@@ -2,3 +2,6 @@ apks/
 *.apk
 *.xapk
 challenge-reports-full.md
+.env
+.env.*
+!.env.example
