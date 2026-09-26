@@ -1,4 +1,4 @@
-import { Fragment, type RefObject } from "react";
+import { Fragment, useMemo, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useNearby } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -13,6 +13,7 @@ import type { Place } from "./anchor.ts";
 import styles from "./Home.module.css";
 import { NearbyCard } from "./NearbyCard.tsx";
 import { NearbyTcCard } from "./NearbyTcCard.tsx";
+import { withPlausibleWalks } from "../walk/plausible.ts";
 
 const MAX_CARDS = 8;
 const FAR_RADIUS_M = 2000;
@@ -44,12 +45,13 @@ function FarStops({ origin, place }: { origin: LatLon; place?: Place }) {
   const t = useT();
   const navigate = useNavigate();
   const far = useNearby(origin, { radius: FAR_RADIUS_M, precise: true });
+  const data = useMemo(() => far.data && withPlausibleWalks(far.data, origin), [far.data, origin]);
   return (
     <>
       <p className={styles.notice}>{t("home.noneWithin")}</p>
-      {far.data?.stops.length ? <p className={styles.caption}>{t("home.nearestFar")}</p> : null}
+      {data?.stops.length ? <p className={styles.info}>{t("home.nearestFar")}</p> : null}
       {far.isPending && <Skeleton variant="stop-card" />}
-      {far.data && <Cards data={far.data} origin={origin} place={place} max={FAR_CARDS} />}
+      {data && <Cards data={data} origin={origin} place={place} max={FAR_CARDS} />}
       <Button variant="tonal" icon="route_plan" label={t("home.planTrip")} onPress={() => navigate("/explore/plan")} />
     </>
   );
@@ -57,6 +59,8 @@ function FarStops({ origin, place }: { origin: LatLon; place?: Place }) {
 
 interface NearbyListProps {
   nearby: ReturnType<typeof useNearby>;
+  /** `nearby.data` with implausible walks replaced (walk/plausible.ts). */
+  data?: NearbyResponse;
   origin: LatLon;
   place?: Place;
   tcDetail?: TransitCenterDetail;
@@ -65,11 +69,10 @@ interface NearbyListProps {
 }
 
 /** D2 items 6–7 and their states: loading, error, nothing within 500 m, late night. */
-export function NearbyList({ nearby, origin, place, tcDetail, firstCard }: NearbyListProps) {
+export function NearbyList({ nearby, data, origin, place, tcDetail, firstCard }: NearbyListProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
-  const { data } = nearby;
 
   if (!data) {
     if (nearby.isError)
@@ -89,7 +92,7 @@ export function NearbyList({ nearby, origin, place, tcDetail, firstCard }: Nearb
   const quiet = shown.every((s) => s.routes.every((r) => !upcoming(r.departures, now).length));
   return (
     <>
-      {quiet && <p className={styles.caption}>{t("home.lateNight")}</p>}
+      {quiet && <p className={styles.info}>{t("home.lateNight")}</p>}
       <Cards data={data} origin={origin} place={place} tcDetail={tcDetail} max={MAX_CARDS} firstCard={firstCard} />
     </>
   );

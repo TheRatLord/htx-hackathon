@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router";
 import { useArrivals, useRoute } from "../../../api/hooks.ts";
 import type { Arrival } from "../../../api/types.ts";
-import { canonicalRouteId, toRouteRef } from "../../../lib/routes.ts";
+import { canonicalRouteId } from "../../../lib/routes.ts";
 import { useSaved, type SavedStop } from "../../../state/saved.ts";
 import { SavedStopRow } from "../../../ui/SavedStopRow.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import type { SavedStopRoute } from "../../../ui/types.ts";
+import { refOfArrival, refOfRoute } from "../stop/refs.ts";
 
 /** One entry per route and direction, in arrival order. */
 function byRoute(arrivals: Arrival[]): SavedStopRoute[] {
@@ -15,7 +16,7 @@ function byRoute(arrivals: Arrival[]): SavedStopRoute[] {
     let g = groups.get(key);
     if (!g) {
       g = {
-        route: toRouteRef({ id: a.routeId, name: a.routeShortName, color: a.routeColor, textColor: a.routeTextColor }),
+        route: refOfArrival(a),
         directionLabel: a.directionLabel,
         headsign: a.headsign,
         deps: [],
@@ -53,9 +54,7 @@ function WithIdleRoute({ preferred, ...props }: RowProps & { preferred: string }
   const route = useRoute(preferred);
   const dir = route.data?.directions.find((d) => d.stopIds.includes(props.stop.id));
   const idle: SavedStopRoute[] =
-    route.data && dir
-      ? [{ route: toRouteRef({ id: route.data.id, name: route.data.displayName, color: route.data.color, textColor: route.data.textColor }), directionLabel: dir.label, headsign: dir.headsigns[0] ?? "", deps: [] }]
-      : [];
+    route.data && dir ? [{ route: refOfRoute(route.data), directionLabel: dir.label, headsign: dir.headsigns[0] ?? "", deps: [] }] : [];
   return <Row {...props} preferred={preferred} routes={[...idle, ...props.routes]} />;
 }
 
