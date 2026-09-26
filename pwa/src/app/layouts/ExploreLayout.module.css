@@ -21,6 +21,19 @@
   gap: var(--sp-2);
 }
 
+/* The search bar and, at its right, the ticket button. */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.searchRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Under the search row at the top right, as in today's app. */
 .fabs {
   position: absolute;
   right: var(--gutter);
@@ -29,5 +42,5 @@
   flex-direction: column;
   align-items: flex-end;
   gap: var(--sp-2);
-  transition: bottom var(--dur-sheet) var(--ease);
+  transition: top var(--dur-sheet) var(--ease);
 }

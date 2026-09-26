@@ -63,6 +63,7 @@ export const router = createBrowserRouter([
           { path: "/more/settings", lazy: page(() => import("../screens/more/Settings.tsx")) },
           { path: "/more/routes", lazy: page(() => import("../screens/more/routes/RouteList.tsx")) },
           { path: "/more/about", lazy: page(() => import("../screens/more/About.tsx")) },
+          { path: "/fares/ticket", lazy: page(() => import("../screens/fares/Ticket.tsx")) },
         ],
       },
       {

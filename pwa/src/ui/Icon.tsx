@@ -8,6 +8,8 @@ const PATHS = {
   bus_stop:
     "M7 2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-4v7h-2v-7H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v9h10V4H7zm1.5 1h7A1.5 1.5 0 0 1 17 6.5V9H7V6.5A1.5 1.5 0 0 1 8.5 5zM8 10h2v1.5H8zm6 0h2v1.5h-2z",
   menu: "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z",
+  qr_code:
+    "M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM19 19h2v2h-2zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM15 19h2v2h-2zM17 17h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2z",
   search:
     "M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
   my_location:

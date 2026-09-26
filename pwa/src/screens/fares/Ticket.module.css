@@ -1,0 +1,43 @@
+.page {
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--gutter) var(--sp-6);
+  text-align: center;
+}
+
+.sample {
+  margin: 0;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--e-1);
+  font-weight: var(--fw-medium);
+}
+
+/* White with a margin even in dark mode: readers need the contrast. */
+.qr {
+  width: min(100%, 320px);
+  height: auto;
+  border-radius: var(--r-box);
+  box-shadow: var(--e-2);
+}
+
+.id {
+  margin: 0;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.08em;
+}
+
+.hint,
+.note {
+  margin: 0;
+  max-width: 36ch;
+  color: var(--c-text-variant);
+}
