@@ -12,10 +12,12 @@ interface NearbyCardProps {
   /** D4: walk times are measured from this place. */
   place?: Place;
   firstRowRef?: Ref<HTMLLIElement>;
+  /** Set when another card has the same stop name: the direction its buses go ("Northbound"). */
+  titleSuffix?: string;
 }
 
 /** A NearbyStopCard whose walk distance is the one shared with the Stop sheet and Walk (C.17). */
-export function NearbyCard({ item, origin, place, firstRowRef }: NearbyCardProps) {
+export function NearbyCard({ item, origin, place, firstRowRef, titleSuffix }: NearbyCardProps) {
   const navigate = useNavigate();
   const { stop } = item;
   const { distanceM } = useWalkDistance(origin, stop.id, item.walkDistanceM, item.walkSource);
@@ -31,6 +33,7 @@ export function NearbyCard({ item, origin, place, firstRowRef }: NearbyCardProps
       onWalk={() => navigate(walkUrl(stop.id, { d: distanceM, from: place?.param, fromName: place?.name }))}
       firstRowRef={firstRowRef}
       laterFirst={item.laterFirst}
+      titleSuffix={titleSuffix}
     />
   );
 }

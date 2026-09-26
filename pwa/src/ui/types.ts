@@ -68,6 +68,8 @@ export interface NearbyStopCardProps {
   onWalk: () => void;
   /** The first route row, for screens that size the sheet to show it (D2 fold rule M2). */
   firstRowRef?: Ref<HTMLLIElement>;
+  /** Appended to the title after " · " ("Northbound"): tells apart two cards with the same stop name. */
+  titleSuffix?: string;
 }
 
 export interface WalkButtonProps {

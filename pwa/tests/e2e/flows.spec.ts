@@ -103,7 +103,7 @@ for (const vp of VIEWPORTS) {
 
       // S10: no coach marks, tips or unrequested dialogs.
       await expect(page.getByRole("dialog")).toHaveCount(0);
-      const missing = await goalOnScreen(page, ["Routes here:", "Fannin St @ McKinney St (246)", "On the west side of Fannin St", "WESTBOUND to DOWNTOWN"], strict);
+      const missing = await goalOnScreen(page, ["Routes here:", "Fannin St @ McKinney St (246)", "West side of Fannin St", "WESTBOUND to DOWNTOWN"], strict);
 
       // The first card is 246 with Route 137 westbound first.
       const card1 = page.getByRole("button", { name: /^Fannin St @ McKinney St \(246\)/ });
@@ -143,7 +143,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Route 40 near you");
       const nb = page.getByRole("button", { name: /^Route 40 NORTHBOUND to N SHEPHERD P&R, Lamar St @ Main St \(342\)/ });
       await expect(nb).toBeVisible();
-      const missing = await goalOnScreen(page, ["NORTHBOUND to N SHEPHERD P&R", "Lamar St @ Main St (342)", "On the north side of Lamar St"], strict);
+      const missing = await goalOnScreen(page, ["NORTHBOUND to N SHEPHERD P&R", "Lamar St @ Main St (342)", "North side of Lamar St"], strict);
       // The next bus (minutes or a clock time) inside the NB card, and the whole card above the fold.
       const nbCard = nb.locator("xpath=..");
       await expect(nbCard).toContainText(TIME);
@@ -241,7 +241,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText("101 stops", { exact: false })).toBeVisible();
       await rider.tap(page.getByRole("button", { name: /^Westheimer Rd @ Montrose Blvd \(2958\)/ }), "row 2958");
       await expect(page).toHaveURL(/stop=2958/);
-      const missing = await goalOnScreen(page, ["Westheimer Rd @ Montrose Blvd", "Stop details ›", /^Walk$/], strict);
+      const missing = await goalOnScreen(page, ["Westheimer Rd @ Montrose Blvd", "Stop details ›", /^Walk \d+ min$/], strict);
       // The expanded row carries the strip (up to 4 times).
       const row = page.locator("li").filter({ hasText: "Westheimer Rd @ Montrose Blvd (2958)" }).filter({ hasText: "Stop details" }).first();
       await expect(row).toContainText(/\d+\s*min/);
@@ -316,7 +316,7 @@ for (const vp of VIEWPORTS) {
       await rider.tap(start, "Start trip");
       await expect(page).toHaveURL(/\/explore\/trip/);
       await expect(page.getByRole("dialog")).toHaveCount(0); // the notification ask is not an OS dialog
-      const missing = await goalOnScreen(page, ["Trip in progress", /^Arriving \d/, /step 1 of \d+/i, "Walk 5 min to M L King Blvd @ UH University Dr (#11424)", "On the west side of M L King Blvd", /Your 80 leaves at \d{1,2}:\d{2} [AP]M/], strict);
+      const missing = await goalOnScreen(page, ["Trip in progress", /^Arriving \d/, /step 1 of \d+/i, "Walk 5 min to M L King Blvd @ UH University Dr (#11424)", "West side of M L King Blvd", /Your 80 leaves at \d{1,2}:\d{2} [AP]M/], strict);
       await rider.attach(info, "F8");
       expect(rider.count).toBeLessThanOrEqual(TARGET.F8.target);
       record("F8", vp.name, rider, missing.length === 0);
@@ -348,7 +348,7 @@ for (const vp of VIEWPORTS) {
       await rider.tap(place.getByRole("button", { name: "Stops near" }).first(), "Stops near on 'Houston Museum of Natural Science'");
       await expect(page).toHaveURL(/at=.*label=Houston/);
       await expectFocusOnH1(page);
-      const missing = await goalOnScreen(page, [/Stops near\s+Houston Museum of Natural Science/, /walk from the museum/, "Main St @ Remington Ln (688)", "On the east side of Main St", "NORTHBOUND to GREENSPOINT TC"], strict);
+      const missing = await goalOnScreen(page, [/Stops near\s+Houston Museum of Natural Science/, "Walk times from the museum", "Main St @ Remington Ln (688)", "East side of Main St", "NORTHBOUND to GREENSPOINT TC"], strict);
       const card = page.getByRole("button", { name: /^Main St @ Remington Ln \(688\)/ });
       await expect(card).toBeVisible();
       await rider.attach(info, "F11");
