@@ -1,9 +1,10 @@
 // D5's result rows. Their inline actions replace today's "What do you want to do?" dialog.
 
+import type { ReactNode } from "react";
 import { useAlerts, useRoute } from "../../../api/hooks.ts";
 import type { SearchResult, StopSummary, TransitCenterSummary } from "../../../api/types.ts";
 import { hasKey, useLang, useT } from "../../../i18n/index.ts";
-import { directionWord, displayHeadsign, formatDistance, sideLine } from "../../../lib/format.ts";
+import { directionWord, displayHeadsign, formatDistance, sideLine, stopTitle } from "../../../lib/format.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
 import { estimateWalk } from "../../../lib/walk.ts";
 import { useLocation } from "../../../state/location.tsx";
@@ -23,7 +24,7 @@ export const SEP = "\u00A0· ";
 const unbroken = (s: string) => s.replaceAll(" ", "\u00A0");
 
 /** The tappable part of a row: icon, bold title and the lines under it. */
-function RowBody({ icon, title, lines, onPress }: { icon: IconName | "tc"; title: string; lines: string[]; onPress: () => void }) {
+function RowBody({ icon, title, lines, extra, onPress }: { icon: IconName | "tc"; title: string; lines: string[]; extra?: ReactNode; onPress: () => void }) {
   const t = useT();
   return (
     <button type="button" className={styles.body} onClick={onPress}>
@@ -43,6 +44,7 @@ function RowBody({ icon, title, lines, onPress }: { icon: IconName | "tc"; title
             {line}
           </span>
         ))}
+        {extra}
       </span>
     </button>
   );
@@ -57,19 +59,43 @@ export function SimpleRow(props: { icon: IconName | "tc"; title: string; lines?:
   );
 }
 
-/** "Closest stop: Hobby Airport (10567) · Eastbound · 3 min walk". */
-function useClosestStopLine(place: { lat?: number; lon?: number }, stop: StopSummary | undefined): string | undefined {
+/**
+ * "Closest stop: Hobby Airport (10567)" over "Eastbound · 3 min walk": two whole lines, so a wrap never
+ * leaves a "·" hanging at a line end. The same two lines in the place row and in its sub-row.
+ */
+interface ClosestStop {
+  title: string;
+  detail: string;
+}
+
+function useClosestStop(place: { lat?: number; lon?: number }, stop: StopSummary | undefined): ClosestStop | undefined {
   const t = useT();
   const lang = useLang();
   const { fix } = useLocation();
   const { walkPace } = usePrefs();
   if (!stop) return undefined;
-  const parts = [t("stopLine.title", { name: stop.name, id: stop.id })];
-  if (stop.kind !== "rail" && stop.directionLabel) parts.push(directionWord(stop.directionLabel, lang));
+  const detail: string[] = [];
+  if (stop.kind !== "rail" && stop.directionLabel) detail.push(directionWord(stop.directionLabel, lang));
   if (fix && place.lat !== undefined && place.lon !== undefined) {
-    parts.push(t("search.closestWalk", { count: estimateWalk({ lat: place.lat, lon: place.lon }, stop, walkPace).minutes }));
+    detail.push(t("search.closestWalk", { count: estimateWalk({ lat: place.lat, lon: place.lon }, stop, walkPace).minutes }));
   }
-  return t("search.closestStop", { stop: parts.join(SEP) });
+  // A plain space before "(688)": the F11 check reads this line as text.
+  return { title: t("search.closestStop", { stop: t("stopLine.title", { name: stop.name, id: stop.id }) }), detail: detail.join(SEP) };
+}
+
+/** The closest-stop lines inside the place row; screen readers hear one sentence ("… (688) · Northbound"). */
+function ClosestLines({ closest }: { closest: ClosestStop }) {
+  return (
+    <>
+      <span className={styles.line}>{closest.title}</span>
+      {closest.detail && (
+        <>
+          <span className="visually-hidden"> · </span>
+          <span className={styles.line}>{closest.detail}</span>
+        </>
+      )}
+    </>
+  );
 }
 
 /**
@@ -98,15 +124,22 @@ interface PlaceRowProps {
 
 export function PlaceRow({ result, actions, attached, onNear, onDirections, onOpenTc, onOpenStop }: PlaceRowProps) {
   const t = useT();
+  const lang = useLang();
   const subtitle = usePlaceSubtitle(result);
   const closestStop = result.nearbyStops?.[0];
-  const closest = useClosestStopLine(result, closestStop);
+  const closest = useClosestStop(result, closestStop);
   // The closest stop, when it is also a result, becomes its own tappable line under the place.
   const closestAttached = closestStop && attached?.stops.find((s) => s.id === closestStop.id);
   const otherStops = attached?.stops.filter((s) => s !== closestAttached) ?? [];
   return (
     <div className={styles.row}>
-      <RowBody icon="place" title={result.title} lines={[subtitle, ...(closest && !closestAttached ? [closest] : [])]} onPress={onNear} />
+      <RowBody
+        icon="place"
+        title={result.title}
+        lines={[subtitle]}
+        extra={closest && !closestAttached ? <ClosestLines closest={closest} /> : undefined}
+        onPress={onNear}
+      />
       {actions && (
         <div className={styles.pills}>
           <Button variant="tonal" icon="route_plan" label={t("search.directions")} onPress={onDirections} />
@@ -122,12 +155,12 @@ export function PlaceRow({ result, actions, attached, onNear, onDirections, onOp
           ))}
           {closestAttached && closest && (
             <li>
-              <SubRow icon="bus_stop" title={closest} onPress={() => onOpenStop?.(closestAttached)} />
+              <SubRow icon="bus_stop" title={closest.title} line={closest.detail || undefined} onPress={() => onOpenStop?.(closestAttached)} />
             </li>
           )}
           {otherStops.map((s) => (
             <li key={s.id}>
-              <SubRow icon="bus_stop" title={t("stopLine.title", { name: s.title, id: s.id })} onPress={() => onOpenStop?.(s)} />
+              <SubRow icon="bus_stop" title={stopTitle(s.title, s.id, lang)} onPress={() => onOpenStop?.(s)} />
             </li>
           ))}
         </ul>
@@ -186,10 +219,16 @@ interface StopRowProps {
   onWalk: (distanceM: number) => void;
 }
 
-export function StopRow({ result, idMatch, walkable, onOpen, onWalk }: StopRowProps) {
+export function StopRow(props: StopRowProps) {
+  const { result } = props;
+  // A stop result without its stop record can only be opened by id.
+  if (!result.stop) return <SimpleRow icon="bus_stop" title={result.title} onPress={props.onOpen} />;
+  return <StopRowBody {...props} stop={result.stop} />;
+}
+
+function StopRowBody({ result, stop, idMatch, walkable, onOpen, onWalk }: StopRowProps & { stop: StopSummary }) {
   const t = useT();
   const lang = useLang();
-  const stop = result.stop!;
   const walk = useStopWalk(stop);
   const names = stop.routes.map((r) => r.name);
   const line = [

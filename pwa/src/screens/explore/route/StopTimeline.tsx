@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { useArrivals, useRouteNext } from "../../../api/hooks.ts";
 import type { Dep, Vehicle } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
-import { upcoming } from "../../../lib/format.ts";
+import { ageMinutes, upcoming } from "../../../lib/format.ts";
 import { useNow } from "../../../state/clock.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
@@ -41,8 +41,19 @@ interface StopTimelineProps {
 }
 
 export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, nearestId, scrollToId, topInset, vehiclesAt, onToggle }: StopTimelineProps) {
+  const now = useNow();
   const next = useRouteNext(routeId, Number(directionKey) as 0 | 1);
   const nextBy = new Map(next.data?.stops.map((s) => [s.stopId, [s.next, s.then].flatMap((d) => (d ? [d.departureTime] : []))]));
+  // Where the next-bus time drops from one stop to the next ("7 min", then "1 min"), a scheduled bus is
+  // between them right now: the one before it has already passed the earlier stops. A glyph on the spine
+  // says so, so the jump doesn't read as a mistake.
+  const firstAhead = (id: string) => (nextBy.get(id) ?? []).map(Date.parse).find((ms) => ms > now);
+  const busBefore = new Set<string>();
+  stops.forEach((stop, i) => {
+    const here = firstAhead(stop.id);
+    const before = i > 0 ? firstAhead(stops[i - 1].id) : undefined;
+    if (here !== undefined && before !== undefined && here < before) busBefore.add(stop.id);
+  });
   const list = useRef<HTMLOListElement>(null);
   // Only the first target of each direction scrolls; later taps expand in place.
   const initial = useRef<{ directionKey: string; stopId: string } | null>(null);
@@ -55,10 +66,21 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
     const scroller = row?.closest("main");
     const page = list.current?.parentElement;
     if (!row || !scroller || !page) return;
+    const contentTop = (el: Element) => el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
     const place = () => {
       const inset = topInset();
-      const top = row.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-      scroller.scrollTop = top - inset - (scroller.clientHeight - inset) * SCROLL_AT;
+      let top = contentTop(row) - inset - (scroller.clientHeight - inset) * SCROLL_AT;
+      // Never leave a row sliced by the sticky header: move to the nearer edge of the row it would cut.
+      const edge = top + inset;
+      for (const li of list.current?.children ?? []) {
+        const start = contentTop(li);
+        const end = start + (li as HTMLElement).offsetHeight;
+        if (start < edge && end > edge) {
+          top = edge - start < end - edge ? start - inset : end - inset;
+          break;
+        }
+      }
+      scroller.scrollTop = top;
     };
     place();
     // Live bus markers and the alert line can still arrive above the row: keep it in place for
@@ -78,9 +100,10 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
 
   return (
     <ol ref={list} className={styles.timeline}>
-      {stops.map((stop) => (
+      {stops.map((stop, i) => (
         <StopRow
           key={stop.id}
+          sameStreet={i > 0 && onStreet(stops[i - 1].name) === onStreet(stop.name)}
           routeId={routeId}
           rail={rail}
           stop={stop}
@@ -89,6 +112,7 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
           expanded={stop.id === expandedId}
           nearest={stop.id === nearestId}
           vehicle={vehiclesAt.get(stop.id)}
+          scheduledBus={busBefore.has(stop.id)}
           onToggle={() => onToggle(stop.id)}
         />
       ))}
@@ -96,7 +120,12 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
   );
 }
 
+/** "Westheimer Rd" in "Westheimer Rd @ Mandell St": the street the bus runs along. */
+const onStreet = (name: string) => name.match(/^(.+?) @ /)?.[1];
+
 interface StopRowProps {
+  /** The stop is on the same street as the one before it, so the street is set quieter and the cross street leads. */
+  sameStreet: boolean;
   routeId: string;
   rail: boolean;
   stop: RouteStop;
@@ -106,10 +135,12 @@ interface StopRowProps {
   expanded: boolean;
   nearest: boolean;
   vehicle?: Vehicle;
+  /** By the timetable, a bus is between the stop above and this one now (drawn only when no live bus is). */
+  scheduledBus: boolean;
   onToggle: () => void;
 }
 
-function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicle, onToggle }: StopRowProps) {
+function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nearest, vehicle, scheduledBus, onToggle }: StopRowProps) {
   const t = useT();
   const now = useNow();
   const deps = upcoming(next.map(scheduledDep), now);
@@ -126,8 +157,16 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
             <Icon name={rail ? "tram" : "directions_bus"} size={14} />
           </span>
           <span className="visually-hidden">
-            {stale ? t("route.vehicleOld", { n: Math.floor(vehicle.ageSeconds / 60) }) : t(rail ? "route.trainComing" : "route.busComing")}
+            {stale ? t("route.vehicleOld", { n: ageMinutes(now - vehicle.ageSeconds * 1000, now) }) : t(rail ? "route.trainComing" : "route.busComing")}
           </span>
+        </>
+      )}
+      {!vehicle && scheduledBus && (
+        <>
+          <span className={`${styles.bus} ${styles.busScheduled}`} aria-hidden="true">
+            <Icon name={rail ? "tram" : "directions_bus"} size={14} />
+          </span>
+          <span className="visually-hidden">{t(rail ? "route.trainScheduled" : "route.busScheduled")}</span>
         </>
       )}
       <button type="button" className={styles.stopButton} aria-expanded={expanded} onClick={onToggle}>
@@ -139,9 +178,7 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
           <span className={`${styles.node} ${expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
         )}
         <span className={styles.stopText}>
-          <span className={styles.stopName}>
-            {stop.name} <span className={styles.stopId}>({stop.id})</span>
-          </span>
+          <StopName name={stop.name} id={stop.id} quietStreet={sameStreet} />
           {nearest && <NearestLine stop={stop} />}
         </span>
         {/* Expanded, the live strip below is the one answer for this stop. */}
@@ -160,6 +197,26 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
       </button>
       {expanded && <ExpandedStop routeId={routeId} stop={stop} scheduled={deps[0]} />}
     </li>
+  );
+}
+
+/**
+ * "Westheimer Rd @ Mandell St (2953)". The cross street and number never break apart, so a narrow row
+ * wraps after "@" ("Westheimer Rd @" / "Mandell St (2953)"). On a run of stops along one street,
+ * "Westheimer Rd @" is grey and the cross street leads.
+ */
+function StopName({ name, id, quietStreet }: { name: string; id: string; quietStreet: boolean }) {
+  const street = onStreet(name);
+  const cross = street ? name.slice(street.length + 3) : name;
+  return (
+    <span className={styles.stopName}>
+      {street && <span className={quietStreet ? styles.street : undefined}>{street} @ </span>}
+      <span className={styles.cross}>
+        {cross}
+        {"\u00a0"}
+        <span className={styles.stopId}>({id})</span>
+      </span>
+    </span>
   );
 }
 
