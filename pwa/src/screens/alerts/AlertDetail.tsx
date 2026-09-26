@@ -45,7 +45,7 @@ export default function AlertDetail() {
   if (store.status !== "ok" || store.source === "unavailable") {
     content = (
       <div className={styles.detail}>
-        <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />
+        <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} demoNote />
       </div>
     );
   } else if (!alert) {
