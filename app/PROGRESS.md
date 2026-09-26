@@ -16,7 +16,7 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
   Owns: everything outside `src/screens/*` except Home.
 - [x] **T1 Home + Nearby stops.** Map, tucked sheet (3 snaps), "Where to?", Home/Work chips, numbered pins by distance, Near you list, saved trips, loading and empty states.
   Owns: `src/screens/Home/**`
-- [ ] **T2 Search.** Input autofocus, "zoo" finds Houston Zoo, Home/Work quick picks, recent searches, star to save a place, empty and no-results states. Picking a result opens Route options and records a recent.
+- [x] **T2 Search.** Input autofocus, "zoo" finds Houston Zoo, Home/Work quick picks, recent searches, star to save a place, empty and no-results states. Picking a result opens Route options and records a recent.
   Owns: `src/screens/Search/**`
 - [x] **T3 Route options.** All 3 routes on the map at once with A/B/C badges, cards below, Fastest / Least walking sort, tap card or map badge/line to select, star to save destination, loading state, Start trip button.
   Owns: `src/screens/Routes/**`
@@ -61,7 +61,8 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
 - Merged T6 Fares (worker commit 3f6eec4 applied as 8d8af8a; the worker's worktree started from main, so only its Fares files were taken). Typecheck, 58 tests and build pass; Fares checked in light and dark, no console errors. Push still refused (403).
 - Merged T5 Stop screen (9d599bf, merge 1eba4b4). Applied its suggested shared fix: map fits leave room for pin captions (bottom +64) and clear of controls (right 108); Stop screen now fits all numbered stops. 64 tests pass. Launched T2 Search and T4 Trip workers (T3 Routes still running).
 - Merged T3 Route options (9b625e8). Worker found the zoo sat near the southern map edge so route fits silently failed with a taller sheet: extended the basemap south, added a centring fallback when fitBounds can't be satisfied, and restored the 42% sheet. Labels now show from zoom 12.6. 74 tests pass. Launched T7 Recent + More (T2, T4 still running).
+- Merged T2 Search (0a1ca96). 83 tests pass; search screenshots (empty and "zoo") in light and dark saved to screenshots/, no console errors.
 
 ## Next
 
-Review and merge T2, T4, T7 when their workers finish. Then run the full smoke + screenshot specs (T8), verify README (T9), then T10, T11.
+Review and merge T4, T7 when their workers finish. Then run the full smoke + screenshot specs (T8), verify README (T9), then T10, T11.
