@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { useAlerts } from "../api/alertsStore.ts";
 import { useLang, useT } from "../i18n/index.ts";
+import { isAdvisory } from "../lib/alerts.ts";
 import { AlertBox } from "./AlertBox.tsx";
 import styles from "./AlertStatusLine.module.css";
 import { Button } from "./Button.tsx";
@@ -30,7 +31,8 @@ export function AlertStatusLine({ scope, name, alerts, demoNote }: AlertStatusLi
     );
   }
   if (alerts.length > 0) {
-    const [first] = alerts;
+    // A service change (red) outranks an advisory (navy) as the one alert shown inline.
+    const first = alerts.find((a) => !isAdvisory(a.effect)) ?? alerts[0];
     const routeId = scope === "route" ? first.routes[0]?.routeId : undefined;
     return (
       <div className={styles.stack}>

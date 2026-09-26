@@ -6,7 +6,7 @@ import type { Alert, RouteRef } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
 import { useLang, useT } from "../../i18n/index.ts";
-import { alertsForRoute } from "../../lib/alerts.ts";
+import { alertsForRoute, isAdvisory } from "../../lib/alerts.ts";
 import { routeRef, useRoutesLoaded } from "../../lib/routes.ts";
 import { compareRouteNames } from "../../lib/sortRoutes.ts";
 import { AlertBox } from "../../ui/AlertBox.tsx";
@@ -21,6 +21,9 @@ import { alertRouteRefs } from "./routeRefs.ts";
 import { useMyRoutes } from "./useMyRoutes.ts";
 
 const firstRouteName = (a: Alert) => a.routes.map((r) => r.route).sort(compareRouteNames)[0] ?? "~";
+/** Red service changes (detour, stop moved) before navy advisories, then by route. */
+const byKindThenRoute = (a: Alert, b: Alert) =>
+  Number(isAdvisory(a.effect)) - Number(isAdvisory(b.effect)) || compareRouteNames(firstRouteName(a), firstRouteName(b));
 
 /** No per-card "Demo" tag: the one banner above the list says every alert is a demo. */
 function AlertItem({ alert }: { alert: Alert }) {
@@ -79,7 +82,7 @@ export default function Alerts() {
   const isMine = (a: Alert) => (myRoutes ?? []).some((r) => alertsForRoute([a], r.id).length > 0);
   const shown = (routeParam ? alertsForRoute(store.alerts, routeParam) : filter === "mine" ? store.alerts.filter(isMine) : store.alerts)
     .slice()
-    .sort((a, b) => compareRouteNames(firstRouteName(a), firstRouteName(b)));
+    .sort(byKindThenRoute);
   const mineWithout = (myRoutes ?? []).filter((r) => alertsForRoute(store.alerts, r.id).length === 0);
   const updatedAt = store.updatedAt;
 
