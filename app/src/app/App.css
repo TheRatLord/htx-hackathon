@@ -1,0 +1,44 @@
+/* The app is a phone-sized column; on wide screens it is centred. */
+.app {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+@media (min-width: 560px) {
+  body {
+    background:
+      radial-gradient(circle at 20% 10%, var(--accent-soft) 0, transparent 40%),
+      var(--bg);
+  }
+  .app {
+    max-height: 920px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 40px;
+    box-shadow: var(--shadow-2), 0 0 0 1px var(--hairline);
+  }
+}
+.app__screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+/* Screens re-enable pointer events on their own panels, so the map stays draggable around them. */
+.app__screen > * {
+  pointer-events: auto;
+}
+.app__screen > .map-overlay {
+  pointer-events: none;
+}
+.map-overlay > * {
+  pointer-events: auto;
+}
+.map-overlay {
+  position: absolute;
+  inset: 0;
+}

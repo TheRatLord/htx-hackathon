@@ -1,0 +1,30 @@
+.page {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(28px);
+  backdrop-filter: saturate(160%) blur(28px);
+  padding: calc(var(--s-6) + var(--safe-top)) var(--gutter) var(--s-3);
+}
+.page--tabbar {
+  padding-bottom: calc(var(--tabbar-h) + var(--tabbar-gap) * 2 + var(--safe-bottom) + var(--s-2));
+}
+.page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+.page__body {
+  display: grid;
+  gap: var(--s-3);
+}
+.page__footer {
+  margin-top: var(--s-4);
+  display: flex;
+  justify-content: center;
+}

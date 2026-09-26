@@ -1,0 +1,73 @@
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  border-bottom: 0;
+  box-shadow: var(--shadow-3);
+  background: var(--glass-strong);
+  transition: transform var(--dur-3) var(--ease-out);
+  will-change: transform;
+  touch-action: none;
+}
+.sheet--dragging {
+  transition: none;
+}
+.sheet__grab {
+  flex: none;
+  cursor: grab;
+  touch-action: none;
+}
+.sheet--dragging .sheet__grab {
+  cursor: grabbing;
+}
+.sheet__handle {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 24px;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+}
+.sheet__handle-bar {
+  width: 40px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--text-3);
+  opacity: 0.45;
+}
+.sheet__header {
+  padding: 0 var(--gutter) var(--s-1);
+}
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 var(--gutter);
+  touch-action: none;
+  transition: opacity var(--dur-2) var(--ease);
+}
+.sheet__body--hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.sheet__body--scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+.sheet__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding: var(--s-2) var(--gutter) calc(var(--s-2) + var(--safe-bottom));
+  background: linear-gradient(to top, var(--glass-solid) 70%, transparent);
+  transition: bottom var(--dur-3) var(--ease-out);
+}
+.sheet--dragging .sheet__footer {
+  transition: none;
+}

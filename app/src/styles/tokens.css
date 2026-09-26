@@ -1,0 +1,187 @@
+/*
+ * Design tokens. One type scale, one accent family, an 8px spacing grid.
+ * Light values sit on :root; dark values apply from the OS setting unless the
+ * rider chose Light, and always when they chose Dark.
+ */
+:root {
+  color-scheme: light;
+
+  /* Spacing: 8px grid (4px only for hairline nudges). */
+  --s-half: 4px;
+  --s-1: 8px;
+  --s-2: 16px;
+  --s-3: 24px;
+  --s-4: 32px;
+  --s-5: 40px;
+  --s-6: 48px;
+  --s-8: 64px;
+  --gutter: 16px;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* Type: Atkinson Hyperlegible, one scale. */
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --t-caption: 13px;
+  --t-small: 15px;
+  --t-body: 17px;
+  --t-title-sm: 20px;
+  --t-title: 24px;
+  --t-display: 32px;
+  --lh-tight: 1.2;
+  --lh-body: 1.4;
+  --tracking-caps: 0.08em;
+
+  /* Tap targets */
+  --tap: 48px;
+  --tap-lg: 56px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+  --dur-3: 380ms;
+
+  /* Layout */
+  --tabbar-h: 72px;
+  --tabbar-gap: 16px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Colour: light */
+  --bg: #eef1f6;
+  --text: #0f1a2e;
+  --text-2: #435069;
+  --text-3: #5d6a84;
+  --text-on-accent: #ffffff;
+
+  --accent: #1c4f9c; /* METRO blue, for text and icons */
+  --accent-fill: #1c4f9c; /* buttons and selected states */
+  --accent-fill-press: #163f7d;
+  --accent-soft: rgba(28, 79, 156, 0.1);
+  --accent-soft-2: rgba(28, 79, 156, 0.18);
+  --focus: #2f6fdc;
+
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.88);
+  --glass-solid: #f8fafd;
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --hairline: rgba(15, 26, 46, 0.1);
+  --fill-1: rgba(15, 26, 46, 0.05);
+  --fill-2: rgba(15, 26, 46, 0.08);
+  --blur: saturate(180%) blur(20px);
+
+  --shadow-1: 0 1px 2px rgba(15, 26, 46, 0.06), 0 2px 8px rgba(15, 26, 46, 0.06);
+  --shadow-2: 0 2px 6px rgba(15, 26, 46, 0.06), 0 12px 32px rgba(15, 26, 46, 0.12);
+  --shadow-3: 0 -2px 12px rgba(15, 26, 46, 0.06), 0 -16px 48px rgba(15, 26, 46, 0.1);
+
+  --live: #0b7a3b;
+  --live-soft: rgba(11, 122, 59, 0.12);
+  --scheduled: #435069;
+  --scheduled-soft: rgba(67, 80, 105, 0.1);
+  --lost: #8a4b00;
+  --lost-soft: #fff3dc;
+  --lost-border: #f0c77a;
+  --danger: #b3261e;
+  --success: #0b7a3b;
+
+  --route-a: #1c4f9c;
+  --route-b: #0e7c86;
+  --route-c: #7a4cc2;
+  --line-700: #c8102e;
+  --destination: #c8102e;
+  --user: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0b111d;
+    --text: #eef2fa;
+    --text-2: #b7c1d6;
+    --text-3: #98a4bd;
+    --accent: #8db8ff;
+    --accent-fill: #2d66c6;
+    --accent-fill-press: #2658ad;
+    --accent-soft: rgba(141, 184, 255, 0.14);
+    --accent-soft-2: rgba(141, 184, 255, 0.24);
+    --focus: #8db8ff;
+    --glass: rgba(20, 28, 44, 0.72);
+    --glass-strong: rgba(22, 31, 49, 0.9);
+    --glass-solid: #151d2e;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --hairline: rgba(238, 242, 250, 0.12);
+    --fill-1: rgba(238, 242, 250, 0.06);
+    --fill-2: rgba(238, 242, 250, 0.1);
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4);
+    --shadow-3: 0 -2px 12px rgba(0, 0, 0, 0.25), 0 -16px 48px rgba(0, 0, 0, 0.35);
+    --live: #4ad68a;
+    --live-soft: rgba(74, 214, 138, 0.14);
+    --scheduled: #b7c1d6;
+    --scheduled-soft: rgba(183, 193, 214, 0.12);
+    --lost: #ffc56b;
+    --lost-soft: rgba(255, 176, 50, 0.12);
+    --lost-border: rgba(255, 197, 107, 0.4);
+    --danger: #ff8a80;
+    --success: #4ad68a;
+    --route-a: #5f95ec;
+    --route-b: #2bb3bd;
+    --route-c: #a784e6;
+    --line-700: #ff5c6e;
+    --destination: #ff5c6e;
+    --user: #5b9cff;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b111d;
+  --text: #eef2fa;
+  --text-2: #b7c1d6;
+  --text-3: #98a4bd;
+  --accent: #8db8ff;
+  --accent-fill: #2d66c6;
+  --accent-fill-press: #2658ad;
+  --accent-soft: rgba(141, 184, 255, 0.14);
+  --accent-soft-2: rgba(141, 184, 255, 0.24);
+  --focus: #8db8ff;
+  --glass: rgba(20, 28, 44, 0.72);
+  --glass-strong: rgba(22, 31, 49, 0.9);
+  --glass-solid: #151d2e;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --hairline: rgba(238, 242, 250, 0.12);
+  --fill-1: rgba(238, 242, 250, 0.06);
+  --fill-2: rgba(238, 242, 250, 0.1);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 -2px 12px rgba(0, 0, 0, 0.25), 0 -16px 48px rgba(0, 0, 0, 0.35);
+  --live: #4ad68a;
+  --live-soft: rgba(74, 214, 138, 0.14);
+  --scheduled: #b7c1d6;
+  --scheduled-soft: rgba(183, 193, 214, 0.12);
+  --lost: #ffc56b;
+  --lost-soft: rgba(255, 176, 50, 0.12);
+  --lost-border: rgba(255, 197, 107, 0.4);
+  --danger: #ff8a80;
+  --success: #4ad68a;
+  --route-a: #5f95ec;
+  --route-b: #2bb3bd;
+  --route-c: #a784e6;
+  --line-700: #ff5c6e;
+  --destination: #ff5c6e;
+  --user: #5b9cff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+  }
+}

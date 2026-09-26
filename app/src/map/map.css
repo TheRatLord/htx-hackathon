@@ -1,0 +1,199 @@
+.map-root {
+  position: absolute;
+  inset: 0;
+  z-index: 0; /* keep marker z-indexes inside the map layer */
+  overflow: hidden;
+  background: var(--bg);
+}
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+.map-canvas .maplibregl-canvas:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+.map-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  text-align: center;
+  color: var(--text-2);
+  background: repeating-linear-gradient(0deg, transparent 0 46px, var(--fill-1) 46px 52px),
+    repeating-linear-gradient(90deg, transparent 0 46px, var(--fill-1) 46px 52px), var(--bg);
+}
+
+.map-marker {
+  line-height: 1;
+}
+
+/* Numbered stop pin with walk time underneath */
+.stop-pin {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-family: var(--font);
+  color: var(--accent);
+}
+.stop-pin__circle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 3px solid var(--accent-fill);
+  font-weight: 700;
+  font-size: var(--t-body);
+  color: var(--accent);
+  box-shadow: var(--shadow-2);
+  transition:
+    transform var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease);
+}
+.stop-pin__caption {
+  padding: 4px 8px;
+  border-radius: var(--r-pill);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-1);
+  font-size: var(--t-caption);
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+button.stop-pin:active .stop-pin__circle {
+  transform: scale(0.94);
+}
+.stop-pin--active .stop-pin__circle {
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
+  transform: scale(1.1);
+}
+
+/* Lettered route badge on a line */
+.route-pin {
+  --pin: var(--route-a);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  border: 3px solid var(--pin);
+  color: var(--pin);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: var(--t-body);
+  box-shadow: var(--shadow-2);
+  transition:
+    transform var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease);
+}
+.route-pin--selected {
+  background: var(--pin);
+  color: #ffffff;
+  transform: scale(1.15);
+}
+/* Bigger invisible tap area around small pins */
+button.route-pin,
+button.stop-pin {
+  position: relative;
+}
+button.route-pin::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.dest-pin {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--destination);
+  border: 3px solid #ffffff;
+  box-shadow: var(--shadow-2);
+}
+.dest-pin__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.user-dot {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.user-dot__core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--user);
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 6px rgba(15, 26, 46, 0.35);
+}
+.user-dot__halo {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--user) 18%, transparent);
+  animation: user-pulse 2.8s var(--ease) infinite;
+}
+@keyframes user-pulse {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* Controls */
+.map-zoom {
+  position: absolute;
+  right: var(--gutter);
+  z-index: 5;
+  display: grid;
+  width: 56px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  transition: top var(--dur-2) var(--ease);
+}
+.map-zoom button {
+  display: grid;
+  place-items: center;
+  height: 56px;
+  color: var(--accent);
+}
+.map-zoom button:active {
+  background: var(--accent-soft);
+}
+.map-zoom__divider {
+  height: 1px;
+  margin: 0 12px;
+  background: var(--hairline);
+}
+.map-locate {
+  position: absolute;
+  right: var(--gutter);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: var(--accent);
+  transition: bottom var(--dur-2) var(--ease);
+}
