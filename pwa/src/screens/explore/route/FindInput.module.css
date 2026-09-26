@@ -3,10 +3,16 @@
   align-items: center;
   gap: var(--sp-2);
   min-height: var(--touch-min);
-  padding: 0 var(--sp-2) 0 var(--sp-4);
+  padding: 0 0 0 var(--sp-4);
   border: 1px solid var(--c-outline-strong);
   border-radius: var(--r-pill);
   background: var(--c-search-field);
+}
+
+/* One focus ring, on the pill, instead of a second one around the input inside it. */
+.field:focus-within {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
 }
 
 .input {
@@ -14,9 +20,12 @@
   min-width: 0;
   min-height: var(--touch-min);
   border: none;
-  border-radius: var(--r-pill);
   background: none;
   font-size: var(--fs-body);
+}
+
+.input:focus-visible {
+  outline: none;
 }
 
 .input::placeholder {
@@ -25,4 +34,16 @@
 
 .input::-webkit-search-cancel-button {
   display: none;
+}
+
+.clear {
+  flex: none;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-4) 0 var(--sp-3);
+  border: none;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
 }

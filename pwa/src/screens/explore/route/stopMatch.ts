@@ -1,8 +1,23 @@
 // Matching a typed query against a route's stops (D9 "Find a stop", D5 "82 montrose").
-// TODO(requests.md): import from src/lib/text.ts once it re-exports the server tokenizer.
-import { tokenize } from "../../../../server/lib/text.ts";
+// A small local normaliser, so the web bundle doesn't pull in the server's search code.
 
-const words = (s: string) => tokenize(s).filter((t) => t.role !== "connector").map((t) => t.text);
+/** Street words riders type in full or short ("Road" and "Rd" are the same word). */
+const SHORT: Record<string, string> = {
+  street: "st", road: "rd", drive: "dr", avenue: "ave", boulevard: "blvd", parkway: "pkwy",
+  freeway: "fwy", highway: "hwy", lane: "ln", court: "ct", place: "pl", circle: "cir",
+};
+/** Words that join cross streets ("&", "@" and "/" become "and"). */
+const CONNECTORS = new Set(["and", "at"]);
+
+const words = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[@&/]/g, " and ")
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w && !CONNECTORS.has(w))
+    .map((w) => SHORT[w] ?? w);
 
 /**
  * True when every typed word starts a word of the stop name, or the query is the start of the stop

@@ -15,7 +15,7 @@ import type { RouteStop } from "./routeGeo.ts";
 import styles from "./RoutePage.module.css";
 import { useStopWalk } from "./useStopWalk.ts";
 
-/** Where the target row lands in the scroll area, so the stops before and after it show. */
+/** Where the target row lands in the space under the sticky bar, so the stops before and after it show. */
 const SCROLL_AT = 0.35;
 /** How long the target row is held in place while the rest of the page loads. */
 const PIN_MS = 3000;
@@ -26,17 +26,21 @@ const scheduledDep = (departureTime: string): Dep => ({ departureTime, isRealtim
 
 interface StopTimelineProps {
   routeId: string;
+  rail: boolean;
   directionKey: string;
   stops: RouteStop[];
   expandedId?: string;
   nearestId?: string;
   /** The row brought into view when a direction first shows (?stop= or the nearest stop). */
   scrollToId?: string;
+  /** Height of the sticky bar over the scroll area. */
+  topInset: () => number;
+  /** Live buses, keyed by the stop each is heading to. */
   vehiclesAt: Map<string, Vehicle>;
   onToggle: (stopId: string) => void;
 }
 
-export function StopTimeline({ routeId, directionKey, stops, expandedId, nearestId, scrollToId, vehiclesAt, onToggle }: StopTimelineProps) {
+export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, nearestId, scrollToId, topInset, vehiclesAt, onToggle }: StopTimelineProps) {
   const next = useRouteNext(routeId, Number(directionKey) as 0 | 1);
   const nextBy = new Map(next.data?.stops.map((s) => [s.stopId, s.next?.departureTime]));
   const list = useRef<HTMLOListElement>(null);
@@ -52,8 +56,9 @@ export function StopTimeline({ routeId, directionKey, stops, expandedId, nearest
     const page = list.current?.parentElement;
     if (!row || !scroller || !page) return;
     const place = () => {
+      const inset = topInset();
       const top = row.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-      scroller.scrollTop = top - scroller.clientHeight * SCROLL_AT;
+      scroller.scrollTop = top - inset - (scroller.clientHeight - inset) * SCROLL_AT;
     };
     place();
     // Live bus markers and the alert line can still arrive above the row: keep it in place for
@@ -69,7 +74,7 @@ export function StopTimeline({ routeId, directionKey, stops, expandedId, nearest
       stop();
       events.forEach((e) => scroller.removeEventListener(e, stop));
     };
-  }, [directionKey, target]);
+  }, [directionKey, target, topInset]);
 
   return (
     <ol ref={list} className={styles.timeline}>
@@ -77,8 +82,10 @@ export function StopTimeline({ routeId, directionKey, stops, expandedId, nearest
         <StopRow
           key={stop.id}
           routeId={routeId}
+          rail={rail}
           stop={stop}
           next={nextBy.get(stop.id)}
+          loading={next.isPending}
           expanded={stop.id === expandedId}
           nearest={stop.id === nearestId}
           vehicle={vehiclesAt.get(stop.id)}
@@ -91,30 +98,35 @@ export function StopTimeline({ routeId, directionKey, stops, expandedId, nearest
 
 interface StopRowProps {
   routeId: string;
+  rail: boolean;
   stop: RouteStop;
   next?: string;
+  loading: boolean;
   expanded: boolean;
   nearest: boolean;
   vehicle?: Vehicle;
   onToggle: () => void;
 }
 
-function StopRow({ routeId, stop, next, expanded, nearest, vehicle, onToggle }: StopRowProps) {
+function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicle, onToggle }: StopRowProps) {
   const t = useT();
   const now = useNow();
   const nextDep = next ? upcoming([scheduledDep(next)], now)[0] : undefined;
+  // A scheduled time never says "Now" (C.2), so a trip due this minute would show as a clock time
+  // among minutes. The column shows only trips a minute or more away (requests.md: two per stop).
+  const dueNow = nextDep !== undefined && Date.parse(nextDep.departureTime) - now < 60_000;
   const stale = vehicle && vehicle.ageSeconds > STALE_VEHICLE_S;
   return (
     <li className={styles.stop} data-stop={stop.id} data-expanded={expanded}>
       {vehicle && (
-        <span className={`${styles.vehicle} ${stale ? styles.vehicleStale : ""}`}>
-          <span className={styles.vehicleIcon} aria-hidden="true">
-            <Icon name="directions_bus" size={14} />
+        <>
+          <span className={`${styles.bus} ${stale ? styles.busStale : ""}`} aria-hidden="true">
+            <Icon name={rail ? "tram" : "directions_bus"} size={14} />
           </span>
-          <span>
-            {stale ? t("route.busNearOld", { n: Math.floor(vehicle.ageSeconds / 60) }) : t("route.busNear")}
+          <span className="visually-hidden">
+            {stale ? t("route.vehicleOld", { n: Math.floor(vehicle.ageSeconds / 60) }) : t(rail ? "route.trainComing" : "route.busComing")}
           </span>
-        </span>
+        </>
       )}
       <button type="button" className={styles.stopButton} aria-expanded={expanded} onClick={onToggle}>
         <span className={`${styles.node} ${nearest || expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
@@ -124,16 +136,19 @@ function StopRow({ routeId, stop, next, expanded, nearest, vehicle, onToggle }: 
           </span>
           {nearest && <NearestLine stop={stop} />}
         </span>
-        <span className={styles.next}>
-          {nextDep ? (
-            <TimeValue dep={nextDep} size="body" />
-          ) : (
-            <>
-              <span aria-hidden="true">{t("route.noNext")}</span>
-              <span className="visually-hidden">{t("route.noNextA11y")}</span>
-            </>
-          )}
-        </span>
+        {/* Expanded, the live strip below is the one answer for this stop. */}
+        {!expanded && (
+          <span className={styles.next}>
+            {nextDep && !dueNow ? (
+              <TimeValue dep={nextDep} size="body" />
+            ) : (
+              <>
+                <span aria-hidden="true">{t("route.noNext")}</span>
+                {!loading && <span className="visually-hidden">{t(dueNow ? "route.dueNowA11y" : "route.noNextA11y")}</span>}
+              </>
+            )}
+          </span>
+        )}
       </button>
       {expanded && <ExpandedStop routeId={routeId} stop={stop} scheduled={nextDep} />}
     </li>
