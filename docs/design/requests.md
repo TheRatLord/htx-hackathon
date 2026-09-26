@@ -116,3 +116,14 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: D1 draws the text-size glyphs at 16 / 18 / 21sp. Screens can't restyle components, so
   Welcome shows "A", "A+", "A++" at one size with "Standard / Large / Extra large" under them.
 - Status: open
+
+## AlertStatusLine retry loop when a screen mounts it only on error
+- From: D (D14, D15)
+- Where: src/api/alertsStore.ts / src/ui/AlertStatusLine.tsx
+- Need: with no cached alerts, a refetch resets the query to `loading` (TanStack v5 clears
+  `status` while there is no data), and a newly mounted observer retries an errored query. A
+  screen that renders AlertStatusLine only in the error branch therefore loops (error → mount →
+  refetch → loading → unmount) about once a second. D14/D15 now keep it mounted for loading and
+  error alike; `retryOnMount: false` on the alerts query (the store already has `retry()`) would
+  make the component safe to use either way.
+- Status: open

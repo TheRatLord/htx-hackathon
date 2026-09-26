@@ -22,6 +22,7 @@ const strings: Strings = {
       planAgainA11y: "Plan again from {from} to {to}",
       clearTitle: "Clear recent history?",
       clearBody: "Saved stops and routes stay.",
+      timesError: "Times can't be loaded right now.",
     },
   },
   es: {
@@ -44,6 +45,7 @@ const strings: Strings = {
       planAgainA11y: "Planear otra vez de {from} a {to}",
       clearTitle: "¿Borrar el historial reciente?",
       clearBody: "Las paradas y rutas guardadas se quedan.",
+      timesError: "No se pueden cargar los horarios ahora.",
     },
   },
 };

@@ -73,3 +73,13 @@
   border-radius: 50%;
   background: var(--c-origin-dot);
 }
+
+.rowError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-1) 0 0 var(--sp-3);
+  color: var(--c-text-variant);
+}
