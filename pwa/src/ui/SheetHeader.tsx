@@ -11,7 +11,7 @@ import type { SheetHeaderProps } from "./types.ts";
  * (end). A start-aligned title shares their row ("‹ Route 40 near you   ⌃"), so no row is spent
  * on Back alone; a centred stop title keeps "‹ Back" on a row above it.
  */
-export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
+export function SheetHeader({ title, overline, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
   const t = useT();
   const chrome = useContext(SheetChromeContext);
   const host = chrome?.host;
@@ -28,7 +28,7 @@ export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlig
       {t("common.back")}
     </button>
   );
-  const toggle = chrome && (
+  const toggle = chrome?.toggle && (
     <button type="button" className={styles.toggle} aria-label={chrome.toggle.label} aria-expanded={chrome.toggle.expanded} onClick={chrome.toggle.onPress}>
       <Icon name={chrome.toggle.icon} />
     </button>
@@ -36,6 +36,7 @@ export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlig
   const text = (
     <div className={styles.text}>
       <h1 tabIndex={-1} className={`${styles.title} ${titleSize === "stop" ? styles.stopTitle : ""}`}>
+        {overline && <span className="visually-hidden">{overline} </span>}
         {title}
       </h1>
       {sub && <div className={styles.sub}>{sub}</div>}
@@ -49,6 +50,19 @@ export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlig
         <>
           <div className={styles.controls}>
             {backRow}
+            {toggle}
+          </div>
+          {text}
+        </>
+      ) : overline ? (
+        // The overline shares the row with Back and the toggle, so the title below gets the full
+        // width: "Houston Museum of Natural Science" fits one 22sp line at 412dp.
+        <>
+          <div className={`${styles.main} ${styles.withBack} ${styles.overlineRow}`}>
+            {back}
+            <p className={styles.overline} aria-hidden="true">
+              {overline}
+            </p>
             {toggle}
           </div>
           {text}

@@ -42,6 +42,8 @@ export interface LiveStripProps {
    * big clock time with "First bus · in 3 hr 17 min", instead of `emptyText`.
    */
   nextService?: { departureTime: string; today: boolean };
+  /** One line inside the strip, under the times, in white at 88% (like the late-night caption): "First time: your 80, scheduled 12:10 PM". */
+  caption?: string;
 }
 
 /** One fact on the strip in its digits, e.g. "about **7** min" (D13's ride step). */
@@ -140,12 +142,16 @@ export interface BottomSheetProps {
   footer?: ReactNode;
   children: ReactNode;
   allowPeek?: boolean;
+  /** Nothing below the fold to show (location off, no saved stop): no "Show list" chevron. "Show map" stays. */
+  noList?: boolean;
   ariaLabel: string;
 }
 
 /** C.7 */
 export interface SheetHeaderProps {
   title: string;
+  /** Small grey line above the title, part of the heading: "Stops near" over a place name, so the name alone gets the title line. */
+  overline?: string;
   titleAlign?: "start" | "center";
   /** "stop" is the 20sp Bold stop title (the default when centred); "title" the 22sp Regular sheet title. */
   titleSize?: "title" | "stop";
@@ -264,7 +270,8 @@ export type OverlayItem =
 /** C.12 sheet banner row. */
 export type SheetBannerProps =
   | { kind: "trip-planned"; place: string; leaveAt: string; onOpen: () => void; onClear: () => void }
-  | { kind: "location-off"; reason: "denied" | "unavailable"; blocked?: boolean; onTurnOn: () => void; onSearch: () => void }
+  /** `compact`: one row, "Location is off · Turn on", for when a saved stop is shown above it. */
+  | { kind: "location-off"; reason: "denied" | "unavailable"; blocked?: boolean; compact?: boolean; onTurnOn: () => void; onSearch: () => void }
   | { kind: "demo"; text: string };
 
 /** C.13 */

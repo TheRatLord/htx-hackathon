@@ -92,10 +92,9 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   setHighlightedStop(map, highlight?.id);
   // Walks and itineraries draw only their own stops: other pins, ID chips and TCs are noise there.
   setQuiet(map, Boolean(scene.legs?.length));
-  // On a walk or trip the callout names the stop's street ("M L King Blvd", short enough to stay on
-  // screen beside the FABs); elsewhere (the stop sheet) it marks which pin is the stop, as today's
-  // "Stop: 342" does.
-  const callout = !highlight ? "" : scene.legs?.length ? highlight.name.split(" @ ")[0] : t("map.stopCallout", { id: highlight.id });
+  // The callout says "Stop 342" on every screen (stop sheet, walk, trip), the number riders match to
+  // the sign and to the stop sheet's title, as today's "Stop: 342" does.
+  const callout = highlight ? t("map.stopCallout", { id: highlight.id }) : "";
   drawScene(map, scene, highlight, callout);
 
   const f = scene.focus;

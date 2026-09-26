@@ -11,8 +11,8 @@ const MAX_MINUTES = 20;
 
 /**
  * C.5a: "🚶 1 min walk" on one line, at the end of a stop card's side-of-street line. Opens Walk
- * (D8). From a place (D4) the visible text stays "4 min walk" (the title says where from); the
- * accessible name says it.
+ * (D8). From a place (D4) the text says where from, "4 min walk from the museum" (`walkFrom.label`),
+ * so a visitor doesn't read it as a walk from where they stand; the accessible name uses the full name.
  */
 export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }: WalkButtonProps) {
   const t = useT();
@@ -27,9 +27,9 @@ export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }:
   else if (walkFrom) label = t("card.walkFromA11y", { from: walkFrom.name ?? walkFrom.label, id: stopId, count: min });
   else label = t("card.walkA11y", { id: stopId, count: min });
   return (
-    <button type="button" className={styles.walk} aria-label={label} onClick={onPress}>
+    <button type="button" className={`${styles.walk} ${walkFrom ? styles.from : ""}`} aria-label={label} onClick={onPress}>
       <Icon name="directions_walk" size={20} />
-      <span className={styles.value}>{t("card.walkPill", { value })}</span>
+      <span className={styles.value}>{walkFrom ? t("card.walkFromPill", { value, from: walkFrom.label }) : t("card.walkPill", { value })}</span>
     </button>
   );
 }

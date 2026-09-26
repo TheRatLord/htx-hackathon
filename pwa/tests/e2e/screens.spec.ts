@@ -9,7 +9,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { GPS, launch, ONBOARDED, SAVED_2958, settle, type Gps } from "./helpers.ts";
 
 const OUT = process.env.SHOTS_DIR ?? resolve(import.meta.dirname, "../../../ux-audit/redesign/round2");
-const NOW_FILE = resolve(import.meta.dirname, ".results/now.txt");
+// The API server's clock file (playwright.config.ts): one per API port.
+const NOW_FILE = resolve(import.meta.dirname, `.results/now-${process.env.API_PORT ?? 8787}.txt`);
 mkdirSync(OUT, { recursive: true });
 
 const ES = { "ridemetro.prefs": { welcomed: true, lang: "es", textSize: "standard", walkPace: "normal" } };

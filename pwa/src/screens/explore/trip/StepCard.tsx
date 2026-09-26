@@ -94,20 +94,16 @@ function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const route = toRouteRef(ride.route);
   const side = shortSide(ride.board, lang);
   const id = ride.board.id ?? "";
+  const time = formatClock(ride.departureTime, lang).replace(" ", "\u00a0");
+  const planned = strip.length > 1 ? t("trip.wait.plannedFirst", { route: ride.route.name, time }) : t("trip.wait.planned", { time });
   return (
     <>
       <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
       {ride.board.bay && <BayTag bay={ride.board.bay} />}
       <div className={styles.bleed}>
-        <LiveStrip deps={strip} />
+        {/* Which of the strip's times is the planned bus, said inside the strip ("10:40 PM" on one line). */}
+        <LiveStrip deps={strip} caption={matched ? undefined : planned} />
       </div>
-      {!matched &&
-        (strip.length > 1 ? (
-          <p className={styles.variant}>{t("trip.wait.plannedFirst", { route: ride.route.name, time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0") })}</p>
-        ) : (
-          // "Scheduled 12:15 PM": the strip's one time, said as a clock time once ("10:40 PM" on one line).
-          <p className={styles.variant}>{t("trip.wait.planned", { time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0") })}</p>
-        ))}
       <p className={`${styles.board} ${styles.withChip}`}>
         {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <RouteBadge route={route} size="sm" /> <strong>{ride.headsign.toUpperCase()}</strong>
       </p>

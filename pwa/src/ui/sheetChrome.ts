@@ -13,7 +13,8 @@ export interface SheetToggle {
 
 export interface SheetChrome {
   onBack?: () => void;
-  toggle: SheetToggle;
+  /** Absent when the sheet has nothing to expand to (BottomSheet `noList`). */
+  toggle?: SheetToggle;
   /** A SheetHeader in the sheet calls this on mount; the sheet then drops its own button row. */
   host: () => () => void;
 }

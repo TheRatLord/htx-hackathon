@@ -44,7 +44,11 @@ const SECTION_LABEL: Record<SearchSection["kind"], string> = {
 type Located = SearchResult & { lat: number; lon: number };
 /** Places come with coordinates; one that doesn't can't be shown on the map or routed to, so it is left out. */
 const located = (r: SearchResult): r is Located => r.lat !== undefined && r.lon !== undefined;
-const atUrl = (r: Located) => `/explore?at=${formatLatLon(r)}&label=${encodeURIComponent(r.title)}`;
+/** A landmark's category ("Museum · 5555 Hermann Park Dr" → museum) lets D4 say "walk from the museum". */
+const atUrl = (r: Located) => {
+  const kind = r.type === "landmark" ? r.subtitle.split(" · ")[0]?.toLowerCase() : undefined;
+  return `/explore?at=${formatLatLon(r)}&label=${encodeURIComponent(r.title)}${kind ? `&kind=${encodeURIComponent(kind)}` : ""}`;
+};
 
 export default function Search() {
   const t = useT();

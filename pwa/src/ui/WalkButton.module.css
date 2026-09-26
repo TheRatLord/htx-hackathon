@@ -22,3 +22,16 @@
   font-weight: var(--fw-bold);
   white-space: nowrap;
 }
+
+/* "4 min walk from the medical center" may not fit one line at 360 or Extra large: it wraps inside
+   the pill instead of pushing past the card. */
+.from {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: start;
+}
+
+.from .value {
+  white-space: normal;
+  text-wrap: balance;
+}

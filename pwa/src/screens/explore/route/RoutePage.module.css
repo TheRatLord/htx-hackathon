@@ -85,7 +85,7 @@
   flex: none;
   align-items: center;
   gap: var(--sp-1);
-  min-height: 40px;
+  min-height: var(--touch-min);
   padding: 0 var(--sp-3) 0 var(--sp-2);
   border: none;
   border-radius: var(--r-pill, 999px);

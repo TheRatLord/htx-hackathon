@@ -11,7 +11,8 @@ import { defineConfig, devices } from "@playwright/test";
 const apiPort = Number(process.env.API_PORT ?? 8787);
 const webPort = Number(process.env.WEB_PORT ?? 5173);
 const e2eNow = process.env.E2E_NOW ?? "2026-09-25T12:00:00-05:00"; // a Friday, weekday service
-const NOW_FILE = resolve(import.meta.dirname, "tests/e2e/.results/now.txt");
+// One clock file per API port: a late-night shot run on one port doesn't move another run's clock.
+const NOW_FILE = resolve(import.meta.dirname, `tests/e2e/.results/now-${apiPort}.txt`);
 
 export default defineConfig({
   testDir: "tests/e2e",

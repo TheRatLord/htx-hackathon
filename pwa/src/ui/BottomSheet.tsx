@@ -32,6 +32,7 @@ export function BottomSheet({
   footer,
   children,
   allowPeek = true,
+  noList = false,
   ariaLabel,
   ref,
 }: BottomSheetProps & { ref?: Ref<HTMLElement> }) {
@@ -85,10 +86,12 @@ export function BottomSheet({
 
   const expanded = snap === "full";
   const toPeek = snap === "half" && Boolean(peek) && allowPeek;
-  const toggle: SheetToggle =
+  const toggle: SheetToggle | undefined =
     expanded || toPeek
       ? { label: t("common.showMap"), icon: "expand_more", expanded, onPress: () => onSnapChange(expanded ? "half" : "peek") }
-      : { label: t("common.showList"), icon: "expand_less", expanded, onPress: () => onSnapChange(snap === "peek" ? "half" : "full") };
+      : noList && snap === "half"
+        ? undefined
+        : { label: t("common.showList"), icon: "expand_less", expanded, onPress: () => onSnapChange(snap === "peek" ? "half" : "full") };
   const [hosts, setHosts] = useState(0);
   const host = useCallback(() => {
     setHosts((n) => n + 1);
@@ -113,10 +116,12 @@ export function BottomSheet({
             ) : (
               <span />
             )}
-            <button type="button" className={styles.textButton} aria-expanded={toggle.expanded} onClick={toggle.onPress}>
-              {toggle.label}
-              <Icon name={toggle.icon} />
-            </button>
+            {toggle && (
+              <button type="button" className={styles.textButton} aria-expanded={toggle.expanded} onClick={toggle.onPress}>
+                {toggle.label}
+                <Icon name={toggle.icon} />
+              </button>
+            )}
           </>
         )}
       </div>
