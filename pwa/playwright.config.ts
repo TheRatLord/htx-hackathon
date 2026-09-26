@@ -2,8 +2,11 @@
 //   npm run test:e2e                      # all flows and rubric checks
 //   npm run test:e2e -- screens.spec.ts   # the screenshot set only (SHOTS_DIR overrides where it goes)
 // Starts its own API (Set S: OFFLINE=1, DEMO_REALTIME=0) and Vite dev server on API_PORT / WEB_PORT
-// (default 8787 / 5173), or reuses ones already running there. The API clock is shifted to a
-// weekday noon (E2E_NOW) so scheduled times exist; the browser clock is synced to it per test.
+// (default 8787 / 5173), or reuses ones already running there. The API clock is frozen at a
+// weekday noon (E2E_NOW, E2E_FREEZE=1; E2E_FREEZE=0 lets it run on from there) so scheduled times
+// exist and every test and screenshot sees the same "now"; the browser clock is fixed to it per test
+// (helpers.ts launch). A reused server must have been started the same way (fake-now.mjs), or the
+// screenshot set refuses to run (screens.spec.ts checks the API's clock first).
 
 import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
@@ -11,6 +14,7 @@ import { defineConfig, devices } from "@playwright/test";
 const apiPort = Number(process.env.API_PORT ?? 8787);
 const webPort = Number(process.env.WEB_PORT ?? 5173);
 const e2eNow = process.env.E2E_NOW ?? "2026-09-25T12:00:00-05:00"; // a Friday, weekday service
+const e2eFreeze = process.env.E2E_FREEZE ?? "1";
 // One clock file per API port: a late-night shot run on one port doesn't move another run's clock.
 const NOW_FILE = resolve(import.meta.dirname, `tests/e2e/.results/now-${apiPort}.txt`);
 
@@ -44,7 +48,7 @@ export default defineConfig({
       url: `http://localhost:${apiPort}/api/health`,
       reuseExistingServer: true,
       timeout: 60_000,
-      env: { PORT: String(apiPort), OFFLINE: "1", DEMO_REALTIME: "0", E2E_NOW: e2eNow, E2E_NOW_FILE: NOW_FILE },
+      env: { PORT: String(apiPort), OFFLINE: "1", DEMO_REALTIME: "0", E2E_NOW: e2eNow, E2E_FREEZE: e2eFreeze, E2E_NOW_FILE: NOW_FILE },
     },
     {
       command: `npx vite --port ${webPort} --strictPort`,
