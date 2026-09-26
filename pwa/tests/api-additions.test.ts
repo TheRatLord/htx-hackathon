@@ -61,6 +61,7 @@ describe("3. transit center window", () => {
   it("returns windowEnd and a departure for every bay with a trip in the window", async () => {
     const tc = await getTransitCenterDetail("northwest-transit-center", NOW);
     expect(tc.windowEnd).not.toBeNull();
+    expect(tc.platforms.find((p) => p.stopId === "79")?.name).toBe("Northwest Transit Center - Platform 2");
     for (const bay of tc.bays) {
       const { arrivals } = await getArrivals(bay.stopId, { limit: 1000, horizonMin: 90, now: NOW });
       if (arrivals.some((a) => a.bay === bay.bay)) expect(bay.departures.length).toBeGreaterThan(0);
@@ -112,6 +113,8 @@ describe("6. route next departures", () => {
     const r = await getRouteNext("82", 0, NOW);
     expect(r.stops).toHaveLength(101);
     expect(r.stops.some((s) => s.next)).toBe(true);
+    expect(r.stops.every((s) => !s.then || (s.next && s.then.departureTime >= s.next.departureTime))).toBe(true);
+    expect(r.stops.some((s) => s.then)).toBe(true);
   });
 
   it("is cached for a minute and validates dir", async () => {

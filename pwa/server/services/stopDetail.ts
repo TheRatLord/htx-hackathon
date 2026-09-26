@@ -67,6 +67,9 @@ export async function getTransitCenterDetail(id: string, now = Date.now()) {
       departures: departures.filter((d) => d.stopId === b.stopId && d.bay === b.bay).slice(0, 4),
     })),
     unassignedDepartures: departures.filter((d) => !d.bay).slice(0, 10),
+    // Platform names for the bay diagram ("Northwest Transit Center - Platform 2"), so a cold
+    // visit needs no stops.json.
+    platforms: tc.stopIds.map((stopId) => ({ stopId, name: findStop(stopId)?.name ?? null })),
     windowEnd: departures.length ? new Date(lastMs).toISOString() : null,
     source: tc.source,
     realtimeSources: results[0]?.realtimeSources ?? [],

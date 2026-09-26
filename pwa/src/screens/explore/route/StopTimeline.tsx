@@ -42,7 +42,7 @@ interface StopTimelineProps {
 
 export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, nearestId, scrollToId, topInset, vehiclesAt, onToggle }: StopTimelineProps) {
   const next = useRouteNext(routeId, Number(directionKey) as 0 | 1);
-  const nextBy = new Map(next.data?.stops.map((s) => [s.stopId, s.next?.departureTime]));
+  const nextBy = new Map(next.data?.stops.map((s) => [s.stopId, [s.next, s.then].flatMap((d) => (d ? [d.departureTime] : []))]));
   const list = useRef<HTMLOListElement>(null);
   // Only the first target of each direction scrolls; later taps expand in place.
   const initial = useRef<{ directionKey: string; stopId: string } | null>(null);
@@ -84,7 +84,7 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
           routeId={routeId}
           rail={rail}
           stop={stop}
-          next={nextBy.get(stop.id)}
+          next={nextBy.get(stop.id) ?? []}
           loading={next.isPending}
           expanded={stop.id === expandedId}
           nearest={stop.id === nearestId}
@@ -100,7 +100,8 @@ interface StopRowProps {
   routeId: string;
   rail: boolean;
   stop: RouteStop;
-  next?: string;
+  /** The next two scheduled departures. */
+  next: string[];
   loading: boolean;
   expanded: boolean;
   nearest: boolean;
@@ -111,10 +112,10 @@ interface StopRowProps {
 function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicle, onToggle }: StopRowProps) {
   const t = useT();
   const now = useNow();
-  const nextDep = next ? upcoming([scheduledDep(next)], now)[0] : undefined;
-  // A scheduled time never says "Now" (C.2), so a trip due this minute would show as a clock time
-  // among minutes. The column shows only trips a minute or more away (requests.md: two per stop).
-  const dueNow = nextDep !== undefined && Date.parse(nextDep.departureTime) - now < 60_000;
+  const deps = upcoming(next.map(scheduledDep), now);
+  // A scheduled time never says "Now" (C.2), so a trip due this minute gives way to the one after it.
+  const shown = deps.find((d) => Date.parse(d.departureTime) - now >= 60_000);
+  const dueNow = !shown && deps.length > 0;
   const stale = vehicle && vehicle.ageSeconds > STALE_VEHICLE_S;
   return (
     <li className={styles.stop} data-stop={stop.id} data-expanded={expanded}>
@@ -139,8 +140,8 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
         {/* Expanded, the live strip below is the one answer for this stop. */}
         {!expanded && (
           <span className={styles.next}>
-            {nextDep && !dueNow ? (
-              <TimeValue dep={nextDep} size="body" />
+            {shown ? (
+              <TimeValue dep={shown} size="body" />
             ) : (
               <>
                 <span aria-hidden="true">{t("route.noNext")}</span>
@@ -150,7 +151,7 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
           </span>
         )}
       </button>
-      {expanded && <ExpandedStop routeId={routeId} stop={stop} scheduled={nextDep} />}
+      {expanded && <ExpandedStop routeId={routeId} stop={stop} scheduled={deps[0]} />}
     </li>
   );
 }

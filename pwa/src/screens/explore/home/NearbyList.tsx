@@ -1,4 +1,4 @@
-import { Fragment, useMemo, type RefObject } from "react";
+import { Fragment, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useNearby } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -13,7 +13,6 @@ import type { Place } from "./anchor.ts";
 import styles from "./Home.module.css";
 import { NearbyCard } from "./NearbyCard.tsx";
 import { NearbyTcCard } from "./NearbyTcCard.tsx";
-import { withPlausibleWalks } from "../walk/plausible.ts";
 
 const MAX_CARDS = 8;
 const FAR_RADIUS_M = 2000;
@@ -45,7 +44,7 @@ function FarStops({ origin, place }: { origin: LatLon; place?: Place }) {
   const t = useT();
   const navigate = useNavigate();
   const far = useNearby(origin, { radius: FAR_RADIUS_M, precise: true });
-  const data = useMemo(() => far.data && withPlausibleWalks(far.data, origin), [far.data, origin]);
+  const data = far.data;
   return (
     <>
       <p className={styles.notice}>{t("home.noneWithin")}</p>
@@ -59,7 +58,6 @@ function FarStops({ origin, place }: { origin: LatLon; place?: Place }) {
 
 interface NearbyListProps {
   nearby: ReturnType<typeof useNearby>;
-  /** `nearby.data` with implausible walks replaced (walk/plausible.ts). */
   data?: NearbyResponse;
   origin: LatLon;
   place?: Place;

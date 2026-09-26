@@ -105,6 +105,8 @@ async function applyMetroArrivals(stopId: string, items: Working[], routeId?: st
       // e.g. a trip from yesterday's service day running past midnight
       w = { tripIdx, scheduledMs: Date.parse(a.ScheduledTime), predictedMs: 0, isRealtime: false, source: "schedule", canceled: false };
       extra.push(w);
+      // The feed can list one trip twice; both entries update this one departure.
+      byTrip.set(g.meta.trips.ids[tripIdx], w);
     }
     w.bay = parseODataStopId(a.StopId).bay ?? w.bay;
     w.canceled ||= a.IsCanceled;

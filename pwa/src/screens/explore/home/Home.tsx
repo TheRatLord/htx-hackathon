@@ -1,7 +1,7 @@
 // Explore home (G.3 `/explore`): Nearby (D2), Route near you (D3, `?route=`) and Stops near a
 // place (D4, `?at=&label=`). One sheet: title row, one banner, the route chips, then the list.
 
-import { useMemo, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useAlerts, useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -32,7 +32,6 @@ import { RouteChips } from "./RouteChips.tsx";
 import { RouteNearYou } from "./RouteNearYou.tsx";
 import { SavedRow } from "./SavedRow.tsx";
 import { useHalfUpTo } from "./useHalfUpTo.ts";
-import { withPlausibleWalks } from "../walk/plausible.ts";
 
 /** Panning further than this from the list's anchor offers "Search this area" (C.16). */
 const SEARCH_AREA_M = 300;
@@ -147,7 +146,7 @@ export default function Home() {
   const origin = anchor.kind === "place" || anchor.kind === "user" ? anchor.point : undefined;
   const place: Place | undefined = anchor.kind === "place" ? { param: anchor.param, name: anchor.label, short: t("home.walkFromThere") } : undefined;
   const nearby = useNearby(origin, { precise: true });
-  const data = useMemo(() => (nearby.data && origin ? withPlausibleWalks(nearby.data, origin) : undefined), [nearby.data, origin]);
+  const data = origin ? nearby.data : undefined;
   const banner = useSheetBanner(anchor, data);
 
   const panned = Boolean(!routeId && origin && center && haversineM(origin.lat, origin.lon, center.lat, center.lon) > SEARCH_AREA_M);

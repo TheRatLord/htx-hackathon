@@ -2,7 +2,7 @@
 // plain-English steps with US units.
 
 import type { LatLon } from "../../shared/types.ts";
-import { WALK_DETOUR_FACTOR, WALK_SPEED_MPS } from "../../shared/walk.ts";
+import { implausibleWalk, WALK_DETOUR_FACTOR, WALK_SPEED_MPS } from "../../shared/walk.ts";
 import { TtlCache } from "../lib/cache.ts";
 import { compass8, formatDistance, haversineM, type Compass8 } from "../lib/geo.ts";
 import { fetchUpstream } from "../lib/upstream.ts";
@@ -69,6 +69,7 @@ export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestinatio
       });
       const route = body.routes?.[0];
       if (body.code !== "Ok" || !route) throw new Error(`no walking route (${body.code})`);
+      if (implausibleWalk(haversineM(from.lat, from.lon, to.lat, to.lon), route.distance)) throw new Error("the street route is implausibly long");
       return {
         source: "osrm",
         ...durations(route.distance, route.duration),

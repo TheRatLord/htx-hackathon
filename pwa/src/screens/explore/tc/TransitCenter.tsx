@@ -29,7 +29,6 @@ import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
 import { useDirectionWord } from "../route/useDirectionWord.ts";
 import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
-import { usePlatformNames } from "./usePlatformNames.ts";
 
 /** Past this the meta line gives only the distance, like the WalkButton (C.5a). */
 const MAX_WALK_MIN = 20;
@@ -78,7 +77,6 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   const now = useNow();
   const { fix } = useLocation();
   const { walkPace } = usePrefs();
-  const names = usePlatformNames();
   const [params, setParams] = useSearchParams();
   // A tapped bay tile whose group isn't on screen yet (the route filter is being cleared).
   const [pendingBay, setPendingBay] = useState<string>();
@@ -106,6 +104,7 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
       { replace: true },
     );
 
+  const names = new Map(tc.platforms.flatMap((p) => (p.name ? [[p.stopId, p.name] as const] : [])));
   const platforms = platformsOf(tc, names);
   const platformName = (stopId: string) => {
     const name = names.get(stopId);
