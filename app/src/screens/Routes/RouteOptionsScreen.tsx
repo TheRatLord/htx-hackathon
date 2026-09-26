@@ -164,6 +164,9 @@ function RouteOptions({
     cardRefs.current.forEach((el, id) => tops.set(id, el.getBoundingClientRect().top));
     prevTops.current = tops;
     setSort(next);
+    // Picking a sort is picking what matters most, so select the new top option.
+    const top = sortRoutes(options, next)[0];
+    if (top) setSelectedId(top.id);
   };
   useLayoutEffect(() => {
     const before = prevTops.current;

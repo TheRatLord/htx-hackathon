@@ -51,23 +51,26 @@ test.describe('smoke at 390x844', () => {
     await expect(page.locator('.route-pin')).toHaveCount(3);
     await page.getByRole('radio', { name: 'Least walking' }).click();
     await page.getByRole('radio', { name: 'Fastest' }).click();
-    await page.locator('.route-pin', { hasText: 'C' }).click();
-    await expect(page.getByRole('button', { name: /start trip.*route c/i })).toBeVisible();
+    // Route C is already a saved sample trip, so pick B by its map badge.
+    await page.locator('.route-pin', { hasText: 'B' }).click();
+    await expect(page.getByRole('button', { name: /start trip.*route b/i })).toBeVisible();
     await page.getByRole('button', { name: /start trip/i }).click();
-    await expect(page).toHaveURL(/#\/trip\/houston-zoo\/C/);
+    await expect(page).toHaveURL(/#\/trip\/houston-zoo\/B/);
 
     // Trip: save and end.
     await page.getByRole('button', { name: /save trip/i }).click();
-    await expect(page.getByRole('button', { name: /saved/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /^saved$/i })).toBeVisible();
     await page.getByRole('button', { name: /end trip/i }).click();
+    await expect(page).toHaveURL(/#\/$/);
+    // The saved trip now shows on Recent.
+    await page.getByRole('button', { name: 'Recent' }).click();
+    await expect(page.getByText('Route 25 · 25 min')).toBeVisible();
 
     // Tabs.
     await page.goto('/#/fares');
     await settle(page, 300);
     await page.getByRole('button', { name: /enlarge code/i }).click();
     await expect(page.getByRole('button', { name: /shrink code/i })).toBeVisible();
-    await page.getByRole('button', { name: 'Recent' }).click();
-    await expect(page).toHaveURL(/#\/recent/);
     await page.getByRole('button', { name: 'More' }).click();
     await expect(page).toHaveURL(/#\/more/);
 

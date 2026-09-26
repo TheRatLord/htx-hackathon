@@ -56,7 +56,7 @@ describe('RouteOptionsScreen', () => {
     expect(getScene().fit?.length).toBeGreaterThan(3);
   });
 
-  it('sorts Fastest as A, B, C and Least walking as B, A, C, keeping the selection', async () => {
+  it('sorts Fastest as A, B, C and Least walking as B, A, C, selecting the new top option', async () => {
     const { user } = setup();
     await finishLoading();
     expect(cardOrder()).toEqual(['A', 'B', 'C']);
@@ -64,7 +64,11 @@ describe('RouteOptionsScreen', () => {
 
     await user.click(screen.getByRole('radio', { name: 'Least walking' }));
     expect(cardOrder()).toEqual(['B', 'A', 'C']);
-    expect(screen.getByRole('button', { name: /^route a:/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^route b:/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Start trip · Route B' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Fastest' }));
+    expect(cardOrder()).toEqual(['A', 'B', 'C']);
     expect(screen.getByRole('button', { name: 'Start trip · Route A' })).toBeInTheDocument();
   });
 
