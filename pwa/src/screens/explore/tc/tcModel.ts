@@ -26,6 +26,27 @@ export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoute
   return [...refs.values()].sort((a, b) => compareRouteNames(a.name, b.name));
 }
 
+/**
+ * The center's routes with the ones leaving soonest first (then the rest in number order), so the
+ * chips name the routes the departures list shows first. `first` (a chosen route) leads.
+ */
+export function routesByNextDeparture(
+  tc: Pick<TransitCenterDetail, "bays" | "unassignedRoutes" | "unassignedDepartures">,
+  now: number,
+  first?: string,
+): RouteRef[] {
+  const soonest = new Map<string, number>();
+  for (const d of upcoming([...tc.bays.flatMap((b) => b.departures), ...tc.unassignedDepartures], now)) {
+    const id = canonicalRouteId(d.routeId);
+    const ms = Date.parse(d.departureTime);
+    if (!(ms >= (soonest.get(id) ?? Infinity))) soonest.set(id, ms);
+  }
+  const lead = first && canonicalRouteId(first);
+  const at = (r: RouteRef) => (r.id === lead ? -Infinity : (soonest.get(r.id) ?? Infinity));
+  // Array.sort is stable: routes with no departure keep tcRoutes' number order.
+  return tcRoutes(tc).sort((a, b) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1));
+}
+
 export const servesRoute = (bay: Pick<Bay, "routes">, routeId: string) =>
   bay.routes.some((r) => canonicalRouteId(r.routeId) === canonicalRouteId(routeId));
 

@@ -160,3 +160,43 @@
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
 }
+
+/* "WESTBOUND to WEST BELT" over the chosen route's strip, as on every departure row. */
+.bannerHeadsign {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+}
+
+/* One platform's bays under its name, said once ("Platform 1"), not on every bay header. */
+.platform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.platformTitle {
+  padding: var(--sp-3) var(--gutter) 0;
+  border-top: 2px solid var(--c-divider);
+  color: var(--c-brand-navy);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.list > .platform:first-child .platformTitle {
+  padding-top: 0;
+  border-top: none;
+}
+
+.platformTitle + .bay .bayTitle,
+.platform:first-child > .bay:first-child .bayTitle {
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Bay headers under a platform are h4s, which the base reset doesn't cover. */
+.platform .bayTitle {
+  margin-top: 0;
+}

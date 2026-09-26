@@ -150,23 +150,22 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
   const stale = vehicle && vehicle.ageSeconds > STALE_VEHICLE_S;
   return (
     <li className={styles.stop} data-stop={stop.id} data-expanded={expanded}>
-      {vehicle && (
-        <>
-          <span className={`${styles.bus} ${stale ? styles.busStale : ""}`} aria-hidden="true">
+      {/* The bus between the stop above and this one, said in words on its own line: the next-bus times
+          restart here ("7 min" above, "1 min" below), and an unlabelled glyph read as a data error. */}
+      {(vehicle || scheduledBus) && (
+        <p className={styles.busMark}>
+          <span className={`${styles.bus} ${!vehicle ? styles.busScheduled : stale ? styles.busStale : ""}`} aria-hidden="true">
             <Icon name={rail ? "tram" : "directions_bus"} size={14} />
           </span>
+          <span aria-hidden="true">{t(vehicle ? (rail ? "route.trainHere" : "route.busHere") : rail ? "route.trainHereScheduled" : "route.busHereScheduled")}</span>
           <span className="visually-hidden">
-            {stale ? t("route.vehicleOld", { n: ageMinutes(now - vehicle.ageSeconds * 1000, now) }) : t(rail ? "route.trainComing" : "route.busComing")}
+            {vehicle
+              ? stale
+                ? t("route.vehicleOld", { n: ageMinutes(now - vehicle.ageSeconds * 1000, now) })
+                : t(rail ? "route.trainComing" : "route.busComing")
+              : t(rail ? "route.trainScheduled" : "route.busScheduled")}
           </span>
-        </>
-      )}
-      {!vehicle && scheduledBus && (
-        <>
-          <span className={`${styles.bus} ${styles.busScheduled}`} aria-hidden="true">
-            <Icon name={rail ? "tram" : "directions_bus"} size={14} />
-          </span>
-          <span className="visually-hidden">{t(rail ? "route.trainScheduled" : "route.busScheduled")}</span>
-        </>
+        </p>
       )}
       <button type="button" className={styles.stopButton} aria-expanded={expanded} onClick={onToggle}>
         {nearest ? (
@@ -177,7 +176,7 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
           <span className={`${styles.node} ${expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
         )}
         <span className={styles.stopText}>
-          <StopName name={stop.name} id={stop.id} sameStreet={sameStreet && !expanded && !nearest} />
+          <StopName name={stop.name} id={stop.id} showStreet={!sameStreet || expanded} />
           {nearest && <NearestLine stop={stop} />}
         </span>
         {/* Expanded, the live strip below is the one answer for this stop. */}
@@ -200,24 +199,30 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
 }
 
 /**
- * "Westheimer Rd @ Mandell St (2953)". The cross street and number never break apart, so a narrow row
- * wraps after "@" ("Westheimer Rd @" / "Mandell St (2953)"). On a run of stops along one street, the
- * street is said once (on the first stop of the run) and the rows under it show only the cross street
- * ("Mandell St (2953)"); screen readers still hear the whole name. The open row and the nearest row
- * always show the whole name.
+ * One name form in every row, open or closed: the cross street and number in bold ("Mandell St (2953)"),
+ * which never break apart. The street the bus runs along goes on a grey line under it on the first
+ * stop of a run along that street and on the open row, so a tap never renames the row under the
+ * rider's finger. Screen readers hear the whole name first ("Westheimer Rd @ Mandell St (2953)").
  */
-function StopName({ name, id, sameStreet }: { name: string; id: string; sameStreet: boolean }) {
+function StopName({ name, id, showStreet }: { name: string; id: string; showStreet: boolean }) {
   const street = onStreet(name);
   const cross = street ? name.slice(street.length + 3) : name;
   return (
-    <span className={styles.stopName}>
-      {street && <span className={sameStreet ? "visually-hidden" : undefined}>{street} @ </span>}
-      <span className={styles.cross}>
-        {cross}
-        {"\u00a0"}
-        <span className={styles.stopId}>({id})</span>
+    <>
+      <span className={styles.stopName}>
+        {street && <span className="visually-hidden">{street} @ </span>}
+        <span className={styles.cross}>
+          {cross}
+          {"\u00a0"}
+          <span className={styles.stopId}>({id})</span>
+        </span>
       </span>
-    </span>
+      {street && showStreet && (
+        <span className={styles.street} aria-hidden="true">
+          {street}
+        </span>
+      )}
+    </>
   );
 }
 

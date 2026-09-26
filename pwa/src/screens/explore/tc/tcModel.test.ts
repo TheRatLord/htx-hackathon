@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Arrival, ClientRoute } from "../../../api/types.ts";
 import { primeRoutes } from "../../../lib/routes.ts";
-import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes } from "./tcModel.ts";
+import { departureRows, foldQuietBays, platformsOf, routesByNextDeparture, servesRoute, tcRoutes } from "./tcModel.ts";
 
 const route = (id: string, displayName: string): ClientRoute => ({
   id,
@@ -49,6 +49,26 @@ beforeAll(() => primeRoutes([route("058", "58"), route("066", "66"), route("085"
 describe("tcRoutes", () => {
   it("lists bay and unassigned routes in number order, dropping unknown names", () => {
     expect(tcRoutes(tc).map((r) => r.name)).toEqual(["58", "66", "85", "219"]);
+  });
+});
+
+describe("routesByNextDeparture", () => {
+  const now = Date.parse("2026-01-01T18:00:00Z");
+  const dep = (routeId: string, time: string) => ({ ...arrival(routeId, "X", time), stopId: "79" });
+  const withDeps = {
+    ...tc,
+    bays: [
+      { ...tc.bays[0], departures: [dep("058", "2026-01-01T18:40:00Z")] },
+      tc.bays[1],
+      { ...tc.bays[2], departures: [dep("085", "2026-01-01T18:05:00Z")] },
+    ],
+    unassignedDepartures: [dep("219", "2026-01-01T18:20:00Z")],
+  };
+  it("puts the routes leaving soonest first, then the rest in number order", () => {
+    expect(routesByNextDeparture(withDeps, now).map((r) => r.name)).toEqual(["85", "219", "58", "66"]);
+  });
+  it("leads with a chosen route", () => {
+    expect(routesByNextDeparture(withDeps, now, "66").map((r) => r.name)).toEqual(["66", "85", "219", "58"]);
   });
 });
 
