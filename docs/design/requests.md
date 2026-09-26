@@ -85,7 +85,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
     restored entries are garbage-collected after 5 min).
   - Until this lands, D22 (offline cache) is not met, and the manifest exists twice: the inline
     one in `vite.config.ts` lacks `includeAssets`, `orientation` and `description`.
-- Status: open (blocks D22)
+- Status: done (34fb41e)
 
 ## Favicon and home-screen icon links
 - From: F0b
@@ -93,7 +93,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: `<link rel="icon" href="/brand/icon.svg" type="image/svg+xml" />` and
   `<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />` in `<head>` (both files are
   in `public/brand/`).
-- Status: open
+- Status: done (34fb41e)
 
 ## OSRM routes the F4 GPS through the downtown tunnels (1.1 km for a 35 m walk)
 - From: F0b (fixture recording)
@@ -104,7 +104,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   than 3× the straight line plus 150 m, return the straight-line estimate (with its "Street
   directions unavailable" warning) instead. Meanwhile `record-fixtures.ts` drops any recorded
   walk over that limit, so the offline run uses the estimate (246 · 1 min, 342 · 2 min).
-- Status: open
+- Status: done (cecb86b): the server rejects a routed walk longer than 3x the straight line + 150 m (`implausibleWalk` in shared/walk.ts) and falls back to the straight line
 
 ## Vehicle age in the map scene
 - From: F0b
@@ -113,7 +113,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   carry no age, so the map can't grey them. An optional `ageSeconds?: number` per vehicle (C/A
   pass `Vehicle.ageSeconds`) would let MapView switch to a grey icon; screens can already put
   "Last seen 3 min ago" in `label`. Not changed here because it alters an exported type.
-- Status: open
+- Status: done (21ce4f6): `vehicles[].ageSeconds`, grey past 120 s
 
 ## F11: the real street walk from the museum puts 688 second
 - From: F0b (fixture recording)
@@ -123,7 +123,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   (29.7220,-95.3897) say 688 is 345 m (5 min) and 2504 is 331 m (4 min), so with recorded walks
   2504 sorts first. The recordings are not committed, so the demo matches the spec; the spec
   owner should decide whether F11 names 688 at 4 min (estimate) or 2504 (street route).
-- Status: open
+- Status: declined: a spec copy decision (688 vs 2504) for the lead, not a shared-code change
 
 ## Map attribution sits top-left, not bottom-left (C.16)
 - From: F0b (review defect 6)
@@ -133,7 +133,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   the camera's top padding, where focused pins are never drawn. While an offline or trip banner
   fills the overlay slot it covers the (i); the credit returns when the banner goes. Please
   update C.16 to match.
-- Status: open
+- Status: declined: kept top-left so it clears the sheet at every snap; the spec text needs updating
 
 ## A shorter "walk from" sub-label for D4
 - From: F0b (review defect 20)
@@ -143,6 +143,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   e.g. `walkFrom.label` = "from museum" and `card.walkFrom` = "{from}" (the a11y label already
   says "Walk from Houston Museum of Natural Science …"). Spec D4 names the current wording, so
   this is a copy decision for the spec owner.
+- Status: declined: copy decision, left to the spec
 
 ## OSRM walks through the downtown tunnel network
 - From: A (D2, D3, D8; flows F1, F4, F10)
@@ -154,7 +155,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   /tunnel/i or its distance is more than ~2.5× the straight line. Offline fixtures are unaffected.
   Meanwhile module A treats an OSRM distance over max(3× the estimate, estimate + 400 m) as unknown
   (`screens/explore/walk/plausible.ts`): /nearby's distance and D8's walk fall back to the estimate.
-- Status: open
+- Status: done (cecb86b), same fix as the F4 entry
 
 ## sortRouteChips should compare walk minutes, not metres
 - From: A (D2 item 4, F1)
@@ -164,7 +165,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   40 (177 m) and [40] is 7th. Suggest `sortRouteChips(stops, tcs, bucket?: (m: number) => number)`.
   Until then `screens/explore/home/chips.ts` has its own comparator (walk minutes, then rail, then
   `compareRouteNames`); replace it with one call once the helper takes a bucket.
-- Status: open
+- Status: done (5665a6e)
 
 ## RouteDirectionCard shows nothing when a direction has no departure
 - From: A (D3, late night / F7 at night)
@@ -174,7 +175,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   (a `loaded` or `noServiceText` prop). Until then `home/DirectionCard.tsx` joins that line under
   the card. For the TC variant the window is the TC detail's 90 min (`windowEnd`), so its wording
   should say so rather than "2 hours".
-- Status: open
+- Status: done (5665a6e): `noServiceText`
 
 ## `enabled` and `refetchInterval` options on useStop, useRoute, useTransitCenter
 - From: A (D2 TC card, saved row, D3 cards, D6)
@@ -184,7 +185,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   home/SavedRow.tsx, `CardWithDetail` in home/DirectionCard.tsx). An `enabled` flag would allow plain hooks.
   `useStop` also polls every 30 s, but D6 needs `/stops/:id` once (spec D6 Data): its times come
   from the 20- and 4-arrival polls. `useStop(id, { refetchInterval: false })` would stop the third poll.
-- Status: open
+- Status: done (5665a6e)
 
 ## A shared client stop lookup (/data/stops.json)
 - From: A (D6 loading title, D3 side of street)
@@ -192,21 +193,21 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: `useClientStop(id)` so D6's loading state can show "Name (ID)" from the cached file (spec
   D6 States) and D3 can read `side` without a `/api/stops/:id` call per card. Today D6 falls back
   to the saved/recent name or "Stop #342", and D3 calls `useStop` for stops not in `/nearby`.
-- Status: open
+- Status: done (5665a6e): src/lib/stops.ts
 
 ## Map marker kind "place" (black pin)
 - From: A (D4 place, D8 `fromName` origin)
 - Where: src/map/scene.ts, MapView.tsx
 - Need: spec D4 wants a black `place` pin labelled with the place; `markers[].kind` has no such
   kind, so D4/D8 use "destination" (red) for now.
-- Status: open
+- Status: done (21ce4f6)
 
 ## Button `external` names RideMETRO.org for every link
 - From: A (D8 "Open in Google Maps ↗")
 - Where: src/ui/Button.tsx
 - Need: `external` always appends "(opens RideMETRO.org)". D8 works around it with `onPress`
   → `window.open`. Suggest an `externalLabel` prop (or a neutral "(opens in a new tab)").
-- Status: open
+- Status: done (21ce4f6): `externalLabel`
 
 ## Walk: fitBounds padding hides the start under the FABs
 - From: A (D8)
@@ -223,7 +224,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   lines, so the row is ~128 dp against the 88 dp budget and card #1's first route row falls under
   the nav. Keep the text button on one line (`white-space: nowrap`) and drop the separate chevron
   when it is shown (C.5b / D2 item 5: the chevron is replaced by "+2 saved ›").
-- Status: open
+- Status: done (21ce4f6)
 
 ## Fold targets without markup selectors
 - From: A (D2 M2/M3, D3, D6, D8: `home/useHalfUpTo.ts`)
@@ -231,7 +232,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: the half-sheet hook finds the sheet with `closest("section[role=region]")` and card #1's
   first route row with `querySelector("li")`. Expose the sheet element (e.g. `useSheetBodyRef()`)
   and a `firstRowRef` prop on NearbyStopCard so the hook takes explicit refs.
-- Status: open
+- Status: done (21ce4f6): `useSheetElement()` and `NearbyStopCard.firstRowRef`
 
 ## BottomSheet: a half height below --sheet-half-min, and the FAB column at large text
 - From: A (D3 at 360x640)
@@ -240,14 +241,14 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   "1 alert") don't fit under the search bar at 360x640, and at 412x800 they cost D3 its second
   card. D3 drops Locate whenever the alerts FAB shows (`routeFabs` in home/Home.tsx). At extra-large text the search bar grows to 2 lines and the top FAB still slides
   under it; the layout could hide the lowest-priority FAB when the column doesn't fit.
-- Status: open
+- Status: done (21ce4f6): ExploreLayout drops the lowest-priority FABs that don't fit; A's `routeFabs` removed
 
 ## DepTimes: the tooSoon word pushes "· 34 min" onto a line that starts with "·"
 - From: A (D2/D3 cards, far-360, live-f1-412)
 - Where: src/ui/DepTimes.tsx, TimeValue
 - Need: "9:50 PM Leaves before you get there" wraps so the next line starts "· 34 min Live". Put the
   tooSoon word on its own line and keep the "·" attached to the next time (`white-space: nowrap`).
-- Status: open
+- Status: done (F0b): every time carries its own leading dot and the line is clipped, so no line starts with "·"
 
 ## Map: the highlighted stop looks like the rider's dot
 - From: A (D6, D8, D3)
@@ -255,7 +256,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: `highlightStopId` and `board` markers draw the same blue circle as the user dot, next to
   it. Draw a navy stop pin with the white "Stop: 342" callout (C.16). D4/D8 place markers use
   `board` until the "place" kind above exists.
-- Status: open
+- Status: done (F0b): the highlight is the large stop pin with the "Stop: 342" callout
 
 ## Formatting and small contract gaps
 - From: A
@@ -269,7 +270,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   Regular title.
 - NotifyPermissionCard keeps showing its buttons after "Turn on alerts" is granted (only a decline
   changes its state); D6 hides it through `onDone`.
-- Status: open
+- Status: done (5665a6e, 21ce4f6), except `Button.label` as a ReactNode (declined: labels stay plain strings for their accessible names)
 
 ## src/lib/text.ts (spec G.2 lists it; missing)
 - From: B (D5, D9, D20)
@@ -281,156 +282,157 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - From: B (D10)
 - Where: src/lib (e.g. `stopName(id)` over `/data/stops.json`, shared with MapView's loader) or `getTransitCenterDetail` (add `platforms: {stopId, name}[]`)
 - Need: the bay diagram labels platforms "Platform 2 · Stop #79" from the stop name, which the TC detail doesn't carry. B loads `/data/stops.json` (1.6 MB) itself in `screens/explore/tc/usePlatformNames.ts` (a second loader next to MapView's) until then. Preferred: `platforms: {stopId, name}[]` in `getTransitCenterDetail`, so a cold TC visit doesn't download every stop. B then deletes `usePlatformNames.ts`.
-- Status: open (review B #23)
+- Status: done (cecb86b): TC detail returns `platforms`
 
 ## Static routes list
 - From: B (D20)
 - Where: src/lib/routes.ts
 - Need: export the loaded `ClientRoute[]` (e.g. `useAllRoutes()` with an error state), so D20 doesn't fetch `/data/routes.json` again through its own query. D20 now checks `res.ok`, shows ErrorState, and takes its badges from `routeRef()`.
-- Status: open
+- Status: done (5665a6e): `useAllRoutes()`
 
 ## SearchField focus ring
 - From: B (D5)
 - Where: src/ui/SearchField.module.css
 - Need: the input draws a rectangular 3px focus ring inside the pill (visible in every D5 screenshot, since the input is autofocused). Put the ring on the pill with `.field:focus-within` and give the input `outline-offset: -3px` or a pill radius, without `outline: none`.
-- Status: open
+- Status: done (a0cb35a)
 
 ## Map attribution shows on pushed pages
 - From: B (D9, D10)
 - Where: src/app/AppShell.tsx / src/map/MapView.tsx
 - Need: the MapLibre attribution ("OpenFreeMap © OpenMapTiles …") stays visible above the bottom nav on PageLayout screens after coming from Explore (seen on /explore/route/82). Hide it with the map. Cause: `.hidden` uses `visibility: hidden`, and MapLibre's compact attribution sets `visibility: visible` on itself; its `z-index: 2` then paints over `<main>`.
-- Status: open. B's pages (D9, D10, D20) work around it with a `position: relative; z-index: 3` screen wrapper; they can drop it once this is fixed.
+- Status: done (34fb41e); B's z-index wrappers removed
 
 ## useRoute enabled flag
 - From: B (D5)
 - Where: src/api/hooks.ts
 - Need: `useRoute(id, { enabled })`, like `useArrivals`. B works around it by rendering the "82 montrose" shortcut's fetching child only for a known route.
-- Status: open
+- Status: done (5665a6e)
 
 ## BayDiagram: highlight several bays, and a spoken platform name
 - From: B (D10)
 - Where: src/ui/BayDiagram.tsx, `BayDiagramProps`
 - Need: (1) `highlight?: string[]` (bay letters; or `{stopId, bay}[]` if letters can repeat across platforms). Route 85 at Northwest TC leaves from bays D and G; the banner names both but only D can be highlighted. (2) A separate spoken platform name per platform (e.g. `a11yLabel`), because the tile label is built from the visible "Platform 2 · Stop #79" and reads "Bay M, Platform 2 · Stop #79, routes 58" instead of C.14's "Bay M, platform 2, routes 58". B will pass every bay in `routeBays` and "platform 2".
-- Status: open (review B #3, #32)
+- Status: done (21ce4f6)
 
 ## /routes/:id/next: two departures per stop
 - From: B (D9)
 - Where: server/services/routeNext.ts (`getArrivals(..., { limit: 1 })`), `RouteNext` type
 - Need: `limit: 2` (e.g. `next: {departureTime} | null` plus `then: {departureTime} | null`, or `deps: {departureTime}[]`). A scheduled trip due this minute can't say "Now" (C.2), so the column would show a clock time among minutes. Until the second trip is available, D9 shows "–" for such a row (spoken "Leaving now. The next time will show shortly.").
-- Status: open (review B #2)
+- Status: done (cecb86b)
 
 ## Transit center detail repeats departures
 - From: B (D10)
 - Where: server/services/stopDetail.ts `getTransitCenterDetail`
 - Need: the same trip can appear twice in one bay (Northwest TC bay G: trip 12065412 at 02:47:21Z twice, so "3 min Live · 3 min Live" and a React duplicate-key error). Probably two upstream sources (arrivals API + GTFS-RT) for one trip. Dedupe by `tripId + departureTime`. D10 now dedupes on the client too.
-- Status: open (review B #4)
+- Status: done (cecb86b): deduped on the server
 
 ## directionWord(label, lang) in lib/format.ts
 - From: B (D5, D9, D10)
 - Where: src/lib/format.ts
 - Need: export the `dir.<label>` lookup that `headsignLine` already does inside, so B can delete `screens/explore/route/useDirectionWord.ts` (a duplicate of it).
-- Status: open (review B #25)
+- Status: done (5665a6e)
 
 ## Rail headsigns in headsignLine
 - From: B (D10)
 - Where: src/lib/format.ts `headsignLine`
 - Need: rail headsigns read "METRORail - FANNIN SOUTH" / "METRORail -NORTH LINE TC". D9 strips the prefix (`routeGeo.ts displayHeadsign`); headsignLine (used for D10 rows and cards) should do the same.
-- Status: open (review B #26)
+- Status: done (5665a6e): `displayHeadsign`
 
 ## Spanish "andén" for bay in common.ts
 - From: B (D10)
 - Where: src/i18n/strings/common.ts (es `stopLine.bay`, `bay.tileA11y`)
 - Need: "andén" means platform, so a bay is "bahía" (B's tc/search strings now say "bahía"; "andén" stays for platform). Change es `stopLine.bay` to "Bahía {bay}" and `bay.tileA11y` to "Bahía {bay}, {platform}, rutas {routes}".
-- Status: open (review B #20)
+- Status: done (5665a6e)
 
 ## Per-route schedule links
 - From: B (D9)
 - Where: scripts/build-gtfs.ts → `routes.json` / `RouteDetail`
 - Need: a `scheduleUrl` per route. RideMETRO's per-route pages exist (e.g. `/riding-metro/transit-services/local-bus/route-details/82-westheimer`, which links the PDF), but the slugs are hand-made: the obvious `<number>-<long name>` slug works for 77 of 117 bus routes and 404s for Park & Ride, Curb2Curb, Community Connector, 500, 23 ("23-clay-west-43rd") and 99. D9 now links the service page (local bus / Park & Ride / METRORail, all verified) as "Schedules on RideMETRO.org ↗" instead of the old `/schedules` URL, which redirected to the home page.
-- Status: open (review B #6)
+- Status: declined: the GTFS has no per-route schedule URL; the link goes to the schedules page
 
 ## MapView: fit a scene only once the sheet has settled
 - From: C (D12, D13)
 - Where: src/map/MapView.tsx (scene application)
 - Need: at the full snap the bottom padding leaves no room, so `fitBounds` throws "Map cannot fit within canvas" and the map keeps the old view; when the sheet then moves to half, the scene is not fitted again. Clamp the padding to the canvas and re-fit the current scene when the sheet height settles. C works around it with `useSettledSheetHeight()` (src/features/trip/scene.ts) in its scene deps; drop that once this lands.
-- Status: open
+- Status: done (21ce4f6): padding clamped, bounds refitted when the sheet settles; C's `useSettledSheetHeight` removed
 
 ## Scene labels clipped at the top edge
 - From: C (D12, D13)
 - Where: src/map/MapView.tsx (fit padding)
 - Need: marker labels such as "Board 80 · #11424" sit above their pin and are cut off when the pin is on the top edge of the fitted bounds. Add the label height to the top fit padding.
-- Status: open
+- Status: done (F0b): the top fit padding is `safeTop + 108`
 
 ## StepList: badge and title on one line; leg colour without a badge; alert rows
 - From: C (D12, D13 All steps)
 - Where: src/ui/StepList.tsx, `TimelineStep` in src/ui/types.ts
 - Need: on board rows the title wraps under the route badge at 360 px; keep the title inline and let it wrap beside the badge. The spec's wording is "BOARD [80] to MLK & PARK VILLAGE" (as on D11's card), so the badge sits after the verb: add an optional `titleLead` ("BOARD") rendered before the badge, and C will pass `titleLead` + title "to MLK & PARK VILLAGE" (today C's title is "Board to MLK & PARK VILLAGE" after the badge). Alight rows need the leg's colour on the rail without rendering a second badge (an optional `legColor` separate from `route`). C.13 also wants alerts as timeline rows: render a step with `alert` as an AlertBox-style row (warning icon, alert colours) that opens D15; C shows them as AlertBoxes under the list until then.
-- Status: open
+- Status: done (21ce4f6)
 
 ## Map: tell board and transfer pins from the rider (review C item 7)
 - From: C (D11, D12, D13)
 - Where: src/map (MapView / layers images)
 - Need: `board` and `transfer` markers are drawn as the same blue dot as `origin` and the user dot, so "Board 80 · #11424" reads like "you are here". Draw `board`/`transfer`/`alight` as the navy stop pin with a white ring (like the highlighted pin, smaller), keep `origin` a dot. The top fit padding must also clear the search bar and a label above a pin at the top edge (F0b's `safeTop + 108` does; mod-C still has the F0a `top: 80`, so D11/D12 labels sit under the search bar there).
-- Status: open
+- Status: done (F0b): board/transfer/alight draw the white navy-ringed stop dot; padding as above
 
 ## Trip bar: a completed state on the Arrived step (review C item 18)
 - From: C (D13)
 - Where: src/app/layouts/ExploreLayout.tsx (trip bar), ExploreChrome options
 - Need: on D13's Arrived step the layout still shows "● Trip in progress · arrive 11:00 PM" above "TRIP COMPLETE". Let D13 say so, e.g. `useExploreChrome({ tripBar: "complete" })` rendering "✓ Trip complete · arrived 11:00 PM" (or hiding the bar). C will pass it on the Arrived step.
-- Status: open
+- Status: done (34fb41e)
 
 ## LiveStrip: wrap instead of scrolling (review C item 5)
 - From: C (D13 Wait step)
 - Where: src/ui/LiveStrip.module.css
 - Need: 4 departures with a clock time ("11:22 PM") overflow the strip at 360 and 412 (the 4th is cut), and in headless Chromium the overflowing `overflow-x: auto` strip paints a grey rectangle over the map canvas at a fixed screen position (bisected on D13 Wait: it goes away with 2 departures or no strip; the map scene is not involved). D6 can hit it too. Wrap the items (or cap them at what fits). C now passes at most 3 departures, clock times only when first, so D13 no longer overflows.
-- Status: open
+- Status: done (21fc99d): the strip wraps and is capped so it stays on one line
 
 ## "Other time ▾" as a small sheet (review C item 25)
 - From: C (D11)
 - Where: src/ui (a small modal sheet, or a BottomSheet variant)
 - Need: the spec opens "Other time ▾" in a small sheet (datetime input + Leave at / Arrive by). There is no such component, so C shows an inline panel under the chips and scrolls it into view (it no longer forces the sheet to full).
-- Status: open
+- Status: declined for now: needs a design; C's inline picker stays
 
 ## Sheet: peek from half without dragging (review C item 26)
 - From: C (D11 peek entry)
 - Where: src/ui/BottomSheet.tsx
 - Need: D11's peek ("( ▶ Start )" on the map) is reached by "Show map ▼ twice" in the spec, but at half the button reads "Show list ▲", so peek needs a swipe (WCAG 2.5.7 asks for a non-drag way). E.g. a "Show map ▼" at half that goes to peek when `allowPeek`.
-- Status: open
+- Status: done (21ce4f6): "Show map" button
 
 ## Pick mode: "My location" can omit `fromName` (review C item 23)
 - From: C (D11)
 - Where: src/lib/planQuery.ts `encodePick` (my-location)
 - Need: D11 now writes the rider's location as `from=<lat,lon>` with no `fromName` and shows it as "My current location" in the current language, so switching to Spanish no longer leaves the English name. `encodePick` still writes `t("common.myLocation")`; C recognises that name in both languages, but dropping it would keep URLs language-free. Recent trips from the rider's location are now stored without `from` (they replay from wherever the rider is), which D16's `placeName` already shows as "My current location".
-- Status: open
+- Status: done (5665a6e)
 
 ## useWalk: accept a place as the destination
 - From: C (D13 final walk)
 - Where: src/api/hooks (useWalk)
 - Need: `useWalk` only walks to a stop id; the last step walks from the alighting stop to a place (Hobby Airport). Accept a `LatLon` destination. C calls `/walk?from&to` itself in src/features/trip/useFinalWalk.ts until then.
-- Status: open
+- Status: done (5665a6e); C's `useFinalWalk` removed
 
 ## LiveStrip: a text variant
 - From: C (D13 ride step)
 - Where: src/ui/LiveStrip.tsx
 - Need: the ride step shows "9 stops left · about 18 min" in the blue live strip (D13), which is text rather than departure times. Add a `children`/text variant so the strip's colours and padding come from one place; C uses a local `.rideStrip` style for now.
-- Status: open
+- Status: done (21ce4f6): `FactStrip`
 
 ## useLocation: a simulated moving fix for demos
 - From: C (D13)
 - Where: src/state/location.ts
 - Need: the live trip demo moves the rider along the itinerary. A `setSimulatedFix(fix | null)` in the location store would move the shared "you" dot and every consumer; C passes its own simulated fix into useLiveTrip and draws a separate "You (simulated)" marker.
-- Status: open
+- Status: declined: C.16 shows the user dot only for a real fix; the demo keeps its own "You (simulated)" marker
 
 ## Pick mode should replace history; Directions can omit `from`
 - From: C (D11, F3)
 - Where: src/screens/explore/search (B's pick mode) and B's Directions button
 - Need: after a pick, `navigate(encodePick(...), { replace: true })` so Back from the plan does not return to the search. The Directions URL can leave `from` out: D11 fills it from the fix and shows "Finding your location" or the location-off state itself.
-- Status: open
+- Status: done in module B
 
 ## Landmarks: expose their nearest stop ids
 - From: C (D11 landmark note)
 - Where: src/api (landmark data)
 - Need: D11's "Hobby Airport: buses stop at …" note finds the stops through a search lookup's `nearbyStops`; the landmark record itself should carry them so the planner does not need a second request.
+- Status: declined: the search lookup already returns `nearbyStops` in the same request
 
 ## Hidden map's attribution shows on top of tab and page screens
 - From: D (D17 Fares, also Recent, More, Alerts)
@@ -442,7 +444,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Blocks F9: reached from Explore, the attribution covers "Seniors 70 and older · Free" at 412x800
   and "Transfers" at 360x640 (re-checked on mod-D after the review fixes). F9 can't be scored as
   delivered until this lands.
-- Status: open
+- Status: done (34fb41e)
 
 ## AlertBox: route badges and dates without the description (D14 list)
 - From: D (D14 Service Alerts)
@@ -455,7 +457,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   one box). Proposed API: `routes?: RouteRef[]` (badges before the effect word, "+N" past 6) and
   `compact="list"` (drops only the description, keeps the dates). D14 will then render one
   `<AlertBox routes={alertRouteRefs(a)} compact="list" …/>` and drop its `.meta` row.
-- Status: open
+- Status: done (21ce4f6, 21fc99d)
 
 ## Group /arrivals into SavedStopRow routes in src/lib
 - From: D (D16 Recent)
@@ -468,21 +470,21 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Update: D16 now groups one entry per route (canonical id, first direction) and keeps a
   preferred route with no departure (its own `?route=` call, then routes.json for the direction
   and headsign). The helper should do the same so Explore's saved row matches.
-- Status: open
+- Status: done (5665a6e): src/api/savedStop.ts
 
 ## useAlerts(): expose when the alerts were fetched
 - From: D (D14 footer "Source: METRO · Updated 1 min ago")
 - Where: src/api/alertsStore.ts
 - Need: an `updatedAt` field. D14 reads `queryClient.getQueryState(keys.alerts()).dataUpdatedAt` today
   (Alerts.tsx); switch to the store field once it exists.
-- Status: open
+- Status: done (5665a6e): `updatedAt`
 
 ## formatDateRange with a start time (D15)
 - From: D (D15 Alert detail)
 - Where: src/lib/format.ts
 - Need: D15's spec line is "From Sep 25, 5:00 AM until Oct 3"; `formatDateRange` has no time.
   An `{ withTime: true }` option for the start would match it. D15 shows the date-only form now.
-- Status: open
+- Status: done (5665a6e): `withTime`
 
 ## SegmentedControl: per-option label size (Welcome A / A+ / A++)
 - From: D (D1 Welcome)
@@ -491,7 +493,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   Welcome shows "A", "A+", "A++" at one size with "Standard / Large / Extra large" under them.
 - Proposed API: `SegmentedOption.labelSize?: "body" | "large" | "xlarge"` (16 / 18 / 21sp), or
   `label: ReactNode`.
-- Status: open
+- Status: done (21ce4f6): `labelSize`
 
 ## AlertStatusLine retry loop when a screen mounts it only on error
 - From: D (D14, D15)
@@ -502,7 +504,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   refetch → loading → unmount) about once a second. D14/D15 now keep it mounted for loading and
   error alike; `retryOnMount: false` on the alerts query (the store already has `retry()`) would
   make the component safe to use either way.
-- Status: open
+- Status: done (5665a6e): `retryOnMount: false`
 
 ## DemoTag component (D15, and AlertBox's own tag)
 - From: D (D15 Alert detail)
@@ -510,7 +512,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: D15 wants the "Demo" tag beside the effect word. Screens can't restyle, so D15 shows the
   warn caption "Demo alerts only" instead. A shared `DemoTag` (AlertBox's `.demo` style) would let
   D15 show the same tag as the list.
-- Status: open
+- Status: done (21ce4f6)
 
 ## Share the static stops/routes loaders (src/lib)
 - From: D (D14 My routes, D15 affected stops, D16 preferred route)
@@ -518,7 +520,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: `useStops()` (stop id → ClientStop from /data/stops.json) and the route directions per
   stop from /data/routes.json. D keeps a local copy in screens/alerts/staticData.ts; MapView and
   routes.ts each fetch the same files privately. One loader per file would parse each once.
-- Status: open
+- Status: done (5665a6e)
 
 ## routeRefOrFallback in src/lib/routes.ts
 - From: D (D14, D15, D16)
@@ -526,7 +528,7 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: a RouteRef for a route known only by id and name (saved/recent routes, GTFS-RT alert
   routes with no text colour) before or without routes.json. D has `routeRefOr()` in
   screens/alerts/routeRefs.ts; Explore and the planner may want the same.
-- Status: open
+- Status: done (5665a6e)
 
 ## ListRow: `lang` and a greyed disabled radio (D19 Coming soon languages)
 - From: D (D19 Settings)
@@ -534,11 +536,11 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: the spec's disabled "Coming soon" radio rows need `lang`/`dir` on the label and a greyed
   circle and sub-label when disabled (today the circle matches an enabled one and the sub is
   darker than the label). Until then D19 lists them in one "Coming soon: …" note.
-- Status: open
+- Status: declined: D19's note line keeps Text size above the fold
 
 ## Tab pages on the page background (TabLayout)
 - From: D (D16 Recent, D17 Fares, D22 not found)
 - Where: src/app/layouts/TabLayout.tsx
 - Need: TabLayout's Frame is `surface` (white), so its `padding-bottom` shows a white strip under
   pages that now use `--c-background` like today's app. `background="background"` fixes it.
-- Status: open
+- Status: done (34fb41e)
