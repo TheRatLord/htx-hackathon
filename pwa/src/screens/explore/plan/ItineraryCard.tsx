@@ -97,9 +97,9 @@ export function SharedAlerts({ list, unavailable }: { list: Alert[]; unavailable
   const href = list.length === 1 ? `/more/alerts/${encodeURIComponent(list[0].id)}` : "/more/alerts";
   return (
     <Link to={href} className={styles.sharedAlert}>
-      <Warning advisory={list.every((a) => isAdvisory(a.effect))} clamp>
-        {text} ›
-      </Warning>
+      {/* Never clamped: this is the one instruction for finding the bus (Hobby's exit to the curb),
+          and its "›" must show that it opens (22-es-360, 22-xlarge-360). */}
+      <Warning advisory={list.every((a) => isAdvisory(a.effect))}>{`${text}\u00a0›`}</Warning>
     </Link>
   );
 }
@@ -164,13 +164,12 @@ export function ItineraryCard({
   const tight = it.legs.flatMap((l) => (l.type === "transit" && l.transfer?.tight ? [l.transfer.waitMin] : []));
   // v2.71's price, on the when line; the Details screen says which fare it is.
   const fare = fareLine(it) && fares.items.find((i) => i.key === "local")?.value[lang];
+  // Two unbreakable parts, "Leave 12:04 PM" and "1 transfer · $1.25": when they can't share a line,
+  // the second starts the next one whole and its leading "·" is clipped (22-xlarge-360).
   const times = [
     t("plan.leaveAt", { time: formatClock(it.startTime, lang) }),
-    it.transfers ? t("plan.transfers", { count: it.transfers }) : t("plan.noTransfers"),
-    fare ?? "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    [it.transfers ? t("plan.transfers", { count: it.transfers }) : t("plan.noTransfers"), fare ?? ""].filter(Boolean).join(" · "),
+  ];
   const boardTime = (x: Itinerary) => {
     const r = x.legs.find((l): l is TransitLeg => l.type === "transit");
     return formatClock(r?.departureTime ?? x.startTime, lang);
@@ -191,7 +190,18 @@ export function ItineraryCard({
             </span>
           </span>
         </span>
-        <span className={styles.times}>{times}</span>
+        <span className={styles.timesClip}>
+          <span className={styles.times}>
+            {times.map((part) => (
+              <span key={part} className={styles.timesPart}>
+                <span className={styles.timesSep} aria-hidden="true">
+                  ·
+                </span>
+                {part}
+              </span>
+            ))}
+          </span>
+        </span>
         {tight.length > 0 && <Warning>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</Warning>}
         {ride && <BoardLine ride={ride} />}
         <AlertsLine it={it} shared={sharedAlerts} />

@@ -39,7 +39,7 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
             </span>
             <span className={styles.text}>
               {i === currentIndex && <span className={styles.here}>{t("timeline.youAreHere")}</span>}
-              <span className={styles.title}>
+              <span className={`${styles.title} ${s.route ? styles.withRoute : ""}`}>
                 {s.kind === "walk" && <Icon name="directions_walk" size={20} />}
                 {s.alert &&
                   (isAdvisory(s.alert.effect) ? (
@@ -52,11 +52,11 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
                 <span className={styles.titleText}>{s.title}</span>
               </span>
               {/* The duration ends the last grey line as plain text ("12:15 PM · 26 stops · 16 min"):
-                  a boxed "16 min" read as a route chip or a button. */}
+                  a boxed "16 min" read as a route chip or a button. "16 min" never breaks. */}
               {s.lines.map((l, j) => (
                 <span key={j} className={styles.line}>
                   {l}
-                  {s.duration && j === s.lines.length - 1 && ` · ${s.duration}`}
+                  {s.duration && j === s.lines.length - 1 && ` · ${s.duration.replace(/ /g, "\u00a0")}`}
                 </span>
               ))}
               {s.duration && !s.lines.length && <span className={styles.line}>{s.duration}</span>}

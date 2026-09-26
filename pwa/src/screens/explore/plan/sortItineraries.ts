@@ -1,4 +1,5 @@
-import type { Itinerary, TransitLeg } from "../../../api/types.ts";
+import type { Itinerary } from "../../../api/types.ts";
+import { tripShape } from "../../../features/trip/departures.ts";
 import type { PlanSort } from "../../../lib/planQuery.ts";
 
 /**
@@ -14,13 +15,7 @@ export function sortItineraries(its: Itinerary[], sort: PlanSort = "soonest"): {
   return list.sort((a, b) => end(a) - end(b));
 }
 
-/** The same buses from the same stops: a later copy of a trip, folded into the first card (22). */
-const tripShape = (it: Itinerary) =>
-  it.legs
-    .filter((l): l is TransitLeg => l.type === "transit")
-    .map((l) => `${l.route.name}@${l.board.id ?? l.board.name}>${l.alight.id ?? l.alight.name}`)
-    .join("|");
-
+/** A later copy of a trip (same buses, same stops) folds into the first card (22). */
 export function foldRepeats<T extends { it: Itinerary }>(list: T[]): { first: T; later: T[] }[] {
   const groups = new Map<string, { first: T; later: T[] }>();
   for (const x of list) {

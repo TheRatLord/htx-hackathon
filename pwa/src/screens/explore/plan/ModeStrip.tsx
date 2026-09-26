@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import type { Itinerary } from "../../../api/types.ts";
 import { isEmptyWalk } from "../../../features/trip/steps.ts";
 import { useT } from "../../../i18n/index.ts";
@@ -34,26 +33,28 @@ export function ModeStrip({ it, toPlace = false }: { it: Itinerary; toPlace?: bo
     const min = walkMinutes(l.distanceM, walkPace);
     parts.push({ min, icon: "directions_walk", label: t("plan.mode.walk", { min }) });
   });
+  // Each leg carries its "›" in front of it, and a "›" that starts a line is clipped (.modesClip),
+  // so a strip that must wrap (Extra large at 360dp) never leaves a "›" dangling at a line's end;
+  // the two lines are balanced, so no leg sits alone on the second (22-xlarge-360).
   return (
-    <span className={styles.modes} role="img" aria-label={parts.map((p) => p.label).join(", ")}>
-      {parts.map((p, i) => (
-        <Fragment key={i}>
-          {i > 0 && <span className={styles.modeSep}>›</span>}
-          {p.route ? (
+    <span className={styles.modesClip} role="img" aria-label={parts.map((p) => p.label).join(", ")}>
+      <span className={styles.modes}>
+        {parts.map((p, i) => (
+          <span key={i} className={styles.modeStep}>
+            <span className={styles.modeSep}>›</span>
             <span className={styles.modeRide}>
-              <RouteBadge route={p.route} size="sm" />
+              {p.route ? (
+                <RouteBadge route={p.route} size="sm" />
+              ) : (
+                <span className={styles.modeWalk}>
+                  <Icon name={p.icon ?? "directions_walk"} size={24} />
+                </span>
+              )}
               <span className={styles.modeMin}>{t("time.min", { n: p.min })}</span>
             </span>
-          ) : (
-            <span className={styles.modeRide}>
-              <span className={styles.modeWalk}>
-                <Icon name={p.icon ?? "directions_walk"} size={24} />
-              </span>
-              <span className={styles.modeMin}>{t("time.min", { n: p.min })}</span>
-            </span>
-          )}
-        </Fragment>
-      ))}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }

@@ -133,6 +133,14 @@
   align-self: center;
 }
 
+/* "BOARD [80] to MLK & PARK VILLAGE": BOARD and the headsign's first line sit on the chip's middle,
+   however many lines the headsign wraps to (24-xlarge-360). */
+.withRoute > .lead,
+.withRoute > .titleText {
+  align-self: flex-start;
+  padding-top: max(0px, (var(--chip-route-sm) - var(--lh-body)) / 2);
+}
+
 /* An alert inside the timeline: the leg's line runs on beside a pink box (C.11 colours). */
 .alertRow .text {
   margin: var(--sp-1) 0;

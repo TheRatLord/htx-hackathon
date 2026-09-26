@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import { useArrivals, useWalk } from "../../../api/hooks.ts";
 import type { LatLon, TransitLeg, WalkLeg } from "../../../api/types.ts";
-import { boardDeparture } from "../../../features/trip/departures.ts";
+import { boardDeparture, nextChance } from "../../../features/trip/departures.ts";
 import { walkOrigin, type RideStop } from "../../../features/trip/progress.ts";
 import type { TripStep } from "../../../features/trip/steps.ts";
 import { shortSide, stopTitle } from "../../../features/trip/timeline.ts";
@@ -16,6 +16,7 @@ import { toRouteRef } from "../../../lib/routes.ts";
 import { canMakeIt, estimateWalk, walkMinutes } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
 import { usePrefs } from "../../../state/prefs.ts";
+import { useTrip } from "../../../state/trip.ts";
 import { useWalkDistance } from "../../../state/walkDistance.ts";
 import { BayTag } from "../../../ui/BayTag.tsx";
 import { Button } from "../../../ui/Button.tsx";
@@ -100,8 +101,13 @@ function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const mins = Math.max(0, Math.round((Date.parse(dep.departureTime) - now) / 60_000));
   const inMin = mins ? t("time.min", { n: mins }) : t("time.now");
   const time = formatClock(dep.departureTime, lang).replace(" ", "\u00a0");
-  const after = strip[1] && Math.max(0, Math.round((Date.parse(strip[1].departureTime) - now) / 60_000));
-  const small = [matched ? "" : t("trip.wait.scheduled"), after ? t("trip.wait.nextAfter", { min: after }) : ""].filter(Boolean).join(" · ");
+  // The backup is a clock time ("Next one 12:30 PM"), never "26 min", which read as 26 min after
+  // this bus. It is the list's "Also at" trip when there is one (it makes every connection), else
+  // the stop's next bus on this route (27).
+  const { active, planned } = useTrip();
+  const backup = (active && planned && nextChance(active.itinerary, ride, planned.response.itineraries)) ?? strip[1]?.departureTime;
+  const after = backup && formatClock(backup, lang).replace(" ", "\u00a0");
+  const small = [matched ? "" : t("trip.wait.scheduled"), after ? t("trip.wait.nextAfter", { time: after }) : ""].filter(Boolean).join(" · ");
   return (
     <>
       <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
