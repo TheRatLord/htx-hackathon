@@ -11,6 +11,7 @@ const { plan } = await import("../server/services/plan.ts");
 const { photonPlaces, HOUSTON_CENTER } = await import("../server/services/places.ts");
 const { walkRoute } = await import("../server/services/walk.ts");
 const { getAlerts } = await import("../server/services/alerts.ts");
+const { getNearby } = await import("../server/services/nearby.ts");
 
 const lm = (id: string) => {
   const l = findLandmark(id)!;
@@ -49,9 +50,32 @@ for (const [from, to] of [
   [point("UH campus", 29.7199, -95.3422), stop("11424")],
   [point("UH campus", 29.7199, -95.3422), stop("11425")],
   [lm("city-hall"), lm("toyota-center")],
+  // Section E: F4 (Walk here to 342), F8 (walk to the first boarding stop), F11 (museum to 688).
+  [point("F4 GPS", 29.7563, -95.3639), stop("342")],
+  [point("F8 GPS", 29.7199, -95.3422), stop("11424")],
+  [lm("hmns"), stop("688")],
 ] as const) {
   await walkRoute(from, to);
   console.log(`walk ${from.name} -> ${to.name}`);
+}
+
+// The street walks /nearby?precise=1 asks OSRM for (its 3 nearest stops) at every section-E GPS
+// position and at the D4 landmark, so offline cards show the same minutes as online. One
+// request at a time, to go easy on the public OSRM server.
+for (const [name, lat, lon] of [
+  ["F1/F4/F10", 29.7563, -95.3639],
+  ["F2/F5", 29.744, -95.39],
+  ["F3/F8", 29.7199, -95.3422],
+  ["F7", 29.789, -95.456],
+  ["F11", 29.75, -95.36],
+  ["D4 HMNS", 29.722, -95.3897],
+] as const) {
+  const { stops } = await getNearby(lat, lon);
+  for (const { stop: s } of stops.slice(0, 3)) {
+    const w = await walkRoute({ lat, lon }, s);
+    console.log(`nearby ${name} -> ${s.id}: ${w.source}`);
+    await pause();
+  }
 }
 
 for (const q of ["hobby airport", "7800 airport blvd", "westheimer and kirby", "galleria", "rice village", "uh"]) {
