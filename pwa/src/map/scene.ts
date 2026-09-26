@@ -28,6 +28,11 @@ export interface MapScene {
    * along the leg: with two rides in one colour, it shows where one bus ends and the next begins.
    */
   legs?: { coords: [number, number][]; kind: "walk" | "ride"; color?: string; label?: string }[];
+  /**
+   * The options not selected (Select Itinerary), drawn faded in --c-alt-route-line under `legs`, as
+   * other map apps show alternative routes. No labels or pins: those belong to the selected one.
+   */
+  altLegs?: { coords: [number, number][]; kind: "walk" | "ride" }[];
   /** `place` is a searched place (D4, D8's start): a black pin. */
   markers?: { id: string; point: LatLon; kind: "origin" | "destination" | "place" | "board" | "alight" | "transfer" | "bay"; label?: string }[];
   /** A bus last seen more than 2 minutes ago is drawn grey; say so in its label ("Last seen 3 min ago"). */

@@ -9,7 +9,7 @@ import { ExploreSheet, useExploreChrome, useSheet, useSheetElement } from "../..
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
-import { itineraryScene } from "../../../features/trip/scene.ts";
+import { planScene } from "../../../features/trip/scene.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { formatLatLon, parseLatLon } from "../../../lib/geo.ts";
@@ -281,7 +281,7 @@ export default function Plan() {
     // A tap from the full list drops it to half, so the route it just drew is in view.
     if (snap === "full") setSnap("half");
   };
-  useMapScene(selected ? itineraryScene(selected, lang) : endpointsScene(query), [selected, query.from, query.to, lang]);
+  useMapScene(selected ? planScene(selected, sorted.map((x) => x.it), lang) : endpointsScene(query), [selected, response, query.from, query.to, lang]);
   // The half sheet grows until card 1 shows whole, down to its Board line and "Details ›", and never
   // so far that the map strip above it goes.
   const sheet = useSheetElement();

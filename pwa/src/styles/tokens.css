@@ -72,6 +72,7 @@
   --c-map-label: #5F6368;
   --c-route-line: #004080;        /* selected route / bus leg line, 6dp, with 2dp white casing */
   --c-walk-line: #2A82E6;         /* dotted walk path, 5dp, dash 1:2 */
+  --c-alt-route-line: #A3AEBD;    /* the other options on Select Itinerary, faded under the selected one */
 
   /* ---------- Typography ---------- */
   /* CJK and Arabic fallbacks after the system UI font, so language names in their own script
