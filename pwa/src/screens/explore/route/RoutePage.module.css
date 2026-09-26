@@ -1,3 +1,57 @@
+/*
+ * Painted above the (hidden) map's attribution control, which otherwise shows through on
+ * pushed pages (requests.md: "Map attribution shows on pushed pages").
+ */
+.screen {
+  position: relative;
+  z-index: 3;
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+/* Back, the route name and Save stay on screen however far the stop list scrolls. */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-background);
+}
+
+/* "[82] Eastbound to DOWNTOWN · Change": shown under the bar once the page header scrolls away. */
+.compact {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--touch-min);
+  padding: var(--sp-1) var(--gutter);
+  border: none;
+  border-bottom: 1px solid var(--c-divider);
+  background: var(--c-background);
+  text-align: start;
+  visibility: hidden;
+}
+
+.compact[data-shown="true"] {
+  visibility: visible;
+}
+
+.compactText {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.compactAction {
+  flex: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
 .page {
   display: flex;
   flex-direction: column;
@@ -141,35 +195,24 @@
   gap: var(--sp-2);
 }
 
-.vehicle {
-  position: relative;
+/* A live bus: a 20dp navy glyph on the spine, between this stop and the one above. */
+.bus {
+  position: absolute;
+  top: 0;
+  left: calc(var(--gutter) + 8px);
   z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding-top: var(--sp-1);
-  color: var(--c-brand-navy);
-  font-weight: var(--fw-medium);
-}
-
-.vehicleIcon {
   display: grid;
-  flex: none;
   place-items: center;
   width: 20px;
   height: 20px;
-  margin-left: -2px;
   border-radius: 50%;
   box-shadow: 0 0 0 2px var(--c-surface);
   background: var(--c-brand-navy);
   color: #fff;
+  transform: translate(-50%, -50%);
 }
 
-.vehicleStale {
-  color: var(--c-text-variant);
-}
-
-.vehicleStale .vehicleIcon {
+.busStale {
   background: var(--c-text-variant);
 }
 
