@@ -1,9 +1,8 @@
 // D11 Plan Your Trip + Select Itinerary: the familiar form while a field is missing (or `edit=1`),
 // then the results with the form collapsed to one summary row, opened at full.
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigate, useNavigationType } from "react-router";
-import { useSearch } from "../../../api/hooks.ts";
 import type { Itinerary, TransitLeg } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
@@ -13,11 +12,13 @@ import { itineraryScene } from "../../../features/trip/scene.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { formatLatLon, parseLatLon } from "../../../lib/geo.ts";
-import { parsePlanQuery, PLAN_SORTS, planUrl, type PlanQuery, type PlanSort } from "../../../lib/planQuery.ts";
+import { parsePlanQuery, planUrl, type PlanQuery, type PlanSort } from "../../../lib/planQuery.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { isOff, useLocation as useRider } from "../../../state/location.tsx";
 import { Button } from "../../../ui/Button.tsx";
+import { ChipRow } from "../../../ui/ChipRow.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
+import { FilterChip } from "../../../ui/FilterChip.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
@@ -25,50 +26,39 @@ import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { ItineraryCard, SharedAlerts, useSharedAlerts } from "./ItineraryCard.tsx";
 import { FromToBox, PlacePicks, usePlacePicks, useWhenText, WhenRow, type FromView } from "./PlanForm.tsx";
 import styles from "./plan.module.css";
-import { sortItineraries } from "./sortItineraries.ts";
+import { foldRepeats, sortItineraries } from "./sortItineraries.ts";
 import { isReady, planKey, usePlanResponse } from "./usePlanResponse.ts";
 import { useStartTrip } from "./useStartTrip.ts";
 
 const LATER_MS = 30 * 60_000;
 
-/** The landmark's own bus stop ("bus stop #10567"), when the destination is a landmark with one. */
-function useLandmarkStop(query: PlanQuery): string | undefined {
-  const id = query.to?.startsWith("landmark:") ? query.to.slice("landmark:".length) : undefined;
-  const search = useSearch(id ? (query.toName ?? "") : "");
-  const landmark = search.data?.results.find((r) => r.type === "landmark" && r.id === id);
-  return landmark?.nearbyStops?.[0]?.id;
-}
+/**
+ * v2.71's three sort chips, in its words (22). Fastest, the default, comes first, so the chosen one
+ * is never behind "More ›" at 360dp.
+ */
+const CHIP_ORDER: PlanSort[] = ["soonest", "transfers", "walk"];
 
-/** The sort as a small "Arrives first ▾" on the summary's last row: no row of its own (22-360). */
-function SortPicker({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort) => void }) {
+function SortChips({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort) => void }) {
   const t = useT();
   return (
-    <select
-      className={styles.sort}
-      value={sort}
-      onChange={(e) => onChange(e.target.value as PlanSort)}
-      onClick={(e) => e.stopPropagation()}
-      aria-label={t("plan.sort.label")}
-    >
-      {PLAN_SORTS.map((s) => (
-        <option key={s} value={s}>
-          {t(`plan.sort.${s}`)}
-        </option>
-      ))}
-    </select>
+    <div className={styles.sortChips}>
+      <ChipRow ariaLabel={t("plan.sort.label")}>
+        {CHIP_ORDER.map((s) => (
+          <FilterChip key={s} label={t(`plan.sort.${s}`)} selected={sort === s} onPress={() => onChange(s)} />
+        ))}
+      </ChipRow>
+    </div>
   );
 }
 
 /**
- * "● My location → 📍 Hobby Airport" / "Bus stop #10567 is at Hobby Airport" / "Leave now · Edit ›"
- * with the sort at the right of that row. The card edits on a tap anywhere but the sort; its one
- * focusable button is "Edit ›".
+ * "● My location → 📍 Hobby Airport" / "Leave now · Edit ›". The card edits on a tap anywhere; its
+ * one focusable button is "Edit ›".
  */
-function Summary({ query, onEdit, sort }: { query: PlanQuery; onEdit: () => void; sort?: ReactNode }) {
+function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const t = useT();
   const lang = useLang();
   const when = useWhenText(query);
-  const stopId = useLandmarkStop(query);
   const from = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang);
   const to = query.toName ?? query.to ?? "";
   return (
@@ -84,8 +74,6 @@ function Summary({ query, onEdit, sort }: { query: PlanQuery; onEdit: () => void
           {to}
         </span>
       </span>
-      {/* J2.3: the trip ends at the landmark's own bus stop, which is at its door (the last walk is 0 m). */}
-      {stopId && <span className={styles.variant}>{t("plan.landmarkStop", { id: stopId, place: to })}</span>}
       <span className={styles.summaryWhen}>
         <button
           type="button"
@@ -99,7 +87,6 @@ function Summary({ query, onEdit, sort }: { query: PlanQuery; onEdit: () => void
           <span>{when}</span>
           <span className={styles.editLink}>{t("common.edit")} ›</span>
         </button>
-        {sort}
       </span>
     </div>
   );
@@ -150,8 +137,14 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
     list = (
       <>
         <SharedAlerts list={shared.list} unavailable={shared.unavailable} />
-        {sortItineraries(response.itineraries, query.sort).map(({ it, index }) => (
-          <ItineraryCard key={it.id} it={it} href={planUrl(query, { index })} sharedAlerts={shared.ids} />
+        {foldRepeats(sortItineraries(response.itineraries, query.sort)).map(({ first: { it, index }, later }) => (
+          <ItineraryCard
+            key={it.id}
+            it={it}
+            href={planUrl(query, { index })}
+            sharedAlerts={shared.ids}
+            later={later.map((l) => ({ it: l.it, href: planUrl(query, { index: l.index }) }))}
+          />
         ))}
       </>
     );
@@ -257,6 +250,11 @@ export default function Plan() {
   useEffect(() => {
     if (resultKey) setSnap("full");
   }, [resultKey, setSnap]);
+  // The form opens with the sheet up, so the places to tap show above the nav, not an empty map (21).
+  const form = !results;
+  useEffect(() => {
+    if (form) setSnap("full");
+  }, [form, setSnap]);
 
   const first = response ? sortItineraries(response.itineraries, query.sort)[0]?.it : undefined;
   useMapScene(first ? itineraryScene(first, lang) : endpointsScene(query), [first, query.from, query.to, lang]);
@@ -284,16 +282,11 @@ export default function Plan() {
       <div className={styles.body}>
         {results ? (
           <>
-            <Summary
-              query={query}
-              onEdit={() => change(query, true)}
-              sort={
-                // Nothing to sort while loading, empty or with one trip.
-                (response?.itineraries.length ?? 0) > 1 && (
-                  <SortPicker sort={query.sort ?? "soonest"} onChange={(s) => change({ ...query, sort: s === "soonest" ? undefined : s })} />
-                )
-              }
-            />
+            <Summary query={query} onEdit={() => change(query, true)} />
+            {/* Nothing to sort while loading, empty or with one trip. */}
+            {(response?.itineraries.length ?? 0) > 1 && (
+              <SortChips sort={query.sort ?? "soonest"} onChange={(s) => change({ ...query, sort: s === "soonest" ? undefined : s })} />
+            )}
             {resultsList}
           </>
         ) : (

@@ -1,0 +1,5 @@
+# Round 5: requests from fixer C (plan, trip)
+
+- **24-itinerary-360 map (shared, src/map).** At 360x640 the [73] leg chip and the "Transfer · #4789" label are still not drawn (only "Board 80 · #11424" and [80] show), so the transfer has no cue on the map. The 412 and Spanish shots are fine. The half sheet at 360 leaves about 240px of map; the placement probably drops them for lack of room. Consider letting the transfer label go below its ring into the attribution corner, or shrinking the chip.
+- **Final walk to the Hobby terminal (server/data/landmarks.json).** This is still missing, because the landmark is the bus stop itself. The plan screens no longer say "Bus stop #10567 is at Hobby Airport". If the landmark moves to the terminal door, the mode strip, timeline and live trip already draw a final walk, but the recorded plan fixtures would need re-recording.
+- **F7 flow (not mine, for the Home fixer or QA).** `flows.spec.ts` F7 now fails at both sizes. The test expects the first "Route 58" card to be the Northwest Transit Center card, but commit 0864210 ranks 8249 first. The test goal or the test should follow the new ranking.

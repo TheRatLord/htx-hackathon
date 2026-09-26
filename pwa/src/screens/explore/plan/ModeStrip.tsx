@@ -13,14 +13,19 @@ import styles from "./plan.module.css";
 export function ModeStrip({ it }: { it: Itinerary }) {
   const t = useT();
   const { walkPace } = usePrefs();
-  const parts = it.legs
-    .filter((l) => !isEmptyWalk(l))
-    .map((l) => {
-      if (l.type === "transit")
-        return { min: l.durationMin, route: toRouteRef(l.route), label: t("plan.mode.ride", { route: l.route.name, min: l.durationMin }) };
-      const min = walkMinutes(l.distanceM, walkPace);
-      return { min, label: t("plan.mode.walk", { min }) };
-    });
+  // Every transfer shows between its two buses: the walk to the next stop, or, at the same stop,
+  // the wait (🕒 2 min), so a 1 min walk and a same-stop change look alike (22).
+  const parts: { min: number; label: string; route?: ReturnType<typeof toRouteRef>; icon?: "directions_walk" | "schedule" }[] = [];
+  for (const l of it.legs) {
+    if (isEmptyWalk(l)) continue;
+    if (l.type === "transit") {
+      if (l.transfer?.sameStop) parts.push({ min: l.transfer.waitMin, icon: "schedule", label: t("plan.mode.wait", { min: l.transfer.waitMin }) });
+      parts.push({ min: l.durationMin, route: toRouteRef(l.route), label: t("plan.mode.ride", { route: l.route.name, min: l.durationMin }) });
+      continue;
+    }
+    const min = walkMinutes(l.distanceM, walkPace);
+    parts.push({ min, icon: "directions_walk", label: t("plan.mode.walk", { min }) });
+  }
   return (
     <span className={styles.modes} role="img" aria-label={parts.map((p) => p.label).join(", ")}>
       {parts.map((p, i) => (
@@ -34,7 +39,7 @@ export function ModeStrip({ it }: { it: Itinerary }) {
           ) : (
             <span className={styles.modeRide}>
               <span className={styles.modeWalk}>
-                <Icon name="directions_walk" size={24} />
+                <Icon name={p.icon ?? "directions_walk"} size={24} />
               </span>
               <span className={styles.modeMin}>{t("time.min", { n: p.min })}</span>
             </span>

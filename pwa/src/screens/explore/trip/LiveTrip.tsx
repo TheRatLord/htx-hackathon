@@ -213,16 +213,22 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   // Explore doesn't return to an empty "No trip" screen.
   const endFromDialog = () => {
     setConfirmEnd(false);
-    let timer = 0;
     const go = () => {
-      window.removeEventListener("popstate", go);
-      clearTimeout(timer);
+      leaving.current?.();
       end();
     };
     window.addEventListener("popstate", go);
     // The dialog pops its entry on the next tick; if it had none to pop, leave anyway.
-    timer = window.setTimeout(go, 300);
+    const timer = window.setTimeout(go, 300);
+    leaving.current = () => {
+      window.removeEventListener("popstate", go);
+      clearTimeout(timer);
+      leaving.current = undefined;
+    };
   };
+  // Leaving another way first (the bottom nav) cancels it: no late end() or navigate().
+  const leaving = useRef<() => void>(undefined);
+  useEffect(() => () => leaving.current?.(), []);
   const originName = fromLabel(active.query, lang);
 
   if (allSteps) {

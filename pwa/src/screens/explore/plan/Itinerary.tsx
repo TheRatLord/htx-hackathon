@@ -58,6 +58,26 @@ function withAlertRows(it: Trip, rows: TimelineRow[], alerts: Alert[], demo: boo
   });
 }
 
+/**
+ * The deepest timeline row, from `from` on, whose bottom (plus the pinned "Start trip" footer) is
+ * within the half sheet's cap; `from` itself when none is.
+ */
+function deepestWholeRow(sheet: HTMLElement, from: number): HTMLElement | undefined {
+  const rows = Array.from(sheet.querySelectorAll<HTMLElement>("ol > li"));
+  const footer = sheet.querySelector<HTMLElement>("[data-sheet-footer]")?.offsetHeight ?? 0;
+  const top = sheet.getBoundingClientRect().top;
+  const cap = foldCap(window.innerHeight);
+  let best = rows[from];
+  for (let i = from; i < rows.length; i++) {
+    let scrolled = 0;
+    for (let p = rows[i].parentElement; p && p !== sheet; p = p.parentElement) scrolled += p.scrollTop;
+    // 8: the gap useHalfUpTo leaves under the row.
+    if (rows[i].getBoundingClientRect().bottom - top + scrolled + 8 + footer <= cap) best = rows[i];
+    else break;
+  }
+  return best;
+}
+
 function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; onShowPlace: (p: LatLon) => void }) {
   const t = useT();
   const lang = useLang();
@@ -71,7 +91,8 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
   // the "Start trip" footer, its time line included (24-360).
   const sheet = useSheetElement();
   const boardIndex = items.findIndex((r) => r.step.kind === "board");
-  useHalfUpTo(() => (boardIndex < 0 ? null : sheet?.querySelectorAll<HTMLElement>("ol > li")[boardIndex]), foldCap, `${boardIndex}|${items.length}`);
+  // Then on to the deepest row that still fits whole, so the fold never slices "Get off at …" (24, 44).
+  useHalfUpTo(() => (boardIndex < 0 || !sheet ? null : deepestWholeRow(sheet, boardIndex)), foldCap, `${boardIndex}|${items.length}`);
   return (
     <>
       <StepList

@@ -90,20 +90,21 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      // The stop's name in bold, full width. The distance is on the walk screen.
-      // Two short grey lines, never an orphaned word (24, 44): what to do and when, then where
-      // ("12:09 PM · Walk 5 min" / "#11424 · west side").
-      const where = joinParts([leg.to.id ? `#${leg.to.id}` : "", shortSide(leg.to, lang)]);
-      const walk = t("plan.firstWalk", { min }, lang);
+      // "Walk 5 min to #11424" says what to do, not where the rider is (24); the stop's name is the
+      // grey line under it, then when and which side ("Leave 12:09 PM · west side"), never an
+      // orphaned word (24, 44).
       const first = legIndex === 0;
-      const wait = t("plan.wait", { min: waitMin(leg.endTime, next) }, lang);
+      const side = shortSide(leg.to, lang);
+      const when = first ? t("plan.leaveAt", { time: formatClock(it.startTime, lang) }, lang) : t("plan.waitCap", { min: waitMin(leg.endTime, next) }, lang);
       rows.push({
         legIndex,
         role: "walk",
         href: walkHref(leg, first ? opts.fromName : leg.from.name, next.route.id),
-        step: first
-          ? { kind: "walk", title: leg.to.name, lines: [joinParts([formatClock(it.startTime, lang), walk]), where].filter(Boolean) }
-          : { kind: "walk", title: leg.to.name, lines: [joinParts([walk, wait]), where, ...transferLines(next, lang)].filter(Boolean) },
+        step: {
+          kind: "walk",
+          title: leg.to.id ? t("plan.walkToStop", { min, id: leg.to.id }, lang) : t("plan.walkTo", { min, place: leg.to.name }, lang),
+          lines: [leg.to.id ? leg.to.name : "", joinParts([when, side]), ...(first ? [] : transferLines(next, lang))].filter(Boolean),
+        },
       });
       return;
     }
