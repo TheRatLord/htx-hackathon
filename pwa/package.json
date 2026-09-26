@@ -1,0 +1,32 @@
+{
+  "name": "htx-metro-pwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "data:build": "tsx scripts/build-gtfs.ts",
+    "data:transit-centers": "tsx scripts/build-transit-centers.ts",
+    "data:verify-landmarks": "tsx scripts/verify-landmarks.ts",
+    "fixtures:record": "tsx scripts/record-fixtures.ts",
+    "server:dev": "tsx watch server/index.ts",
+    "server:start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "dotenv": "^18.0.4",
+    "fflate": "^0.8.3",
+    "gtfs-realtime-bindings": "^2.2.0",
+    "hono": "^4.13.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}
