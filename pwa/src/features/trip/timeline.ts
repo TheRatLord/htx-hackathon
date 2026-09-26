@@ -3,13 +3,13 @@
 
 import type { Itinerary, PlanStop, TransitLeg, WalkLeg } from "../../api/types.ts";
 import { t, type Lang } from "../../i18n/index.ts";
-import { localiseSide } from "../../lib/i18nServer.ts";
-import { formatClock, formatDistance, sideLine } from "../../lib/format.ts";
+import { formatClock, formatDistance } from "../../lib/format.ts";
+import { localiseSide, sideDirection } from "../../lib/i18nServer.ts";
 import { formatLatLon } from "../../lib/geo.ts";
 import { toRouteRef } from "../../lib/routes.ts";
 import { walkMinutes, type WalkPace } from "../../lib/walk.ts";
 import type { TimelineStep } from "../../ui/types.ts";
-import type { TripStep } from "./steps.ts";
+import { isEmptyWalk, type TripStep } from "./steps.ts";
 
 export interface TimelineRow {
   step: TimelineStep;
@@ -29,7 +29,26 @@ interface TimelineOpts {
 /** "M L King Blvd @ UH University Dr (#11424)" */
 export const stopTitle = (s: PlanStop) => (s.id ? `${s.name} (#${s.id})` : s.name);
 
-const stopHref = (s: PlanStop, routeId: string) => s.id && `/explore/stop/${encodeURIComponent(s.id)}?route=${encodeURIComponent(routeId)}`;
+/**
+ * "west side": the stop's side without the street, for lines that already name the stop
+ * ("…UH University Dr (#11424), west side"). Empty when the stop has no side.
+ */
+export function shortSide(stop: PlanStop, lang: Lang): string {
+  if (!stop.side) return "";
+  const parsed = sideDirection(stop.side);
+  return parsed ? t(`plan.sideShort.${parsed.dir}`, undefined, lang) : localiseSide(stop.side, lang);
+}
+
+/** "M L King Blvd @ UH University Dr (#11424), west side" */
+export function stopWithSide(stop: PlanStop, lang: Lang): string {
+  const side = shortSide(stop, lang);
+  return side ? `${stopTitle(stop)}, ${side}` : stopTitle(stop);
+}
+
+function stopHref(s: PlanStop, routeId: string): string | undefined {
+  if (!s.id) return undefined;
+  return `/explore/stop/${encodeURIComponent(s.id)}?route=${encodeURIComponent(routeId)}`;
+}
 
 /** D8 for a walk that ends at a stop, seeded with the leg's distance so every screen shows the same minutes. */
 function walkHref(leg: WalkLeg, fromName: string, routeId: string): string | undefined {
@@ -52,6 +71,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
   const { lang, pace } = opts;
   const rows: TimelineRow[] = [];
   it.legs.forEach((leg, legIndex) => {
+    if (isEmptyWalk(leg)) return;
     const next = it.legs.slice(legIndex + 1).find((l): l is TransitLeg => l.type === "transit");
     if (leg.type === "walk") {
       const min = walkMinutes(leg.distanceM, pace);
@@ -64,8 +84,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      const side = leg.to.side ? ` · ${localiseSide(leg.to.side, lang)}` : "";
-      const to = `${t("plan.toStop", { stop: stopTitle(leg.to) }, lang)}${side}`;
+      const to = t("plan.toStop", { stop: stopWithSide(leg.to, lang) }, lang);
       const first = legIndex === 0;
       rows.push({
         legIndex,
@@ -90,7 +109,9 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         step: { kind: "transfer", title: t("plan.sameStop", { min: leg.transfer.waitMin }, lang), lines: transferLines(leg, lang) },
       });
     }
-    const side = sideLine({ ...leg.board, kind: route.mode }, { withCompass: false, lang });
+    // A walk or transfer row right above already named the stop; a trip that starts at it didn't.
+    const named = rows.at(-1)?.role === "walk" || rows.at(-1)?.role === "transfer";
+    const leaves = `${formatClock(leg.departureTime, lang)}${leg.isRealtime ? ` ${t("status.live", undefined, lang)}` : ""}`;
     rows.push({
       legIndex,
       role: "board",
@@ -99,9 +120,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         kind: "board",
         route,
         title: t("plan.boardTo", { headsign: leg.headsign.toUpperCase() }, lang),
-        lines: [stopTitle(leg.board), ...(side ? [side] : []), t("plan.rideStops", { count: leg.numStops }, lang)],
-        time: formatClock(leg.departureTime, lang),
-        status: leg.isRealtime ? "live" : undefined,
+        lines: [...(named ? [] : [stopWithSide(leg.board, lang)]), `${leaves} · ${t("plan.stops", { count: leg.numStops }, lang)}`],
         duration: t("time.min", { n: leg.durationMin }, lang),
       },
     });

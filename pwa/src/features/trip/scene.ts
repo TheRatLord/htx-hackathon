@@ -2,7 +2,7 @@
 // (the map adds the white casing), a blue origin, a red destination and labelled stop pins.
 
 import { useEffect, useState } from "react";
-import type { Itinerary, LatLon } from "../../api/types.ts";
+import type { Itinerary, LatLon, TransitLeg } from "../../api/types.ts";
 import { t, type Lang } from "../../i18n/index.ts";
 import { legCoords } from "../../lib/polyline.ts";
 import { useMapPadding, type MapScene } from "../../map/scene.ts";
@@ -13,21 +13,23 @@ export function itineraryLegs(it: Itinerary): NonNullable<MapScene["legs"]> {
   return it.legs.map((l) => ({ coords: legCoords(l.geometry), kind: l.type === "walk" ? "walk" : "ride", color: l.type === "walk" ? "" : l.route.color }));
 }
 
-export function itineraryMarkers(it: Itinerary, lang: Lang): Markers {
+/** `hide`: board stops left out, e.g. one the scene enlarges with its own callout. */
+export function itineraryMarkers(it: Itinerary, lang: Lang, hide: (string | undefined)[] = []): Markers {
   const first = it.legs[0];
   const last = it.legs.at(-1);
   const markers: Markers = [];
   if (first) markers.push({ id: "origin", point: first.type === "walk" ? first.from : first.board, kind: "origin" });
-  let rides = 0;
-  for (const l of it.legs) {
-    if (l.type !== "transit") continue;
-    const id = l.board.id ?? "";
-    markers.push(
-      rides++ === 0
-        ? { id: `board-${id}`, point: l.board, kind: "board", label: t("plan.map.board", { route: l.route.name, id }, lang) }
-        : { id: `transfer-${id}`, point: l.board, kind: "transfer", label: t("plan.map.transfer", { id }, lang) },
-    );
-  }
+  it.legs
+    .filter((l): l is TransitLeg => l.type === "transit")
+    .forEach((l, ride) => {
+      const id = l.board.id ?? "";
+      if (hide.includes(id)) return;
+      markers.push(
+        ride === 0
+          ? { id: `board-${id}`, point: l.board, kind: "board", label: t("plan.map.board", { route: l.route.name, id }, lang) }
+          : { id: `transfer-${id}`, point: l.board, kind: "transfer", label: t("plan.map.transfer", { id }, lang) },
+      );
+    });
   if (last) markers.push({ id: "destination", point: last.type === "walk" ? last.to : last.alight, kind: "destination" });
   return markers;
 }

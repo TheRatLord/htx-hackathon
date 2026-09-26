@@ -2,8 +2,9 @@
 // from the itinerary, because /trips re-bases stop times onto today's service day (always different
 // in fixture mode). The position comes from the GPS fix when one is near the route, else the clock.
 
-import type { LatLon, PlanStop, TransitLeg, TripDetail } from "../../api/types.ts";
+import type { LatLon, PlanStop, TransitLeg, TripDetail, WalkLeg } from "../../api/types.ts";
 import { haversineM } from "../../lib/geo.ts";
+import { legCoords } from "../../lib/polyline.ts";
 import type { TripStep } from "./steps.ts";
 
 /** A fix within this distance of a trip stop places the rider at that stop. */
@@ -22,7 +23,34 @@ export interface RideStop {
   time: number;
 }
 
+/** A fix this close to a walk's start is still "at the start": the planned walk applies. */
+const AT_START_M = 50;
+/** A fix farther than this from a walk's path is not on that walk (e.g. a static demo GPS). */
+const ON_WALK_M = 400;
+
 const distance = (a: LatLon, b: LatLon) => haversineM(a.lat, a.lon, b.lat, b.lon);
+
+/** Metres from `p` to the segment a–b, on a flat local projection (fine at walking scale). */
+function toSegmentM(p: LatLon, a: LatLon, b: LatLon): number {
+  const kx = 111_320 * Math.cos((p.lat * Math.PI) / 180);
+  const ky = 110_540;
+  const [ax, ay, bx, by] = [(a.lon - p.lon) * kx, (a.lat - p.lat) * ky, (b.lon - p.lon) * kx, (b.lat - p.lat) * ky];
+  const [dx, dy] = [bx - ax, by - ay];
+  const len2 = dx * dx + dy * dy;
+  const k = len2 ? Math.min(1, Math.max(0, -(ax * dx + ay * dy) / len2)) : 0;
+  return Math.hypot(ax + k * dx, ay + k * dy);
+}
+
+/**
+ * Where a walk step is measured from: the fix while the rider is on that walk, or undefined when
+ * the planned walk applies (no fix, still at the start, or somewhere else entirely).
+ */
+export function walkOrigin(leg: WalkLeg, fix: LatLon | undefined): LatLon | undefined {
+  if (!fix || distance(fix, leg.from) <= AT_START_M) return undefined;
+  if (distance(fix, leg.to) <= NEAR_STOP_M) return fix;
+  const path = [leg.from, ...legCoords(leg.geometry).map(([lon, lat]) => ({ lat, lon })), leg.to];
+  return path.some((a, i) => i > 0 && toSegmentM(fix, path[i - 1], a) <= ON_WALK_M) ? fix : undefined;
+}
 
 /**
  * The ride's stops from the board stop to the alight stop, with times aligned to the itinerary.

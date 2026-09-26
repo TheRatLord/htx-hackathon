@@ -5,18 +5,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useVehicles } from "../../../api/hooks.ts";
+import type { LatLon, PlanStop } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
+import { fromLabel } from "../../../features/trip/origin.ts";
+import type { RideStop } from "../../../features/trip/progress.ts";
 import { boundsOf, itineraryLegs, itineraryMarkers, useSettledSheetHeight } from "../../../features/trip/scene.ts";
 import { simLegs, useSimulatedFix } from "../../../features/trip/simulate.ts";
+import type { TripStep } from "../../../features/trip/steps.ts";
 import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip/timeline.ts";
-import { useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
+import { destinationOf, useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
 import { useWakeLock } from "../../../features/trip/wakeLock.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatLatLon } from "../../../lib/geo.ts";
 import { notify, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
+import { readJson, writeJson } from "../../../lib/storage.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { useLocation as useRider } from "../../../state/location.tsx";
 import { usePrefs } from "../../../state/prefs.ts";
@@ -28,13 +33,14 @@ import { NotifyPermissionCard } from "../../../ui/NotifyPermissionCard.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { StepList } from "../../../ui/StepList.tsx";
 import { useToast } from "../../../ui/Toast.tsx";
-import { StepCard, walkUrl } from "./StepCard.tsx";
+import { StepCard } from "./StepCard.tsx";
 import styles from "./trip.module.css";
 
 const BUZZ = [200, 100, 200];
 const RESUME_TOAST_AFTER_MS = 30_000;
 const VEHICLE_STALE_S = 120;
-const FOLLOW_ZOOM = 16;
+/** Get-off warnings already given, so leaving D13 (for Walk) and coming back doesn't buzz again. */
+const WARNED_KEY = "ridemetro.tripWarned";
 
 function NoTrip() {
   const t = useT();
@@ -47,7 +53,40 @@ function NoTrip() {
   );
 }
 
-function Running({ active }: { active: ActiveTrip }) {
+/** What the step asks of the rider, without its minutes, so it changes only when the step does. */
+function stepSummary(step: TripStep, destination: string, t: ReturnType<typeof useT>): string {
+  switch (step.kind) {
+    case "walk":
+      return t("trip.say.walk", { stop: stopTitle(step.ride.board) });
+    case "wait":
+      return t("trip.wait.head", { id: step.ride.board.id ?? "" });
+    case "ride":
+      return t("trip.say.ride", { route: step.ride.route.name, headsign: step.ride.headsign });
+    case "final":
+      return t("trip.say.walk", { stop: destination });
+    case "arrived":
+      return t("trip.arrived.head", { place: step.destination.name });
+  }
+}
+
+/** The stop the current step is heading for, which the map enlarges and frames with the rider. */
+function stepTarget(step: TripStep, stops: RideStop[] | undefined, rideIndex: number): { point: LatLon; stopId?: string } {
+  switch (step.kind) {
+    case "walk":
+    case "wait":
+      return { point: step.ride.board, stopId: step.ride.board.id };
+    case "ride": {
+      const next = stops?.[rideIndex + 1];
+      return next?.point ? { point: next.point, stopId: next.id } : { point: step.ride.alight, stopId: step.ride.alight.id };
+    }
+    case "final":
+      return { point: step.leg.to };
+    case "arrived":
+      return { point: step.destination };
+  }
+}
+
+function Running({ active, destination }: { active: ActiveTrip; destination: PlanStop }) {
   const t = useT();
   const lang = useLang();
   const navigate = useNavigate();
@@ -68,22 +107,30 @@ function Running({ active }: { active: ActiveTrip }) {
   const simFix = useSimulatedFix(sim);
   const fix = simFix ?? rider.fix;
 
-  const live = useLiveTrip(active, fix);
+  const live = useLiveTrip(active, destination, fix);
   const { step, stepIndex, total, stops, rideIndex } = live;
   const n = Math.min(stepIndex + 1, total);
   useWakeLock(true);
 
-  // A get-off warning buzzes once per step; the last one also notifies if the rider allowed it.
-  const left = step.kind === "ride" && stops ? stops.length - 1 - rideIndex : undefined;
-  const fired = useRef(new Set<string>());
+  // A new step starts at the top of the sheet, where its instruction is.
+  const body = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (step.kind !== "ride" || (left !== 1 && left !== 2)) return;
-    const key = `${stepIndex}:${left}`;
-    if (fired.current.has(key)) return;
-    fired.current.add(key);
+    body.current?.parentElement?.scrollTo({ top: 0 });
+  }, [stepIndex]);
+
+  // A get-off warning buzzes once per step and trip; the last one also notifies if the rider allowed it.
+  const left = step.kind === "ride" && stops ? stops.length - 1 - rideIndex : undefined;
+  const alight = step.kind === "ride" ? stopTitle(step.ride.alight) : "";
+  useEffect(() => {
+    if (left !== 1 && left !== 2) return;
+    const key = `${active.startedAt}:${stepIndex}:${left}`;
+    const warned = readJson<string[]>(WARNED_KEY, [], "session");
+    if (warned.includes(key)) return;
+    writeJson(WARNED_KEY, [...warned, key], "session");
     vibrate(BUZZ);
-    if (left === 1) void notify(t("trip.warn.notifyTitle"), stopTitle(step.ride.alight), `trip-${stepIndex}`);
-  }, [left, step, stepIndex, lang]);
+    if (left === 1) void notify(t("trip.warn.notifyTitle"), alight, `trip-${stepIndex}`);
+    // `t` is rebuilt every render; `lang` is what it depends on.
+  }, [left, alight, stepIndex, active.startedAt, lang]);
 
   // Honest about the foreground limit: say so when the rider comes back after a while.
   useEffect(() => {
@@ -100,17 +147,23 @@ function Running({ active }: { active: ActiveTrip }) {
   const vehicles = useVehicles(ride?.route.id, { enabled: Boolean(ride?.tripId) && !active.fixture });
   const vehicle = ride?.tripId ? vehicles.data?.vehicles.find((v) => v.tripId === ride.tripId) : undefined;
 
-  // The boarding pins are already labelled; on a ride, the next stop gets the callout.
-  const highlightStopId = step.kind === "ride" ? stops?.[rideIndex + 1]?.id : undefined;
-  const legIndex = "legIndex" in step ? step.legIndex : it.legs.length - 1;
+  const target = stepTarget(step, stops, rideIndex);
+  const boarded = ride?.board.id;
+  const legIndex = step.kind === "arrived" ? it.legs.length - 1 : step.legIndex;
   const sheetH = useSettledSheetHeight();
   const scene = useMemo((): MapScene => {
     const legs = itineraryLegs(it);
     const current = boundsOf((legs[legIndex]?.coords ?? []).map(([lon, lat]) => ({ lat, lon })));
+    // The rider and where they are heading, together; without a fix, the current leg.
+    const both = fix && boundsOf([fix, target.point]);
     return {
       legs,
-      markers: [...itineraryMarkers(it, lang), ...(simFix ? [{ id: "sim", point: simFix, kind: "origin" as const, label: t("trip.sim.you") }] : [])],
-      highlightStopId,
+      markers: [
+        // The enlarged stop has its own callout; on a ride, the stop just boarded is behind the rider.
+        ...itineraryMarkers(it, lang, [target.stopId, boarded]),
+        ...(simFix ? [{ id: "sim", point: simFix, kind: "origin" as const, label: t("trip.sim.you") }] : []),
+      ],
+      highlightStopId: target.stopId,
       vehicles: vehicle
         ? [
             {
@@ -120,10 +173,10 @@ function Running({ active }: { active: ActiveTrip }) {
             },
           ]
         : [],
-      focus: fix ? { kind: "point", point: fix, zoom: FOLLOW_ZOOM } : current && { kind: "bounds", bounds: current },
+      focus: both ? { kind: "bounds", bounds: both } : current && { kind: "bounds", bounds: current },
     };
     // Rebuilt when what it shows changes (t follows lang); `sheetH` re-fits it above a settled sheet.
-  }, [it, lang, legIndex, highlightStopId, vehicle, fix, simFix, sheetH]);
+  }, [it, lang, legIndex, target.stopId, target.point.lat, target.point.lon, boarded, vehicle, fix, simFix, sheetH]);
   useMapScene(scene, [scene]);
 
   const basis = simFix
@@ -139,9 +192,10 @@ function Running({ active }: { active: ActiveTrip }) {
     tripActions.end();
     navigate("/explore", { replace: true });
   };
+  const originName = fromLabel(active.query, lang);
 
   if (allSteps) {
-    const rows = itineraryTimeline(it, { fromName: active.query.fromName ?? t("common.myLocation"), toName: live.destination.name, pace: walkPace, lang });
+    const rows = itineraryTimeline(it, { fromName: originName, toName: destination.name, pace: walkPace, lang });
     const here = rider.fix;
     return (
       <ExploreSheet ariaLabel={t("trip.allSteps")} onBack={onBack} header={<SheetHeader title={t("trip.allSteps")} />}>
@@ -153,15 +207,7 @@ function Running({ active }: { active: ActiveTrip }) {
             disabled={!here}
             disabledReason={t("trip.planAgainOff")}
             onPress={() =>
-              here &&
-              navigate(
-                planUrl({
-                  from: formatLatLon(here),
-                  fromName: t("common.myLocation"),
-                  to: active.query.to ?? formatLatLon(live.destination),
-                  toName: live.destination.name,
-                }),
-              )
+              here && navigate(planUrl({ from: formatLatLon(here), to: active.query.to ?? formatLatLon(destination), toName: destination.name }))
             }
           />
           <StepList
@@ -177,6 +223,7 @@ function Running({ active }: { active: ActiveTrip }) {
     );
   }
 
+  const summary = stepSummary(step, destination.name, t);
   return (
     <ExploreSheet
       ariaLabel={t("trip.title")}
@@ -197,16 +244,22 @@ function Running({ active }: { active: ActiveTrip }) {
         </div>
       }
     >
-      <div className={styles.body}>
+      <div ref={body} className={styles.body}>
+        {/* The one announcement per step (L13): no minutes, so GPS and clock updates stay silent. */}
+        <p className="visually-hidden" aria-live="polite">
+          {step.kind === "arrived" ? `${t("trip.complete")}: ${summary}` : `${t("trip.stepOf", { n, total })}: ${summary}`}
+        </p>
         <section className={styles.card}>
           <StepCard
             step={step}
             fix={fix}
+            fixture={active.fixture}
             stops={stops}
             rideIndex={rideIndex}
             basis={basis}
-            destination={live.destination.name}
-            onWalkDirections={(leg, r) => navigate(walkUrl(leg, r, rider.fix, rider.fix ? t("common.myLocation") : leg.from.name))}
+            destination={destination.name}
+            originName={originName}
+            onNavigate={navigate}
             onDone={end}
           />
         </section>
@@ -253,7 +306,8 @@ function Running({ active }: { active: ActiveTrip }) {
 export default function LiveTrip() {
   const t = useT();
   const { active } = useTrip();
+  const destination = useMemo(() => active && destinationOf(active), [active]);
   usePageTitle(t("trip.title"));
   useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
-  return active ? <Running active={active} /> : <NoTrip />;
+  return active && destination ? <Running active={active} destination={destination} /> : <NoTrip />;
 }

@@ -82,11 +82,11 @@
   margin: 0 calc(-1 * var(--gutter));
 }
 
-/* The LiveStrip look with "5 stops left · about 7 min": big digits, 16sp words. */
+/* The LiveStrip look with "5 stops left · about 7 min": both numbers in strip digits, 16sp words. */
 .strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 var(--sp-2);
+  gap: 0 var(--sp-6);
   align-items: baseline;
   min-height: var(--strip-h);
   padding: var(--sp-3) var(--gutter);
@@ -125,14 +125,6 @@
   font-size: var(--fs-stop-title);
   line-height: var(--lh-stop-title);
   font-weight: var(--fw-bold);
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 
 .walkSteps {
