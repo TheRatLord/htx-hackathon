@@ -44,11 +44,20 @@ export function NextBus({ stopId, routeId, walkMin }: { stopId: string; routeId?
     <div className={styles.box}>
       <p className={styles.nextBus}>
         <RouteBadge route={refOfArrival(first)} size="sm" />
-        <span>{nextBusText(first)}</span>
+        <span>
+          {nextBusText(first)}
+          {/* "You have time." rides on the same line (16): only a warning takes a line of its own. */}
+          {verdict === "yes" && (
+            <>
+              {" · "}
+              <span className={styles.ok}>{t("canMakeIt.yes")}</span>
+            </>
+          )}
+        </span>
       </p>
-      {verdict && (
-        <p className={verdict === "yes" ? styles.ok : styles.warn}>
-          {verdict !== "yes" && <Icon name="warning" size={20} color="var(--c-alert-icon)" />}
+      {verdict && verdict !== "yes" && (
+        <p className={styles.warn}>
+          <Icon name="warning" size={20} color="var(--c-alert-icon)" />
           {t(`canMakeIt.${verdict}`)} {later && t("walk.nextOne", { time: shown(later) })}
         </p>
       )}

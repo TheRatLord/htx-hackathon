@@ -30,6 +30,7 @@ export function NearbyCard({ item, origin, place, firstRowRef }: NearbyCardProps
       onOpenRoute={(routeId) => navigate(`${stopPath}?route=${encodeURIComponent(routeId)}`)}
       onWalk={() => navigate(walkUrl(stop.id, { d: distanceM, from: place?.param, fromName: place?.name }))}
       firstRowRef={firstRowRef}
+      laterFirst={item.laterFirst}
     />
   );
 }

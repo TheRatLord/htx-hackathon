@@ -27,10 +27,12 @@ interface ExpandedRouteProps {
   stripRef: RefObject<HTMLDivElement | null>;
   /** The stop's own actions (Save, Walk here), right under the strip: walking there is the next thing a rider does. */
   stopActions?: ReactNode;
+  /** 360 or Extra large: drop "Telephone / Heights" so the headsign and strip stay above the fold. */
+  hideLongName?: boolean;
 }
 
 /** D6: the expanded route: header row, the blue strip (the answer, first), the stop's Walk here / Save, then Schedule / Track. */
-export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopActions }: ExpandedRouteProps) {
+export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopActions, hideLongName }: ExpandedRouteProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -68,7 +70,7 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopAction
       >
         <RouteBadge route={route} size="sm" showIcon />
         <span className={styles.routeText}>
-          <span className={styles.longName}>{entry.longName}</span>
+          {!hideLongName && entry.longName && <span className={styles.longName}>{entry.longName}</span>}
           <span className={styles.headline}>{keepHeadsign(headline, entry.headsign)}</span>
         </span>
         <Icon name="chevron_right" />
