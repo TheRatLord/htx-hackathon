@@ -78,6 +78,7 @@ const strings: Strings = {
       canceled: "Canceled",
       scheduled: "Scheduled",
       tooSoon: "Leaves before you get there",
+      tooSoonLead: "The {time} bus leaves before you get there",
       demoCaption: "Demo: live times are simulated",
     },
     schedule: {
@@ -303,6 +304,7 @@ const strings: Strings = {
       canceled: "Cancelado",
       scheduled: "Programado",
       tooSoon: "Sale antes de que usted llegue",
+      tooSoonLead: "El autobús de {time} sale antes de que usted llegue",
       demoCaption: "Demo: las horas en vivo son simuladas",
     },
     schedule: {

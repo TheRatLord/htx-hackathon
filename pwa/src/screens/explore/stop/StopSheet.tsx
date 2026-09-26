@@ -117,12 +117,15 @@ function LoadingScene({ stopId }: { stopId: string }) {
 
 function Loaded({ detail }: { detail: StopDetail }) {
   const t = useT();
+  const lang = useLang();
   const now = useNow();
   const offline = useOffline();
   const { textSize } = usePrefs();
   const narrow = useNarrow();
-  // Walk and Save on one row with short labels: Extra large text, or Large text on a narrow screen.
-  const compact = textSize === "xlarge" || (narrow && textSize === "large");
+  // Walk and Save on one row with short labels: Extra large text, or Large text on a narrow screen,
+  // or Spanish on a narrow screen ("Caminar aquí · 2 min" and "Guardar" each took a full row, which
+  // pushed Horario and Avisarme below the fold, 12-es-360).
+  const compact = textSize === "xlarge" || (narrow && (textSize === "large" || lang === "es"));
   const [params, setParams] = useSearchParams();
   const alerts = useAlerts();
   const { stop, serving } = detail;

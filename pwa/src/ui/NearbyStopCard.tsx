@@ -1,6 +1,6 @@
 import type { Dep, NearbyRoute } from "../api/types.ts";
 import { useLang, useT } from "../i18n/index.ts";
-import { clockRow, departureA11y, headsignLine, isFirstBus, sideLine, stopTitle, upcoming } from "../lib/format.ts";
+import { departureA11y, headsignLine, isFirstBus, sideLine, stopTitle, upcoming } from "../lib/format.ts";
 import { toRouteRef } from "../lib/routes.ts";
 import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
@@ -78,7 +78,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   // Two cards with one stop name tell them apart on the grey line ("Northbound · East side of
   // Main St"): in the title, the direction wrapped to a line of its own after a dot (07).
   const side = [titleSuffix, sideLine(stop, { withCompass: false, lang })].filter(Boolean).join(" · ");
-  const title = stopTitle(stop.name, stop.id, lang);
+  const title = stopTitle(stop.name, stop.id, lang, { xl });
 
   const rowText = (row: Row) => {
     if (row.kind === "none") return `${t("routeName.a11y", { name: row.name })}, ${t("card.noBuses2h")}`;
@@ -87,8 +87,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
       return `${t("routeName.a11y", { name: row.name })} ${headsignLine(toRouteRef(row), row.directionLabel, row.headsign, lang)}, ${when}`;
     }
     const ref = toRouteRef({ id: row.route.routeId, name: row.route.name, color: row.route.color, textColor: row.route.textColor });
-    const { deps, clock } = clockRow(shownDeps(row.deps, now, walkMin).slice(0, 2), now, offline);
-    const times = deps.map((d) => departureA11y(d, now, { walkMin, offline, clock, lang }));
+    const times = shownDeps(row.deps, now, walkMin).slice(0, 2).map((d) => departureA11y(d, now, { walkMin, offline, lang }));
     return `${t("routeName.a11y", { name: row.route.name })} ${headsignLine(ref, row.route.directionLabel, row.route.headsign, lang)}, ${times.join(`; ${t("card.then")} `)}`;
   };
   const summary = [title, side, walkMin !== undefined ? t("time.minutesA11y", { count: walkMin }) : ""].filter(Boolean).join(", ");
