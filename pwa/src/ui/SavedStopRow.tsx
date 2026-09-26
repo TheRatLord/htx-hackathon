@@ -78,7 +78,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
             </button>
           )}
         </div>
-        {fullSide && <p className={styles.meta}>{fullSide}</p>}
+        {fullSide && <p className={`${styles.meta} ${rowStyles.side}`}>{fullSide}</p>}
         {walkDistanceM !== undefined && onWalk && (
           <div className={styles.walkSlot}>
             <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />

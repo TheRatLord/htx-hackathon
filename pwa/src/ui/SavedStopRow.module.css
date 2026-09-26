@@ -13,6 +13,18 @@
   margin-top: 1px;
 }
 
+/*
+ * Extra large on a narrow phone: no grey side line. The headsign already says the direction, the
+ * rider has stood at their saved stop before, and its two lines pushed 'The 1 min bus leaves before
+ * you get there' under the tab bar, so a greyed '1 min' had no reason on the first screen
+ * (03-xlarge-360). The stop sheet still has it.
+ */
+@media (max-width: 399px) {
+  :global(html[data-text-size="xlarge"]) .side {
+    display: none;
+  }
+}
+
 .route {
   display: flex;
   gap: var(--sp-3);

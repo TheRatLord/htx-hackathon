@@ -8,11 +8,23 @@ import type { BottomSheetProps, Snap } from "./types.ts";
 /** A fling faster than this (px/ms, ~30% of a screen per second) picks the next snap in its direction. */
 const FLING_VELOCITY = 0.5;
 
+const token = (name: string) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+
+/**
+ * Set on the sheet (in px) by a screen whose half sheet must end above its default height, on the
+ * last whole line that fits (useHalfUpTo): the half snap is then no taller than this.
+ */
+export const HALF_MAX_VAR = "--half-max";
+
+/** The half sheet's height before a screen grows it (C.6). */
+export function defaultHalfPx(): number {
+  return Math.max(token("--sheet-half-min"), Math.min(0.52 * window.innerHeight, 460));
+}
+
 /** Snap heights in px for a container `h` px tall; mirrors the CSS in BottomSheet.module.css (C.6). */
-function snapHeights(h: number, minHalf = 0): Record<Snap, number> {
-  const token = (name: string) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+function snapHeights(h: number, minHalf = 0, halfMax = Infinity): Record<Snap, number> {
   const full = h;
-  const half = Math.min(full, Math.max(token("--sheet-half-min"), Math.min(0.52 * window.innerHeight, 460), minHalf));
+  const half = Math.min(full, halfMax, Math.max(defaultHalfPx(), minHalf));
   return { peek: token("--sheet-peek"), half, full };
 }
 
@@ -47,7 +59,8 @@ export function BottomSheet({
     else if (ref) ref.current = el;
   };
 
-  const heights = () => snapHeights(root.current?.parentElement?.clientHeight ?? window.innerHeight, minHalf);
+  const heights = () =>
+    snapHeights(root.current?.parentElement?.clientHeight ?? window.innerHeight, minHalf, parseFloat(root.current?.style.getPropertyValue(HALF_MAX_VAR) ?? "") || Infinity);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest("button, a, input, textarea, select") || !root.current) return;
