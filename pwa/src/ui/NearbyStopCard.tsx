@@ -61,7 +61,7 @@ function orderRows(props: NearbyStopCardProps, now: number): Row[] {
 
 /** C.5a: a nearby stop with its walk time and next buses per route. */
 export function NearbyStopCard(props: NearbyStopCardProps) {
-  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef } = props;
+  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef, titleSuffix } = props;
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -72,7 +72,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   const shown = rows.slice(0, maxRoutes);
   const hidden = rows.slice(maxRoutes);
   const side = sideLine(stop, { withCompass: false, lang });
-  const title = stopTitle(stop.name, stop.id, lang);
+  const title = titleSuffix ? `${stopTitle(stop.name, stop.id, lang)}\u00a0· ${titleSuffix}` : stopTitle(stop.name, stop.id, lang);
 
   const rowText = (row: Row) => {
     if (row.kind === "none") return `${t("routeName.a11y", { name: row.name })}, ${t("card.noBuses2h")}`;

@@ -1,9 +1,10 @@
 import { Fragment, type ReactNode, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useNearby } from "../../../api/hooks.ts";
-import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
+import type { LatLon, NearbyResponse, NearbyStop, TransitCenterDetail } from "../../../api/types.ts";
+import type { Lang } from "../../../i18n/index.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { upcoming } from "../../../lib/format.ts";
+import { directionWord, upcoming } from "../../../lib/format.ts";
 import { errorText } from "../../../lib/i18nServer.ts";
 import { walkMinutes } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
@@ -22,6 +23,22 @@ const FAR_CARDS = 3;
 /** A transit center further than this walk is not "nearby" for most riders: it goes last, under "Farther away". */
 const NEAR_TC_MIN = 10;
 
+/**
+ * Two cards with the same stop name (the two sides of Main St @ Remington Ln) get the direction
+ * their buses go on the title line, when all of a card's routes go one way.
+ */
+function directionSuffixes(stops: NearbyStop[], lang: Lang): Map<string, string> {
+  const count = new Map<string, number>();
+  for (const s of stops) count.set(s.stop.name, (count.get(s.stop.name) ?? 0) + 1);
+  const out = new Map<string, string>();
+  for (const s of stops) {
+    if ((count.get(s.stop.name) ?? 0) < 2) continue;
+    const labels = new Set(s.routes.map((r) => r.directionLabel).filter(Boolean));
+    if (labels.size === 1) out.set(s.stop.id, directionWord([...labels][0], lang));
+  }
+  return out;
+}
+
 interface CardsProps {
   data: NearbyResponse;
   origin: LatLon;
@@ -35,6 +52,8 @@ interface CardsProps {
 
 function Cards({ data, origin, place, tcDetail, max, firstRow, afterFirst }: CardsProps) {
   const t = useT();
+  const lang = useLang();
+  const suffixes = directionSuffixes(data.stops.slice(0, max), lang);
   const { walkPace } = usePrefs();
   const tc = data.transitCenters[0];
   const tcCard = tc && <NearbyTcCard tc={tc} detail={tcDetail?.id === tc.id ? tcDetail : undefined} origin={origin} place={place} />;
@@ -43,7 +62,7 @@ function Cards({ data, origin, place, tcDetail, max, firstRow, afterFirst }: Car
     <>
       {data.stops.slice(0, max).map((item, i) => (
         <Fragment key={item.stop.id}>
-          <NearbyCard item={item} origin={origin} place={place} firstRowRef={i === 0 ? firstRow : undefined} />
+          <NearbyCard item={item} origin={origin} place={place} firstRowRef={i === 0 ? firstRow : undefined} titleSuffix={suffixes.get(item.stop.id)} />
           {i === 0 && afterFirst}
           {i === 0 && !tcFar && tcCard}
         </Fragment>
