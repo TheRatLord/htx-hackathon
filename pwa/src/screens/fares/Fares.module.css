@@ -11,18 +11,12 @@
   font-weight: var(--fw-regular);
 }
 
-/* The one "to be confirmed" line for the whole page (it was a badge on every section). */
-.note {
-  margin: calc(-1 * var(--sp-2)) var(--gutter) var(--sp-3);
-  color: var(--c-text-variant);
-}
-
 /* Compact: the heading and the button say it all. */
 .ticket {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  margin: 0 var(--gutter) var(--sp-2);
+  margin: 0 var(--gutter) var(--sp-3);
   padding: var(--sp-3) var(--sp-4) var(--sp-4);
   border-radius: var(--r-card);
   background: var(--c-card);
@@ -57,9 +51,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
-  min-height: 56px;
+  min-height: 48px;
   margin: 0 var(--gutter);
-  padding: var(--sp-2) 0;
+  padding: var(--sp-1) 0;
 }
 
 .row + .row {

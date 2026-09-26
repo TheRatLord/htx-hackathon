@@ -10,7 +10,6 @@ import { formatDateRange } from "../../lib/format.ts";
 import { useRoutesLoaded } from "../../lib/routes.ts";
 import { AlertStatusLine } from "../../ui/AlertStatusLine.tsx";
 import { AppBar } from "../../ui/AppBar.tsx";
-import { DemoTag } from "../../ui/DemoTag.tsx";
 import { EmptyState } from "../../ui/EmptyState.tsx";
 import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
@@ -66,7 +65,6 @@ export default function AlertDetail() {
           <p className={styles.effect}>
             <Icon name="warning" color="var(--c-alert-icon)" />
             {effectWord(alert.effect, lang)}
-            {store.source === "demo" && <DemoTag />}
           </p>
           <h2 className={styles.header}>{header.text}</h2>
           <p>{formatDateRange(alert.activeFrom, alert.activeUntil, lang, { withTime: true })}</p>
