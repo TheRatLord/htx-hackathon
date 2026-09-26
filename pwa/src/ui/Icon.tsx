@@ -55,6 +55,9 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS | "route_plan";
 
+/** The 24dp-grid path of a single-path icon, for drawing it outside the DOM (map pin images). */
+export const iconPath = (name: keyof typeof PATHS): string => PATHS[name];
+
 /** Decorative by default; pass `label` only for an icon that stands alone. */
 export function Icon({ name, size = 24, color = "currentColor", label }: { name: IconName; size?: number; color?: string; label?: string }) {
   const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true };
@@ -62,9 +65,9 @@ export function Icon({ name, size = 24, color = "currentColor", label }: { name:
     // Today's trip-planner glyph: a dotted path from a blue dot to a red pin.
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" {...a11y} focusable="false">
-        <circle cx="5.5" cy="18.5" r="3" fill="var(--c-origin-dot)" />
-        <path d="M8 16.5c3-1 6-3 7-6" fill="none" stroke="var(--c-text-variant)" strokeWidth="1.8" strokeDasharray="1.5 2.2" strokeLinecap="round" />
-        <path d="M17.5 2a4.5 4.5 0 0 0-4.5 4.5c0 3.4 4.5 8 4.5 8s4.5-4.6 4.5-8A4.5 4.5 0 0 0 17.5 2zm0 6.2a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4z" fill="var(--c-dest-pin)" />
+        <circle cx="5" cy="5.5" r="3" fill="var(--c-origin-dot)" />
+        <path d="M9.5 5.5h6a2.5 2.5 0 0 1 0 5h-7a2.5 2.5 0 0 0 0 5H13" fill="none" stroke="var(--c-origin-dot)" strokeWidth="1.8" strokeDasharray="2.2 1.6" />
+        <path d="M18.5 12a3.2 3.2 0 0 0-3.2 3.2c0 2.4 3.2 5.8 3.2 5.8s3.2-3.4 3.2-5.8a3.2 3.2 0 0 0-3.2-3.2zm0 4.4a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4z" fill="var(--c-dest-pin)" />
       </svg>
     );
   }

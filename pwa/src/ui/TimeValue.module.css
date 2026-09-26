@@ -31,9 +31,18 @@
 }
 
 .strip .value {
+  height: var(--lh-strip);
   font-size: var(--fs-strip);
   line-height: var(--lh-strip);
   font-weight: var(--fw-medium);
+}
+
+/* Every status word on the strip starts on the same line, whatever sits beside it. */
+.strip .word:not(:empty) {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: var(--lh-caption);
 }
 
 .unit {
