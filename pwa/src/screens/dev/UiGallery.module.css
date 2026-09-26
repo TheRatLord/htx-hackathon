@@ -1,0 +1,80 @@
+.gallery {
+  padding-bottom: var(--sp-8);
+}
+
+.title {
+  padding: var(--sp-4) var(--gutter);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-regular);
+}
+
+.section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--c-divider);
+}
+
+.heading {
+  padding: 0 var(--gutter) var(--sp-3);
+  color: var(--c-brand-blue-dark);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter);
+}
+
+.bleed {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  align-items: flex-start;
+}
+
+.wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: var(--sp-2);
+}
+
+.icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--c-text-variant);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.sheetBox {
+  position: relative;
+  height: 420px;
+  border-radius: var(--r-box);
+  background: var(--c-map-land);
+  overflow: hidden;
+}
+
+.pad {
+  padding: var(--sp-3) var(--gutter);
+}
+
+.mapTint {
+  padding: var(--sp-3);
+  border-radius: var(--r-box);
+  background: var(--c-map-land);
+}

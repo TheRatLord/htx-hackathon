@@ -1,0 +1,11 @@
+.todo {
+  padding: var(--sp-4) var(--gutter);
+  color: var(--c-text-variant);
+}
+
+.title {
+  padding: var(--sp-4) var(--gutter) 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+}

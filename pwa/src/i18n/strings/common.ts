@@ -41,6 +41,7 @@ const strings: Strings = {
       routeAlerts: { one: "{count} alert", other: "{count} alerts" },
       noFix: "Can't find your location yet",
       searchThisArea: "Search this area",
+      thisArea: "this area",
       stopCallout: "Stop: {id}",
     },
     banner: {
@@ -96,7 +97,8 @@ const strings: Strings = {
       routeRowA11y: "Route {route} {headsign}",
       moreSaved: "+{count} saved",
       plusRoutes: { one: "+{count} route", other: "+{count} routes" },
-      platformLine: "Platform {platform} (stop #{id})",
+      platformLine: "{platform} (stop #{id})",
+      stopNumber: "Stop #{id}",
     },
     routeName: { a11y: "Route {name}", railA11y: "{name} Line", filterA11y: "Show Route {name} near you" },
     headsign: { to: "to" },
@@ -211,6 +213,7 @@ const strings: Strings = {
       unknown: "Something went wrong. Please try again.",
     },
     fareLine: { local: "Local fare {price}", reduced: "Reduced fares" },
+    timeline: { youAreHere: "You are here" },
   },
   es: {
     app: { name: "RideMETRO", pageTitle: "{title} · RideMETRO", metro: "METRO" },
@@ -251,6 +254,7 @@ const strings: Strings = {
       routeAlerts: { one: "{count} aviso", other: "{count} avisos" },
       noFix: "Todavía no encontramos su ubicación",
       searchThisArea: "Buscar en esta zona",
+      thisArea: "esta zona",
       stopCallout: "Parada: {id}",
     },
     banner: {
@@ -309,7 +313,8 @@ const strings: Strings = {
       routeRowA11y: "Ruta {route} {headsign}",
       moreSaved: "+{count} guardadas",
       plusRoutes: { one: "+{count} ruta", other: "+{count} rutas" },
-      platformLine: "Plataforma {platform} (parada #{id})",
+      platformLine: "{platform} (parada #{id})",
+      stopNumber: "Parada #{id}",
     },
     routeName: { a11y: "Ruta {name}", railA11y: "Línea {name}", filterA11y: "Mostrar la ruta {name} cerca de usted" },
     headsign: { to: "a" },
@@ -424,6 +429,7 @@ const strings: Strings = {
       unknown: "Algo salió mal. Intente de nuevo.",
     },
     fareLine: { local: "Tarifa local {price}", reduced: "Tarifas reducidas" },
+    timeline: { youAreHere: "Usted está aquí" },
   },
 };
 

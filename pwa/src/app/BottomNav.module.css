@@ -1,0 +1,46 @@
+.nav {
+  display: flex;
+  flex: none;
+  min-height: var(--nav-h);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--c-nav-bg);
+}
+
+.tab {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-height: var(--touch-min);
+  color: var(--c-text-variant);
+  text-decoration: none;
+}
+
+.pill {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--r-pill);
+}
+
+.label {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+}
+
+.tab[aria-current="page"] {
+  color: var(--c-text);
+}
+
+.tab[aria-current="page"] .pill {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+.tab[aria-current="page"] .label {
+  font-weight: var(--fw-bold);
+}
