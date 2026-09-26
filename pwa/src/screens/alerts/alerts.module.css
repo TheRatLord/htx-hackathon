@@ -70,9 +70,8 @@
 
 .footer {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: var(--sp-2);
+  flex-direction: column;
+  align-items: flex-start;
   padding: var(--sp-2) var(--gutter);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);

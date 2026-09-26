@@ -18,7 +18,6 @@ import { AppBar } from "../../ui/AppBar.tsx";
 import { FilterChip } from "../../ui/FilterChip.tsx";
 import { Icon } from "../../ui/Icon.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
-import { Skeleton } from "../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../ui/UpdatedAgo.tsx";
 import styles from "./alerts.module.css";
 import { useMyRoutes } from "./useMyRoutes.ts";
@@ -93,14 +92,9 @@ export default function Alerts() {
   const updatedAt = qc.getQueryState(keys.alerts())?.dataUpdatedAt;
 
   let body;
-  if (store.status === "loading") {
-    body = (
-      <>
-        <Skeleton variant="row" />
-        <Skeleton variant="row" />
-      </>
-    );
-  } else if (store.status === "error" || store.source === "unavailable") {
+  // AlertStatusLine owns the loading and "can't be checked" states. It must stay mounted across
+  // both: a remount retries the failed query, which resets it to loading.
+  if (store.status !== "ok" || store.source === "unavailable") {
     body = <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />;
   } else if (routeParam && shown.length === 0) {
     body = <AlertStatusLine scope="route" name={t("alerts.routeName", { route: route ?? routeParam })} alerts={[]} />;
@@ -141,7 +135,6 @@ export default function Alerts() {
       {store.status === "ok" && store.source !== "unavailable" && (
         <footer className={styles.footer}>
           <span>{demo ? t("alerts.sourceDemo") : t("alerts.sourceMetro")}</span>
-          {updatedAt ? <span aria-hidden="true">·</span> : null}
           {updatedAt ? <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={store.retry} /> : null}
         </footer>
       )}

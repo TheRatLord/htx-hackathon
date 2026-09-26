@@ -18,7 +18,6 @@ import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
-import { Skeleton } from "../../ui/Skeleton.tsx";
 import styles from "./alerts.module.css";
 
 function AffectedStop({ id }: { id: string }) {
@@ -40,13 +39,8 @@ export default function AlertDetail() {
 
   const alert = store.alerts.find((a) => a.id === alertId);
   let content;
-  if (store.status === "loading") {
-    content = (
-      <div className={styles.detail}>
-        <Skeleton variant="stop-card" />
-      </div>
-    );
-  } else if (store.status === "error" || store.source === "unavailable") {
+  // AlertStatusLine owns the loading and "can't be checked" states (and must stay mounted across them).
+  if (store.status !== "ok" || store.source === "unavailable") {
     content = (
       <div className={styles.detail}>
         <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />

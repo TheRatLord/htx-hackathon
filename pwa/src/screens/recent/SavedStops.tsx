@@ -33,17 +33,26 @@ function byRoute(arrivals: Arrival[]): SavedStopRoute[] {
 }
 
 function SavedRow({ stop }: { stop: SavedStop }) {
+  const t = useT();
   const navigate = useNavigate();
   const arrivals = useArrivals(stop.id, { limit: SAVED_ROW_LIMIT });
   const route = stop.preferredRouteId ? `?route=${encodeURIComponent(stop.preferredRouteId)}` : "";
   return (
-    <SavedStopRow
-      stopId={stop.id}
-      name={stop.name}
-      preferredRouteId={stop.preferredRouteId}
-      routes={byRoute(arrivals.data?.arrivals ?? [])}
-      onOpen={() => navigate(`/explore/stop/${encodeURIComponent(stop.id)}${route}`)}
-    />
+    <>
+      <SavedStopRow
+        stopId={stop.id}
+        name={stop.name}
+        preferredRouteId={stop.preferredRouteId}
+        routes={byRoute(arrivals.data?.arrivals ?? [])}
+        onOpen={() => navigate(`/explore/stop/${encodeURIComponent(stop.id)}${route}`)}
+      />
+      {arrivals.isError && !arrivals.data && (
+        <p className={styles.rowError}>
+          {t("recent.timesError")}
+          <Button variant="text" label={t("common.tryAgain")} onPress={() => void arrivals.refetch()} />
+        </p>
+      )}
+    </>
   );
 }
 
