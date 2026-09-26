@@ -17,7 +17,7 @@ import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
 import styles from "./alerts.module.css";
 import { alertRouteRefs } from "./routeRefs.ts";
-import { useStops } from "./staticData.ts";
+import { useStops } from "../../lib/stops.ts";
 
 export default function AlertDetail() {
   const t = useT();
@@ -40,7 +40,7 @@ export default function AlertDetail() {
   usePageTitle(title);
 
   let content;
-  // AlertStatusLine owns the loading and "can't be checked" states (and must stay mounted across them).
+  // AlertStatusLine owns the loading and "can't be checked" states.
   if (store.status !== "ok" || store.source === "unavailable") {
     content = (
       <div className={styles.detail}>
@@ -68,7 +68,7 @@ export default function AlertDetail() {
           </p>
           {store.source === "demo" && <p className={styles.demo}>{t("alerts.demoCaption")}</p>}
           <h2 className={styles.header}>{header.text}</h2>
-          <p>{formatDateRange(alert.activeFrom, alert.activeUntil, lang)}</p>
+          <p>{formatDateRange(alert.activeFrom, alert.activeUntil, lang, { withTime: true })}</p>
           {description.text && <p className={styles.description}>{description.text}</p>}
           {(header.englishOnly || description.englishOnly) && <p className={styles.caption}>{t("alert.englishOnly")}</p>}
         </div>

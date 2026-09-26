@@ -42,6 +42,8 @@ describe("encodePick", () => {
 
   it("fills From with my location", () => {
     const url = encodePick("/explore/plan?to=342", "from", { kind: "my-location", point: { lat: 29.7, lon: -95.3 } });
-    expect(parsePlanQuery(new URL(url, "http://x").searchParams)).toMatchObject({ from: "29.70000,-95.30000", fromName: "My current location", to: "342" });
+    const q = parsePlanQuery(new URL(url, "http://x").searchParams);
+    expect(q).toMatchObject({ from: "29.70000,-95.30000", to: "342" });
+    expect(q.fromName).toBeUndefined();
   });
 });

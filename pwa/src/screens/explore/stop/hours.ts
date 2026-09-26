@@ -1,7 +1,7 @@
 // D7's hourly grid: departures grouped by clock hour in Houston, in service-day order.
 
 import type { Lang } from "../../../i18n/index.ts";
-import { hourFormat, TIME_ZONE } from "./when.ts";
+import { formatHour, TIME_ZONE } from "../../../lib/format.ts";
 
 export interface HourRow {
   /** Calendar date and hour in Houston, so 12 AM after midnight stays apart from 12 AM before. */
@@ -28,14 +28,13 @@ export function hourKey(ms: number): { key: string; minute: string } {
 
 /** "7 PM": 05 35. Service after midnight stays at the end, as on printed schedules. */
 export function hourRows(departures: { departureTime: string }[], lang: Lang): HourRow[] {
-  const label = hourFormat(lang);
   const rows: HourRow[] = [];
   for (const d of departures) {
     const ms = Date.parse(d.departureTime);
     const { key, minute } = hourKey(ms);
     let row = rows.at(-1);
     if (row?.key !== key) {
-      row = { key, label: label.format(new Date(ms)), minutes: [], startMs: ms };
+      row = { key, label: formatHour(ms, lang), minutes: [], startMs: ms };
       rows.push(row);
     }
     row.minutes.push(minute);

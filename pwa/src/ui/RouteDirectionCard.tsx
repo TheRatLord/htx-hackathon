@@ -1,6 +1,7 @@
 import { useLang, useT } from "../i18n/index.ts";
-import { headsignLine, platformLabel, sideLine } from "../lib/format.ts";
+import { headsignLine, platformLabel, sideLine, upcoming } from "../lib/format.ts";
 import { walkMinutes } from "../lib/walk.ts";
+import { useNow } from "../state/clock.ts";
 import { usePrefs } from "../state/prefs.ts";
 import { BayTag } from "./BayTag.tsx";
 import styles from "./cards.module.css";
@@ -10,8 +11,9 @@ import type { RouteDirectionCardProps } from "./types.ts";
 import { WalkButton } from "./WalkButton.tsx";
 
 /** C.5c: one direction of a route near you (D3); with `bay`/`tcName`, the transit-center variant. */
-export function RouteDirectionCard({ route, directionLabel, headsign, stop, walkDistanceM, deps, bay, tcName, onOpen, onWalk }: RouteDirectionCardProps) {
+export function RouteDirectionCard({ route, directionLabel, headsign, stop, walkDistanceM, deps, bay, tcName, noServiceText, onOpen, onWalk }: RouteDirectionCardProps) {
   const t = useT();
+  const now = useNow();
   const lang = useLang();
   const { walkPace } = usePrefs();
   const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
@@ -41,7 +43,7 @@ export function RouteDirectionCard({ route, directionLabel, headsign, stop, walk
       <p className={styles.meta}>
         {tcName ? t("card.platformLine", { platform: platformLabel(stop, lang), id: stop.id }) : sideLine(stop, { withCompass: false, lang })}
       </p>
-      <DepTimes deps={deps} walkMin={walkMin} />
+      {noServiceText && !upcoming(deps, now).length ? <p className={styles.noService}>{noServiceText}</p> : <DepTimes deps={deps} walkMin={walkMin} />}
     </article>
   );
 }

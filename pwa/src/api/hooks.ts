@@ -45,8 +45,14 @@ export function useNearby(anchor?: LatLon, opts: { radius?: number; precise?: bo
   });
 }
 
-export function useStop(id: string) {
-  return useQuery({ queryKey: keys.stop(id), queryFn: () => apiGet<StopDetail>(`/stops/${encodeURIComponent(id)}`), refetchInterval: LIVE_POLL_MS });
+/** Polls by default; `refetchInterval: false` fetches once (D6 takes its times from /arrivals). */
+export function useStop(id: string, opts: { enabled?: boolean; refetchInterval?: number | false } = {}) {
+  return useQuery({
+    queryKey: keys.stop(id),
+    queryFn: () => apiGet<StopDetail>(`/stops/${encodeURIComponent(id)}`),
+    enabled: opts.enabled ?? true,
+    refetchInterval: opts.refetchInterval ?? LIVE_POLL_MS,
+  });
 }
 
 export function useArrivals(stopId: string, opts: { route?: string; limit?: number; enabled?: boolean } = {}) {
@@ -69,8 +75,13 @@ export function useSearch(q: string, near?: LatLon) {
   });
 }
 
-export function useRoute(id: string) {
-  return useQuery({ queryKey: keys.route(id), queryFn: () => apiGet<RouteDetail>(`/routes/${encodeURIComponent(id)}`), staleTime: 5 * 60_000 });
+export function useRoute(id: string, opts: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: keys.route(id),
+    queryFn: () => apiGet<RouteDetail>(`/routes/${encodeURIComponent(id)}`),
+    enabled: opts.enabled ?? true,
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useRouteNext(id: string, dir: 0 | 1) {
@@ -98,10 +109,11 @@ export function useTransitCenters() {
   });
 }
 
-export function useTransitCenter(id: string) {
+export function useTransitCenter(id: string, opts: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: keys.transitCenter(id),
     queryFn: () => apiGet<TransitCenterDetail>(`/transit-centers/${encodeURIComponent(id)}`),
+    enabled: opts.enabled ?? true,
     refetchInterval: LIVE_POLL_MS,
   });
 }
@@ -117,12 +129,16 @@ export function usePlan(query: PlanQuery | null) {
   });
 }
 
-export function useWalk(from?: LatLon, toStop?: string) {
+/** To a stop id, or to a place (the last walk of a trip). */
+export function useWalk(from?: LatLon, to?: string | LatLon, opts: { enabled?: boolean } = {}) {
   const at = from ? formatLatLon(from) : "";
+  const toStop = typeof to === "string" ? to : undefined;
+  const toPoint = typeof to === "object" ? formatLatLon(to) : undefined;
   return useQuery({
-    queryKey: keys.walk(at, toStop ?? ""),
-    queryFn: () => apiGet<WalkRoute>("/walk", { from: at, toStop }),
-    enabled: Boolean(from && toStop),
+    // A "lat,lon" never clashes with a stop id.
+    queryKey: keys.walk(at, toStop ?? toPoint ?? ""),
+    queryFn: () => apiGet<WalkRoute>("/walk", { from: at, toStop, to: toPoint }),
+    enabled: Boolean(from && to) && (opts.enabled ?? true),
     staleTime: 60 * 60_000,
   });
 }

@@ -88,6 +88,8 @@ export interface RouteDirectionCardProps {
   deps: Dep[];
   bay?: string;
   tcName?: string;
+  /** Shown in place of the times once they have loaded and none is upcoming ("No buses in the next 2 hours"). */
+  noServiceText?: string;
   onOpen: () => void;
   onWalk: () => void;
 }

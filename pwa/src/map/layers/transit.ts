@@ -20,12 +20,12 @@ const isRail: Expr = ["==", ["get", "kind"], "rail"];
 /** 20dp pins below zoom 16, 28dp from 16 (C.16). */
 const pinImage: Expr = ["step", ["zoom"], ["case", isRail, "pin-rail-sm", "pin-bus-sm"], 16, ["case", isRail, "pin-rail-md", "pin-bus-md"]];
 
-export function stopsCollection(stops: ClientStop[], anchor: LatLon): FeatureCollection {
+export function stopsCollection(stops: Iterable<ClientStop>, anchor: LatLon): FeatureCollection {
   // Squared equirectangular distance: enough to rank labels, and cheap for 8,797 stops.
   const k = Math.cos((anchor.lat * Math.PI) / 180);
   return {
     type: "FeatureCollection",
-    features: stops.map((s) => ({
+    features: Array.from(stops, (s) => ({
       type: "Feature",
       properties: { id: s.id, kind: s.kind === "rail" ? "rail" : "stop", ...(s.bearing !== undefined && { bearing: s.bearing }), sort: ((s.lat - anchor.lat) ** 2 + ((s.lon - anchor.lon) * k) ** 2) * 1e8 },
       geometry: { type: "Point", coordinates: [s.lon, s.lat] },

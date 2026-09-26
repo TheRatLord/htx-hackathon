@@ -35,11 +35,6 @@ export function nearestDirection(route: Pick<RouteDetail, "directions">, from: L
   return route.directions.reduce((a, b) => (distance(b) < distance(a) ? b : a)).directionId;
 }
 
-/** "FANNIN SOUTH" for "METRORail - FANNIN SOUTH": rail headsigns repeat the system name. */
-export function displayHeadsign(headsign: string): string {
-  return headsign.replace(/^METRORail\s*-\s*/i, "");
-}
-
 /**
  * METRO's page for the route's kind of service. Per-route pages exist, but their addresses are
  * hand-made slugs that can't be derived from the GTFS names (requests.md), so this links one level up.

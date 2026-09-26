@@ -6,18 +6,44 @@ import { hasKey, t, type Lang } from "../i18n/index.ts";
 import { localiseSide, sideDirection } from "./i18nServer.ts";
 import { canMakeIt } from "./walk.ts";
 
-const TIME_ZONE = "America/Chicago";
+/** Every clock and date is shown in Houston time. */
+export const TIME_ZONE = "America/Chicago";
+const locale = (lang: Lang) => (lang === "es" ? "es-US" : "en-US");
 /** Departures more than this far in the past are dropped from every list. */
 const PAST_GRACE_MS = 60_000;
 
-const clockFormats: Record<Lang, Intl.DateTimeFormat> = {
-  en: new Intl.DateTimeFormat("en-US", { timeZone: TIME_ZONE, hour: "numeric", minute: "2-digit" }),
-  es: new Intl.DateTimeFormat("es-US", { timeZone: TIME_ZONE, hour: "numeric", minute: "2-digit" }),
-};
+/** One formatter per language, built on first use. */
+function formats(options: Intl.DateTimeFormatOptions): (lang: Lang) => Intl.DateTimeFormat {
+  const built: Partial<Record<Lang, Intl.DateTimeFormat>> = {};
+  return (lang) => (built[lang] ??= new Intl.DateTimeFormat(locale(lang), { timeZone: TIME_ZONE, ...options }));
+}
+
+const clockFormat = formats({ hour: "numeric", minute: "2-digit" });
+const weekdayFormat = formats({ weekday: "short" });
+const hourFormat = formats({ hour: "numeric" });
+const serviceDateFormat = formats({ weekday: "short", month: "short", day: "numeric" });
+const dateFormat = formats({ month: "short", day: "numeric" });
 
 /** "7:05 PM" in Houston time, no leading zero. */
 export function formatClock(iso: string, lang: Lang): string {
-  return clockFormats[lang].format(new Date(iso));
+  return clockFormat(lang).format(new Date(iso));
+}
+
+/** "Sat 5:12 AM": the next day with service (D6's empty strip, D7's empty state). */
+export function formatDayTime(iso: string, lang: Lang): string {
+  return `${weekdayFormat(lang).format(new Date(iso))} ${formatClock(iso, lang)}`;
+}
+
+/** "7 PM": an hour label (D7's grid). */
+export function formatHour(ms: number, lang: Lang): string {
+  return hourFormat(lang).format(new Date(ms));
+}
+
+/** A GTFS service date ("20260925") as "Fri, Sep 25". */
+export function formatServiceDate(serviceDate: string, lang: Lang): string {
+  const [y, m, d] = [serviceDate.slice(0, 4), serviceDate.slice(4, 6), serviceDate.slice(6, 8)].map(Number);
+  // Noon UTC is the same calendar day in Houston.
+  return serviceDateFormat(lang).format(new Date(Date.UTC(y, m - 1, d, 12)));
 }
 
 export function statusOf(dep: Pick<Dep, "canceled" | "isRealtime" | "source">): Status {
@@ -89,17 +115,16 @@ export function formatDistance(m: number, lang: Lang): string {
   return t(`units.${unit}`, { n }, lang);
 }
 
-const dateFormats: Record<Lang, Intl.DateTimeFormat> = {
-  en: new Intl.DateTimeFormat("en-US", { timeZone: TIME_ZONE, month: "short", day: "numeric" }),
-  es: new Intl.DateTimeFormat("es-US", { timeZone: TIME_ZONE, month: "short", day: "numeric" }),
-};
-
-/** An alert's active period: "Until Oct 3", "From Sep 25 until Oct 3" or "Ongoing". */
-export function formatDateRange(from: string | null | undefined, until: string | null | undefined, lang: Lang): string {
-  const d = (iso: string) => dateFormats[lang].format(new Date(iso));
-  if (from && until) return t("alert.fromUntil", { from: d(from), until: d(until) }, lang);
+/**
+ * An alert's active period: "Until Oct 3", "From Sep 25 until Oct 3" or "Ongoing". `withTime`
+ * adds the start's clock time ("From Sep 25, 5:00 AM until Oct 3", D15).
+ */
+export function formatDateRange(from: string | null | undefined, until: string | null | undefined, lang: Lang, opts: { withTime?: boolean } = {}): string {
+  const d = (iso: string) => dateFormat(lang).format(new Date(iso));
+  const start = (iso: string) => (opts.withTime ? `${d(iso)}, ${formatClock(iso, lang)}` : d(iso));
+  if (from && until) return t("alert.fromUntil", { from: start(from), until: d(until) }, lang);
   if (until) return t("alert.until", { until: d(until) }, lang);
-  if (from) return t("alert.from", { from: d(from) }, lang);
+  if (from) return t("alert.from", { from: start(from) }, lang);
   return t("alert.ongoing", undefined, lang);
 }
 
@@ -128,13 +153,22 @@ export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang:
   return [compass, side].filter(Boolean).join(" · ");
 }
 
-/** "NORTHBOUND to N SHEPHERD P&R" (bus) or "to METRORAIL - FANNIN SOUTH" (rail, whose direction labels are unreliable). */
+/** "Eastbound" (es "Rumbo este") for a direction label; unknown labels stay as METRO wrote them. */
+export function directionWord(label: string, lang: Lang): string {
+  const key = `dir.${label}`;
+  return hasKey(key, lang) ? t(key, undefined, lang) : label;
+}
+
+/** "FANNIN SOUTH" for "METRORail - FANNIN SOUTH": rail headsigns repeat the system name. */
+export function displayHeadsign(headsign: string): string {
+  return headsign.replace(/^METRORail\s*-\s*/i, "");
+}
+
+/** "NORTHBOUND to N SHEPHERD P&R" (bus) or "to FANNIN SOUTH" (rail, whose direction labels are unreliable). */
 export function headsignLine(route: Pick<RouteRef, "mode">, directionLabel: string, headsign: string, lang: Lang): string {
-  const to = `${t("headsign.to", undefined, lang)} ${headsign.toUpperCase()}`;
+  const to = `${t("headsign.to", undefined, lang)} ${displayHeadsign(headsign).toUpperCase()}`;
   if (route.mode === "rail" || !directionLabel) return to;
-  const dirKey = `dir.${directionLabel}`;
-  const dir = hasKey(dirKey, lang) ? t(dirKey, undefined, lang) : directionLabel;
-  return `${dir.toUpperCase()} ${to}`;
+  return `${directionWord(directionLabel, lang).toUpperCase()} ${to}`;
 }
 
 /** A transit-center platform's short name: "Northwest Transit Center - Platform 2" → "Platform 2", else "Stop #79" (C.14). */

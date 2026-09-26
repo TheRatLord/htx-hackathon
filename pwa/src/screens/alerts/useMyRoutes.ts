@@ -6,7 +6,7 @@ import type { NearbyResponse, RouteRef } from "../../api/types.ts";
 import { canonicalRouteId, routeRef, toRouteRef, useRoutesLoaded } from "../../lib/routes.ts";
 import { compareRouteNames } from "../../lib/sortRoutes.ts";
 import { useSaved } from "../../state/saved.ts";
-import { useStops } from "./staticData.ts";
+import { useStops } from "../../lib/stops.ts";
 
 /** Undefined until routes.json (and stops.json, when stops are saved) have loaded. */
 export function useMyRoutes(): RouteRef[] | undefined {

@@ -7,7 +7,7 @@ import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useLang, useT } from "../../i18n/index.ts";
 import { sideLine } from "../../lib/format.ts";
 import { planUrl, type PlanQuery } from "../../lib/planQuery.ts";
-import { routeRef, useRoutesLoaded } from "../../lib/routes.ts";
+import { routeRef, routeRefOrFallback, useRoutesLoaded } from "../../lib/routes.ts";
 import { useRecents, type RecentStop } from "../../state/recents.ts";
 import { useSaved } from "../../state/saved.ts";
 import { Button } from "../../ui/Button.tsx";
@@ -17,13 +17,12 @@ import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
-import { routeRefOr } from "../alerts/routeRefs.ts";
 import styles from "./Recent.module.css";
 import { SavedStops } from "./SavedStops.tsx";
 
 function RouteChips({ routes }: { routes: { id: string; name: string }[] }) {
   const navigate = useNavigate();
-  const refs = routes.map((r) => routeRefOr(r.id, r.name));
+  const refs = routes.map((r) => routeRefOrFallback(r.id, r.name));
   return (
     <div className={styles.chips}>
       {refs.map((r) => (

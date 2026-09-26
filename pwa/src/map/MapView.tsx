@@ -7,9 +7,10 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTransitCenters } from "../api/hooks.ts";
-import type { ClientStop, LatLon } from "../api/types.ts";
+import type { LatLon } from "../api/types.ts";
 import { t } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
+import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
 import { addMarkerImages } from "./layers/images.ts";
 import { addSceneLayers, drawScene, showUser } from "./layers/scene.ts";
@@ -17,21 +18,6 @@ import { addTransitLayers, setHighlightedStop, showTransitCenters, STOPS_SOURCE,
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
-
-let stopsPromise: Promise<ClientStop[]> | null = null;
-/** Loaded once; a failed load is forgotten, so the next camera move or scene tries again. */
-function loadStops(): Promise<ClientStop[]> {
-  stopsPromise ??= fetch("/data/stops.json")
-    .then((r) => {
-      if (!r.ok) throw new Error(`stops.json: ${r.status}`);
-      return r.json() as Promise<ClientStop[]>;
-    })
-    .catch((err: unknown) => {
-      stopsPromise = null;
-      throw err;
-    });
-  return stopsPromise;
-}
 
 /** Label ranking is recomputed only when the anchor moves this far. */
 const RESORT_M = 50;
@@ -45,8 +31,8 @@ const padding = (bottom: number, safeTop: number) => ({ top: safeTop + 108, left
 async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions) {
   showUser(map, user);
   // Without stops.json the scene still draws, just without the enlarged pin.
-  const stops = scene.highlightStopId ? await loadStops().catch(() => []) : [];
-  const highlight = stops.find((s) => s.id === scene.highlightStopId);
+  const stops = scene.highlightStopId ? await loadStops().catch(() => undefined) : undefined;
+  const highlight = scene.highlightStopId ? stops?.get(scene.highlightStopId) : undefined;
   setHighlightedStop(map, highlight?.id);
   drawScene(map, scene, highlight, highlight ? t("map.stopCallout", { id: highlight.id }) : "");
 
@@ -98,8 +84,9 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const anchor = labelAnchor(map, scene, user);
     if (anchorRef.current && haversineM(anchorRef.current.lat, anchorRef.current.lon, anchor.lat, anchor.lon) < RESORT_M) return;
     anchorRef.current = anchor;
+    // A failed load is forgotten, so the next camera move or scene tries again.
     void loadStops().then(
-      (stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops, anchor)),
+      (stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops.values(), anchor)),
       () => (anchorRef.current = null),
     );
   };

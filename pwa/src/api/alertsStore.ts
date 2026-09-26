@@ -12,6 +12,8 @@ export interface AlertsStore {
   status: "loading" | "ok" | "error";
   source?: AlertsResult["source"];
   alerts: Alert[];
+  /** When the last answer arrived (ms), for "Updated 1 min ago". */
+  updatedAt?: number;
   forRoute(routeId: string): Alert[];
   forStop(stopId: string, routeIds: string[]): Alert[];
   forItinerary(it: Itinerary): Alert[];
@@ -19,12 +21,15 @@ export interface AlertsStore {
 }
 
 export function useAlerts(): AlertsStore {
-  const q = useQuery({ queryKey: keys.alerts(), queryFn: () => apiGet<AlertsResult>("/alerts"), refetchInterval: ALERTS_POLL_MS });
+  // A newly mounted AlertStatusLine must not retry a failed fetch by itself (that resets the
+  // store to "loading" and unmounts it again); its "Try again" calls retry().
+  const q = useQuery({ queryKey: keys.alerts(), queryFn: () => apiGet<AlertsResult>("/alerts"), refetchInterval: ALERTS_POLL_MS, retryOnMount: false });
   const alerts = q.data?.alerts ?? [];
   return {
     status: q.data ? "ok" : q.isError ? "error" : "loading",
     source: q.data?.source,
     alerts,
+    updatedAt: q.data ? q.dataUpdatedAt : undefined,
     forRoute: (routeId) => alertsForRoute(alerts, routeId),
     forStop: (stopId, routeIds) => alertsForStop(alerts, stopId, routeIds),
     forItinerary: (it) => alertsForItinerary(alerts, it),
