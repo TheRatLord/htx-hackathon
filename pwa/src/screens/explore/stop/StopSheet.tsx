@@ -1,7 +1,7 @@
 // D6 Stop sheet (`/explore/stop/:stopId?route=`): the centred "Name (ID)", Save and Walk here,
 // alerts, the expanded route with today's blue strip, the other routes, and the legend.
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useArrivals, useStop } from "../../../api/hooks.ts";
 import { useAlerts } from "../../../api/alertsStore.ts";
@@ -12,6 +12,7 @@ import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { sideLine } from "../../../lib/format.ts";
+import { errorText } from "../../../lib/i18nServer.ts";
 import { canonicalRouteId } from "../../../lib/routes.ts";
 import { estimateWalk, walkMinutes } from "../../../lib/walk.ts";
 import { useMapScene } from "../../../map/scene.ts";
@@ -23,6 +24,7 @@ import { useSaved } from "../../../state/saved.ts";
 import { useWalkDistance } from "../../../state/walkDistance.ts";
 import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
 import { Button } from "../../../ui/Button.tsx";
+import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { Legend } from "../../../ui/Legend.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
@@ -30,6 +32,8 @@ import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { useToast } from "../../../ui/Toast.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
+import { foldCap } from "../home/fold.ts";
+import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 import { CollapsedRoute } from "./CollapsedRoute.tsx";
 import { ExpandedRoute } from "./ExpandedRoute.tsx";
@@ -100,12 +104,15 @@ function Loaded({ detail }: { detail: StopDetail }) {
       { replace: true },
     );
 
+  const strip = useRef<HTMLDivElement>(null);
+  useHalfUpTo(() => strip.current, foldCap, expanded ? servingKey(expanded) : "");
+
   return (
     <div className={styles.body}>
       {detail.transitCenter && (
         <Button
           variant="text"
-          label={`${t("stop.partOf", { tc: detail.transitCenter.name })} · ${t("card.departuresByBay")} ›`}
+          label={t("stop.partOfTc", { tc: detail.transitCenter.name })}
           href={`/explore/tc/${encodeURIComponent(detail.transitCenter.id)}`}
         />
       )}
@@ -113,9 +120,26 @@ function Loaded({ detail }: { detail: StopDetail }) {
         <SaveButton stop={stop} routeId={expanded?.routeId} />
         <WalkHere stop={stop} routeId={expanded?.routeId} />
       </div>
-      <AlertStatusLine scope="stop" name={stop.name} alerts={alerts.forStop(stop.id, stop.routes.map((r) => r.id))} />
       <hr className={styles.divider} />
-      {expanded && <ExpandedRoute key={servingKey(expanded)} stop={stop} entry={expanded} shared={serving.filter((s) => s.routeId === expanded.routeId).length > 1} />}
+      {expanded && (
+        <ExpandedRoute
+          key={servingKey(expanded)}
+          stop={stop}
+          entry={expanded}
+          shared={serving.filter((s) => s.routeId === expanded.routeId).length > 1}
+          mixed={departuresOf(expanded, arrivals)}
+          stripRef={strip}
+        />
+      )}
+      {/* After the strip, so the answer to "when does it come?" is on the first screen (A.1.2). */}
+      <AlertStatusLine
+        scope="stop"
+        name={stop.name}
+        alerts={alerts.forStop(
+          stop.id,
+          stop.routes.map((r) => r.id),
+        )}
+      />
       {others.length > 0 && (
         <ul className={styles.others} aria-label={t("stop.routes")}>
           {others.map((s) => (
@@ -128,7 +152,6 @@ function Loaded({ detail }: { detail: StopDetail }) {
       <Legend />
       <div className={styles.updated}>
         <UpdatedAgo at={updatedAt} onRefresh={() => void mixed.refetch()} />
-        <span aria-hidden="true">·</span>
         <ScheduleCaption />
       </div>
     </div>
@@ -163,15 +186,23 @@ export default function StopSheet() {
   }, [summary]);
 
   const side = summary ? sideLine(summary, { withCompass: false, lang }) : "";
-  const notFound = stop.error instanceof ApiError && stop.error.code === "stop_not_found";
+  const notFound = stop.error instanceof ApiError && stop.error.code === "stop_not_found" ? stop.error : undefined;
   return (
     <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} titleAlign="center" sub={side || undefined} />} onBack={back}>
       {stop.data ? (
         <Loaded detail={stop.data} />
+      ) : notFound ? (
+        <div className={styles.body}>
+          <EmptyState
+            icon="search"
+            title={t("stop.notFoundTitle")}
+            body={errorText(notFound, { id: stopId }, lang)}
+            action={{ label: t("stop.searchInstead"), variant: "primary", onPress: () => navigate(`/explore/search?q=${encodeURIComponent(stopId)}`) }}
+          />
+        </div>
       ) : stop.isError ? (
         <div className={styles.body}>
           <ErrorState error={stop.error} context={{ id: stopId }} onRetry={() => void stop.refetch()} />
-          {notFound && <Button variant="tonal" icon="search" label={t("stop.searchInstead")} onPress={() => navigate(`/explore/search?q=${encodeURIComponent(stopId)}`)} />}
         </div>
       ) : (
         <div className={styles.body}>
