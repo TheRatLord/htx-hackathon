@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Arrival, ClientRoute } from "../../../api/types.ts";
 import { primeRoutes } from "../../../lib/routes.ts";
-import { departureRows, platformsOf, servesRoute, tcRoutes } from "./tcModel.ts";
+import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes } from "./tcModel.ts";
 
 const route = (id: string, displayName: string): ClientRoute => ({
   id,
@@ -61,13 +61,37 @@ describe("servesRoute", () => {
 });
 
 describe("departureRows", () => {
+  const now = Date.parse("2026-09-26T02:00:00Z");
+
   it("groups by route and headsign in departure order, optionally for one route", () => {
     const deps = [arrival("070", "BRITTMOORE", "2026-09-26T02:10:00Z"), arrival("072", "BRITTMOORE", "2026-09-26T02:15:00Z"), arrival("070", "BRITTMOORE", "2026-09-26T02:40:00Z")];
-    expect(departureRows(deps).map((r) => [r.route.name, r.deps.length])).toEqual([
+    expect(departureRows(deps, now).map((r) => [r.route.name, r.deps.length])).toEqual([
       ["70", 2],
       ["72", 1],
     ]);
-    expect(departureRows(deps, "72").map((r) => r.route.name)).toEqual(["72"]);
+    expect(departureRows(deps, now, "72").map((r) => r.route.name)).toEqual(["72"]);
+  });
+
+  it("counts a repeated trip once and drops departures that have left", () => {
+    const due = arrival("058", "WEST BELT", "2026-09-26T02:03:00Z");
+    const gone = arrival("058", "WEST BELT", "2026-09-26T01:55:00Z");
+    expect(departureRows([gone, due, { ...due }], now).map((r) => r.deps.length)).toEqual([1]);
+    expect(departureRows([gone], now)).toEqual([]);
+  });
+});
+
+describe("foldQuietBays", () => {
+  it("folds runs of two or more empty bays into one line", () => {
+    const [row] = departureRows([arrival("058", "WEST BELT", "2026-09-26T02:03:00Z")], Date.parse("2026-09-26T02:00:00Z"));
+    const items = foldQuietBays([
+      { bay: "H", rows: [row] },
+      { bay: "I", rows: [] },
+      { bay: "K", rows: [row] },
+      { bay: "L", rows: [] },
+      { bay: "M", rows: [] },
+      { bay: "N", rows: [] },
+    ]);
+    expect(items.map((i) => (i.kind === "bay" ? `${i.bay}:${i.rows.length}` : i.bays.join("")))).toEqual(["H:1", "I:0", "K:1", "LMN"]);
   });
 });
 
