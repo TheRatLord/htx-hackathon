@@ -3,3 +3,8 @@
   inset: 0;
   background: var(--c-map-land);
 }
+
+/* Compact attribution, bottom-left, just above the sheet (C.16). */
+.map :global(.maplibregl-ctrl-bottom-left) {
+  bottom: var(--attribution-bottom, 0px);
+}
