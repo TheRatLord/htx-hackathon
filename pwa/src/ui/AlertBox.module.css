@@ -1,19 +1,21 @@
 .box {
   display: flex;
   gap: var(--sp-2);
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
   min-height: var(--touch-min);
-  padding: var(--sp-3);
-  border: 1px solid var(--c-alert-border);
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3);
+  border: 1px solid var(--c-outline);
+  border-left: 4px solid var(--c-alert-text);
   border-radius: var(--r-alert);
-  background: var(--c-alert-bg);
+  background: var(--c-surface);
   color: var(--c-text);
   text-align: start;
 }
 
 .box > svg {
   flex: none;
+  color: var(--c-text-variant);
 }
 
 .text {
@@ -24,11 +26,15 @@
   min-width: 0;
 }
 
-/* "[82] Stop moved: …": badges first, the headline wrapping beside them. */
+/* "⚠ Stop moved: …", the icon hanging beside the first line. */
 .lead {
   display: flex;
   gap: var(--sp-2);
   align-items: flex-start;
+}
+
+.lead > svg {
+  flex: none;
 }
 
 .headline {
@@ -46,11 +52,16 @@
   font-size: var(--fs-caption);
 }
 
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
 .badges {
   display: flex;
-  flex: none;
   flex-wrap: wrap;
-  max-width: 50%;
   align-items: center;
   gap: var(--sp-2);
 }

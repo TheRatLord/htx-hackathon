@@ -1,24 +1,26 @@
-import { useRef, useState, type PointerEvent, type Ref } from "react";
+import { useCallback, useRef, useState, type PointerEvent, type Ref } from "react";
 import { useT } from "../i18n/index.ts";
 import styles from "./BottomSheet.module.css";
 import { Icon } from "./Icon.tsx";
+import { SheetChromeContext, type SheetChrome, type SheetToggle } from "./sheetChrome.ts";
 import type { BottomSheetProps, Snap } from "./types.ts";
 
 /** A fling faster than this (px/ms, ~30% of a screen per second) picks the next snap in its direction. */
 const FLING_VELOCITY = 0.5;
-const TOP_GAP = 8;
 
 /** Snap heights in px for a container `h` px tall; mirrors the CSS in BottomSheet.module.css (C.6). */
 function snapHeights(h: number, minHalf = 0): Record<Snap, number> {
   const token = (name: string) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
-  const full = h - TOP_GAP;
+  const full = h;
   const half = Math.min(full, Math.max(token("--sheet-half-min"), Math.min(0.52 * window.innerHeight, 460), minHalf));
   return { peek: token("--sheet-peek"), half, full };
 }
 
 /**
- * C.6: the Explore sheet. "‹ Back" and "Show list ▲ / Show map ▼" live in the 48dp handle zone
- * (the no-drag alternative, WCAG 2.5.7). Dragging also works; swiping never discards anything.
+ * C.6: the Explore sheet. Its no-drag alternative (WCAG 2.5.7) is one chevron toggle, "Show list"
+ * or "Show map" by the snap it is at, never both. With a SheetHeader inside, "‹ Back" and the
+ * toggle sit on the title row and the handle zone is just the grab bar; otherwise (a custom
+ * header, the peek summary) they fill the 48dp handle zone. Swiping never discards anything.
  */
 export function BottomSheet({
   snap,
@@ -47,7 +49,7 @@ export function BottomSheet({
   const heights = () => snapHeights(root.current?.parentElement?.clientHeight ?? window.innerHeight, minHalf);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest("button") || !root.current) return;
+    if ((e.target as HTMLElement).closest("button, a, input, textarea, select") || !root.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const h = root.current.getBoundingClientRect().height;
     drag.current = { startY: e.clientY, startH: h, lastY: e.clientY, lastT: e.timeStamp, v: 0 };
@@ -82,35 +84,48 @@ export function BottomSheet({
   };
 
   const expanded = snap === "full";
+  const toPeek = snap === "half" && Boolean(peek) && allowPeek;
+  const toggle: SheetToggle =
+    expanded || toPeek
+      ? { label: t("common.showMap"), icon: "expand_more", expanded, onPress: () => onSnapChange(expanded ? "half" : "peek") }
+      : { label: t("common.showList"), icon: "expand_less", expanded, onPress: () => onSnapChange(snap === "peek" ? "half" : "full") };
+  const [hosts, setHosts] = useState(0);
+  const host = useCallback(() => {
+    setHosts((n) => n + 1);
+    return () => setHosts((n) => n - 1);
+  }, []);
+  const chrome: SheetChrome = { onBack, toggle, host };
   const style = dragH !== null ? { height: dragH, transition: "none" } : undefined;
   const showPeek = snap === "peek" && peek;
+  const hosted = hosts > 0 && !showPeek;
+  const grip = { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
   return (
     <section ref={setRoot} className={`${styles.sheet} ${styles[snap]}`} style={{ ...style, ["--min-half" as string]: `${minHalf ?? 0}px` }} role="region" aria-label={ariaLabel}>
-      <div className={styles.handleZone} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-        {onBack ? (
-          <button type="button" className={styles.textButton} onClick={onBack}>
-            <Icon name="chevron_left" />
-            {t("common.back")}
-          </button>
-        ) : (
-          <span />
-        )}
+      <div className={`${styles.handleZone} ${hosted ? styles.slim : ""}`} {...grip}>
         <span className={styles.handle} aria-hidden="true" />
-        <span className={styles.snapButtons}>
-          {/* A sheet with its own peek summary (D11) can reach it without dragging too. */}
-          {snap === "half" && peek && allowPeek && (
-            <button type="button" className={styles.textButton} onClick={() => onSnapChange("peek")}>
-              {t("common.showMap")}
-              <Icon name="expand_more" />
+        {!hosted && (
+          <>
+            {onBack ? (
+              <button type="button" className={styles.textButton} onClick={onBack}>
+                <Icon name="chevron_left" />
+                {t("common.back")}
+              </button>
+            ) : (
+              <span />
+            )}
+            <button type="button" className={styles.textButton} aria-expanded={toggle.expanded} onClick={toggle.onPress}>
+              {toggle.label}
+              <Icon name={toggle.icon} />
             </button>
-          )}
-          <button type="button" className={styles.textButton} aria-expanded={expanded} onClick={() => onSnapChange(expanded ? "half" : "full")}>
-            {expanded ? t("common.showMap") : t("common.showList")}
-            <Icon name={expanded ? "expand_more" : "expand_less"} />
-          </button>
-        </span>
+          </>
+        )}
       </div>
-      {showPeek ? peek : header}
+      <SheetChromeContext value={chrome}>
+        {/* The title row drags the sheet too, so the slim handle zone isn't the only grip. */}
+        <div className={styles.headerZone} {...grip}>
+          {showPeek ? peek : header}
+        </div>
+      </SheetChromeContext>
       <div className={styles.body} hidden={Boolean(showPeek)}>
         {children}
       </div>

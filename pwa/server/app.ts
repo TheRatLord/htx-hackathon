@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { config } from "./config.ts";
-import { findStop } from "./gtfs/store.ts";
+import { findRoute, findStop } from "./gtfs/store.ts";
 import { optionalNumber, parseLatLon, parsePlace, requireParam } from "./params.ts";
 import { getAlerts } from "./services/alerts.ts";
 import { getArrivals } from "./services/arrivals.ts";
@@ -85,8 +85,11 @@ export function createApp() {
       label: `stop #${toStop.id} (${toStop.name}${toStop.dir ? `, ${toStop.dir.toLowerCase()}` : ""})`,
       name: toStop.name,
     };
-    cacheFor(c, 3600, 86400);
-    return c.json(await walkRoute(from, to, destination));
+    const walk = await walkRoute(from, to, destination);
+    // A straight-line estimate may be a passing upstream failure: browsers must not keep it.
+    if (walk.source === "osrm") cacheFor(c, 3600, 86400);
+    else c.header("Cache-Control", "no-store");
+    return c.json(walk);
   });
 
   app.get("/plan", async (c) => {
@@ -129,8 +132,14 @@ export function createApp() {
   });
 
   app.get("/vehicles", async (c) => {
-    if (!config.metroTransitApiKey || config.offline)
-      throw new ApiError(503, "REALTIME_UNAVAILABLE", "Live bus locations need METRO_TRANSIT_API_KEY (not available offline).");
+    // Not an error the rider can fix, and polled: answer 200 with `available: false` so the
+    // browser doesn't log a failed request every 15 s. The route still has to exist.
+    if (!config.metroTransitApiKey || config.offline) {
+      const routeId = c.req.query("route");
+      if (routeId && !findRoute(routeId)) throw new ApiError(404, "ROUTE_NOT_FOUND", `Route ${routeId} doesn't exist.`);
+      cacheFor(c, 300);
+      return c.json({ vehicles: [], available: false });
+    }
     cacheFor(c, 15);
     return c.json({ vehicles: await getVehicles(c.req.query("route")) });
   });

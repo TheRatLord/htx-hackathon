@@ -2,10 +2,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-2);
+  /* Tight enough that two pills with icons ("Full Schedule", "Track Bus Stop") fit a 360dp row. */
+  gap: 6px;
   min-height: var(--touch-min);
   min-width: var(--touch-min);
-  padding: var(--sp-2) var(--sp-5);
+  padding: var(--sp-2) var(--sp-4);
   border: none;
   border-radius: var(--r-pill);
   font-size: var(--fs-body);

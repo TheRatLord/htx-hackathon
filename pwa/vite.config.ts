@@ -14,6 +14,19 @@ export default defineConfig({
     react(),
     VitePWA(pwaOptions),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Vendors in their own long-lived chunks: an app deploy doesn't re-download MapLibre.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("maplibre-gl")) return "maplibre";
+          if (/[\\/](react|react-dom|react-router|scheduler|@tanstack)[\\/]/.test(id)) return "vendor";
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     port: webPort,
     strictPort: true,

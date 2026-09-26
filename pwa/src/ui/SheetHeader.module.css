@@ -1,11 +1,57 @@
 .header {
   display: flex;
   flex: none;
+  flex-direction: column;
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+/* In a sheet, Back and the chevron reach into the gutter so their text lines up with the content. */
+.inSheet {
+  padding-inline: var(--gutter) var(--sp-1);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0 calc(-1 * var(--sp-3));
+}
+
+.main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
+/* Title and "Updated just now · Refresh" share a line when they fit. */
+.text {
+  display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0 var(--sp-3);
-  padding: 0 var(--gutter) var(--sp-2);
+  min-width: 0;
+}
+
+.inSheet .text {
+  padding-inline-end: var(--sp-3);
+}
+
+.inSheet .main .text {
+  min-height: var(--touch-min);
+  padding-inline-end: 0;
+}
+
+/* No Back row: clear the grab bar drawn over the top of the header. */
+.inSheet > .main {
+  padding-top: var(--sp-3);
+}
+
+.center .text {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
 }
 
 .title {
@@ -14,11 +60,6 @@
   line-height: var(--lh-title);
   font-weight: var(--fw-regular);
   overflow-wrap: anywhere;
-}
-
-.center {
-  flex-direction: column;
-  text-align: center;
 }
 
 .stopTitle {
@@ -30,4 +71,34 @@
 .sub,
 .right {
   flex: none;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin-left: auto;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-link-text);
+}
+
+.toggle:active,
+.back:active {
+  background: rgb(0 0 0 / 6%);
 }

@@ -24,15 +24,25 @@ export function alertsForRoute(alerts: Alert[], routeId: string): Alert[] {
   return alerts.filter((a) => a.routes.some((r) => sameRoute(r.routeId, routeId)));
 }
 
-/** The stop's own alerts plus alerts on any route serving it. */
-export function alertsForStop(alerts: Alert[], stopId: string, routeIds: string[]): Alert[] {
-  return alerts.filter((a) => a.stopIds.includes(stopId) || a.routes.some((r) => routeIds.some((id) => sameRoute(r.routeId, id))));
+/**
+ * Whether an alert touches these stops or routes. An alert that names stops is about those stops
+ * (its routes are the ones serving them there, as in a GTFS-RT informed entity with both a route
+ * and a stop), so it matches only at those stops; an alert without stops is route-wide.
+ */
+function touches(a: Alert, stopIds: string[], routeIds: string[]): boolean {
+  if (a.stopIds.length) return a.stopIds.some((s) => stopIds.includes(s));
+  return a.routes.some((r) => routeIds.some((id) => sameRoute(r.routeId, id)));
 }
 
-/** Alerts on any ridden route, or at any boarding or alighting stop. */
+/** The stop's own alerts plus route-wide alerts on any route serving it (not another stop's alert). */
+export function alertsForStop(alerts: Alert[], stopId: string, routeIds: string[]): Alert[] {
+  return alerts.filter((a) => touches(a, [stopId], routeIds));
+}
+
+/** Route-wide alerts on any ridden route, and alerts at any boarding or alighting stop. */
 export function alertsForItinerary(alerts: Alert[], it: Itinerary): Alert[] {
   const rides = it.legs.filter((l) => l.type === "transit");
   const routeIds = rides.map((l) => l.route.id);
   const stopIds = rides.flatMap((l) => [l.board.id, l.alight.id]).filter((id): id is string => Boolean(id));
-  return alerts.filter((a) => a.stopIds.some((s) => stopIds.includes(s)) || a.routes.some((r) => routeIds.some((id) => sameRoute(r.routeId, id))));
+  return alerts.filter((a) => touches(a, stopIds, routeIds));
 }

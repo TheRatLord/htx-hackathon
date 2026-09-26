@@ -36,6 +36,12 @@ export interface LiveStripProps {
   deps: Dep[];
   loading?: boolean;
   emptyText?: string;
+  /**
+   * The next scheduled trip when none is in the window (from /stops/:id/schedule's
+   * `nextServiceFirst`; `today` when its serviceDate is the response's serviceDate). Shown as a
+   * big clock time with "First bus · in 3 hr 17 min", instead of `emptyText`.
+   */
+  nextService?: { departureTime: string; today: boolean };
 }
 
 /** One fact on the strip in its digits, e.g. "about **7** min" (D13's ride step). */
@@ -83,8 +89,12 @@ export interface SavedStopRowProps {
   preferredRouteId?: string;
   routes: SavedStopRoute[];
   onOpen: () => void;
-  /** "+2 saved ›" in place of the chevron when more stops are saved (D2 item 5). */
+  /** "+2 saved ›" at the top right when more stops are saved (D2 item 5). */
   moreSaved?: { count: number; onPress: () => void };
+  /** The side-of-street line and walk pill, as on a nearby card (C.5a), when the rider's position is known. */
+  side?: string;
+  walkDistanceM?: number;
+  onWalk?: () => void;
 }
 
 /** C.5c */
@@ -199,6 +209,8 @@ export interface ChipRowProps {
   children: ReactNode;
   label?: string;
   ariaLabel: string;
+  /** Wrap onto more rows instead of scrolling behind "More ›" (a few chips that must all show: plan sort). */
+  wrap?: boolean;
 }
 
 export interface SegmentedOption<V extends string> {

@@ -3,40 +3,22 @@
   z-index: 1;
   display: inline-flex;
   flex: none;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-width: 64px;
+  gap: 2px;
   min-height: var(--touch-min);
-  padding: var(--sp-1) var(--sp-2);
+  padding: 0 var(--sp-3) 0 var(--sp-2);
   border: 1px solid var(--c-outline-strong);
-  border-radius: var(--r-box);
+  border-radius: var(--r-pill);
   background: var(--c-surface);
   color: var(--c-text);
 }
 
-.top {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.top svg {
+.walk svg {
+  flex: none;
   color: var(--c-accent-icon);
 }
 
 .value {
-  font-size: var(--fs-heading);
-  line-height: var(--lh-heading);
   font-weight: var(--fw-bold);
   white-space: nowrap;
-}
-
-/* "walk from the museum" (D4) wraps within the width of "walk from the", so the stop name
-   beside the button keeps two lines at 360dp. */
-.sub {
-  max-width: 6.5em;
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
-  text-align: center;
 }

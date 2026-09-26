@@ -21,7 +21,8 @@ describe("formatDeparture", () => {
   it("says Now only for live times; a scheduled time at or past its minute shows the clock", () => {
     expect(fmt(0.5, "live")).toBe("Now");
     expect(fmt(-0.5, "simulated")).toBe("Now");
-    expect(fmt(0.5, "scheduled")).toBe("7:00 PM");
+    // Still ahead: "1 min", never a clock time beside minutes (judges, round 1).
+    expect(fmt(0.5, "scheduled")).toBe("1 min");
     expect(fmt(-0.5, "canceled")).toBe("6:59 PM");
   });
 
@@ -71,8 +72,8 @@ describe("sideLine and localiseSide", () => {
   });
 
   it("keeps it where no route line is shown", () => {
-    expect(sideLine(stop, { withCompass: true, lang: "en" })).toBe("Westbound stop · North side of Lamar St");
-    expect(sideLine({ kind: "stop", directionLabel: "Eastbound" }, { withCompass: true, lang: "en" })).toBe("Eastbound stop");
+    expect(sideLine(stop, { withCompass: true, lang: "en" })).toBe("North side of Lamar St");
+    expect(sideLine({ kind: "stop", directionLabel: "Eastbound" }, { withCompass: true, lang: "en" })).toBe("");
   });
 
   it("says Rail station for rail", () => {

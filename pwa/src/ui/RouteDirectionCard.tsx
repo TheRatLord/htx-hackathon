@@ -3,7 +3,6 @@ import { headsignLine, platformLabel, sideLine, upcoming } from "../lib/format.t
 import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
 import { usePrefs } from "../state/prefs.ts";
-import { BayTag } from "./BayTag.tsx";
 import styles from "./cards.module.css";
 import { DepTimes } from "./DepTimes.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
@@ -19,31 +18,28 @@ export function RouteDirectionCard({ route, directionLabel, headsign, stop, walk
   const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
   const headline = headsignLine(route, directionLabel, headsign, lang);
   const place = tcName ?? t("stopLine.title", { name: stop.name, id: stop.id });
+  // Same grammar as the nearby card (C.5a): the place and its walk pill first, the route row under it.
+  const meta = tcName
+    ? [bay && t("stopLine.bay", { bay }), platformLabel(stop, lang)].filter(Boolean).join(" · ")
+    : sideLine(stop, { withCompass: false, lang });
   return (
     <article className={styles.card}>
-      <button type="button" className={styles.hit} aria-label={`${t("routeName.a11y", { name: route.name })} ${headline}, ${place}`} onClick={onOpen} />
-      <div className={styles.route}>
+      <button type="button" className={styles.hit} aria-label={`${t("routeName.a11y", { name: route.name })} ${headline}, ${place}${meta ? `, ${meta}` : ""}`} onClick={onOpen} />
+      <h2 className={styles.name}>{place}</h2>
+      {(meta || walkDistanceM !== undefined) && (
+        <div className={styles.metaRow}>
+          <p className={`${styles.meta} ${tcName ? styles.metaStrong : ""}`}>{meta}</p>
+          {walkDistanceM !== undefined && <WalkButton stopId={stop.id} tcName={tcName} walkDistanceM={walkDistanceM} onPress={onWalk} />}
+        </div>
+      )}
+      <hr className={styles.divider} />
+      <div className={styles.routeRow}>
         <RouteBadge route={route} size="sm" />
-        <span className={styles.headsign}>{headline}</span>
+        <span className={styles.rowText}>
+          <span className={styles.headsign}>{headline}</span>
+          {noServiceText && !upcoming(deps, now).length ? <span className={styles.noService}>{noServiceText}</span> : <DepTimes deps={deps} walkMin={walkMin} />}
+        </span>
       </div>
-      <div className={styles.top}>
-        <h2 className={styles.name}>
-          {place}
-          {tcName && bay && (
-            <>
-              <span className={styles.sep} aria-hidden="true">
-                ·
-              </span>
-              <BayTag bay={bay} />
-            </>
-          )}
-        </h2>
-        {walkDistanceM !== undefined && <WalkButton stopId={stop.id} walkDistanceM={walkDistanceM} onPress={onWalk} />}
-      </div>
-      <p className={styles.meta}>
-        {tcName ? t("card.platformLine", { platform: platformLabel(stop, lang), id: stop.id }) : sideLine(stop, { withCompass: false, lang })}
-      </p>
-      {noServiceText && !upcoming(deps, now).length ? <p className={styles.noService}>{noServiceText}</p> : <DepTimes deps={deps} walkMin={walkMin} />}
     </article>
   );
 }

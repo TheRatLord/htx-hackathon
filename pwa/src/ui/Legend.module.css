@@ -1,7 +1,7 @@
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-5);
+  gap: var(--sp-2) var(--sp-4);
   color: var(--c-text-variant);
 }
 
@@ -16,17 +16,13 @@
   align-items: flex-start;
   padding: 2px var(--sp-2);
   border-radius: var(--r-chip);
-  background: var(--c-card);
-  color: var(--c-text);
+  /* Samples on the strip's own blue, so they look like the times they explain (C.3). */
+  background: var(--c-brand-blue-deep);
+  color: #fff;
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
 
-.live {
-  color: var(--c-live-text);
-}
-
 .canceled {
-  color: var(--c-canceled-text);
   text-decoration: line-through;
 }

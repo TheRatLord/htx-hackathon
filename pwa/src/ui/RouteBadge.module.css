@@ -67,9 +67,12 @@
   padding-top: 0;
 }
 
+/* Selected: the chip fills with its band colour (navy for bus) and white numerals. A grey fill
+   read as "disabled" to older riders; the check stays as the non-colour cue. */
 button.badge[aria-pressed="true"] {
-  border: 2px solid var(--c-primary);
-  background: var(--c-chip-selected);
+  border: none;
+  background: var(--route-color, var(--c-brand-navy));
+  color: #fff;
 }
 
 button.badge:active {
@@ -85,6 +88,6 @@ button.badge:active {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--c-primary);
-  color: var(--c-on-primary);
+  background: #fff;
+  color: var(--route-color, var(--c-brand-navy));
 }

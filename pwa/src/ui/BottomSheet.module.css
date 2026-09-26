@@ -22,8 +22,10 @@
   height: min(calc(100% - 8px), max(var(--sheet-half-min), min(52dvh, 460px), var(--min-half)));
 }
 
+/* Full: the sheet covers the whole map (no strip of map and pins peeking over its corners). */
 .full {
-  height: calc(100% - 8px - env(safe-area-inset-top));
+  height: calc(100% - env(safe-area-inset-top));
+  border-radius: 0;
 }
 
 .handleZone {
@@ -38,19 +40,33 @@
   cursor: grab;
 }
 
+/* With a SheetHeader hosting Back and the toggle, the zone is only the grab bar, drawn over the
+   top of the header (which drags the sheet itself), so it costs no height of its own. */
+.slim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  min-height: 0;
+  height: 16px;
+  pointer-events: none;
+}
+
+.headerZone {
+  flex: none;
+  touch-action: none;
+}
+
 .handle {
   position: absolute;
-  top: 10px;
+  top: 8px;
   left: 50%;
   width: 32px;
   height: 4px;
   margin-left: -16px;
   border-radius: 2px;
   background: var(--c-handle);
-}
-
-.snapButtons {
-  display: flex;
 }
 
 .textButton {
@@ -68,6 +84,8 @@
 .body {
   flex: 1;
   min-height: 0;
+  /* The last line scrolls clear of the sheet's edge (and the nav under it) with room to spare. */
+  padding-bottom: var(--sp-6);
   overflow-y: auto;
   overscroll-behavior: contain;
 }

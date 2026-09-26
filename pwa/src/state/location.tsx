@@ -55,6 +55,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       return;
     }
     let perm: PermissionStatus | undefined;
+    // query() can settle after cleanup (StrictMode, a change of `demo`): then it must not subscribe.
+    let cancelled = false;
     const onChange = () => {
       if (!perm) return;
       if (perm.state === "granted") setRequests((n) => n + 1);
@@ -68,12 +70,16 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     navigator.permissions
       .query({ name: "geolocation" })
       .then((p) => {
+        if (cancelled) return;
         perm = p;
         p.addEventListener("change", onChange);
         onChange();
       })
-      .catch(() => setStatus("prompt"));
-    return () => perm?.removeEventListener("change", onChange);
+      .catch(() => !cancelled && setStatus("prompt"));
+    return () => {
+      cancelled = true;
+      perm?.removeEventListener("change", onChange);
+    };
   }, [demo]);
 
   useEffect(() => {

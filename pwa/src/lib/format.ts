@@ -60,8 +60,11 @@ type Shown = { kind: "now" } | { kind: "min"; m: number } | { kind: "clock" };
  * A scheduled time never says "Now": the bus may already have gone.
  */
 function shown(departureTime: string, now: number, opts: { offline?: boolean; status: Status }): Shown {
-  const m = Math.floor((Date.parse(departureTime) - now) / 60_000);
+  const diff = Date.parse(departureTime) - now;
   const realtime = opts.status === "live" || opts.status === "simulated";
+  // A scheduled bus still ahead but under a minute away is "1 min", never its clock time
+  // ("12:01 PM" at 12:00:30 beside "8 min" read as two formats for one thing).
+  const m = !realtime && diff > 0 ? Math.max(1, Math.floor(diff / 60_000)) : Math.floor(diff / 60_000);
   if (opts.offline || m >= 60 || (m <= 0 && !realtime)) return { kind: "clock" };
   return m <= 0 ? { kind: "now" } : { kind: "min", m };
 }
@@ -140,9 +143,10 @@ export interface SideLineStop {
 }
 
 /**
- * The line under a stop name. Without the compass word ("On the north side of Lamar St") where
- * a route line on the same card already gives the direction; with it ("Westbound stop · North
- * side of Lamar St") where no route line is shown.
+ * The line under a stop name: "On the north side of Lamar St" where a route line on the same
+ * card gives the direction, "North side of Lamar St" where none is shown (`withCompass`). The
+ * stop's own compass word ("Westbound stop") is no longer shown: it is the direction of the
+ * street, and contradicted the route's ("NORTHBOUND to N SHEPHERD") at corners where buses turn.
  */
 export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang: Lang }): string {
   const { lang } = opts;
@@ -150,12 +154,8 @@ export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang:
   if (!opts.withCompass) {
     const parsed = stop.side ? sideDirection(stop.side) : undefined;
     if (parsed) return t(`sideOn.${parsed.dir}`, { street: parsed.street }, lang);
-    return stop.side ? localiseSide(stop.side, lang) : "";
   }
-  const compassKey = `compassStop.${stop.directionLabel}`;
-  const compass = hasKey(compassKey, lang) ? t(compassKey, undefined, lang) : "";
-  const side = stop.side ? localiseSide(stop.side, lang) : "";
-  return [compass, side].filter(Boolean).join(" · ");
+  return stop.side ? localiseSide(stop.side, lang) : "";
 }
 
 /** "Eastbound" (es "Rumbo este") for a direction label; unknown labels stay as METRO wrote them. */

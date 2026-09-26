@@ -4,6 +4,7 @@ import { useNow } from "../state/clock.ts";
 import styles from "./cards.module.css";
 import { DepTimes } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
+import { WalkButton } from "./WalkButton.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
 import rowStyles from "./SavedStopRow.module.css";
 import type { SavedStopRoute, SavedStopRowProps } from "./types.ts";
@@ -16,8 +17,8 @@ function pickRoute(routes: SavedStopRoute[], preferredRouteId: string | undefine
   return [...routes].sort((a, b) => first(a) - first(b))[0];
 }
 
-/** C.5b: a saved stop's next buses. It never waits on location. */
-export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, moreSaved }: SavedStopRowProps) {
+/** C.5b: a saved stop's next buses, in the nearby card's layout with a star. It never waits on location. */
+export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, moreSaved, side, walkDistanceM, onWalk }: SavedStopRowProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -32,14 +33,19 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
           <Icon name="star_filled" size={20} color="var(--c-accent-icon)" />
           {title}
         </h2>
-        {moreSaved ? (
+        {moreSaved && (
           <button type="button" className={rowStyles.more} onClick={moreSaved.onPress}>
             {t("card.moreSaved", { count: moreSaved.count })} ›
           </button>
-        ) : (
-          <Icon name="chevron_right" />
         )}
       </div>
+      {(side || (walkDistanceM !== undefined && onWalk)) && (
+        <div className={styles.metaRow}>
+          <p className={styles.meta}>{side}</p>
+          {walkDistanceM !== undefined && onWalk && <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />}
+        </div>
+      )}
+      <hr className={styles.divider} />
       {shown && (
         <div className={rowStyles.route}>
           <RouteBadge route={shown.route} size="sm" />

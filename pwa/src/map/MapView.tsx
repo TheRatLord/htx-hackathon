@@ -8,13 +8,13 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTransitCenters } from "../api/hooks.ts";
 import type { LatLon } from "../api/types.ts";
-import { t } from "../i18n/index.ts";
+import { t, useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
 import { addMarkerImages } from "./layers/images.ts";
 import { addSceneLayers, drawScene, showUser } from "./layers/scene.ts";
-import { addTransitLayers, setHighlightedStop, showTransitCenters, STOPS_SOURCE, stopsCollection, transitAt } from "./layers/transit.ts";
+import { addTransitLayers, setHighlightedStop, setQuiet, showTransitCenters, STOPS_SOURCE, stopsCollection, transitAt } from "./layers/transit.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -36,20 +36,33 @@ function padding(bottom: number, safeTop: number, canvasH: number): maplibregl.P
   return { top, left: 32, right: 72, bottom: Math.max(0, Math.min(bottom + 24, canvasH - top - MIN_FIT_H)) };
 }
 
+/**
+ * A fitted box keeps room on the left as well as the right (FABs), so a marker label placed
+ * beside a pin at the box's edge ("Transfer · #4789") stays on screen.
+ */
 function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl.PaddingOptions) {
+  if (![a.lat, a.lon, b.lat, b.lon].every(Number.isFinite)) return;
   const bounds: LngLatBoundsLike = [
     [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
     [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
   ];
-  map.fitBounds(bounds, { padding: pad, maxZoom: 17 });
+  map.fitBounds(bounds, { padding: { ...pad, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) }, maxZoom: 17 });
 }
 
+/** Bumped by every applyScene call: a call that finishes after a newer one started does nothing. */
+let sceneSeq = 0;
+
 async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions) {
+  const seq = ++sceneSeq;
   showUser(map, user);
   // Without stops.json the scene still draws, just without the enlarged pin.
   const stops = scene.highlightStopId ? await loadStops().catch(() => undefined) : undefined;
+  // stops.json (1.6 MB) can take seconds on a cold start: the rider may have moved on to another screen.
+  if (seq !== sceneSeq) return;
   const highlight = scene.highlightStopId ? stops?.get(scene.highlightStopId) : undefined;
   setHighlightedStop(map, highlight?.id);
+  // Walks and itineraries draw only their own stops: other pins, ID chips and TCs are noise there.
+  setQuiet(map, Boolean(scene.legs?.length));
   drawScene(map, scene, highlight, highlight ? t("map.stopCallout", { id: highlight.id }) : "");
 
   const f = scene.focus;
@@ -80,6 +93,7 @@ interface MapViewProps {
 
 export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChange }: MapViewProps) {
   const navigate = useNavigate();
+  const lang = useLang();
   const tcs = useTransitCenters();
   const tcData = tcs.data?.transitCenters;
   const container = useRef<HTMLDivElement>(null);
@@ -117,7 +131,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         pitchWithRotate: false,
         dragRotate: false,
       });
-      map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "top-left");
+      map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "bottom-left");
       // Collapsed to its (i) button until tapped. MapLibre 5.x opens a compact attribution
       // (class maplibregl-compact-show) until the first drag; this class name is its internals.
       map.once("idle", () => container.current?.querySelector(".maplibregl-compact-show")?.classList.remove("maplibregl-compact-show"));
@@ -161,7 +175,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     if (!mapRef.current || !ready.current) return;
     void applyScene(mapRef.current, scene, user, pad(bottomPadding));
     rankLabels(mapRef.current);
-  }, [scene]);
+    // `lang`: the "Stop: 342" callout is re-drawn in the new language.
+  }, [scene, lang]);
 
   // The sheet moved to another snap: fit the scene again above it once it has settled.
   useEffect(() => {
@@ -195,7 +210,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
 
   return (
     <>
-      <div ref={container} className={styles.map} />
+      {/* The attribution's (i) sits bottom-left, just above the sheet (clear of the FAB column on the right). */}
+      <div ref={container} className={styles.map} style={{ ["--map-bottom" as string]: `${bottomPadding}px` }} />
       <div ref={safeTopProbe} className={styles.safeTop} aria-hidden="true" />
     </>
   );

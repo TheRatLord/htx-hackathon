@@ -1,7 +1,6 @@
 import { useLang, useT } from "../i18n/index.ts";
-import { formatDistance, headsignLine, upcoming } from "../lib/format.ts";
+import { headsignLine, upcoming } from "../lib/format.ts";
 import { useNow } from "../state/clock.ts";
-import { BayTag } from "./BayTag.tsx";
 import styles from "./cards.module.css";
 import { DepTimes } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
@@ -21,24 +20,35 @@ export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCente
   return (
     <article className={styles.card}>
       <button type="button" className={styles.hit} aria-label={tc.name} onClick={onOpen} />
-      <div className={styles.top}>
-        <h2 className={`${styles.name} ${tcStyles.title}`}>
-          <span className={tcStyles.tile} aria-hidden="true">
-            {t("card.tcTile")}
-          </span>
-          {tc.name}
-        </h2>
+      <h2 className={`${styles.name} ${tcStyles.title}`}>
+        <span className={tcStyles.tile} aria-hidden="true">
+          {t("card.tcTile")}
+        </span>
+        {tc.name}
+      </h2>
+      <div className={styles.metaRow}>
+        <p className={styles.meta}>{t("card.bays", { count: tc.bayCount })}</p>
         <WalkButton stopId={tc.id} tcName={tc.name} walkDistanceM={tc.walkDistanceM} onPress={onWalk} />
       </div>
-      <p className={styles.meta}>{t("card.transitCenterLine", { bays: tc.bayCount, distance: formatDistance(tc.walkDistanceM, lang) })}</p>
+      <hr className={styles.divider} />
       <ul className={styles.rows}>
         {soonest.map((d) => (
           <li key={`${d.tripId}-${d.departureTime}`} className={tcStyles.dep}>
-            {d.bay && <BayTag bay={d.bay} />}
             <RouteBadge route={d.route} size="sm" />
             <span className={styles.rowText}>
               <span className={styles.headsign}>{headsignLine(d.route, d.directionLabel, d.headsign, lang)}</span>
-              <DepTimes deps={[d]} max={1} />
+              {/* "Bay G · 9 min": the bay is plain bold text by the time, not a second chip beside the route's. */}
+              <span className={tcStyles.bayLine}>
+                {d.bay && (
+                  <>
+                    <strong className={tcStyles.bay}>{t("stopLine.bay", { bay: d.bay })}</strong>
+                    <span className={styles.sep} aria-hidden="true">
+                      ·
+                    </span>
+                  </>
+                )}
+                <DepTimes deps={[d]} max={1} />
+              </span>
             </span>
           </li>
         ))}

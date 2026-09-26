@@ -5,9 +5,10 @@ import type { ChipRowProps } from "./types.ts";
 
 /**
  * C.10: a horizontal chip scroller with an optional visible label (which is also the group's
- * name) and a "More ›" button when it overflows; it turns into "‹ Back" at the end.
+ * name) and a "More ›" button when it overflows; it turns into "‹ Back" at the end. `wrap`
+ * lays short sets (sort chips) out on as many rows as they need instead: nothing is hidden.
  */
-export function ChipRow({ children, label, ariaLabel }: ChipRowProps) {
+export function ChipRow({ children, label, ariaLabel, wrap }: ChipRowProps) {
   const t = useT();
   const labelId = useId();
   const scroller = useRef<HTMLDivElement>(null);
@@ -15,7 +16,7 @@ export function ChipRow({ children, label, ariaLabel }: ChipRowProps) {
 
   useEffect(() => {
     const el = scroller.current;
-    if (!el) return;
+    if (!el || wrap) return;
     const update = () => {
       if (el.scrollWidth <= el.clientWidth + 1) setOverflow("none");
       else setOverflow(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 ? "end" : "more");
@@ -32,7 +33,7 @@ export function ChipRow({ children, label, ariaLabel }: ChipRowProps) {
       ro.disconnect();
       mo.disconnect();
     };
-  }, []);
+  }, [wrap]);
 
   const page = () => {
     const el = scroller.current;
@@ -47,7 +48,7 @@ export function ChipRow({ children, label, ariaLabel }: ChipRowProps) {
         </p>
       )}
       <div className={styles.row}>
-        <div ref={scroller} className={styles.scroller}>
+        <div ref={scroller} className={`${styles.scroller} ${wrap ? styles.wrapped : ""} ${overflow !== "none" ? styles.withMore : ""}`}>
           {children}
         </div>
         {overflow !== "none" && (

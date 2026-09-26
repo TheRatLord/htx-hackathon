@@ -20,7 +20,7 @@ export function RouteBadge({ route, size, selected, showIcon, onPress, ariaLabel
       )}
     </>
   );
-  const style = size === "lg" ? { background: route.color } : undefined;
+  const style = size === "lg" ? { background: route.color } : ({ ["--route-color" as string]: route.color } as const);
   if (onPress) {
     return (
       <button type="button" className={className} style={style} aria-pressed={selected ?? false} aria-label={label} onClick={onPress}>

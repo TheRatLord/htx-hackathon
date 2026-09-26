@@ -16,6 +16,7 @@ import { Fab } from "../../ui/Fab.tsx";
 import { MapSearchBar } from "../../ui/MapSearchBar.tsx";
 import { StatusBanner } from "../../ui/StatusBanner.tsx";
 import { useToast } from "../../ui/Toast.tsx";
+import { useUpdatedAgoShown } from "../../ui/UpdatedAgo.tsx";
 import type { FabProps, OverlayItem, Snap } from "../../ui/types.ts";
 import { useMapHost } from "../mapHost.ts";
 import { ExploreContext, type ExploreChromeOptions, type FabRequest } from "./ExploreChrome.tsx";
@@ -55,6 +56,8 @@ export function ExploreLayout() {
   const rider = useRiderLocation();
   const offline = useOffline();
   const offlineSince = useOfflineSince();
+  // A sheet showing "Offline · last update 12:07 PM" already says it: no second banner over the map.
+  const offlineInSheet = useUpdatedAgoShown();
   const trip = useTrip();
   const alerts = useAlerts();
   const toast = useToast();
@@ -91,9 +94,11 @@ export function ExploreLayout() {
   const downtown = !rider.fix && location.pathname === "/explore" && !new URLSearchParams(location.search).has("at");
 
   // C.12 priority: offline > trip-active > Search this area > Downtown > Demo location.
-  const overlay: OverlayItem | undefined = offline
+  const overlay: OverlayItem | undefined = offline && !offlineInSheet
     ? { kind: "offline", since: offlineSince ? formatClock(new Date(offlineSince).toISOString(), lang) : undefined }
-    : arriveAt && !onTrip
+    : offline
+      ? undefined
+      : arriveAt && !onTrip
       ? { kind: "trip-active", arriveAt, onOpen: () => navigate("/explore/trip") }
       : chrome?.banner === "search-this-area" && center
         ? { kind: "search-this-area", onPress: () => navigate(`/explore?at=${formatLatLon(center)}&label=${encodeURIComponent(t("map.thisArea"))}`) }
