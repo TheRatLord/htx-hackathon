@@ -57,6 +57,13 @@ function walkHref(leg: WalkLeg, fromName: string, routeId: string): string | und
   return `/explore/stop/${encodeURIComponent(leg.to.id)}/walk?${q}`;
 }
 
+/**
+ * "12:09 PM · Walk 5 min · #11424 · west side", wrapping only between its parts (never "west /
+ * side"). Times sit on this grey line, not in a right-hand column, so the stop's name gets the
+ * full width (24, 44).
+ */
+const joinParts = (parts: string[]) => parts.filter(Boolean).map((p) => p.replace(/ /g, "\u00a0")).join(" · ");
+
 /** Minutes between getting to a stop and the bus leaving it. */
 const waitMin = (arrive: string, ride: TransitLeg) => Math.max(0, Math.round((Date.parse(ride.departureTime) - Date.parse(arrive)) / 60_000));
 
@@ -83,12 +90,11 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      // Two lines, never four (24, 44): the stop's name in bold, then "Walk 5 min · #11424 · west side"
-      // in grey. The distance is on the walk screen.
-      const where = [
-        leg.to.id ? t("plan.walkStep", { min, id: leg.to.id }, lang) : t("plan.firstWalk", { min }, lang),
-        shortSide(leg.to, lang),
-      ].filter(Boolean);
+      // The stop's name in bold, full width. The distance is on the walk screen.
+      // Two short grey lines, never an orphaned word (24, 44): what to do and when, then where
+      // ("12:09 PM · Walk 5 min" / "#11424 · west side").
+      const where = joinParts([leg.to.id ? `#${leg.to.id}` : "", shortSide(leg.to, lang)]);
+      const walk = t("plan.firstWalk", { min }, lang);
       const first = legIndex === 0;
       const wait = t("plan.wait", { min: waitMin(leg.endTime, next) }, lang);
       rows.push({
@@ -96,8 +102,8 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         role: "walk",
         href: walkHref(leg, first ? opts.fromName : leg.from.name, next.route.id),
         step: first
-          ? { kind: "walk", title: leg.to.name, time: formatClock(it.startTime, lang), lines: [where.join(" · ")] }
-          : { kind: "walk", title: leg.to.name, lines: [[...where, wait].join(" · "), ...transferLines(next, lang)] },
+          ? { kind: "walk", title: leg.to.name, lines: [joinParts([formatClock(it.startTime, lang), walk]), where].filter(Boolean) }
+          : { kind: "walk", title: leg.to.name, lines: [joinParts([walk, wait]), where, ...transferLines(next, lang)].filter(Boolean) },
       });
       return;
     }
@@ -122,7 +128,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         route,
         titleLead: t("plan.board", undefined, lang).toUpperCase(),
         title: `${t("headsign.to", undefined, lang)} ${leg.headsign.toUpperCase()}`,
-        lines: [...(named ? [] : [stopWithSide(leg.board, lang)]), `${leaves} · ${t("plan.stops", { count: leg.numStops }, lang)}`],
+        lines: [...(named ? [] : [stopWithSide(leg.board, lang)]), joinParts([leaves, t("plan.stops", { count: leg.numStops }, lang)])],
         duration: t("time.min", { n: leg.durationMin }, lang),
       },
     });
@@ -130,10 +136,10 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
       legIndex,
       role: "alight",
       href: stopHref(leg.alight, route.id),
-      step: { kind: "alight", title: t("plan.getOffAt", { stop: stopTitle(leg.alight, lang) }, lang), lines: [], time: formatClock(leg.arrivalTime, lang), legColor: route.color },
+      step: { kind: "alight", title: t("plan.getOffAt", { stop: stopTitle(leg.alight, lang) }, lang), lines: [formatClock(leg.arrivalTime, lang)], legColor: route.color },
     });
   });
-  rows.push({ legIndex: it.legs.length, role: "arrive", step: { kind: "arrive", title: opts.toName, lines: [], time: formatClock(it.endTime, lang) } });
+  rows.push({ legIndex: it.legs.length, role: "arrive", step: { kind: "arrive", title: opts.toName, lines: [t("plan.arriveAt", { time: formatClock(it.endTime, lang) }, lang)] } });
   return rows;
 }
 

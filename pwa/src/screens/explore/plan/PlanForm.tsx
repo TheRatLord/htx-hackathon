@@ -158,10 +158,20 @@ export function WhenRow({ query, onChange }: { query: PlanQuery; onChange: (q: P
 export interface PlacePick {
   to: string;
   toName: string;
-  icon: "schedule" | "star";
+  icon: "schedule" | "star" | "place";
 }
 
-/** Up to three places to tap instead of type: recent trip destinations first, then saved stops. */
+/**
+ * Where most riders go, for a first visit with nothing recent or saved yet (21): the form is never
+ * a blank half sheet. Names are the landmarks' own, as search shows them.
+ */
+const POPULAR: PlacePick[] = [
+  { to: "landmark:hobby-airport", toName: "Hobby Airport", icon: "place" },
+  { to: "landmark:texas-medical-center", toName: "Texas Medical Center Transit Center", icon: "place" },
+  { to: "landmark:downtown-tc", toName: "Downtown Transit Center", icon: "place" },
+];
+
+/** Up to three places to tap instead of type: recent trip destinations first, then saved stops, else popular places. */
 export function usePlacePicks(query: PlanQuery): PlacePick[] {
   const { trips } = useRecents();
   const { stops } = useSaved();
@@ -174,15 +184,17 @@ export function usePlacePicks(query: PlanQuery): PlacePick[] {
   };
   for (const r of trips) if (r.query.to && r.query.toName) add({ to: r.query.to, toName: r.query.toName, icon: "schedule" });
   for (const s of stops) add({ to: s.id, toName: `${s.name} (${s.id})`, icon: "star" });
+  if (!picks.length) POPULAR.forEach(add);
   return picks;
 }
 
 export function PlacePicks({ picks, onPick }: { picks: PlacePick[]; onPick: (p: PlacePick) => void }) {
   const t = useT();
   if (!picks.length) return null;
+  const title = t(picks.every((p) => p.icon === "place") ? "plan.popularPlaces" : "plan.recentPlaces");
   return (
-    <section className={styles.picks} aria-label={t("plan.recentPlaces")}>
-      <h2 className={styles.picksTitle}>{t("plan.recentPlaces")}</h2>
+    <section className={styles.picks} aria-label={title}>
+      <h2 className={styles.picksTitle}>{title}</h2>
       <ul>
         {picks.map((p) => (
           <li key={p.to}>

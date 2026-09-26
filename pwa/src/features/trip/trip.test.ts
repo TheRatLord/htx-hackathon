@@ -96,12 +96,19 @@ describe("timeline", () => {
 
   it("has a row per walk, boarding, getting off and the arrival", () => {
     expect(rows.map((r) => r.role)).toEqual(["walk", "board", "alight", "walk", "board", "alight", "arrive"]);
-    expect(rows[0].step).toMatchObject({ title: "M L King Blvd @ UH University Dr", lines: ["Walk 5 min · #11424 · west side"] });
+    const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, " ");
+    expect(rows[0].step.title).toBe("M L King Blvd @ UH University Dr");
+    // The time is on the grey line (no right-hand column), and the line wraps only between parts.
+    expect(rows[0].step.time).toBeUndefined();
+    expect(rows[0].step.lines.map(plain)).toEqual([expect.stringMatching(/^\d{1,2}:\d{2} [AP]M · Walk 5 min$/), "#11424 · west side"]);
+    expect(rows[0].step.lines[1]).toContain("west\u00a0side");
     expect(rows[1].step).toMatchObject({ titleLead: "BOARD", title: "to MLK & PARK VILLAGE" });
-    expect(rows[1].step.lines).toEqual(["7:05 PM · 4 stops"]);
+    expect(rows[1].step.lines.map(plain)).toEqual(["7:05 PM · 4 stops"]);
     expect(rows[2].step.title).toBe("Get off at M L King Blvd @ Bellfort\u00a0(#3938)");
     expect(rows[3].step.title).toBe("Bellfort Av @ M L King Blvd");
-    expect(rows[3].step.lines[0]).toMatch(/^Walk \d+ min · #\d+ · south side · wait 9 min$/);
+    expect(rows[2].step.lines.map(plain)).toEqual([expect.stringMatching(/^\d{1,2}:\d{2} [AP]M$/)]);
+    expect(plain(rows[3].step.lines[0])).toMatch(/^Walk \d+ min · wait 9 min$/);
+    expect(plain(rows[3].step.lines[1])).toMatch(/^#\d+ · south side$/);
     expect(rows[0].href).toMatch(/^\/explore\/stop\/11424\/walk\?/);
   });
 

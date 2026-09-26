@@ -1,7 +1,7 @@
 // D11 Plan Your Trip + Select Itinerary: the familiar form while a field is missing (or `edit=1`),
 // then the results with the form collapsed to one summary row, opened at full.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useLocation, useNavigate, useNavigationType } from "react-router";
 import { useSearch } from "../../../api/hooks.ts";
 import type { Itinerary, TransitLeg } from "../../../api/types.ts";
@@ -22,7 +22,7 @@ import { Icon } from "../../../ui/Icon.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
-import { ItineraryCard } from "./ItineraryCard.tsx";
+import { ItineraryCard, SharedAlerts, useSharedAlerts } from "./ItineraryCard.tsx";
 import { FromToBox, PlacePicks, usePlacePicks, useWhenText, WhenRow, type FromView } from "./PlanForm.tsx";
 import styles from "./plan.module.css";
 import { sortItineraries } from "./sortItineraries.ts";
@@ -39,8 +39,32 @@ function useLandmarkStop(query: PlanQuery): string | undefined {
   return landmark?.nearbyStops?.[0]?.id;
 }
 
-/** "● My location → 📍 Hobby Airport" / "Arrive at bus stop #10567" / "Leave now   Edit ›": the whole row edits. */
-function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
+/** The sort as a small "Arrives first ▾" on the summary's last row: no row of its own (22-360). */
+function SortPicker({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort) => void }) {
+  const t = useT();
+  return (
+    <select
+      className={styles.sort}
+      value={sort}
+      onChange={(e) => onChange(e.target.value as PlanSort)}
+      onClick={(e) => e.stopPropagation()}
+      aria-label={t("plan.sort.label")}
+    >
+      {PLAN_SORTS.map((s) => (
+        <option key={s} value={s}>
+          {t(`plan.sort.${s}`)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/**
+ * "● My location → 📍 Hobby Airport" / "Bus stop #10567 is at Hobby Airport" / "Leave now · Edit ›"
+ * with the sort at the right of that row. The card edits on a tap anywhere but the sort; its one
+ * focusable button is "Edit ›".
+ */
+function Summary({ query, onEdit, sort }: { query: PlanQuery; onEdit: () => void; sort?: ReactNode }) {
   const t = useT();
   const lang = useLang();
   const when = useWhenText(query);
@@ -48,7 +72,8 @@ function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const from = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang);
   const to = query.toName ?? query.to ?? "";
   return (
-    <button type="button" className={styles.summary} onClick={onEdit} aria-label={t("plan.summaryA11y", { from, to, when })}>
+    // Mouse and touch convenience only: the "Edit ›" button below is the accessible control.
+    <div className={styles.summary} onClick={onEdit}>
       <span className={styles.summaryPlaces}>
         <span>
           <span className={styles.smallDot} />
@@ -59,30 +84,24 @@ function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
           {to}
         </span>
       </span>
-      {/* J2.3: the trip ends at the landmark's bus stop, not at its door. */}
-      {stopId && <span className={styles.variant}>{t("plan.landmarkStop", { id: stopId })}</span>}
+      {/* J2.3: the trip ends at the landmark's own bus stop, which is at its door (the last walk is 0 m). */}
+      {stopId && <span className={styles.variant}>{t("plan.landmarkStop", { id: stopId, place: to })}</span>}
       <span className={styles.summaryWhen}>
-        <span>{when}</span>
-        <span>{t("common.edit")} ›</span>
+        <button
+          type="button"
+          className={styles.summaryEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          aria-label={t("plan.summaryA11y", { from, to, when })}
+        >
+          <span>{when}</span>
+          <span className={styles.editLink}>{t("common.edit")} ›</span>
+        </button>
+        {sort}
       </span>
-    </button>
-  );
-}
-
-/** One control for the order, so no chip is ever cut off at 360dp (a native picker on phones). */
-function SortPicker({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort) => void }) {
-  const t = useT();
-  return (
-    <label className={styles.sort}>
-      <span>{t("plan.sort.by")}</span>
-      <select value={sort} onChange={(e) => onChange(e.target.value as PlanSort)} aria-label={t("plan.sort.label")}>
-        {PLAN_SORTS.map((s) => (
-          <option key={s} value={s}>
-            {t(`plan.sort.${s}`)}
-          </option>
-        ))}
-      </select>
-    </label>
+    </div>
   );
 }
 
@@ -98,6 +117,7 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
   const lang = useLang();
   const { response } = plan;
   const sample = response?.source === "offline-fixture";
+  const shared = useSharedAlerts(response?.itineraries ?? []);
   let list;
   if (plan.error) list = <ErrorState error={plan.error} onRetry={plan.retry} />;
   else if (!response)
@@ -127,15 +147,16 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
       </>
     );
   else
-    list = sortItineraries(response.itineraries, query.sort).map(({ it, index }) => (
-      <ItineraryCard key={it.id} it={it} href={planUrl(query, { index })} />
-    ));
+    list = (
+      <>
+        <SharedAlerts list={shared.list} unavailable={shared.unavailable} />
+        {sortItineraries(response.itineraries, query.sort).map(({ it, index }) => (
+          <ItineraryCard key={it.id} it={it} href={planUrl(query, { index })} sharedAlerts={shared.ids} />
+        ))}
+      </>
+    );
   return (
     <>
-      {/* Nothing to sort while loading, empty or with one trip. */}
-      {(response?.itineraries.length ?? 0) > 1 && (
-        <SortPicker sort={query.sort ?? "soonest"} onChange={(s) => onChange({ ...query, sort: s === "soonest" ? undefined : s })} />
-      )}
       {list}
       {response?.itineraries.length ? (
         <>
@@ -263,7 +284,16 @@ export default function Plan() {
       <div className={styles.body}>
         {results ? (
           <>
-            <Summary query={query} onEdit={() => change(query, true)} />
+            <Summary
+              query={query}
+              onEdit={() => change(query, true)}
+              sort={
+                // Nothing to sort while loading, empty or with one trip.
+                (response?.itineraries.length ?? 0) > 1 && (
+                  <SortPicker sort={query.sort ?? "soonest"} onChange={(s) => change({ ...query, sort: s === "soonest" ? undefined : s })} />
+                )
+              }
+            />
             {resultsList}
           </>
         ) : (

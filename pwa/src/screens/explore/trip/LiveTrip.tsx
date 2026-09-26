@@ -20,7 +20,7 @@ import { useWakeLock } from "../../../features/trip/wakeLock.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
 import { ageMinutes, STALE_VEHICLE_S } from "../../../lib/format.ts";
 import { boundsOf, formatLatLon } from "../../../lib/geo.ts";
-import { BUZZ, notify, vibrate } from "../../../lib/notify.ts";
+import { BUZZ, notify, notifyPermission, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
 import { readJson, writeJson } from "../../../lib/storage.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
@@ -128,8 +128,9 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     const warned = readJson<string[]>(WARNED_KEY, [], "session");
     if (warned.includes(key)) return;
     writeJson(WARNED_KEY, [...warned, key], "session");
-    vibrate(BUZZ);
-    if (left === 1) void notify(t("trip.warn.notifyTitle"), alight, `trip-${stepIndex}`);
+    // A shown notification buzzes itself (and notify() buzzes when it can't show one): never twice.
+    if (left === 1 && notifyPermission() === "granted") void notify(t("trip.warn.notifyTitle"), alight, `trip-${stepIndex}`);
+    else vibrate(BUZZ);
   }, [left, alight, stepIndex, active.startedAt, t]);
 
   // Honest about the foreground limit: say so when the rider comes back after a while.
@@ -150,11 +151,25 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   const target = stepTarget(step, stops, rideIndex);
   const boarded = ride?.board.id;
   const legIndex = step.kind === "arrived" ? it.legs.length - 1 : step.legIndex;
+  // The camera frames the rider and the step's target once per step (and once more when the first
+  // fix arrives), never on each GPS update or bus poll: those only move the dot and the bus, so the
+  // rider can pan and zoom during the ride. Locate brings the camera back.
+  const hasFix = Boolean(fix);
+  const focusKey = `${stepIndex}|${target.stopId ?? ""}|${target.point.lat},${target.point.lon}|${hasFix}`;
+  const fixRef = useRef(fix);
+  fixRef.current = fix;
+  const focus = useMemo((): MapScene["focus"] => {
+    const f = fixRef.current;
+    const both = f && boundsOf([f, target.point]);
+    const current = boundsOf((itineraryLegs(it)[legIndex]?.coords ?? []).map(([lon, lat]) => ({ lat, lon })));
+    return both ? { kind: "bounds", bounds: both } : current && { kind: "bounds", bounds: current };
+    // `focusKey` stands for the step, its target and whether there is a fix.
+  }, [focusKey, it, legIndex]);
+  const framed = useRef<MapScene["focus"]>(undefined);
   const scene = useMemo((): MapScene => {
     const legs = itineraryLegs(it);
-    const current = boundsOf((legs[legIndex]?.coords ?? []).map(([lon, lat]) => ({ lat, lon })));
-    // The rider and where they are heading, together; without a fix, the current leg.
-    const both = fix && boundsOf([fix, target.point]);
+    // Only a new framing moves the camera: a scene without `focus` redraws in place.
+    const newFocus = framed.current !== focus;
     return {
       legs,
       markers: [
@@ -173,11 +188,15 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
             },
           ]
         : [],
-      focus: both ? { kind: "bounds", bounds: both } : current && { kind: "bounds", bounds: current },
+      ...(newFocus && { focus }),
     };
-    // Rebuilt when what it shows changes (t follows lang).
-  }, [it, lang, legIndex, target.stopId, target.point.lat, target.point.lon, boarded, vehicle, fix, simFix]);
+    // Rebuilt when what it shows changes (t follows lang); the rider's own dot is drawn by the map.
+  }, [it, lang, focus, target.stopId, boarded, vehicle, simFix]);
   useMapScene(scene, [scene]);
+  // Set after the scene is applied, so a render (or StrictMode's second call) never loses the framing.
+  useEffect(() => {
+    framed.current = focus;
+  }, [focus]);
 
   const basis = simFix
     ? t("trip.basis.simulated")
@@ -189,6 +208,20 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   const end = () => {
     tripActions.end();
     navigate("/explore", { replace: true });
+  };
+  // From the dialog: close it first so it drops its own history entry, then leave, so Back from
+  // Explore doesn't return to an empty "No trip" screen.
+  const endFromDialog = () => {
+    setConfirmEnd(false);
+    let timer = 0;
+    const go = () => {
+      window.removeEventListener("popstate", go);
+      clearTimeout(timer);
+      end();
+    };
+    window.addEventListener("popstate", go);
+    // The dialog pops its entry on the next tick; if it had none to pop, leave anyway.
+    timer = window.setTimeout(go, 300);
   };
   const originName = fromLabel(active.query, lang);
 
@@ -299,7 +332,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
         body={t("trip.endBody")}
         actions={[
           { label: t("trip.keepGoing"), variant: "text", onPress: () => setConfirmEnd(false) },
-          { label: t("trip.end"), variant: "danger-text", onPress: end },
+          { label: t("trip.end"), variant: "danger-text", onPress: endFromDialog },
         ]}
       />
     </ExploreSheet>
