@@ -119,9 +119,13 @@ function routeMatches(query: string, tokens: Token[]): SearchResult[] {
 
 function landmarkMatches(query: string, tokens: Token[]): SearchResult[] {
   const nq = normalize(query);
-  return landmarks()
+  const scored = landmarks()
     .map((l) => ({ l, score: landmarkScore(l, nq, tokens) }))
-    .filter((x) => x.score >= MIN_SCORE)
+    .filter((x) => x.score >= MIN_SCORE);
+  // A landmark named exactly by the query ("hobby" → Hobby Airport) hides partial matches
+  // ("Hobby Center" under Theater District), which read as unrelated results.
+  const exact = scored.filter((x) => x.score >= EXACT_LANDMARK);
+  return (exact.length ? exact : scored)
     .sort((a, b) => b.score - a.score)
     .map(({ l }) => {
       const stops = (l.stopIds?.map(findStop).filter((s) => s !== undefined) ?? []).map(stopSummary);
@@ -138,9 +142,11 @@ function landmarkMatches(query: string, tokens: Token[]): SearchResult[] {
     });
 }
 
+const EXACT_LANDMARK = 1.1;
+
 function landmarkScore(l: Landmark, nq: string, tokens: Token[]): number {
   const names = [l.name, ...l.aliases].map(normalize);
-  if (names.includes(nq)) return 1.1;
+  if (names.includes(nq)) return EXACT_LANDMARK;
   return Math.max(...names.map((n) => matchScore(tokens, n.split(" "))));
 }
 

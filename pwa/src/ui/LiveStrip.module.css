@@ -41,3 +41,20 @@
 .empty {
   font-size: var(--fs-body);
 }
+
+/* One row: items that wrap are hidden by useOneRow (LiveStrip.tsx). */
+.oneRow {
+  overflow: hidden;
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-3);
+}
+
+.nextCaption {
+  color: var(--c-live-on-strip);
+  font-weight: var(--fw-medium);
+}

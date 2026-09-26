@@ -288,7 +288,7 @@ for (const vp of VIEWPORTS) {
       expect.soft(first, "[58] is the first chip").toBe("58");
       await rider.tap(page.getByRole("button", { name: "Show Route 58 near you" }), "chip [58]");
       await expectFocusOnH1(page);
-      const missing = await goalOnScreen(page, ["Route 58 near you", "WESTBOUND to WEST BELT", /Northwest Transit Center/, /Bay M/, "Platform 2 (stop #79)"], strict);
+      const missing = await goalOnScreen(page, ["Route 58 near you", "WESTBOUND to WEST BELT", /Northwest Transit Center/, /Bay M/, "Platform 2"], strict);
       // TC card first (D3 order rule), with a departure.
       const cards = page.getByRole("button", { name: /^Route 58 / });
       await expect(cards.first()).toHaveAccessibleName(/Northwest Transit Center/);

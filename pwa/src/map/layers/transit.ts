@@ -20,14 +20,32 @@ const isRail: Expr = ["==", ["get", "kind"], "rail"];
 /** 20dp pins below zoom 16, 28dp from 16 (C.16). */
 const pinImage: Expr = ["step", ["zoom"], ["case", isRail, "pin-rail-sm", "pin-bus-sm"], 16, ["case", isRail, "pin-rail-md", "pin-bus-md"]];
 
+/** Only the stops nearest the anchor carry their ID chip at walking zoom (C.16, M4); the rest from LABEL_ALL_ZOOM. */
+const LABELLED_NEAREST = 3;
+const LABEL_ALL_ZOOM = 18;
+
 export function stopsCollection(stops: Iterable<ClientStop>, anchor: LatLon): FeatureCollection {
   // Squared equirectangular distance: enough to rank labels, and cheap for 8,797 stops.
   const k = Math.cos((anchor.lat * Math.PI) / 180);
+  const list = Array.from(stops, (s) => ({ s, sort: ((s.lat - anchor.lat) ** 2 + ((s.lon - anchor.lon) * k) ** 2) * 1e8 }));
+  const nearest = new Set(
+    list
+      .filter((x) => x.s.kind !== "rail")
+      .sort((a, b) => a.sort - b.sort)
+      .slice(0, LABELLED_NEAREST)
+      .map((x) => x.s.id),
+  );
   return {
     type: "FeatureCollection",
-    features: Array.from(stops, (s) => ({
+    features: list.map(({ s, sort }) => ({
       type: "Feature",
-      properties: { id: s.id, kind: s.kind === "rail" ? "rail" : "stop", ...(s.bearing !== undefined && { bearing: s.bearing }), sort: ((s.lat - anchor.lat) ** 2 + ((s.lon - anchor.lon) * k) ** 2) * 1e8 },
+      properties: {
+        id: s.id,
+        kind: s.kind === "rail" ? "rail" : "stop",
+        ...(s.bearing !== undefined && { bearing: s.bearing }),
+        ...(nearest.has(s.id) && { near: 1 }),
+        sort,
+      },
       geometry: { type: "Point", coordinates: [s.lon, s.lat] },
     })),
   };
@@ -41,12 +59,11 @@ export function showTransitCenters(map: maplibregl.Map, tcs: TransitCenterSummar
 }
 
 /** The stop layer scene route lines and labels go under (see scene.ts). */
-export const BOTTOM_TRANSIT_LAYER = "stops-label";
+export const BOTTOM_TRANSIT_LAYER = "stops-pin";
 
 /**
- * Layers are added bottom to top; MapLibre places symbols top to bottom. So the pins (always
- * shown) are placed before the ID chips, and a chip moves to another side of its pin, or hides,
- * rather than cover a pin, the rider's dot or a scene marker.
+ * Layers are added bottom to top; MapLibre places symbols top to bottom. ID chips move to
+ * another side of their pin, or hide, rather than cover the rider's dot or a scene marker.
  */
 export function addTransitLayers(map: maplibregl.Map) {
   const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -54,12 +71,9 @@ export function addTransitLayers(map: maplibregl.Map) {
   map.addSource(TCS_SOURCE, { type: "geojson", data: empty });
   const text = token("--c-text");
 
-  map.addLayer({
-    id: "stops-label",
-    type: "symbol",
-    source: STOPS_SOURCE,
-    minzoom: 16,
-    layout: {
+  // Two chip layers, one look: the nearest few stops from zoom 16, every stop from 18. A chip on
+  // every pin hid the street names riders use to find their way.
+  const chipLayout: maplibregl.SymbolLayerSpecification["layout"] = {
       "text-field": ["get", "id"],
       "text-font": LABEL_FONT_BOLD,
       "text-size": 14,
@@ -72,22 +86,23 @@ export function addTransitLayers(map: maplibregl.Map) {
       // The pins nearest the anchor keep their labels when labels collide.
       "symbol-sort-key": ["get", "sort"],
       "symbol-z-order": "source",
-    },
-    paint: { "text-color": text },
-  });
+  };
   map.addLayer({
     id: "stops-pin",
     type: "symbol",
     source: STOPS_SOURCE,
-    minzoom: 14,
-    // Pins always show, and reserve exactly their square: labels may sit right next to them.
-    layout: { "icon-image": pinImage, "icon-allow-overlap": true, "icon-padding": 0 },
+    // From 15: at 14 downtown, forty identical pins were noise (C.16); TC tiles show from 11.
+    minzoom: 15,
+    // Pins always show, and don't reserve space (ignore-placement): with a pin on every downtown
+    // corner, reserving it pushed every street name off the map. The few ID chips may sit
+    // beside or over a pin; they point at the nearest ones anyway.
+    layout: { "icon-image": pinImage, "icon-allow-overlap": true, "icon-padding": 0, "icon-ignore-placement": true },
   });
   map.addLayer({
     id: "stops-notch",
     type: "symbol",
     source: STOPS_SOURCE,
-    minzoom: 14,
+    minzoom: 15,
     filter: ["has", "bearing"],
     layout: {
       "icon-image": ["case", isRail, "notch-rail", "notch-bus"],
@@ -98,6 +113,17 @@ export function addTransitLayers(map: maplibregl.Map) {
       "icon-allow-overlap": true,
       "icon-ignore-placement": true,
     },
+  });
+  map.addLayer({ id: "stops-label", type: "symbol", source: STOPS_SOURCE, minzoom: LABEL_ALL_ZOOM, layout: chipLayout, paint: { "text-color": text } });
+  map.addLayer({
+    id: "stops-label-near",
+    type: "symbol",
+    source: STOPS_SOURCE,
+    minzoom: 16,
+    maxzoom: LABEL_ALL_ZOOM,
+    filter: ["has", "near"],
+    layout: chipLayout,
+    paint: { "text-color": text },
   });
   map.addLayer({
     id: "tc-label",
@@ -123,11 +149,19 @@ export function addTransitLayers(map: maplibregl.Map) {
   });
 }
 
+const QUIET_LAYERS = ["stops-pin", "stops-notch", "stops-label", "stops-label-near", "tc-pin", "tc-label"];
+
+/** Walk and itinerary scenes show only their own markers: every other stop pin, chip and TC is hidden. */
+export function setQuiet(map: maplibregl.Map, quiet: boolean) {
+  for (const id of QUIET_LAYERS) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", quiet ? "none" : "visible");
+}
+
 /** Hides one stop's normal pin and label while the scene shows it enlarged with its callout. */
 export function setHighlightedStop(map: maplibregl.Map, stopId: string | undefined) {
   const filter: maplibregl.FilterSpecification | null = stopId ? ["!=", ["get", "id"], stopId] : null;
   map.setFilter("stops-pin", filter);
   map.setFilter("stops-label", filter);
+  map.setFilter("stops-label-near", stopId ? ["all", ["has", "near"], ["!=", ["get", "id"], stopId]] : ["has", "near"]);
   map.setFilter("stops-notch", stopId ? ["all", ["has", "bearing"], ["!=", ["get", "id"], stopId]] : ["has", "bearing"]);
 }
 
@@ -142,7 +176,8 @@ const pinHalf = (map: maplibregl.Map, layer: string) => (layer === "tc-pin" ? 18
  */
 export function transitAt(map: maplibregl.Map, point: maplibregl.Point): TransitTap | undefined {
   const tap = (f: maplibregl.MapGeoJSONFeature): TransitTap => ({ kind: f.layer.id === "tc-pin" ? "tc" : "stop", id: String(f.properties.id) });
-  const label = map.getLayer("stops-label") && map.queryRenderedFeatures(point, { layers: ["stops-label"] })[0];
+  const labelLayers = ["stops-label", "stops-label-near"].filter((l) => map.getLayer(l));
+  const label = labelLayers.length > 0 && map.queryRenderedFeatures(point, { layers: labelLayers })[0];
   if (label) return tap(label);
 
   const box: [maplibregl.PointLike, maplibregl.PointLike] = [

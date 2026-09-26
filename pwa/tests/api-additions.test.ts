@@ -86,13 +86,27 @@ describe("4. structured walk steps", () => {
 });
 
 describe("5. stop schedule", () => {
-  it("covers the whole service day and the next day's first trip", () => {
+  it("covers the whole service day; the next trip is later today while one remains", () => {
     const s = getStopSchedule("342", "40", NOW);
     expect(s.serviceDate).toBe("20260930");
     expect(s.departures.length).toBeGreaterThan(10);
     expect(Date.parse(s.departures[0].departureTime)).toBeLessThan(NOW - 6 * 3600_000);
-    expect(s.nextServiceFirst).not.toBeNull();
+    expect(s.nextServiceFirst!.serviceDate).toBe("20260930");
+    expect(Date.parse(s.nextServiceFirst!.departureTime)).toBeGreaterThanOrEqual(NOW);
+  });
+
+  it("names the next day's first trip once today's service has ended", () => {
+    const s = getStopSchedule("342", "40", serviceDayStart("20260930") + 26 * 3600_000);
     expect(s.nextServiceFirst!.serviceDate).toBe("20261001");
+  });
+
+  it("after midnight, before the first bus, the next trip is this morning (not tomorrow)", () => {
+    // Sat 2:30 AM: Friday's late trips are over; Saturday's 5:47 AM is still ahead.
+    const at = serviceDayStart("20260926") + 2.5 * 3600_000;
+    const s = getStopSchedule("342", "40", at);
+    expect(s.serviceDate).toBe("20260926");
+    expect(s.nextServiceFirst!.serviceDate).toBe("20260926");
+    expect(Date.parse(s.nextServiceFirst!.departureTime) - at).toBeLessThan(6 * 3600_000);
   });
 
   it("is served over HTTP", async () => {

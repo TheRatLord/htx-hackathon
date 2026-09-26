@@ -9,7 +9,11 @@ import type { WalkButtonProps } from "./types.ts";
 /** Beyond this, minutes are less useful than the distance. */
 const MAX_MINUTES = 20;
 
-/** C.5a: "🚶 1 min / walk", top right of a stop card. Opens Walk (D8). */
+/**
+ * C.5a: "🚶 1 min walk" on one line, at the end of a stop card's side-of-street line. Opens Walk
+ * (D8). From a place (D4) the visible text stays "4 min walk" (the title says where from); the
+ * accessible name says it.
+ */
 export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }: WalkButtonProps) {
   const t = useT();
   const lang = useLang();
@@ -24,11 +28,8 @@ export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }:
   else label = t("card.walkA11y", { id: stopId, count: min });
   return (
     <button type="button" className={styles.walk} aria-label={label} onClick={onPress}>
-      <span className={styles.top}>
-        <Icon name="directions_walk" size={20} />
-        <span className={styles.value}>{value}</span>
-      </span>
-      <span className={styles.sub}>{walkFrom ? t("card.walkFrom", { from: walkFrom.label }) : t("card.walk")}</span>
+      <Icon name="directions_walk" size={20} />
+      <span className={styles.value}>{t("card.walkPill", { value })}</span>
     </button>
   );
 }

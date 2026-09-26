@@ -74,7 +74,9 @@
   --c-walk-line: #2A82E6;         /* dotted walk path, 5dp, dash 1:2 */
 
   /* ---------- Typography ---------- */
-  --font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  /* CJK and Arabic fallbacks after the system UI font, so language names in their own script
+     ("中文", "العربية") never render as empty boxes where the device has those fonts. */
+  --font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Noto Sans Arabic", sans-serif;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-bold: 700;

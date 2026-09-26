@@ -42,6 +42,28 @@
   color: var(--c-text-variant);
 }
 
+/* "On the west side of Fannin St   [🚶 1 min walk]": the walk pill ends the side line, so the stop
+   name above keeps the card's full width. */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: calc(-1 * var(--sp-1)) 0;
+}
+
+/* With large text the side line takes the row and the pill drops under it, right-aligned,
+   rather than squeezing the line to a word per row. */
+.metaRow .meta {
+  flex: 1 1 11em;
+  min-width: 0;
+}
+
+.metaRow > button {
+  margin-left: auto;
+}
+
 .divider {
   margin: var(--sp-1) 0;
   border: none;
@@ -95,7 +117,7 @@
   z-index: 1;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: var(--touch-min);
   margin: calc(-1 * var(--sp-1)) 0 calc(-1 * var(--card-pad));
   padding: var(--sp-1) 0 0;
@@ -106,13 +128,20 @@
   text-align: start;
 }
 
-.route {
-  display: flex;
-  gap: var(--sp-3);
-  align-items: center;
-}
-
 .sep {
   margin: 0 var(--sp-1);
   color: var(--c-text-variant);
+}
+
+/* "Bay M · Platform 2" on a transit-center card: where to stand, so it reads darker than a side line. */
+.metaStrong {
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+}
+
+.routeRow {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-1) 0;
 }

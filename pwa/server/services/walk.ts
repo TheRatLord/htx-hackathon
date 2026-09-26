@@ -60,26 +60,27 @@ export interface WalkDestination {
 export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestination): Promise<WalkRoute> {
   const r = (n: number) => n.toFixed(5);
   const coords = `${r(from.lon)},${r(from.lat)};${r(to.lon)},${r(to.lat)}`;
-  return cache.get(`${coords}|${destination?.label ?? ""}`, async () => {
-    try {
-      const { body } = await fetchUpstream<OsrmResponse>({
-        service: "osrm",
-        url: `${OSRM}/${coords}?overview=full&geometries=geojson&steps=true`,
-        fixtureKey: `foot/${coords}`,
-      });
-      const route = body.routes?.[0];
-      if (body.code !== "Ok" || !route) throw new Error(`no walking route (${body.code})`);
-      if (implausibleWalk(haversineM(from.lat, from.lon, to.lat, to.lon), route.distance)) throw new Error("the street route is implausibly long");
-      return {
-        source: "osrm",
-        ...durations(route.distance, route.duration),
-        geometry: { type: "LineString", coordinates: route.geometry.coordinates },
-        steps: describeSteps(route.legs.flatMap((l) => l.steps), destination),
-      };
-    } catch (err) {
-      return straightLine(from, to, destination, (err as Error).message);
-    }
-  });
+  // Only real answers are cached: a street route, or OSRM's deliberate "no route" / an
+  // implausible detour (both fall back to a straight line). A timeout or 5xx is not cached, so
+  // the next request asks OSRM again instead of serving a straight line for 24 h.
+  const load = async (): Promise<WalkRoute> => {
+    const { body } = await fetchUpstream<OsrmResponse>({
+      service: "osrm",
+      url: `${OSRM}/${coords}?overview=full&geometries=geojson&steps=true`,
+      fixtureKey: `foot/${coords}`,
+    });
+    const route = body.routes?.[0];
+    if (body.code !== "Ok" || !route) return straightLine(from, to, destination, `no walking route (${body.code})`);
+    if (implausibleWalk(haversineM(from.lat, from.lon, to.lat, to.lon), route.distance))
+      return straightLine(from, to, destination, "the street route is implausibly long");
+    return {
+      source: "osrm",
+      ...durations(route.distance, route.duration),
+      geometry: { type: "LineString", coordinates: route.geometry.coordinates },
+      steps: describeSteps(route.legs.flatMap((l) => l.steps), destination),
+    };
+  };
+  return cache.get(`${coords}|${destination?.label ?? ""}`, load).catch((err: unknown) => straightLine(from, to, destination, (err as Error).message));
 }
 
 function durations(distanceM: number, durationS: number) {

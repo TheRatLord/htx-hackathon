@@ -15,7 +15,7 @@ export function Legend() {
       <li className={styles.item}>
         <span className={`${styles.chip} ${styles.live}`}>
           {sample}
-          <Icon name="live_arcs" size={16} color="var(--c-live-icon)" />
+          <Icon name="live_arcs" size={16} color="var(--c-live-on-strip)" />
         </span>
         {t("status.live")}
       </li>

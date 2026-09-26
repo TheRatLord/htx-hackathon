@@ -23,3 +23,12 @@
   align-items: flex-start;
   padding: var(--sp-1) 0;
 }
+
+.bayLine {
+  display: flex;
+  align-items: baseline;
+}
+
+.bay {
+  font-size: var(--fs-heading);
+}

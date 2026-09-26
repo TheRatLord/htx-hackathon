@@ -22,19 +22,36 @@
   scrollbar-width: none;
 }
 
+/* Room for the "More ›" button, so the last chip can scroll fully clear of it. */
+.withMore {
+  padding-right: 112px;
+}
+
+.wrapped {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  row-gap: var(--sp-2);
+}
+
 .scroller::-webkit-scrollbar {
   display: none;
 }
 
+/* An opaque button beside the scroller's visible end: a chip under it is covered completely,
+   never half-shown through a fade ("1Más ›"). */
 .more {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
+  display: inline-flex;
+  align-items: center;
   min-width: var(--touch-min);
-  padding: 0 var(--sp-4) 0 var(--sp-8);
+  padding: 0 var(--gutter) 0 var(--sp-3);
   border: none;
-  background: linear-gradient(to right, transparent, var(--c-surface) 40%);
+  border-left: 1px solid var(--c-divider);
+  background: var(--c-surface);
+  box-shadow: -8px 0 8px -4px var(--c-surface);
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
   white-space: nowrap;

@@ -1,5 +1,5 @@
-import type { Dep } from "../api/types.ts";
-import { departureA11y, showsClock, upcoming } from "../lib/format.ts";
+import { useLayoutEffect, useRef, type RefObject } from "react";
+import { departureA11y, formatClock, formatDayTime, upcoming } from "../lib/format.ts";
 import { useLang, useT } from "../i18n/index.ts";
 import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
@@ -7,20 +7,29 @@ import styles from "./LiveStrip.module.css";
 import { TimeValue } from "./TimeValue.tsx";
 import type { LiveStripProps, StripFact } from "./types.ts";
 
-/** Three minute values fit one row at 360dp. */
-const MAX_DEPS = 3;
-/** Clock times ("12:19 AM") are twice as wide. */
-const MAX_CLOCKS = 2;
+/** Up to four times, as today's strip; those that don't fit on its one row are hidden (see useOneRow). */
+const MAX_DEPS = 4;
 
 /**
- * The departures that fit: minute values after the first departure, so a far-off clock time
- * never pushes the strip onto a second row; when every time is a clock time (offline, late
- * night), the first two.
+ * Hides the items that wrapped onto a second row, after every render and resize: the strip stays
+ * one row at any width and text size, showing as many times as fit (two clock times at 360dp,
+ * four minute values at 412dp). Items are unhidden, measured and re-hidden in one layout pass.
  */
-function stripDeps(deps: Dep[], now: number, offline: boolean): Dep[] {
-  const next = upcoming(deps, now).slice(0, MAX_DEPS);
-  if (next.every((d) => showsClock(d, now, offline))) return next.slice(0, MAX_CLOCKS);
-  return next.filter((d, i) => i === 0 || !showsClock(d, now, offline));
+function useOneRow(list: RefObject<HTMLUListElement | null>) {
+  useLayoutEffect(() => {
+    const el = list.current;
+    if (!el) return;
+    const fit = () => {
+      const items = Array.from(el.children) as HTMLElement[];
+      items.forEach((li) => (li.hidden = false));
+      const top = items[0]?.offsetTop ?? 0;
+      items.forEach((li, i) => (li.hidden = i > 0 && li.offsetTop > top));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
 }
 
 /** The strip's look with facts instead of times: "**5** stops left · about **7** min" (D13 ride step). */
@@ -37,17 +46,37 @@ export function FactStrip({ facts }: { facts: StripFact[] }) {
   );
 }
 
-/** C.3: the blue live-minutes strip. Not a live region: polling never re-announces. */
-export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {
+/**
+ * C.3: the blue live-minutes strip. Not a live region: polling never re-announces. With nothing
+ * in the window and `nextService` known, the next bus is still the big number: "5:47 AM" over
+ * "First bus · in 3 hr 17 min" (today) or "No more trips today · Sun" (a later day).
+ */
+export function LiveStrip({ deps, loading, emptyText, nextService }: LiveStripProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
   const offline = useOffline();
-  const shown = stripDeps(deps, now, offline);
+  const list = useRef<HTMLUListElement>(null);
+  const shown = upcoming(deps, now).slice(0, MAX_DEPS);
+  useOneRow(list);
   if (loading) {
     return (
       <div className={styles.strip} aria-busy="true" aria-label={t("common.loading")}>
         <span className={styles.placeholder}>{t("strip.loading")}</span>
+      </div>
+    );
+  }
+  if (!shown.length && nextService && Date.parse(nextService.departureTime) > now) {
+    const mins = Math.round((Date.parse(nextService.departureTime) - now) / 60_000);
+    const caption = nextService.today
+      ? t("strip.firstBusIn", { in: formatDuration(mins, t) })
+      : t("strip.noMoreToday", { day: formatDayTime(nextService.departureTime, lang).split(" ")[0] });
+    return (
+      <div className={styles.strip}>
+        <p className={styles.next}>
+          <span className={styles.digits}>{formatClock(nextService.departureTime, lang)}</span>
+          <span className={styles.nextCaption}>{caption}</span>
+        </p>
       </div>
     );
   }
@@ -59,7 +88,7 @@ export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {
     );
   }
   return (
-    <ul className={styles.strip} aria-label={t("strip.label")}>
+    <ul ref={list} className={`${styles.strip} ${styles.oneRow}`} aria-label={t("strip.label")}>
       {shown.map((d) => (
         <li
           key={`${d.tripId}-${d.departureTime}`}
@@ -73,4 +102,12 @@ export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {
       ))}
     </ul>
   );
+}
+
+/** "3 hr 17 min", "45 min". */
+export function formatDuration(mins: number, t: (key: string, vars?: Record<string, string | number>) => string): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (!h) return t("time.min", { n: m });
+  return m ? t("time.hrMin", { h, m }) : t("time.hr", { h });
 }

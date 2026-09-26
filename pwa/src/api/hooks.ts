@@ -4,9 +4,10 @@
 export { useAlerts } from "./alertsStore.ts";
 
 import { useQuery } from "@tanstack/react-query";
-import { formatLatLon, roundedKey } from "../lib/geo.ts";
+import { useState } from "react";
+import { formatLatLon, haversineM, roundedKey } from "../lib/geo.ts";
 import type { PlanQuery } from "../lib/planQuery.ts";
-import { apiGet } from "./client.ts";
+import { ApiError, apiGet } from "./client.ts";
 import { keys } from "./keys.ts";
 import type {
   ArrivalsResult,
@@ -33,7 +34,23 @@ export function useHealth() {
   return useQuery({ queryKey: keys.health(), queryFn: () => apiGet<Health>("/health"), staleTime: 5 * 60_000 });
 }
 
-export function useNearby(anchor?: LatLon, opts: { radius?: number; precise?: boolean } = {}) {
+/** The nearby list re-anchors only once the rider has moved this far (GPS jitter and walking along a block don't). */
+const REANCHOR_M = 75;
+
+/**
+ * `p`, held still until it moves more than REANCHOR_M. With a high-accuracy watch, every ~11 m
+ * step would otherwise be a new query key: a new /nearby request (three OSRM walks with
+ * `precise`) and a reshuffled list.
+ */
+function useStableAnchor(p: LatLon | undefined): LatLon | undefined {
+  const [anchor, setAnchor] = useState(p);
+  const moved = p ? !anchor || haversineM(anchor.lat, anchor.lon, p.lat, p.lon) > REANCHOR_M : anchor !== undefined;
+  if (moved) setAnchor(p);
+  return moved ? p : anchor;
+}
+
+export function useNearby(near?: LatLon, opts: { radius?: number; precise?: boolean } = {}) {
+  const anchor = useStableAnchor(near);
   const at = anchor ? roundedKey(anchor) : "";
   return useQuery({
     queryKey: keys.nearby(at, opts.radius, opts.precise),
@@ -155,9 +172,15 @@ export function useTripStops(tripId?: string, fromStop?: string) {
 export function useVehicles(routeId: string | undefined, opts: { enabled: boolean }) {
   return useQuery({
     queryKey: keys.vehicles(routeId),
-    queryFn: () => apiGet<{ vehicles: Vehicle[] }>("/vehicles", { route: routeId }),
+    queryFn: async () => {
+      const res = await apiGet<{ vehicles: Vehicle[]; available?: false }>("/vehicles", { route: routeId });
+      // No key, or offline: the server says so with a 200 (no failed request in the console).
+      if (res.available === false) throw new ApiError("realtime_unavailable", 503, "Live bus positions are unavailable.");
+      return res;
+    },
     enabled: opts.enabled,
-    refetchInterval: VEHICLE_POLL_MS,
+    // Stop polling once the server has said live positions are unavailable.
+    refetchInterval: (q) => (q.state.error instanceof ApiError && q.state.error.code === "realtime_unavailable" ? false : VEHICLE_POLL_MS),
     retry: false,
   });
 }

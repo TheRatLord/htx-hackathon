@@ -7,7 +7,7 @@ import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
 import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
-import { DepTimes } from "./DepTimes.tsx";
+import { DepTimes, shownDeps } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
 import type { NearbyStopCardProps } from "./types.ts";
@@ -58,7 +58,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   const rowText = (row: Row) => {
     if (row.kind === "none") return `${t("routeName.a11y", { name: row.name })}, ${t("card.noBuses2h")}`;
     const ref = toRouteRef({ id: row.route.routeId, name: row.route.name, color: row.route.color, textColor: row.route.textColor });
-    const times = row.deps.slice(0, 2).map((d) => departureA11y(d, now, { walkMin, offline, lang }));
+    const times = shownDeps(row.deps, now, walkMin).slice(0, 2).map((d) => departureA11y(d, now, { walkMin, offline, lang }));
     return `${t("routeName.a11y", { name: row.route.name })} ${headsignLine(ref, row.route.directionLabel, row.route.headsign, lang)}, ${times.join(`; ${t("card.then")} `)}`;
   };
   const summary = [title, side, walkMin !== undefined ? t("time.minutesA11y", { count: walkMin }) : ""].filter(Boolean).join(", ");
@@ -66,13 +66,13 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   return (
     <article className={styles.card}>
       <button type="button" className={styles.hit} aria-label={`${summary}. ${shown.map(rowText).join(". ")}`} onClick={onOpen} />
-      <div className={styles.top}>
-        <h2 className={styles.name}>{title}</h2>
-        {walkDistanceM !== undefined && (
-          <WalkButton stopId={stop.id} walkDistanceM={walkDistanceM} walkFrom={walkFrom} onPress={onWalk} />
-        )}
-      </div>
-      {side && <p className={styles.meta}>{side}</p>}
+      <h2 className={styles.name}>{title}</h2>
+      {(side || walkDistanceM !== undefined) && (
+        <div className={styles.metaRow}>
+          <p className={styles.meta}>{side}</p>
+          {walkDistanceM !== undefined && <WalkButton stopId={stop.id} walkDistanceM={walkDistanceM} walkFrom={walkFrom} onPress={onWalk} />}
+        </div>
+      )}
       <hr className={styles.divider} />
       <ul className={styles.rows}>
         {shown.map((row, i) => {
@@ -107,11 +107,12 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
       </ul>
       {hidden.length > 0 && (
         <button type="button" className={styles.link} onClick={onOpen}>
-          {t("card.moreRoutes", {
-            count: hidden.length,
-            names: hidden.map((r) => (r.kind === "none" ? r.name : r.route.name)).join(", "),
-          })}
-          <Icon name="chevron_right" />
+          <span>
+            {t("card.alsoHere", {
+              names: hidden.map((r) => t("routeName.a11y", { name: r.kind === "none" ? r.name : r.route.name })).join(", "),
+            })}
+            <Icon name="chevron_right" />
+          </span>
         </button>
       )}
     </article>

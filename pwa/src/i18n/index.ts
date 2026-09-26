@@ -2,7 +2,7 @@
 // `{ en, es }` dictionaries whose nested keys flatten to "namespace.key"; a
 // module adds its own file and never edits another's.
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export type Lang = "en" | "es";
 export type Vars = Record<string, string | number>;
@@ -80,10 +80,13 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l);
 };
 
-/** t() bound to the current language; re-renders the caller when the language changes. */
+/**
+ * t() bound to the current language; re-renders the caller when the language changes. The
+ * function is stable while the language stays the same, so effects can list it as a dependency.
+ */
 export function useT(): (key: string, vars?: Vars) => string {
   const lang = useSyncExternalStore(subscribe, getLang, getLang);
-  return (key, vars) => t(key, vars, lang);
+  return useCallback((key: string, vars?: Vars) => t(key, vars, lang), [lang]);
 }
 
 export function useLang(): Lang {

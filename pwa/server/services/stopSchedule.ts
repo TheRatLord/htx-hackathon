@@ -1,5 +1,5 @@
 // A route's whole scheduled service day at one stop (for the hourly grid), plus
-// the first trip of the next day with service (for "Next bus Sat 5:12 AM").
+// the next trip after now (for "First bus 5:47 AM" or "Next bus Sat 5:12 AM").
 
 import { scheduledDepartures } from "../gtfs/schedule.ts";
 import { findRoute, findStop, gtfs } from "../gtfs/store.ts";
@@ -16,6 +16,11 @@ export interface StopSchedule {
   routeId: string;
   serviceDate: string;
   departures: { departureTime: string }[];
+  /**
+   * The next scheduled trip after `now`: later today when the current service day still has one
+   * (after midnight, before the first morning bus), otherwise the first trip of the next day
+   * with service. `serviceDate` equal to the response's `serviceDate` means "today".
+   */
   nextServiceFirst: { serviceDate: string; departureTime: string } | null;
 }
 
@@ -44,7 +49,9 @@ export function getStopSchedule(stopId: string, routeId: string, now = Date.now(
   const serviceDate = late.some((t) => t >= now) ? yesterday : today;
   const times = serviceDate === yesterday ? late : departuresOn(stopIdx, routeIdx, today);
 
-  let nextServiceFirst: StopSchedule["nextServiceFirst"] = null;
+  const laterToday = times.find((t) => t >= now);
+  let nextServiceFirst: StopSchedule["nextServiceFirst"] =
+    laterToday !== undefined ? { serviceDate, departureTime: new Date(laterToday).toISOString() } : null;
   for (let i = 1; i <= LOOKAHEAD_DAYS && !nextServiceFirst; i++) {
     const date = addDays(serviceDate, i);
     const first = departuresOn(stopIdx, routeIdx, date)[0];
