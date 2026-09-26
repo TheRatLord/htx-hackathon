@@ -26,6 +26,7 @@ schedule only. Never commit or print them.
 | `npm run web:build` / `npm run web:preview` | Type-check and build the PWA into `dist/`, then serve it |
 | `npm run typecheck` / `npm run typecheck:web` | Server and frontend type checks |
 | `npm test` | Vitest: API tests (`tests/`) and frontend unit tests (`src/**/*.test.ts`), offline |
+| `npm run lint` | oxlint (`.oxlintrc.json`): correctness rules plus React's rules of hooks (errors) and exhaustive deps (warnings). ESLint's typescript-eslint does not support TypeScript 7 yet |
 
 Useful env flags for the API: `OFFLINE=1` (recorded fixtures only, no network), `DEMO_REALTIME=1`
 (simulated live times, shown as "Live (demo)"), `RECORD_FIXTURES=1`.

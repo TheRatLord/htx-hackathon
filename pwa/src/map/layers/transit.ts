@@ -321,7 +321,7 @@ export function transitAt(map: maplibregl.Map, point: maplibregl.Point): Transit
       ? { kind: "cluster", id: String(f.properties.id), ids: String(f.properties.ids).split(","), at: f.geometry.coordinates as [number, number] }
       : { kind: f.layer.id === "tc-pin" ? "tc" : "stop", id: String(f.properties.id) };
   const labelLayers = ["stops-label", "stops-label-near"].filter((l) => map.getLayer(l));
-  const label = labelLayers.length > 0 && map.queryRenderedFeatures(point, { layers: labelLayers })[0];
+  const label = labelLayers.length > 0 && safeQuery(map, point, labelLayers)?.[0];
   if (label) return tap(label);
 
   const box: [maplibregl.PointLike, maplibregl.PointLike] = [
@@ -330,13 +330,63 @@ export function transitAt(map: maplibregl.Map, point: maplibregl.Point): Transit
   ];
   const layers = PIN_LAYERS.filter((l) => map.getLayer(l));
   let best: { tap: TransitTap; d: number } | undefined;
-  for (const f of map.queryRenderedFeatures(box, { layers })) {
-    if (f.geometry.type !== "Point") continue;
-    const p = map.project(f.geometry.coordinates as [number, number]);
-    const half = pinHalf(map, f.layer.id);
+  const consider = (coords: [number, number], layer: string, t: () => TransitTap) => {
+    const p = map.project(coords);
+    const half = pinHalf(map, layer);
     const d = Math.hypot(Math.max(0, Math.abs(p.x - point.x) - half), Math.max(0, Math.abs(p.y - point.y) - half));
-    if (d > TAP_SLOP || (best && best.d <= d)) continue;
-    best = { tap: tap(f), d };
+    if (d > TAP_SLOP || (best && best.d <= d)) return;
+    best = { tap: t(), d };
+  };
+  // One layer at a time: when maplibre's feature index for a GeoJSON tile is left empty after a
+  // setData, querying it throws ("Out of bounds ... _numberToString") until the next update while its
+  // pins still draw. A rider's tap on such a pin must still open the stop, so that layer is
+  // hit-tested from the data the app gave its source instead.
+  for (const layer of layers) {
+    const found = safeQuery(map, box, [layer]);
+    if (found) {
+      for (const f of found) if (f.geometry.type === "Point") consider(f.geometry.coordinates as [number, number], layer, () => tap(f));
+      continue;
+    }
+    for (const f of drawnFromData(map, layer)) {
+      const kind = layer === "tc-pin" ? "tc" : "stop";
+      consider(f.coordinates, layer, () =>
+        f.ids ? { kind: "cluster", id: f.id, ids: f.ids, at: f.coordinates } : { kind, id: f.id },
+      );
+    }
   }
-  return best?.tap;
+  return (best as { tap: TransitTap } | undefined)?.tap;
+}
+
+function safeQuery(map: maplibregl.Map, at: maplibregl.PointLike | [maplibregl.PointLike, maplibregl.PointLike], layers: string[]) {
+  try {
+    return map.queryRenderedFeatures(at, { layers });
+  } catch {
+    return undefined;
+  }
+}
+
+type DataPin = { id: string; ids?: string[]; coordinates: [number, number] };
+
+/**
+ * The pins a layer draws, read from its source's data: what a tap falls back on when the layer's
+ * rendered-feature query throws. Only layers that draw every feature (overlap allowed) qualify:
+ * stops-pin-far drops colliding pins, so guessing from its data could open a stop that isn't shown.
+ */
+function drawnFromData(map: maplibregl.Map, layer: string): DataPin[] {
+  const zoom = map.getZoom();
+  const minzoom = layer === "tc-pin" ? 11 : ALL_PINS_ZOOM;
+  if (layer === "stops-pin-far" || zoom < minzoom || map.getLayoutProperty(layer, "visibility") === "none") return [];
+  const source = layer === "tc-pin" ? TCS_SOURCE : layer === "stops-cluster" ? CLUSTERS_SOURCE : STOPS_SOURCE;
+  const data = (map.getSource(source) as GeoJSONSource | undefined)?.serialize().data;
+  if (!data || typeof data !== "object" || !("features" in data)) return [];
+  const hidden = layer === "stops-pin" ? new Set([...coveredIds, ...(highlighted ? [highlighted] : [])]) : undefined;
+  const out: DataPin[] = [];
+  for (const f of (data as FeatureCollection).features) {
+    if (f.geometry?.type !== "Point" || !f.properties) continue;
+    const id = String(f.properties.id);
+    if (hidden?.has(id)) continue;
+    const ids = f.properties.cluster ? String(f.properties.ids).split(",") : undefined;
+    out.push({ id, ids, coordinates: f.geometry.coordinates as [number, number] });
+  }
+  return out;
 }
