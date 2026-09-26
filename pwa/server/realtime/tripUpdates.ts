@@ -3,7 +3,7 @@
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { config } from "../config.ts";
 import { TtlCache } from "../lib/cache.ts";
-import { fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
+import { failureBackoff, fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
 
 const URL_BASE = "https://api.ridemetro.org/GtfsRealtime/TripUpdates";
 const { FeedMessage, TripDescriptor, TripUpdate } = GtfsRealtimeBindings.transit_realtime;
@@ -27,8 +27,11 @@ const cache = new TtlCache<Map<string, TripRealtime>>(30_000, 1);
 
 export const hasTripUpdates = () => Boolean(config.metroApiKey) && !config.offline;
 
+/** After a failed load, the feed isn't asked again for this long. */
+const guarded = failureBackoff("metro-tripupdates", 45_000);
+
 export function tripUpdates(): Promise<Map<string, TripRealtime>> {
-  return cache.get("feed", async () => {
+  return cache.get("feed", () => guarded(async () => {
     const { body } = await fetchUpstream<Uint8Array>({
       service: "metro-tripupdates",
       url: URL_BASE,
@@ -38,7 +41,7 @@ export function tripUpdates(): Promise<Map<string, TripRealtime>> {
       timeoutMs: 10_000,
     });
     return parseFeed(body);
-  });
+  }));
 }
 
 function parseFeed(buf: Uint8Array): Map<string, TripRealtime> {

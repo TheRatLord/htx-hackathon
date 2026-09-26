@@ -1,5 +1,5 @@
 import { useT } from "../i18n/index.ts";
-import { alertText, effectWord } from "../lib/alerts.ts";
+import { alertText, effectWord, isAdvisory } from "../lib/alerts.ts";
 import { formatDateRange } from "../lib/format.ts";
 import styles from "./AlertBox.module.css";
 import { DemoTag } from "./DemoTag.tsx";
@@ -10,7 +10,8 @@ import type { AlertBoxProps } from "./types.ts";
 const MAX_BADGES = 6;
 
 /**
- * C.11: the alert card. The headline has the card's full width (the ⚠ inline in its first line),
+ * C.11: the alert card. A service change has a red edge and ⚠; an advisory a navy edge and (i).
+ * The alert card. The headline has the card's full width (the ⚠ inline in its first line),
  * and the route chips share the date line below it; the card is white with a red edge (a pink fill on every card read as
  * an alarm). The header is never truncated; `compact` only drops the description (and, unless
  * "list", the dates). "Demo" is a small tag at the end, not a column of its own.
@@ -20,12 +21,13 @@ export function AlertBox({ alert, lang, compact, demo, routes, onOpen }: AlertBo
   const header = alertText(alert, "header", lang);
   const description = alertText(alert, "description", lang);
   const dates = compact !== true ? formatDateRange(alert.activeFrom, alert.activeUntil, lang) : "";
+  const advisory = isAdvisory(alert.effect);
   return (
-    <button type="button" className={styles.box} onClick={onOpen}>
+    <button type="button" className={`${styles.box} ${advisory ? styles.advisory : ""}`} onClick={onOpen}>
       <span className={styles.text}>
         {/* The icon sits in the first line, and later lines run under it: no hanging indent. */}
         <span className={styles.headline}>
-          <Icon name="warning" size={20} color="var(--c-alert-icon)" />
+          {advisory ? <Icon name="info" size={20} color="var(--c-brand-navy)" /> : <Icon name="warning" size={20} color="var(--c-alert-icon)" />}
           <strong>{effectWord(alert.effect, lang)}:</strong> {header.text}
         </span>
         {header.englishOnly && <span className={styles.caption}>{t("alert.englishOnly")}</span>}

@@ -25,6 +25,8 @@ export interface TimeValueProps {
   dep: Dep;
   size: "minutes" | "strip" | "body";
   walkMin?: number;
+  /** Show the clock time even under an hour (one format per row: DepTimes' `clockRow`). */
+  clock?: boolean;
 }
 
 export interface StatusWordProps {
@@ -68,7 +70,7 @@ export interface NearbyStopCardProps {
   onWalk: () => void;
   /** The first route row, for screens that size the sheet to show it (D2 fold rule M2). */
   firstRowRef?: Ref<HTMLLIElement>;
-  /** Appended to the title after " · " ("Northbound"): tells apart two cards with the same stop name. */
+  /** Put before the side line ("Northbound · East side of Main St"): tells apart two cards with the same stop name. */
   titleSuffix?: string;
 }
 
@@ -192,7 +194,7 @@ export type FabProps =
   | { kind: "myTrip"; onPress: () => void };
 
 /** C.10 */
-export type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text";
+type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text";
 
 export interface ButtonProps {
   variant: ButtonVariant;
@@ -317,7 +319,7 @@ export interface BayDiagramProps {
 }
 
 /** C.15 */
-export interface DialogAction {
+interface DialogAction {
   label: string;
   variant: "text" | "danger-text";
   onPress: () => void;

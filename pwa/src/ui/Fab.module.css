@@ -25,17 +25,19 @@
   background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
 }
 
+/* Extra large on a narrow phone: the icon over a small "Plan Trip", in a square button. The label
+   stays: the riders who chose the largest text are the ones who need the word (46). */
 @media (max-width: 399px) {
   :global(html[data-text-size="xlarge"]) .planTrip {
-    padding: 0;
+    flex-direction: column;
+    gap: 0;
+    width: calc(var(--fab) + var(--sp-3));
+    padding: var(--sp-1) 2px;
   }
 
   :global(html[data-text-size="xlarge"]) .planTrip .label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    font-size: var(--fs-caption);
+    line-height: 1.1;
+    text-align: center;
   }
 }

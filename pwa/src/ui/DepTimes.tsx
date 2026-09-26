@@ -1,7 +1,8 @@
 import { useT } from "../i18n/index.ts";
-import { formatDuration, isFirstBus, upcoming } from "../lib/format.ts";
+import { clockRow, formatDuration, isFirstBus, upcoming } from "../lib/format.ts";
 import { canMakeIt } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
+import { useOffline } from "../state/offline.ts";
 import type { Dep } from "../api/types.ts";
 import styles from "./DepTimes.module.css";
 import { TimeValue } from "./TimeValue.tsx";
@@ -18,14 +19,14 @@ export function shownDeps<T extends Dep>(deps: T[], now: number, walkMin?: numbe
  * With `walkMin`, buses that leave before the rider can walk there are left out, so the first
  * big number is one they can catch (a greyed "3 min" first still read as the answer). Only when
  * every listed bus is too soon are they shown, greyed with "Leaves before you get there".
- * The one time rule, per time as on the strip: minutes under an hour, the clock time after
- * ("2 min · 1:02 PM"); offline, clock times. The morning's first bus, late at night, is the same
+ * One format per row (clockRow); offline, clock times. The morning's first bus, late at night, is the same
  * big time with a grey line under it saying so and how long that is: "4:20 AM" / "First bus · in 1 hr 50 min".
  */
 export function DepTimes({ deps, max = 2, walkMin, firstBus }: { deps: Dep[]; max?: number; walkMin?: number; firstBus?: boolean }) {
   const t = useT();
   const now = useNow();
-  const shown = shownDeps(deps, now, walkMin).slice(0, max);
+  const offline = useOffline();
+  const { deps: shown, clock } = clockRow(shownDeps(deps, now, walkMin).slice(0, max), now, offline);
   const first = shown.find((d) => !d.canceled);
   // `firstBus`: the route's next bus after a gap (NearbyStopCard's late-night rows) says "First bus" by day too.
   const early = first && isFirstBus(first.departureTime, now);
@@ -48,7 +49,7 @@ export function DepTimes({ deps, max = 2, walkMin, firstBus }: { deps: Dep[]; ma
             <span className={styles.sep} aria-hidden="true">
               ·
             </span>
-            <TimeValue dep={d} size="minutes" walkMin={walkMin} />
+            <TimeValue dep={d} size="minutes" walkMin={walkMin} clock={clock} />
           </span>
         ))}
       </span>

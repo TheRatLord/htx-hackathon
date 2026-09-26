@@ -29,7 +29,7 @@ import {
   stopsCollection,
   transitAt,
 } from "./layers/transit.ts";
-import { around, lineRects, midpoint, overlaps, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
+import { around, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -42,8 +42,12 @@ const RESORT_M = 50;
  * overlapping pins wins at zoom 15, so a coarse anchor is enough.
  */
 const RESORT_CENTRE_M = 800;
-/** Below this much visible map (px), the attribution (i) is hidden: it sat on the only stops shown (46). */
-const ATTRIB_MIN_MAP_H = 300;
+/**
+ * Below this much visible map (px), the attribution (i) is hidden: over a half-height sheet's map
+ * strip it sat on the stops and the park the rider was looking at (07, 46). It shows whenever the
+ * map is the main view (Show map, a peeked sheet), where it has room.
+ */
+const ATTRIB_MIN_MAP_H = 440;
 /** A fit keeps its stops this far from the FAB column: a pin and its ID label (half a chip wide). */
 const FAB_LABEL_ROOM = 40;
 /** A fitted scene is fitted again this long after the sheet stops changing height. */
@@ -155,8 +159,16 @@ function chrome(container: HTMLElement): Rect[] {
   return out;
 }
 
+/** Where along a ride leg its route chip may go, in order of preference. */
+const LEG_LABEL_AT = [0.5, 0.35, 0.65, 0.25, 0.75];
+
 /** A pin's square (28dp from zoom 16, 20dp below) plus a little room, around its point. */
 const PIN_BOX = square(16);
+/**
+ * A pin closer than this to the search bar or a FAB is left out (or, listed, nudged into view): a
+ * pin touching "Plan Trip" read as part of the button (02, 259).
+ */
+const CHROME_GAP_BOX = square(24);
 /** A tall pin's head (place, destination), 40dp above its point. */
 const TALL_BOX: Rect = { l: -16, t: -40, r: 16, b: 0 };
 /** The highlighted 36dp pin with its "Stop 342" callout above it. */
@@ -187,7 +199,7 @@ function nudgeFor(blocked: Pt[], keep: Pt[], covering: Rect[], w: number, mapBot
   return options.find(
     ([dx, dy]) =>
       Math.hypot(dx, dy) <= MAX_NUDGE &&
-      blocked.every((p) => fits({ x: p.x - dx, y: p.y - dy }, square(20))) &&
+      blocked.every((p) => fits({ x: p.x - dx, y: p.y - dy }, CHROME_GAP_BOX)) &&
       keep.every((p) => fits({ x: p.x - dx, y: p.y - dy }, PIN_BOX)),
   );
 }
@@ -269,25 +281,38 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         lineRects(coords.map(([lon, lat]) => proj({ lat, lon }))).filter(onScreen),
       );
 
-      // Scene labels first: the markers' ("Board 80 · #11424") and the ride legs' route numbers.
-      const items = [
-        ...(scene.markers ?? []).flatMap((m) => (m.label ? [{ id: m.id, point: m.point, text: m.label, kind: TALL_PINS.has(m.kind) ? ("tall" as const) : ("dot" as const) }] : [])),
-        ...(scene.legs ?? []).flatMap((l, i) => {
-          const mid = l.label ? midpoint(l.coords) : undefined;
-          return mid ? [{ id: legLabelId(i), point: { lon: mid[0], lat: mid[1] }, text: l.label!, kind: "leg" as const }] : [];
-        }),
-      ];
+      // Scene labels first: the ride legs' route numbers ([80], [73]: the only cue where one bus
+      // ends and the next begins), then the markers' ("Board 80 · #11424"). A leg's chip goes
+      // halfway along it, else a third or a quarter of the way from either end: in Spanish the
+      // wider "Transbordo · #4789" took the midpoint and both chips were dropped (44).
       const sides: Record<string, string> = {};
+      const legPoints: Record<string, [number, number]> = {};
       const hidden: string[] = [];
-      for (const it of items) {
-        const spot = placeSceneLabel(proj(it.point), it.text, it.kind, { width: w, hard, soft: lines });
-        if (!spot) hidden.push(it.id);
+      (scene.legs ?? []).forEach((l, i) => {
+        if (!l.label) return;
+        const id = legLabelId(i);
+        for (const f of LEG_LABEL_AT) {
+          const at = pointAlong(l.coords, f);
+          if (!at) break;
+          const spot = placeSceneLabel(proj({ lon: at[0], lat: at[1] }), l.label, "leg", { width: w, hard, soft: [] });
+          if (!spot) continue;
+          sides[id] = spot.key;
+          legPoints[id] = at;
+          hard.push(spot.box);
+          return;
+        }
+        hidden.push(id);
+      });
+      for (const m of scene.markers ?? []) {
+        if (!m.label) continue;
+        const spot = placeSceneLabel(proj(m.point), m.label, TALL_PINS.has(m.kind) ? "tall" : "dot", { width: w, hard, soft: lines });
+        if (!spot) hidden.push(m.id);
         else {
-          sides[it.id] = spot.key;
+          sides[m.id] = spot.key;
           hard.push(spot.box);
         }
       }
-      setLabelSides(map, sides);
+      setLabelSides(map, sides, legPoints);
       hideSceneLabels(map, hidden);
       if (!stops) return;
 
@@ -303,7 +328,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       for (const s of stopsWithin(stops, b.getWest(), b.getSouth(), b.getEast(), b.getNorth())) {
         if (s.id === scene.highlightStopId) continue;
         const p = proj(s);
-        if (covering.some((o) => overlaps(around(p, PIN_BOX), o))) {
+        if (covering.some((o) => overlaps(around(p, CHROME_GAP_BOX), o))) {
           covered.push(s.id);
           if (taggedAt.has(s.id) && p.y < mapBottom) blocked.push(p);
           continue;
@@ -311,11 +336,17 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         if (s.kind !== "rail") inView.push({ s, p, r: taggedAt.get(s.id) ?? 1e6 + rank(s) });
       }
       inView.sort((a, c) => a.r - c.r);
-      const pins = inView.filter(({ p }) => p.y < mapBottom).map(({ p }) => around(p, square(pinHalf)));
+      const visible = inView.filter(({ p }) => p.y < mapBottom);
+      // A listed stop's pin is never covered by another chip; other pins are avoided where possible.
+      const pins = visible.filter(({ s }) => !taggedAt.has(s.id)).map(({ p }) => around(p, square(pinHalf)));
+      for (const { s, p } of visible) if (taggedAt.has(s.id)) hard.push(around(p, square(pinHalf)));
       const labels: NearLabel[] = [];
-      const want = Math.max(LABELLED_NEAREST, tagged.length);
+      // The sheet's own stops only, when it lists some: an unlisted stop's chip ("3425" over
+      // Westheimer Rd, 03) was one more number to match against the cards, and none of them.
+      const candidates = tagged.length ? inView.filter(({ s }) => taggedAt.has(s.id)) : inView;
+      const want = tagged.length || LABELLED_NEAREST;
       if (map.getZoom() >= 16)
-        for (const { s, p } of inView) {
+        for (const { s, p } of candidates) {
           if (labels.length >= want) break;
           const saved = savedIds.includes(s.id);
           const spot = placeChip(p, s.id, { width: w, hard, soft: [...pins, ...lines] }, saved ? 16 : 0);

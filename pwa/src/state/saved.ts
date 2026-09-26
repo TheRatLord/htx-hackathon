@@ -10,7 +10,7 @@ export interface SavedStop {
   preferredRouteId?: string;
 }
 
-export interface SavedRoute {
+interface SavedRoute {
   id: string;
   name: string;
 }

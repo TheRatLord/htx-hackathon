@@ -2,7 +2,7 @@
 import type { DataSource } from "../../shared/types.ts";
 
 
-export type { Arrival, ClientStop, ClientRoute, DataSource, LatLon, Cardinal } from "../../shared/types.ts";
+export type { Arrival, ClientStop, ClientRoute, LatLon } from "../../shared/types.ts";
 export type { NearbyStop, NearbyRoute, NearbyTransitCenter } from "../../server/services/nearby.ts";
 export type { StopSummary } from "../../server/services/present.ts";
 export type { Alert, AlertsResult } from "../../server/services/alerts.ts";

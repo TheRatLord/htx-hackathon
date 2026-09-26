@@ -30,7 +30,8 @@ function savedStopRoutes(arrivals: Arrival[]): SavedStopRoute[] {
 /**
  * The row's routes, preferred route first. It always shows: when it is not among the stop's next
  * 6 buses it gets its own call, and when that is empty too its direction and headsign come from
- * routes.json (the row then reads "No buses in the next 3 hours"). `routes` is undefined while loading.
+ * routes.json (the row then reads "No buses in the next 3 hours"); so does a failed call for it
+ * (`own.isError`, for a "Try again" line). `routes` is undefined while loading.
  */
 export function useSavedStopRoutes(stop: SavedStop | undefined) {
   useRoutesLoaded();
@@ -48,7 +49,10 @@ export function useSavedStopRoutes(stop: SavedStop | undefined) {
     const ref = preferredRouteId && routeRef(preferredRouteId);
     const idle = ref && dir ? { route: ref, directionLabel: dir.directionLabel, headsign: dir.headsign, deps: [] } : undefined;
     const preferred = found ?? idle;
-    routes = !own.data ? undefined : preferred ? [preferred, ...rows!] : rows;
+    // A failed call for the preferred route shows it from routes.json, as with no buses: the row
+    // stayed a skeleton for good (Explore) or empty (Recent) when that call failed.
+    const settled = own.data || own.isError;
+    routes = !settled ? undefined : preferred ? [preferred, ...rows!] : rows;
   }
-  return { routes, preferredRouteId, arrivals };
+  return { routes, preferredRouteId, arrivals, own };
 }

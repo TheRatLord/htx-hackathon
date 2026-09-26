@@ -14,10 +14,14 @@ export const overlaps = (a: Rect, b: Rect) => a.l < b.r && b.l < a.r && a.t < b.
 export const around = (p: Pt, box: Rect): Rect => ({ l: p.x + box.l, t: p.y + box.t, r: p.x + box.r, b: p.y + box.b });
 export const square = (half: number): Rect => ({ l: -half, t: -half, r: half, b: half });
 
-/** Label text is bold 14px: about 8.4px a character, wrapping at MapLibre's 10em (140px). */
+/**
+ * Label text is bold 14px: about 8.4px a character, wrapping at 20em (280px; the scene-labels
+ * layer's text-max-width): "Northwest TC · Bay M" on one line, not two (06).
+ */
 const TEXT_PX = 14;
 const CHAR_W = 8.4;
-const MAX_TEXT_W = 140;
+export const LABEL_MAX_EM = 20;
+const MAX_TEXT_W = LABEL_MAX_EM * TEXT_PX;
 const LINE_H = 17;
 /**
  * The white chip around the text, as MapLibre collides it: icon-text-fit padding (1px, 5px) plus
@@ -26,7 +30,7 @@ const LINE_H = 17;
 const CHIP_PAD_X = 18;
 const CHIP_PAD_Y = 8;
 
-export function labelSize(text: string, extra = 0): { w: number; h: number } {
+function labelSize(text: string, extra = 0): { w: number; h: number } {
   const textW = text.length * CHAR_W + extra;
   const lines = Math.max(1, Math.ceil(textW / MAX_TEXT_W));
   return { w: Math.min(textW, MAX_TEXT_W) + CHIP_PAD_X, h: lines * LINE_H + CHIP_PAD_Y };
@@ -50,12 +54,12 @@ function boxFor({ anchor, dx, dy }: Placement, { w, h }: { w: number; h: number 
  * The keys are the "lk" property the scene-labels layer matches on (layers/scene.ts).
  */
 export const LABEL_PLACEMENTS: Record<string, Placement> = {
-  a: { anchor: "bottom", dx: 0, dy: -28 },
+  a: { anchor: "bottom", dx: 0, dy: -24 },
   ar: { anchor: "bottom-left", dx: 14, dy: -20 },
   al: { anchor: "bottom-right", dx: -14, dy: -20 },
-  r: { anchor: "left", dx: 34, dy: 0 },
-  l: { anchor: "right", dx: -34, dy: 0 },
-  b: { anchor: "top", dx: 0, dy: 28 },
+  r: { anchor: "left", dx: 30, dy: 0 },
+  l: { anchor: "right", dx: -30, dy: 0 },
+  b: { anchor: "top", dx: 0, dy: 26 },
   br: { anchor: "top-left", dx: 14, dy: 20 },
   bl: { anchor: "top-right", dx: -14, dy: 20 },
   ta: { anchor: "bottom", dx: 0, dy: -56 },
@@ -64,19 +68,25 @@ export const LABEL_PLACEMENTS: Record<string, Placement> = {
   tb: { anchor: "top", dx: 0, dy: 12 },
   c: { anchor: "center", dx: 0, dy: 0 },
 };
-const DOT_ORDER = ["a", "ar", "al", "r", "l", "b", "br", "bl"];
+/** Sides with a pointer at the marker first (a, b, r, l), the corners only when those are taken. */
+const DOT_ORDER = ["a", "b", "r", "l", "ar", "al", "br", "bl"];
+/** The chip image for a scene label's side: its pointer faces the marker (layers/scene.ts). */
+export const LABEL_POINTER: Record<string, "down" | "up" | "left" | "right"> = { a: "down", ta: "down", b: "up", tb: "up", r: "left", tr: "left", l: "right", tl: "right" };
 const TALL_ORDER = ["ta", "tr", "tl", "tb"];
 
-/** Stop-ID chip sides: under the pin as in the spec, else above, beside, or at a corner. */
-export const CHIP_PLACEMENTS: Record<string, Placement> = {
-  below: { anchor: "top", dx: 0, dy: 20 },
-  above: { anchor: "bottom", dx: 0, dy: -20 },
-  right: { anchor: "left", dx: 24, dy: 0 },
-  left: { anchor: "right", dx: -24, dy: 0 },
-  belowLeft: { anchor: "top-right", dx: -10, dy: 18 },
-  belowRight: { anchor: "top-left", dx: 10, dy: 18 },
+/**
+ * Stop-ID chip sides. Each chip has a pointer at its pin (label-chip-<pointer>), and goes above its
+ * pin first, like the "Stop 342" callout, so every tag reads the same way; else below, left or
+ * right. The text sits 25/30px out: the chip's body clears the 28dp pin and its pointer tip just
+ * touches it (the 2958 chip beside its pin covered half of it, 03).
+ */
+export const CHIP_PLACEMENTS: Record<string, Placement & { pointer: "down" | "up" | "left" | "right" }> = {
+  above: { anchor: "bottom", dx: 0, dy: -25, pointer: "down" },
+  below: { anchor: "top", dx: 0, dy: 25, pointer: "up" },
+  left: { anchor: "right", dx: -30, dy: 0, pointer: "right" },
+  right: { anchor: "left", dx: 30, dy: 0, pointer: "left" },
 };
-const CHIP_ORDER = ["below", "above", "left", "right", "belowLeft", "belowRight"];
+const CHIP_ORDER = ["above", "below", "left", "right"];
 
 /** MapLibre's text-variable-anchor-offset value for one placement (offsets in ems of the text). */
 export const anchorOffset = ({ anchor, dx, dy }: Placement): [Anchor, [number, number]] => [anchor, [dx / TEXT_PX, dy / TEXT_PX]];
@@ -90,15 +100,21 @@ export interface Surroundings {
   soft: Rect[];
 }
 
+/**
+ * The first side clear of everything; else the side that covers the fewest soft obstacles (a
+ * label over two boxes of a bus line, not over its whole leg: "Transbordo · #4789" sat on the 80
+ * line in Spanish, 44, when the first side merely touching the line won).
+ */
 function pick(p: Pt, size: { w: number; h: number }, keys: string[], table: Record<string, Placement>, s: Surroundings): { key: string; box: Rect } | undefined {
-  let fallback: { key: string; box: Rect } | undefined;
+  let fallback: { key: string; box: Rect; n: number } | undefined;
   for (const key of keys) {
     const box = around(p, boxFor(table[key], size));
     if (box.l < 0 || box.r > s.width || box.t < 0 || s.hard.some((o) => overlaps(box, o))) continue;
-    if (!s.soft.some((o) => overlaps(box, o))) return { key, box };
-    fallback ??= { key, box };
+    const n = s.soft.filter((o) => overlaps(box, o)).length;
+    if (!n) return { key, box };
+    if (!fallback || n < fallback.n) fallback = { key, box, n };
   }
-  return fallback;
+  return fallback && { key: fallback.key, box: fallback.box };
 }
 
 export type LabelKind = "dot" | "tall" | "leg";
@@ -128,17 +144,17 @@ export function lineRects(points: Pt[], half = 4, step = 8): Rect[] {
   return out;
 }
 
-/** The point halfway along a line (by length), where a ride leg's route label goes. */
-export function midpoint(coords: [number, number][]): [number, number] | undefined {
+/** The point a fraction `f` of the way along a line (by length): 0.5 is where a ride leg's route label goes first. */
+export function pointAlong(coords: [number, number][], f = 0.5): [number, number] | undefined {
   if (coords.length < 2) return coords[0];
   const seg = coords.slice(1).map((c, i) => Math.hypot(c[0] - coords[i][0], c[1] - coords[i][1]));
-  let half = seg.reduce((a, b) => a + b, 0) / 2;
+  let rest = seg.reduce((a, b) => a + b, 0) * f;
   for (let i = 0; i < seg.length; i++) {
-    if (half <= seg[i]) {
-      const f = seg[i] ? half / seg[i] : 0;
-      return [coords[i][0] + (coords[i + 1][0] - coords[i][0]) * f, coords[i][1] + (coords[i + 1][1] - coords[i][1]) * f];
+    if (rest <= seg[i]) {
+      const k = seg[i] ? rest / seg[i] : 0;
+      return [coords[i][0] + (coords[i + 1][0] - coords[i][0]) * k, coords[i][1] + (coords[i + 1][1] - coords[i][1]) * k];
     }
-    half -= seg[i];
+    rest -= seg[i];
   }
   return coords.at(-1);
 }
