@@ -68,3 +68,51 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   be untrue there.
 - **10 (card labels):** the LiveStrip keeps its spec label "16 minutes, scheduled"
   (`markScheduled: true`); cards follow C.5a and leave the scheduled default unspoken.
+
+## MapView: fit a scene only once the sheet has settled
+- From: C (D12, D13)
+- Where: src/map/MapView.tsx (scene application)
+- Need: at the full snap the bottom padding leaves no room, so `fitBounds` throws "Map cannot fit within canvas" and the map keeps the old view; when the sheet then moves to half, the scene is not fitted again. Clamp the padding to the canvas and re-fit the current scene when the sheet height settles. C works around it with `useSettledSheetHeight()` (src/features/trip/scene.ts) in its scene deps; drop that once this lands.
+- Status: open
+
+## Scene labels clipped at the top edge
+- From: C (D12, D13)
+- Where: src/map/MapView.tsx (fit padding)
+- Need: marker labels such as "Board 80 · #11424" sit above their pin and are cut off when the pin is on the top edge of the fitted bounds. Add the label height to the top fit padding.
+- Status: open
+
+## StepList: badge and title on one line; leg colour without a badge
+- From: C (D12, D13 All steps)
+- Where: src/ui/StepList.tsx
+- Need: on board rows the title ("Board [80] to MLK & Park Village") wraps under the route badge at 360 px; keep the title inline and let it wrap beside the badge. Alight rows need the leg's colour on the rail without rendering a second badge (an optional `legColor` separate from `route`).
+- Status: open
+
+## useWalk: accept a place as the destination
+- From: C (D13 final walk)
+- Where: src/api/hooks (useWalk)
+- Need: `useWalk` only walks to a stop id; the last step walks from the alighting stop to a place (Hobby Airport). Accept a `LatLon` destination. C calls `/walk?from&to` itself in src/features/trip/useFinalWalk.ts until then.
+- Status: open
+
+## LiveStrip: a text variant
+- From: C (D13 ride step)
+- Where: src/ui/LiveStrip.tsx
+- Need: the ride step shows "9 stops left · about 18 min" in the blue live strip (D13), which is text rather than departure times. Add a `children`/text variant so the strip's colours and padding come from one place; C uses a local `.rideStrip` style for now.
+- Status: open
+
+## useLocation: a simulated moving fix for demos
+- From: C (D13)
+- Where: src/state/location.ts
+- Need: the live trip demo moves the rider along the itinerary. A `setSimulatedFix(fix | null)` in the location store would move the shared "you" dot and every consumer; C passes its own simulated fix into useLiveTrip and draws a separate "You (simulated)" marker.
+- Status: open
+
+## Pick mode should replace history; Directions can omit `from`
+- From: C (D11, F3)
+- Where: src/screens/explore/search (B's pick mode) and B's Directions button
+- Need: after a pick, `navigate(encodePick(...), { replace: true })` so Back from the plan does not return to the search. The Directions URL can leave `from` out: D11 fills it from the fix and shows "Finding your location" or the location-off state itself.
+- Status: open
+
+## Landmarks: expose their nearest stop ids
+- From: C (D11 landmark note)
+- Where: src/api (landmark data)
+- Need: D11's "Hobby Airport: buses stop at …" note finds the stops through a search lookup's `nearbyStops`; the landmark record itself should carry them so the planner does not need a second request.
+- Status: open
