@@ -138,7 +138,7 @@ export default function Search() {
               actions={r.type === "landmark" || i === 0}
               attached={section.attached.get(r.id)}
               onOpenTc={(tc) => go(`/explore/tc/${encodeURIComponent(tc.id)}`)}
-              onOpenStop={(stop) => go(`/explore/stop/${encodeURIComponent(stop.id)}`)}
+              onOpenStop={(id) => go(`/explore/stop/${encodeURIComponent(id)}`)}
               onNear={() => go(atUrl(r))}
               onDirections={() =>
                 go(planUrl({ to: r.type === "landmark" ? `landmark:${r.id}` : formatLatLon(r), toName: r.title }))

@@ -112,14 +112,11 @@
   background: rgb(0 0 0 / 5%);
 }
 
-.street {
-  color: var(--c-text-variant);
-}
-
-/* "Mandell St (2953)" stays on one line where it fits; a longer one still wraps rather than overflow. */
+/* "Mandell St (2953)" leads and stays on one line where it fits; a longer one still wraps rather than overflow. */
 .cross {
   display: inline-block;
   max-width: 100%;
+  font-weight: var(--fw-medium);
 }
 
 .page {

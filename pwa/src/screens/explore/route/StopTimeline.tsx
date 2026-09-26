@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { useArrivals, useRouteNext } from "../../../api/hooks.ts";
 import type { Dep, Vehicle } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
-import { ageMinutes, upcoming } from "../../../lib/format.ts";
+import { ageMinutes, STALE_VEHICLE_S, upcoming } from "../../../lib/format.ts";
 import { useNow } from "../../../state/clock.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
@@ -19,8 +19,6 @@ import { useStopWalk } from "./useStopWalk.ts";
 const SCROLL_AT = 0.35;
 /** How long the target row is held in place while the rest of the page loads. */
 const PIN_MS = 3000;
-/** A bus not heard from for longer than this is drawn grey (D22). */
-const STALE_VEHICLE_S = 120;
 
 const scheduledDep = (departureTime: string): Dep => ({ departureTime, isRealtime: false, canceled: false, source: "schedule", tripId: "" });
 
@@ -178,7 +176,7 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
           <span className={`${styles.node} ${expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
         )}
         <span className={styles.stopText}>
-          <StopName name={stop.name} id={stop.id} quietStreet={sameStreet} />
+          <StopName name={stop.name} id={stop.id} sameStreet={sameStreet && !expanded && !nearest} />
           {nearest && <NearestLine stop={stop} />}
         </span>
         {/* Expanded, the live strip below is the one answer for this stop. */}
@@ -202,15 +200,17 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
 
 /**
  * "Westheimer Rd @ Mandell St (2953)". The cross street and number never break apart, so a narrow row
- * wraps after "@" ("Westheimer Rd @" / "Mandell St (2953)"). On a run of stops along one street,
- * "Westheimer Rd @" is grey and the cross street leads.
+ * wraps after "@" ("Westheimer Rd @" / "Mandell St (2953)"). On a run of stops along one street, the
+ * street is said once (on the first stop of the run) and the rows under it show only the cross street
+ * ("Mandell St (2953)"); screen readers still hear the whole name. The open row and the nearest row
+ * always show the whole name.
  */
-function StopName({ name, id, quietStreet }: { name: string; id: string; quietStreet: boolean }) {
+function StopName({ name, id, sameStreet }: { name: string; id: string; sameStreet: boolean }) {
   const street = onStreet(name);
   const cross = street ? name.slice(street.length + 3) : name;
   return (
     <span className={styles.stopName}>
-      {street && <span className={quietStreet ? styles.street : undefined}>{street} @ </span>}
+      {street && <span className={sameStreet ? "visually-hidden" : undefined}>{street} @ </span>}
       <span className={styles.cross}>
         {cross}
         {"\u00a0"}

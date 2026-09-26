@@ -10,8 +10,9 @@ import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
 import { directionWord, formatClock, headsignLine, platformLabel } from "../../../lib/format.ts";
 import { canonicalRouteId, useRoutesLoaded } from "../../../lib/routes.ts";
-import { estimateWalk } from "../../../lib/walk.ts";
+import { estimateWalk, MAX_WALK_MINUTES } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
+import { useOffline } from "../../../state/offline.ts";
 import { useLocation } from "../../../state/location.tsx";
 import { usePrefs } from "../../../state/prefs.ts";
 import { AppBar } from "../../../ui/AppBar.tsx";
@@ -29,9 +30,6 @@ import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
 import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
-
-/** Past this the Walk button leaves out the minutes, like the WalkButton (C.5a). */
-const MAX_WALK_MIN = 20;
 
 const bayId = (bay: string) => `bay-${bay}`;
 /** "12:05 AM" kept on one line. */
@@ -83,7 +81,8 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   const [params, setParams] = useSearchParams();
   // A tapped bay tile whose group isn't on screen yet (the route filter is being cleared).
   const [pendingBay, setPendingBay] = useState<string>();
-  // The bay map is folded away until asked for, so departures come first (it opens itself for a chosen route).
+  // The bay map is folded away until asked for, so departures come first. With a route chosen, the
+  // banner already names its bay and platform, so the map stays folded there too.
   const [mapOpen, setMapOpen] = useState(false);
   useRoutesLoaded();
 
@@ -119,6 +118,14 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
     return n ? t("tc.platform", { n }) : label || t("card.stopNumber", { id: stopId });
   };
   const routeBays = selected ? tc.bays.filter((b) => servesRoute(b, selected.id)) : [];
+  const offline = useOffline();
+  // The chosen route's strip (one bay) reads live arrivals; this is the same query, shared with the banner.
+  const stripBay = routeBays.length === 1 ? routeBays[0] : undefined;
+  const strip = useArrivals(stripBay?.stopId ?? "", { route: selected?.id, limit: 4, enabled: Boolean(stripBay) });
+  // Any live time on the page decides whether the footer needs "…unless marked Live".
+  const hasLive =
+    [...tc.bays.flatMap((b) => b.departures), ...tc.unassignedDepartures].some((d) => d.isRealtime) ||
+    Boolean(stripBay && strip.data?.arrivals.some((d) => d.isRealtime));
   const shownBays = selected ? routeBays : platforms.flatMap((p) => p.bays);
   const unassigned = departureRows(tc.unassignedDepartures, now, selected?.id);
   const walk = fix ? estimateWalk(fix, tc, walkPace) : undefined;
@@ -143,16 +150,16 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   const showList = !selected || !routeBays.length;
   // With a route chosen, the diagram shrinks to the platforms it leaves from, with its bay lit.
   const diagramPlatforms = selected && routeBays.length ? platforms.filter((p) => routeBays.some((b) => b.stopId === p.stopId)) : platforms;
-  const diagramShown = (selected && routeBays.length > 0) || mapOpen;
+  const diagramShown = mapOpen;
   const bayLetters = (bays: Bay[]) => (bays.length > 1 ? `${bays[0].bay}–${bays.at(-1)!.bay}` : (bays[0]?.bay ?? ""));
   return (
     <div className={styles.page}>
+      {/* Just the Walk button: the bay count told the rider nothing they could act on. */}
       <div className={styles.metaRow}>
-        <p className={styles.meta}>{t("tc.bays", { count: tc.bays.length })}</p>
         <Button
           variant="tonal"
           icon="directions_walk"
-          label={walk && walk.minutes <= MAX_WALK_MIN ? t("tc.walkHereMin", { min: walk.minutes }) : t("common.walkHere")}
+          label={walk && walk.minutes <= MAX_WALK_MINUTES ? t("tc.walkHereMin", { min: walk.minutes }) : t("common.walkHere")}
           href={`/explore/stop/${encodeURIComponent(walkStop)}/walk?${new URLSearchParams({
             ...(selected && { route: selected.id }),
             ...(walkSeed !== undefined && { d: String(walkSeed) }),
@@ -167,12 +174,10 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
         </ChipRow>
       </div>
       {selected && <RouteBanner tc={tc} routeName={selected.name} routeId={selected.id} platformName={platformName} />}
-      {!(selected && routeBays.length) && (
-        <button type="button" className={styles.mapToggle} aria-expanded={mapOpen} onClick={() => setMapOpen((o) => !o)}>
-          <span>{t(mapOpen ? "tc.hideBayMap" : "tc.showBayMap")}</span>
-          <Icon name={mapOpen ? "expand_less" : "expand_more"} />
-        </button>
-      )}
+      <button type="button" className={styles.mapToggle} aria-expanded={mapOpen} onClick={() => setMapOpen((o) => !o)}>
+        <span>{t(mapOpen ? "tc.hideBayMap" : "tc.showBayMap")}</span>
+        <Icon name={mapOpen ? "expand_less" : "expand_more"} />
+      </button>
       {diagramShown && (
         <BayDiagram
           platforms={diagramPlatforms.map((p) => ({
@@ -212,9 +217,20 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
           {unassigned.length > 0 && <BayGroup title={t("tc.bayNotPublished")} rows={unassigned} windowEnd={tc.windowEnd} />}
         </div>
       )}
+      {/* One footer line, "Scheduled times · Updated just now · Refresh". The longer caption ("…unless
+          marked Live") is kept for when a Live time or the offline note can be on the page. */}
       <div className={styles.footer}>
-        <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={onRefresh} />
-        <ScheduleCaption />
+        {hasLive || offline ? (
+          <>
+            <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={onRefresh} />
+            <ScheduleCaption />
+          </>
+        ) : (
+          <p className={styles.footerLine}>
+            <span>{t("tc.scheduledTimes")}</span>
+            <span aria-hidden="true">·</span> <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={onRefresh} />
+          </p>
+        )}
       </div>
     </div>
   );

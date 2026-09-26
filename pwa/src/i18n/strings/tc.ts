@@ -26,6 +26,7 @@ const strings: Strings = {
       notFound: "No transit center called '{id}'",
       notFoundBody: "Search for the transit center by name, or open it from the map.",
       search: "Search",
+      scheduledTimes: "Scheduled times",
     },
   },
   es: {
@@ -53,6 +54,7 @@ const strings: Strings = {
       notFound: "No hay un centro de tránsito llamado '{id}'",
       notFoundBody: "Busque el centro de tránsito por su nombre o ábralo desde el mapa.",
       search: "Buscar",
+      scheduledTimes: "Horario programado",
     },
   },
 };
