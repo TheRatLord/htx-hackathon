@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useAlerts } from "../../../api/hooks.ts";
 import type { Alert, Itinerary as Trip, LatLon } from "../../../api/types.ts";
-import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
+import { ExploreSheet, useExploreChrome, useSheet, useSheetElement } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
@@ -29,6 +29,8 @@ import { StepList } from "../../../ui/StepList.tsx";
 import type { TimelineStep } from "../../../ui/types.ts";
 import { FareLine } from "./ItineraryCard.tsx";
 import styles from "./plan.module.css";
+import { foldCap } from "../home/fold.ts";
+import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { usePlanResponse } from "./usePlanResponse.ts";
 import { useStartTrip } from "./useStartTrip.ts";
 
@@ -65,6 +67,11 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
   const tripAlerts = alerts.source === "unavailable" ? [] : alerts.forItinerary(it);
   const items = withAlertRows(it, rows, tripAlerts, alerts.source === "demo", lang);
   const last = it.legs.at(-1);
+  // P1: the half sheet grows (within the map strip, M1) to show the whole first BOARD row above
+  // the "Start trip" footer, its time line included (24-360).
+  const sheet = useSheetElement();
+  const boardIndex = items.findIndex((r) => r.step.kind === "board");
+  useHalfUpTo(() => (boardIndex < 0 ? null : sheet?.querySelectorAll<HTMLElement>("ol > li")[boardIndex]), foldCap, `${boardIndex}|${items.length}`);
   return (
     <>
       <StepList

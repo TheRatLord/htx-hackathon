@@ -6,11 +6,15 @@ import { useSheet, useSheetElement } from "../../../app/layouts/ExploreChrome.ts
 
 const GAP = 8;
 
-/** Top of the sheet to the bottom of `el`, as if the sheet body were not scrolled. */
+/**
+ * Top of the sheet to the bottom of `el`, as if the sheet body were not scrolled, plus a pinned
+ * footer ("▶ Start trip") that covers the body's last lines.
+ */
 function reach(el: HTMLElement, sheet: HTMLElement): number {
   let scrolled = 0;
   for (let p = el.parentElement; p && p !== sheet; p = p.parentElement) scrolled += p.scrollTop;
-  return el.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top + scrolled + GAP;
+  const footer = sheet.querySelector<HTMLElement>("[data-sheet-footer]")?.offsetHeight ?? 0;
+  return el.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top + scrolled + GAP + footer;
 }
 
 /**

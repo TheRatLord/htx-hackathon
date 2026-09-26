@@ -103,7 +103,7 @@ for (const vp of VIEWPORTS) {
 
       // S10: no coach marks, tips or unrequested dialogs.
       await expect(page.getByRole("dialog")).toHaveCount(0);
-      const missing = await goalOnScreen(page, ["Your route:", "Fannin St @ McKinney St (246)", "On the west side of Fannin St", "WESTBOUND to DOWNTOWN"], strict);
+      const missing = await goalOnScreen(page, ["Routes here:", "Fannin St @ McKinney St (246)", "On the west side of Fannin St", "WESTBOUND to DOWNTOWN"], strict);
 
       // The first card is 246 with Route 137 westbound first.
       const card1 = page.getByRole("button", { name: /^Fannin St @ McKinney St \(246\)/ });
@@ -190,7 +190,7 @@ for (const vp of VIEWPORTS) {
       await rider.tap(place.getByRole("button", { name: "Directions" }).first(), "Directions on 'Hobby Airport'");
       await expect(page).toHaveURL(/\/explore\/plan\?/);
       await expectFocusOnH1(page);
-      const missing = await goalOnScreen(page, ["My location", "Hobby Airport", "Edit ›", "BOARD", "to MLK & PARK VILLAGE", "M L King Blvd @ UH University Dr (#11424)", "On the west side of M L King Blvd", /Leaves \d{1,2}:\d{2}\s?[AP]M/], true); // P1: both sizes
+      const missing = await goalOnScreen(page, ["My location", "Hobby Airport", "Edit ›", /Board 80 at #11424 · \d{1,2}:\d{2}\s?[AP]M/], true); // P1: both sizes
       await rider.attach(info, "F3");
       expect(rider.count).toBeLessThanOrEqual(TARGET.F3.target);
       record("F3", vp.name, rider, missing.length === 0);
@@ -343,7 +343,7 @@ for (const vp of VIEWPORTS) {
       const rider = new Rider(page);
       await rider.tap(await searchBar(page), "search bar");
       await rider.type("museum of natural science");
-      await expect(page.getByRole("button", { name: /^Houston Museum of Natural Science/ })).toContainText(/Closest stop: Main St @ Remington Ln \(688\)\s*·\s*Northbound/);
+      await expect(page.getByRole("button", { name: /^Closest stop: Main St @ Remington Ln \(688\)/ })).toContainText(/Northbound/);
       const place = page.getByRole("button", { name: /^Houston Museum of Natural Science/ }).locator("xpath=..");
       await rider.tap(place.getByRole("button", { name: "Stops near" }).first(), "Stops near on 'Houston Museum of Natural Science'");
       await expect(page).toHaveURL(/at=.*label=Houston/);

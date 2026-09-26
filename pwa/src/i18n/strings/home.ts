@@ -11,6 +11,8 @@ const strings: Strings = {
       // D4: an overline above the place name, so the title is the name alone.
       stopsNear: "Stops near",
       backToMe: "Back to my location",
+      // D4: the short link on the overline row; its spoken name is backToMe.
+      myLocation: "My location",
       chipLabel: "Routes here:",
       chipGroup: "Routes near you",
       footerPace: "Walk times are estimates at a normal pace. Change the pace in More › Settings.",
@@ -46,6 +48,7 @@ const strings: Strings = {
       nearPlace: "Paradas cerca de {place}",
       stopsNear: "Paradas cerca de",
       backToMe: "Volver a mi ubicación",
+      myLocation: "Mi ubicación",
       chipLabel: "Rutas aquí:",
       chipGroup: "Rutas cerca de usted",
       footerPace: "Los tiempos a pie son aproximados, a paso normal. Cambie el paso en Más › Configuración.",

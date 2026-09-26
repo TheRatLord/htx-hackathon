@@ -18,7 +18,6 @@ import { useNow } from "../../../state/clock.ts";
 import { usePrefs } from "../../../state/prefs.ts";
 import { useSaved } from "../../../state/saved.ts";
 import { useTrip } from "../../../state/trip.ts";
-import { Button } from "../../../ui/Button.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
@@ -196,22 +195,21 @@ export default function Home() {
   const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
 
   return (
-    // D4 has one way back, "Back to my location" (its UpdatedAgo shares that row, as a place name
-    // fills the title row); D3 keeps the sheet's "‹ Back".
+    // D4 has one way back, "✕ My location" at the end of the overline row (no row of its own);
+    // D3 keeps the sheet's "‹ Back".
     <ExploreSheet ariaLabel={title} noList={noList} header={
         <SheetHeader
           title={place && !routeId ? place.name : title}
           overline={place && !routeId ? t("home.stopsNear") : undefined}
-          sub={place ? undefined : updated}
+          overlineAction={
+            place && !routeId
+              ? { label: t("home.myLocation"), ariaLabel: t("home.backToMe"), icon: "close", onPress: () => navigate("/explore") }
+              : undefined
+          }
+          sub={updated}
         />
       } onBack={routeId ? back : undefined}>
       <div className={styles.body}>
-        {place && !routeId && (
-          <div className={styles.backToMe}>
-            <Button variant="tonal" icon="close" label={t("home.backToMe")} onPress={() => navigate("/explore")} />
-            {updated}
-          </div>
-        )}
         {banner && !place && !offFirst && <SheetBanner {...banner} />}
         {data && !chipsLater && chips}
         {routeId ? (
