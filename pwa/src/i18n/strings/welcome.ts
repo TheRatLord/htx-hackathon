@@ -29,7 +29,7 @@ const strings: Strings = {
       sizeXlarge: "Muy grande",
       showStops: "Ver paradas cercanas",
       asking: "Esperando su respuesta sobre la ubicación…",
-      notNow: "Ahora no, voy a buscar",
+      notNow: "Ahora no, prefiero buscar",
     },
   },
 };
