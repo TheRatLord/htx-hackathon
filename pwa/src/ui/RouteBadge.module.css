@@ -1,0 +1,90 @@
+.badge {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-1);
+  border: 1px solid var(--c-chip-border);
+  border-top: none;
+  border-radius: var(--r-chip);
+  background: var(--c-surface);
+  color: var(--c-text-strong);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--chip-band);
+}
+
+.name {
+  padding-top: var(--chip-band);
+}
+
+.sm {
+  min-width: var(--chip-route-sm);
+  min-height: var(--chip-route-sm);
+  font-size: var(--fs-body);
+}
+
+.sm .band {
+  height: 6px;
+}
+
+.md {
+  min-width: var(--chip-route-md);
+  min-height: var(--chip-route-md);
+  font-size: var(--fs-heading);
+}
+
+.lg {
+  min-width: var(--chip-route-lg);
+  min-height: var(--chip-route-lg);
+  border: none;
+  color: #fff;
+  font-size: var(--fs-display);
+}
+
+.lg .name {
+  padding-top: 0;
+}
+
+.withIcon {
+  gap: 2px;
+  min-height: 52px;
+  padding-top: var(--chip-band);
+}
+
+.withIcon .name {
+  padding-top: 0;
+}
+
+button.badge[aria-pressed="true"] {
+  border: 2px solid var(--c-primary);
+  background: var(--c-chip-selected);
+}
+
+button.badge:active {
+  background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
+}
+
+.check {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}

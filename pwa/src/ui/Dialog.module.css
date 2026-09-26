@@ -1,0 +1,40 @@
+.dialog {
+  width: min(312px, 90vw);
+  padding: var(--sp-6) var(--sp-6) var(--sp-2);
+  border: none;
+  border-radius: var(--r-box);
+  box-shadow: var(--e-dialog);
+  color: var(--c-text);
+}
+
+.dialog::backdrop {
+  background: var(--c-scrim);
+}
+
+.title {
+  margin-bottom: var(--sp-3);
+  color: var(--c-brand-blue-deep);
+  font-size: 1.25rem;
+  line-height: 1.625rem;
+  font-weight: var(--fw-medium);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: var(--sp-4);
+}
+
+.action {
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.danger {
+  color: var(--c-alert-text);
+}

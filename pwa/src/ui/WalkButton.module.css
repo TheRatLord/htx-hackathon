@@ -1,0 +1,40 @@
+.walk {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-box);
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+
+.top {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.top svg {
+  color: var(--c-accent-icon);
+}
+
+.value {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.sub {
+  max-width: 9em;
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  text-align: center;
+}

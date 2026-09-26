@@ -1,0 +1,46 @@
+.box {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-alert-border);
+  border-radius: var(--r-alert);
+  background: var(--c-alert-bg);
+  color: var(--c-text);
+  text-align: start;
+}
+
+.box > svg {
+  flex: none;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.headline {
+  overflow-wrap: anywhere;
+}
+
+.description {
+  white-space: pre-line;
+}
+
+.caption {
+  color: var(--c-text-variant);
+  font-size: var(--fs-caption);
+}
+
+.demo {
+  flex: none;
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-chip);
+  background: var(--c-nav-bg);
+  font-weight: var(--fw-bold);
+}

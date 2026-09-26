@@ -1,0 +1,92 @@
+.time {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--sp-2);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  display: inline-flex;
+  align-items: flex-start;
+}
+
+.minutes .value {
+  font-size: var(--fs-minutes);
+  line-height: var(--lh-minutes);
+  font-weight: var(--fw-bold);
+}
+
+.body .value {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-bold);
+}
+
+.strip {
+  flex-direction: column;
+  align-items: flex-start;
+  color: #fff;
+}
+
+.strip .value {
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+.unit {
+  margin-left: 2px;
+  font-size: var(--fs-unit);
+}
+
+.live,
+.simulated {
+  color: var(--c-live-text);
+}
+
+.canceled {
+  color: var(--c-canceled-text);
+}
+
+.canceled time {
+  text-decoration: line-through;
+}
+
+.tooSoon {
+  color: var(--c-text-secondary);
+}
+
+.word {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.word:empty {
+  display: none;
+}
+
+.arcs {
+  color: var(--c-live-icon);
+  margin-left: 1px;
+}
+
+/* On the blue strip (C.3): white digits, status words at 14sp in the strip's own green. */
+.strip .arcs,
+.strip .word,
+.strip .word > span {
+  color: var(--c-live-on-strip);
+}
+
+.strip .word,
+.strip .word > span {
+  font-size: var(--fs-caption);
+}
+
+.strip.live,
+.strip.simulated,
+.strip.canceled,
+.strip.canceled .word > span {
+  color: #fff;
+}

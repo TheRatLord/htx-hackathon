@@ -1,0 +1,35 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: var(--touch-min);
+  padding: 0 var(--gutter);
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+}
+
+.variant {
+  color: var(--c-text-variant);
+}
+
+.blue {
+  color: var(--c-brand-blue-dark);
+}
+
+.note {
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-chip);
+  background: var(--c-nav-bg);
+  color: var(--c-text);
+  text-transform: none;
+}

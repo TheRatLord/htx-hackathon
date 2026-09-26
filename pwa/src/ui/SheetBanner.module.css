@@ -1,0 +1,44 @@
+.trip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-1);
+  min-height: 56px;
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.tripText {
+  flex: 1 1 12em;
+  font-weight: var(--fw-medium);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.title {
+  display: flex;
+  gap: var(--sp-1);
+  align-items: center;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.steps {
+  color: var(--c-text-variant);
+}
+
+.demo {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+}

@@ -1,0 +1,27 @@
+.row {
+  min-height: 88px;
+}
+
+.name {
+  display: flex;
+  gap: var(--sp-1);
+  align-items: flex-start;
+  font-size: var(--fs-body);
+}
+
+.name svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.route {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.extra {
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+  letter-spacing: normal;
+}

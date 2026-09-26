@@ -1,0 +1,32 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  color: var(--c-text-variant);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: flex-start;
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-chip);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.live {
+  color: var(--c-live-text);
+}
+
+.canceled {
+  color: var(--c-canceled-text);
+  text-decoration: line-through;
+}

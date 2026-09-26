@@ -1,0 +1,23 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.title {
+  font-weight: var(--fw-medium);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.caption {
+  color: var(--c-text-variant);
+}
