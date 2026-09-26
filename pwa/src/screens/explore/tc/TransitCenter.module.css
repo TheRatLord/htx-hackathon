@@ -1,0 +1,113 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter);
+}
+
+.meta {
+  color: var(--c-text-variant);
+}
+
+/* "Route 58 leaves from Bay M" on the bay-tag blue, as in C.5. */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-nav-bg);
+}
+
+.bannerTitle {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.bannerBay {
+  display: flex;
+  flex-direction: column;
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--sp-2);
+}
+
+.nextLabel {
+  font-weight: var(--fw-medium);
+}
+
+.note {
+  padding: var(--sp-3);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+}
+
+/* ChipRow and SectionHeader bring their own gutter. */
+.bleed {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.bay {
+  padding: 0 var(--gutter);
+  scroll-margin-top: var(--sp-2);
+}
+
+.bayTitle {
+  margin-bottom: var(--sp-1);
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) 0;
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: var(--c-text-variant);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
+}
+
+.source {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
