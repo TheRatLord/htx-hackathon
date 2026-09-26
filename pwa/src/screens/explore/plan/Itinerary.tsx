@@ -8,7 +8,7 @@ import type { Alert, Itinerary as Trip, LatLon } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
-import { fromLabel } from "../../../features/trip/origin.ts";
+import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
 import { itineraryScene } from "../../../features/trip/scene.ts";
 import { itineraryTimeline, type TimelineRow } from "../../../features/trip/timeline.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
@@ -17,12 +17,12 @@ import { formatClock } from "../../../lib/format.ts";
 import { parsePlanQuery, planUrl } from "../../../lib/planQuery.ts";
 import { useMapScene } from "../../../map/scene.ts";
 import { usePrefs } from "../../../state/prefs.ts";
+import { walkMinutes } from "../../../lib/walk.ts";
 import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
-import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { StepList } from "../../../ui/StepList.tsx";
@@ -82,6 +82,23 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
   );
 }
 
+/** The peek's second line: what to do first, "Walk 5 min to #11424 · 80 leaves 12:15 PM". */
+export function FirstAction({ it }: { it: Trip }) {
+  const t = useT();
+  const lang = useLang();
+  const { walkPace } = usePrefs();
+  const i = it.legs.findIndex((l) => l.type === "transit");
+  const ride = it.legs[i];
+  if (ride?.type !== "transit") return null;
+  const walkM = it.legs.slice(0, i).reduce((m, l) => m + (l.type === "walk" ? l.distanceM : 0), 0);
+  const leaves = t("plan.firstRide", { route: ride.route.name, time: formatClock(ride.departureTime, lang) });
+  return (
+    <span className={styles.peekLine}>
+      {walkM >= 5 && ride.board.id ? `${t("plan.firstWalk", { min: walkMinutes(walkM, walkPace), id: ride.board.id })} · ${leaves}` : leaves}
+    </span>
+  );
+}
+
 export default function Itinerary() {
   const t = useT();
   const lang = useLang();
@@ -94,7 +111,8 @@ export default function Itinerary() {
   const query = parsePlanQuery(new URLSearchParams(search));
   const title = t("plan.detailTitle");
   usePageTitle(title);
-  useExploreChrome({ fabs: ["locate"] });
+  // The trip is chosen: no search field over its map.
+  useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
 
   const plan = usePlanResponse(query, { reuse: true });
   const it = plan.response?.itineraries[Number(index)];
@@ -117,11 +135,14 @@ export default function Itinerary() {
       />
     );
   else {
-    const rows = itineraryTimeline(it, { fromName: fromLabel(query, lang) || plan.response.from.name, toName: query.toName ?? plan.response.to.name, pace: walkPace, lang });
+    // "My location" (short), so the first row's title doesn't wrap beside its time at 360dp.
+    const fromName = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang) || plan.response.from.name;
+    const rows = itineraryTimeline(it, { fromName, toName: query.toName ?? plan.response.to.name, pace: walkPace, lang });
     body = (
       <>
-        {plan.response.source === "offline-fixture" && <SheetBanner kind="demo" text={t("plan.fixtureBanner")} />}
         <p className={styles.arrive}>{t("plan.arrive", { time: formatClock(it.endTime, lang), min: it.durationMin })}</p>
+        {/* D11 showed the banner; here one caption line is enough. */}
+        {plan.response.source === "offline-fixture" && <p className={styles.caption}>{t("plan.fixtureBanner")}</p>}
         <Timeline it={it} rows={rows} onShowPlace={setPlace} />
         <FareLine it={it} />
         <ScheduleCaption />
@@ -137,8 +158,11 @@ export default function Itinerary() {
       peek={
         it && (
           <div className={styles.peek}>
-            <p>{t("plan.detailPeek", { min: it.durationMin })}</p>
-            <Button variant="tonal" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={start} />
+            <p>
+              {t("plan.detailPeek", { min: it.durationMin })}
+              <FirstAction it={it} />
+            </p>
+            <Button variant="primary" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={start} />
           </div>
         )
       }

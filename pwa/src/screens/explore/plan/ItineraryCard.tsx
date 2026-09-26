@@ -64,7 +64,7 @@ export function FareLine({ it }: { it: Itinerary }) {
 }
 
 /** D11's itinerary card: today's mode strip and duration, plus the boarding block and fare line. */
-export function ItineraryCard({ it, href, sample }: { it: Itinerary; href: string; sample: boolean }) {
+export function ItineraryCard({ it, href }: { it: Itinerary; href: string }) {
   const t = useT();
   const lang = useLang();
   const ride = it.legs.find((l): l is TransitLeg => l.type === "transit");
@@ -78,11 +78,8 @@ export function ItineraryCard({ it, href, sample }: { it: Itinerary; href: strin
       <Link to={href} className={styles.cardMain}>
         <span className={styles.cardTop}>
           <ModeStrip it={it} />
-          <span className={styles.durationCol}>
-            <span className={styles.duration}>{t("time.min", { n: it.durationMin })}</span>
-            {/* A source note, so caption size: it sits beside the strip instead of costing a line (P1). */}
-            {sample && <span className={styles.caption}>{t("plan.sampleTimes")}</span>}
-          </span>
+          {/* Sample times are said once, in the banner above the list. */}
+          <span className={styles.duration}>{t("time.min", { n: it.durationMin })}</span>
         </span>
         <span className={styles.times}>{times}</span>
         {tight.length > 0 && <span className={styles.alertText}>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</span>}

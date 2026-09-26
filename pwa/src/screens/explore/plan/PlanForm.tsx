@@ -45,7 +45,7 @@ export function FromToBox({ query, from, onPick, onSwap }: FromToProps) {
       </div>
       <button type="button" className={styles.place} onClick={() => onPick("to")} aria-label={t("plan.toA11y", { place: toText })}>
         <Icon name="place" color="var(--c-dest-pin)" />
-        <span className={query.to ? undefined : styles.placeholder}>{toText}</span>
+        <span className={query.to ? undefined : styles.emptyField}>{toText}</span>
       </button>
       <button type="button" className={styles.swap} onClick={onSwap} aria-label={t("plan.swapA11y")}>
         <Icon name="swap_vert" size={20} />

@@ -9,7 +9,7 @@ import { Icon } from "../../../ui/Icon.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import styles from "./plan.module.css";
 
-/** Today's mode strip: 🚶6 › [80] › 🚶2 › [73], with each ride's minutes under its badge. */
+/** Today's mode strip: 🚶 › [80] › 🚶 › [73], with each leg's minutes under its icon or badge ("5 min"). */
 export function ModeStrip({ it }: { it: Itinerary }) {
   const t = useT();
   const { walkPace } = usePrefs();
@@ -32,9 +32,11 @@ export function ModeStrip({ it }: { it: Itinerary }) {
               <span className={styles.modeMin}>{t("time.min", { n: p.min })}</span>
             </span>
           ) : (
-            <span className={styles.modeWalk}>
-              <Icon name="directions_walk" size={20} />
-              {p.min}
+            <span className={styles.modeRide}>
+              <span className={styles.modeWalk}>
+                <Icon name="directions_walk" size={24} />
+              </span>
+              <span className={styles.modeMin}>{t("time.min", { n: p.min })}</span>
             </span>
           )}
         </Fragment>

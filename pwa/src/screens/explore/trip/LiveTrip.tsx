@@ -11,14 +11,14 @@ import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromLabel } from "../../../features/trip/origin.ts";
 import type { RideStop } from "../../../features/trip/progress.ts";
-import { boundsOf, itineraryLegs, itineraryMarkers } from "../../../features/trip/scene.ts";
+import { itineraryLegs, itineraryMarkers } from "../../../features/trip/scene.ts";
 import { simLegs, useSimulatedFix } from "../../../features/trip/simulate.ts";
 import type { TripStep } from "../../../features/trip/steps.ts";
 import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip/timeline.ts";
 import { destinationOf, useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
 import { useWakeLock } from "../../../features/trip/wakeLock.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { formatLatLon } from "../../../lib/geo.ts";
+import { boundsOf, formatLatLon } from "../../../lib/geo.ts";
 import { notify, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
 import { readJson, writeJson } from "../../../lib/storage.ts";
@@ -131,8 +131,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     writeJson(WARNED_KEY, [...warned, key], "session");
     vibrate(BUZZ);
     if (left === 1) void notify(t("trip.warn.notifyTitle"), alight, `trip-${stepIndex}`);
-    // `t` is rebuilt every render; `lang` is what it depends on.
-  }, [left, alight, stepIndex, active.startedAt, lang]);
+  }, [left, alight, stepIndex, active.startedAt, t]);
 
   // Honest about the foreground limit: say so when the rider comes back after a while.
   useEffect(() => {
@@ -143,7 +142,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [n, total, toast, lang]);
+  }, [n, total, toast, t]);
 
   const ride = step.kind === "wait" || step.kind === "ride" ? step.ride : undefined;
   const vehicles = useVehicles(ride?.route.id, { enabled: Boolean(ride?.tripId) && !active.fixture });
@@ -231,19 +230,20 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
       ariaLabel={t("trip.title")}
       onBack={onBack}
       header={
-        <div className={styles.stepHeader}>
-          <h1 tabIndex={-1} className={styles.stepOf}>
-            {step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
-          </h1>
-          <Button
-            variant="text"
-            label={`${t("trip.allSteps")} ›`}
-            onPress={() => {
-              setSnap("full");
-              navigate(`/explore/trip?view=steps`);
-            }}
-          />
-        </div>
+        // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
+        <SheetHeader
+          title={step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
+          right={
+            <Button
+              variant="text"
+              label={`${t("trip.allSteps")} ›`}
+              onPress={() => {
+                setSnap("full");
+                navigate(`/explore/trip?view=steps`);
+              }}
+            />
+          }
+        />
       }
     >
       <div ref={body} className={styles.body}>
@@ -265,15 +265,25 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
             onDone={end}
           />
         </section>
-        {active.fixture && !simFix && step.kind !== "ride" && step.kind !== "arrived" && <p className={styles.caption}>{t("trip.basis.fixture")}</p>}
         <NotifyPermissionCard context="trip" />
         {step.kind !== "arrived" && (
           <div className={styles.controls}>
-            {stepIndex > 0 && <Button variant="tonal" icon="chevron_left" label={t("trip.prev")} onPress={() => live.goTo(stepIndex - 1)} />}
-            <Button variant="tonal" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
+            {stepIndex > 0 && <Button variant="tonal" label={`‹ ${t("trip.prev")}`} onPress={() => live.goTo(stepIndex - 1)} />}
+            <Button variant="primary" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
           </div>
         )}
-        {step.kind !== "arrived" && <p className={styles.caption}>{t("trip.keepOpen")}</p>}
+        {step.kind !== "arrived" && (
+          <div className={styles.endRow}>
+            <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
+          </div>
+        )}
+        {/* The two notes share one caption line at the bottom (the ride step's caption already names its basis). */}
+        {step.kind !== "arrived" && (
+          <p className={styles.caption}>
+            {t("trip.keepOpen")}
+            {active.fixture && !simFix && step.kind !== "ride" && ` ${t("trip.basis.fixtureShort")}`}
+          </p>
+        )}
         {simAllowed && step.kind !== "arrived" && (
           <div className={styles.sim}>
             <Button
@@ -283,11 +293,6 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
               onPress={() => setSimFrom(simFrom === null ? legIndex : null)}
             />
             {simFix && <p className={styles.caption}>{t("trip.sim.note")}</p>}
-          </div>
-        )}
-        {step.kind !== "arrived" && (
-          <div>
-            <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
           </div>
         )}
       </div>

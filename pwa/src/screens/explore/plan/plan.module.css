@@ -67,6 +67,18 @@
   color: var(--c-text-variant);
 }
 
+/* An empty field looks like one: white, outlined, as on the search bar. */
+.emptyField {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-alert);
+  background: var(--c-surface);
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+}
+
 .placeAlert {
   color: var(--c-alert-text);
   font-size: var(--fs-body);
@@ -106,11 +118,12 @@
   }
 }
 
+/* The line stops short of the Swap pill, which sits over its right end. */
 .between {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  padding-left: var(--sp-4);
+  padding: 0 128px 0 var(--sp-4);
   color: var(--c-text-variant);
 }
 
@@ -196,6 +209,27 @@
 }
 
 /* ---------- Results ---------- */
+
+.sort {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  font-weight: var(--fw-medium);
+}
+
+.sort select {
+  min-height: var(--touch-min);
+  padding: 0 44px 0 var(--sp-4);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%23444'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  color: var(--c-text);
+  font: inherit;
+  font-weight: var(--fw-medium);
+  appearance: none;
+}
 
 .summary {
   display: flex;
@@ -302,7 +336,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 2px;
+  padding: 0 1px;
   color: var(--c-text-variant);
   font-weight: var(--fw-medium);
 }
@@ -313,27 +347,20 @@
   align-items: center;
 }
 
+/* 16sp (L1): the minutes are information, not a caption. */
 .modeMin {
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
+  white-space: nowrap;
 }
 
 .modeWalk {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 40px;
-  font-weight: var(--fw-medium);
-}
-
-.durationCol {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: end;
 }
 
 .duration {
+  flex: none;
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);
   font-weight: var(--fw-bold);
@@ -383,7 +410,18 @@
 }
 
 .fare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-1);
+  align-items: center;
   font-variant-numeric: tabular-nums;
+}
+
+/* L8: a 48dp tall target, although it reads as an inline link. */
+.fare .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
 }
 
 .cardFoot {
@@ -416,6 +454,12 @@
   flex: 1;
   min-width: 0;
   font-weight: var(--fw-medium);
+}
+
+.peekLine {
+  display: block;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
 }
 
 .peek > :last-child {

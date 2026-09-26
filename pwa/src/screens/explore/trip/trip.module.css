@@ -7,24 +7,6 @@
   padding: 0 var(--gutter) var(--sp-4);
 }
 
-.stepHeader {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  padding: 0 var(--sp-1) 0 var(--gutter);
-}
-
-.stepOf {
-  color: var(--c-text-variant);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  font-weight: var(--fw-medium);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-caps);
-}
-
 .card {
   display: flex;
   flex-direction: column;
@@ -127,4 +109,16 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--sp-1);
+}
+
+.endRow {
+  margin-top: calc(-1 * var(--sp-2));
+}
+
+/* A line with a route chip in it: the chip sits on the text's centre line. */
+.withChip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
 }

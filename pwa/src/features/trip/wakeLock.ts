@@ -8,14 +8,20 @@ export function useWakeLock(enabled: boolean): void {
     if (!enabled || !("wakeLock" in navigator)) return;
     let lock: WakeLockSentinel | undefined;
     let cancelled = false;
+    // One request at a time: a visibilitychange during the first request must not take a second
+    // sentinel that would overwrite (and leak) the first.
+    let pending = false;
     const acquire = async () => {
-      if (document.visibilityState !== "visible" || (lock && !lock.released)) return;
+      if (pending || document.visibilityState !== "visible" || (lock && !lock.released)) return;
+      pending = true;
       try {
         const next = await navigator.wakeLock.request("screen");
         if (cancelled) void next.release();
         else lock = next;
       } catch {
         // Denied (e.g. battery saver): the trip still works, the screen may just dim.
+      } finally {
+        pending = false;
       }
     };
     void acquire();
