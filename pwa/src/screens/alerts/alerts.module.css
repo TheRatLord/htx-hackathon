@@ -21,29 +21,6 @@
   list-style: none;
 }
 
-/* Badges and dates sit right on top of their box until AlertBox can hold them (requests.md). */
-.item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.moreBadges {
-  font-weight: var(--fw-medium);
-  color: var(--c-text-variant);
-}
-
-.dates {
-  color: var(--c-text-variant);
-}
-
 .more {
   display: flex;
 }

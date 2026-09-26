@@ -18,7 +18,7 @@ import { usePrefs } from "../../../state/prefs.ts";
 import { useWalkDistance } from "../../../state/walkDistance.ts";
 import { BayTag } from "../../../ui/BayTag.tsx";
 import { Button } from "../../../ui/Button.tsx";
-import { LiveStrip } from "../../../ui/LiveStrip.tsx";
+import { FactStrip, LiveStrip } from "../../../ui/LiveStrip.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import styles from "./trip.module.css";
 
@@ -131,14 +131,14 @@ function RideCard({ ride, stops, index, basis }: RideProps) {
       </p>
       <p className={styles.getOff}>{t("trip.ride.getOff", { stop: stopTitle(ride.alight) })}</p>
       <GetOffWarning left={left} alight={ride.alight.id ? stopTitle(ride.alight) : ride.alight.name} />
-      <p className={`${styles.bleed} ${styles.strip}`}>
-        <span>
-          <span className={styles.stripDigits}>{left}</span> {t("trip.ride.stopsLeft", { count: left })}
-        </span>
-        <span>
-          {t("trip.ride.about")} <span className={styles.stripDigits}>{about}</span> {t("trip.ride.min")}
-        </span>
-      </p>
+      <div className={styles.bleed}>
+        <FactStrip
+          facts={[
+            { value: left, unit: t("trip.ride.stopsLeft", { count: left }) },
+            { lead: t("trip.ride.about"), value: about, unit: t("trip.ride.min") },
+          ]}
+        />
+      </div>
       {left > 0 && <p>{t("trip.ride.next", { stop: next.id ? `${next.name} (#${next.id})` : next.name })}</p>}
       <div
         className={styles.progress}

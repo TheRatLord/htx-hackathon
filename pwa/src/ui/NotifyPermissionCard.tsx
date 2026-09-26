@@ -8,19 +8,19 @@ import type { NotifyPermissionCardProps } from "./types.ts";
 
 /**
  * C.15: the only place notifications are asked for, at most once per context (remembered across
- * visits). Renders nothing when already asked or when the browser has nothing to ask. Declining
- * blocks nothing.
+ * visits). Renders nothing when already asked, once allowed, or when the browser has nothing to
+ * ask. Declining blocks nothing.
  */
 export function NotifyPermissionCard({ context, onDone }: NotifyPermissionCardProps) {
   const t = useT();
   const [askable] = useState(() => !wasNotifyAsked(context) && notifyPermission() === "default");
-  const [declined, setDeclined] = useState(false);
-  if (!askable) return null;
-  if (declined) return <p className={styles.caption}>{t("notify.declined")}</p>;
-  const finish = (result: "granted" | "declined") => {
-    markNotifyAsked(context, result);
-    if (result === "declined") setDeclined(true);
-    onDone(result);
+  const [result, setResult] = useState<"granted" | "declined">();
+  if (!askable || result === "granted") return null;
+  if (result === "declined") return <p className={styles.caption}>{t("notify.declined")}</p>;
+  const finish = (r: "granted" | "declined") => {
+    markNotifyAsked(context, r);
+    setResult(r);
+    onDone?.(r);
   };
   return (
     <div className={styles.card}>

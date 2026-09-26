@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { useNavigate } from "react-router";
 import type { LatLon, NearbyStop } from "../../../api/types.ts";
 import { useWalkDistance } from "../../../state/walkDistance.ts";
@@ -10,10 +11,11 @@ interface NearbyCardProps {
   origin: LatLon;
   /** D4: walk times are measured from this place. */
   place?: Place;
+  firstRowRef?: Ref<HTMLLIElement>;
 }
 
 /** A NearbyStopCard whose walk distance is the one shared with the Stop sheet and Walk (C.17). */
-export function NearbyCard({ item, origin, place }: NearbyCardProps) {
+export function NearbyCard({ item, origin, place, firstRowRef }: NearbyCardProps) {
   const navigate = useNavigate();
   const { stop } = item;
   const { distanceM } = useWalkDistance(origin, stop.id, item.walkDistanceM, item.walkSource);
@@ -27,6 +29,7 @@ export function NearbyCard({ item, origin, place }: NearbyCardProps) {
       onOpen={() => navigate(stopPath)}
       onOpenRoute={(routeId) => navigate(`${stopPath}?route=${encodeURIComponent(routeId)}`)}
       onWalk={() => navigate(walkUrl(stop.id, { d: distanceM, from: place?.param, fromName: place?.name }))}
+      firstRowRef={firstRowRef}
     />
   );
 }

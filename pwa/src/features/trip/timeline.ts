@@ -119,7 +119,8 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
       step: {
         kind: "board",
         route,
-        title: t("plan.boardTo", { headsign: leg.headsign.toUpperCase() }, lang),
+        titleLead: t("plan.board", undefined, lang).toUpperCase(),
+        title: `${t("headsign.to", undefined, lang)} ${leg.headsign.toUpperCase()}`,
         lines: [...(named ? [] : [stopWithSide(leg.board, lang)]), `${leaves} · ${t("plan.stops", { count: leg.numStops }, lang)}`],
         duration: t("time.min", { n: leg.durationMin }, lang),
       },
@@ -128,7 +129,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
       legIndex,
       role: "alight",
       href: stopHref(leg.alight, route.id),
-      step: { kind: "alight", title: t("plan.getOffAt", { stop: stopTitle(leg.alight) }, lang), lines: [], time: formatClock(leg.arrivalTime, lang) },
+      step: { kind: "alight", title: t("plan.getOffAt", { stop: stopTitle(leg.alight) }, lang), lines: [], time: formatClock(leg.arrivalTime, lang), legColor: route.color },
     });
   });
   rows.push({ legIndex: it.legs.length, role: "arrive", step: { kind: "arrive", title: opts.toName, lines: [], time: formatClock(it.endTime, lang) } });

@@ -4,9 +4,23 @@ import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
 import styles from "./LiveStrip.module.css";
 import { TimeValue } from "./TimeValue.tsx";
-import type { LiveStripProps } from "./types.ts";
+import type { LiveStripProps, StripFact } from "./types.ts";
 
 const MAX_DEPS = 4;
+
+/** The strip's look with facts instead of times: "**5** stops left · about **7** min" (D13 ride step). */
+export function FactStrip({ facts }: { facts: StripFact[] }) {
+  return (
+    <p className={`${styles.strip} ${styles.facts}`}>
+      {facts.map((f, i) => (
+        <span key={i}>
+          {f.lead && `${f.lead} `}
+          <span className={styles.digits}>{f.value}</span> {f.unit}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 /** C.3: the blue live-minutes strip. Not a live region: polling never re-announces. */
 export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {

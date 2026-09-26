@@ -33,9 +33,8 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
           {title}
         </h2>
         {moreSaved ? (
-          <button type="button" className={styles.link} onClick={moreSaved.onPress}>
-            {t("card.moreSaved", { count: moreSaved.count })}
-            <Icon name="chevron_right" />
+          <button type="button" className={rowStyles.more} onClick={moreSaved.onPress}>
+            {t("card.moreSaved", { count: moreSaved.count })} ›
           </button>
         ) : (
           <Icon name="chevron_right" />

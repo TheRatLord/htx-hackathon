@@ -25,3 +25,18 @@
   font-weight: var(--fw-regular);
   letter-spacing: normal;
 }
+
+/* "+2 saved ›" stays on one line, so the stop name keeps the width (C.5b, the M2 fold). */
+.more {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-3)) 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}

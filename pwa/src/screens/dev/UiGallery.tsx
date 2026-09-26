@@ -373,7 +373,7 @@ export default function UiGallery() {
       <Section title="C.14 BayDiagram">
         <BayDiagram
           handAuthored
-          highlight={bay}
+          highlight={[{ stopId: "79", bay }, { stopId: "13170", bay }]}
           onBayPress={setBay}
           platforms={[
             { stopId: "13170", label: "Platform 1 · Stop #13170", bays: ["C", "D", "E", "G", "H", "I"] },
@@ -406,7 +406,7 @@ export default function UiGallery() {
           <UpdatedAgo at={at(-0.15)} onRefresh={() => {}} />
           <UpdatedAgo at={at(-3)} onRefresh={() => {}} />
         </div>
-        <NotifyPermissionCard context="trip" onDone={() => {}} />
+        <NotifyPermissionCard context="trip" />
         <div className={styles.bleed}>
           <SectionHeader label="Rider resources" tone="blue" />
           <ListRow kind="internal" label="Route Schedules" onPress={() => {}} />

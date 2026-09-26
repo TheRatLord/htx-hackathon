@@ -128,6 +128,24 @@
   align-self: center;
 }
 
+.lead {
+  flex: none;
+  align-self: center;
+}
+
+/* An alert inside the timeline: the leg's line runs on beside a pink box (C.11 colours). */
+.alertRow .text {
+  margin: var(--sp-1) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-alert-border);
+  border-radius: var(--r-alert);
+  background: var(--c-alert-bg);
+}
+
+.alertRow .title {
+  font-weight: var(--fw-regular);
+}
+
 .here {
   color: var(--c-link-text);
   font-weight: var(--fw-medium);

@@ -9,7 +9,7 @@ import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/E
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
-import { itineraryScene, useSettledSheetHeight } from "../../../features/trip/scene.ts";
+import { itineraryScene } from "../../../features/trip/scene.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { formatLatLon, parseLatLon } from "../../../lib/geo.ts";
@@ -234,8 +234,7 @@ export default function Plan() {
   }, [resultKey, setSnap]);
 
   const first = response ? sortItineraries(response.itineraries, query.sort)[0]?.it : undefined;
-  const sheetH = useSettledSheetHeight();
-  useMapScene(first ? itineraryScene(first, lang) : endpointsScene(query), [first, query.from, query.to, lang, sheetH]);
+  useMapScene(first ? itineraryScene(first, lang) : endpointsScene(query), [first, query.from, query.to, lang]);
 
   // Only denied and unavailable are "off"; a location not asked for yet is still being found (C.17).
   const fromView: FromView = query.from ? { kind: "place", name: fromLabel(query, lang) } : isOff(rider.status) ? { kind: "off" } : { kind: "finding" };

@@ -11,7 +11,7 @@ import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromLabel } from "../../../features/trip/origin.ts";
 import type { RideStop } from "../../../features/trip/progress.ts";
-import { boundsOf, itineraryLegs, itineraryMarkers, useSettledSheetHeight } from "../../../features/trip/scene.ts";
+import { boundsOf, itineraryLegs, itineraryMarkers } from "../../../features/trip/scene.ts";
 import { simLegs, useSimulatedFix } from "../../../features/trip/simulate.ts";
 import type { TripStep } from "../../../features/trip/steps.ts";
 import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip/timeline.ts";
@@ -152,7 +152,6 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   const target = stepTarget(step, stops, rideIndex);
   const boarded = ride?.board.id;
   const legIndex = step.kind === "arrived" ? it.legs.length - 1 : step.legIndex;
-  const sheetH = useSettledSheetHeight();
   const scene = useMemo((): MapScene => {
     const legs = itineraryLegs(it);
     const current = boundsOf((legs[legIndex]?.coords ?? []).map(([lon, lat]) => ({ lat, lon })));
@@ -171,14 +170,15 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
             {
               id: vehicle.vehicleId,
               point: vehicle,
+              ageSeconds: vehicle.ageSeconds,
               label: vehicle.ageSeconds > VEHICLE_STALE_S ? t("trip.vehicleStale", { min: Math.round(vehicle.ageSeconds / 60) }) : t("trip.vehicle", { route: vehicle.route }),
             },
           ]
         : [],
       focus: both ? { kind: "bounds", bounds: both } : current && { kind: "bounds", bounds: current },
     };
-    // Rebuilt when what it shows changes (t follows lang); `sheetH` re-fits it above a settled sheet.
-  }, [it, lang, legIndex, target.stopId, target.point.lat, target.point.lon, boarded, vehicle, fix, simFix, sheetH]);
+    // Rebuilt when what it shows changes (t follows lang).
+  }, [it, lang, legIndex, target.stopId, target.point.lat, target.point.lon, boarded, vehicle, fix, simFix]);
   useMapScene(scene, [scene]);
 
   const basis = simFix
@@ -266,7 +266,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
           />
         </section>
         {active.fixture && !simFix && step.kind !== "ride" && step.kind !== "arrived" && <p className={styles.caption}>{t("trip.basis.fixture")}</p>}
-        <NotifyPermissionCard context="trip" onDone={() => undefined} />
+        <NotifyPermissionCard context="trip" />
         {step.kind !== "arrived" && (
           <div className={styles.controls}>
             {stepIndex > 0 && <Button variant="tonal" icon="chevron_left" label={t("trip.prev")} onPress={() => live.goTo(stepIndex - 1)} />}

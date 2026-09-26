@@ -31,6 +31,7 @@ interface ExploreContextValue extends SheetControl {
   minHalf?: number;
   setChrome: (opts: ExploreChromeOptions | null) => void;
   sheetRef: Ref<HTMLElement>;
+  sheetEl: HTMLElement | null;
 }
 
 export const ExploreContext = createContext<ExploreContextValue | null>(null);
@@ -44,6 +45,11 @@ function useExploreContext(): ExploreContextValue {
 export function useSheet(): SheetControl {
   const { snap, setSnap, setMinHalf } = useExploreContext();
   return { snap, setSnap, setMinHalf };
+}
+
+/** The current sheet's root element, for screens that size the sheet to their content. */
+export function useSheetElement(): HTMLElement | null {
+  return useExploreContext().sheetEl;
 }
 
 /** Set on mount (and when the options change), cleared on unmount. */

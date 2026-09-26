@@ -114,7 +114,7 @@ export default function Walk() {
   const scene: MapScene = { highlightStopId: stopId };
   if (walk) {
     const coords = walk.geometry.coordinates;
-    scene.legs = [{ coords, kind: "walk", color: "" }];
+    scene.legs = [{ coords, kind: "walk" }];
     const lons = coords.map((c) => c[0]);
     const lats = coords.map((c) => c[1]);
     scene.focus = stepFocus
@@ -127,15 +127,22 @@ export default function Walk() {
           ],
         };
   } else if (target) scene.focus = { kind: "point", point: target };
-  if (origin) scene.markers = [{ id: "origin", point: origin, kind: from ? "board" : "origin", label: fromName }];
+  if (origin) scene.markers = [{ id: "origin", point: origin, kind: from ? "place" : "origin", label: fromName }];
   // Rounded, so GPS jitter doesn't move the camera.
   useMapScene(scene, [stopId, osrm.data, target, stepFocus?.lat, stepFocus?.lon, origin && roundedKey(origin)]);
 
   const walkMin = distanceM !== undefined ? walkMinutes(distanceM, walkPace) : undefined;
   const maps = target && (() => openGoogleMaps(target, from));
   const mapsButton = (primary: boolean) =>
-    maps && (
-      <Button variant={primary ? "primary" : "text"} fullWidth={primary} label={t("walk.googleMaps")} ariaLabel={t("walk.googleMapsA11y")} onPress={maps} />
+    target && (
+      <Button
+        variant={primary ? "primary" : "text"}
+        fullWidth={primary}
+        label={t("walk.googleMapsLink")}
+        href={googleMapsUrl(target, from)}
+        external
+        externalLabel={t("walk.newTab")}
+      />
     );
 
   let body;
@@ -211,7 +218,7 @@ export default function Walk() {
   }
 
   return (
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} />} onBack={back}>
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} titleSize="stop" />} onBack={back}>
       <div className={styles.body}>{body}</div>
     </ExploreSheet>
   );

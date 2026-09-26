@@ -1,7 +1,7 @@
 // Map marker images drawn on a canvas at device resolution, so they stay sharp and need no sprite
 // file: stop pins (bus and rail, three sizes), the TC tile, the direction notch, the destination
-// pin, the live-bus icon, the rider and itinerary dots, and the white chips behind stop-ID labels
-// and the "Stop: 342" callout.
+// and place pins, the live-bus icon (grey when stale), the rider and itinerary dots, and the white
+// chips behind stop-ID labels and the "Stop: 342" callout.
 
 import type maplibregl from "maplibre-gl";
 import { t } from "../../i18n/index.ts";
@@ -85,7 +85,8 @@ function tcTile(navy: string, text: string): ImageData {
   });
 }
 
-function destinationPin(red: string): ImageData {
+/** The destination (red) and searched-place (black) pin. */
+function placePin(red: string): ImageData {
   return image(32, 40, (ctx) => {
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,.3)";
@@ -184,8 +185,10 @@ export function addMarkerImages(map: maplibregl.Map) {
   add("notch-bus", notch(blue));
   add("notch-rail", notch(red));
   add("pin-tc", tcTile(navy, t("card.tcTile")));
-  add("pin-dest", destinationPin(token("--c-dest-pin")));
+  add("pin-dest", placePin(token("--c-dest-pin")));
+  add("pin-place", placePin(token("--c-text")));
   add("vehicle", vehicle(navy));
+  add("vehicle-stale", vehicle(token("--c-text-disabled")));
   add("dot-user", dot(16, token("--c-user-dot"), "#fff", 2));
   add("dot-origin", dot(16, token("--c-origin-dot"), "#fff", 2));
   add("dot-stop", dot(14, "#fff", navy, 3));

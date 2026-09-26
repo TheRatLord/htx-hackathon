@@ -1,0 +1,9 @@
+.tag {
+  flex: none;
+  width: fit-content;
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-chip);
+  background: var(--c-nav-bg);
+  color: var(--c-text);
+  font-weight: var(--fw-bold);
+}

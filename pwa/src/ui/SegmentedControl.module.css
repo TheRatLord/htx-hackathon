@@ -34,6 +34,14 @@
   font-weight: var(--fw-medium);
 }
 
+.large {
+  font-size: 1.125rem;
+}
+
+.xlarge {
+  font-size: 1.3125rem;
+}
+
 .sub {
   font-size: var(--fs-body);
 }

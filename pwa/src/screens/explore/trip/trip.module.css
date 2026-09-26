@@ -82,25 +82,6 @@
   margin: 0 calc(-1 * var(--gutter));
 }
 
-/* The LiveStrip look with "5 stops left · about 7 min": both numbers in strip digits, 16sp words. */
-.strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--sp-6);
-  align-items: baseline;
-  min-height: var(--strip-h);
-  padding: var(--sp-3) var(--gutter);
-  background: var(--c-brand-blue-deep);
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-
-.stripDigits {
-  font-size: var(--fs-strip);
-  line-height: var(--lh-strip);
-  font-weight: var(--fw-medium);
-}
-
 .progress {
   align-self: stretch;
   height: 6px;

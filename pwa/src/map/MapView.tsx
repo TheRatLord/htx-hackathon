@@ -21,12 +21,28 @@ import styles from "./MapView.module.css";
 
 /** Label ranking is recomputed only when the anchor moves this far. */
 const RESORT_M = 50;
+/** A fitted scene is fitted again this long after the sheet stops changing height. */
+const SETTLE_MS = 300;
+/** The least map height a fit keeps between the paddings (at the full snap the sheet covers nearly all of it). */
+const MIN_FIT_H = 64;
 
 /**
  * Camera padding keeps fitted content clear of the chrome: at the top, the search bar (12 + 48),
- * the 8dp gap and the destination pin's 40dp body, which rises above its point.
+ * the 8dp gap and the destination pin's 40dp body, which rises above its point. The bottom is
+ * clamped so a fit never asks for more room than the canvas has.
  */
-const padding = (bottom: number, safeTop: number) => ({ top: safeTop + 108, left: 32, right: 72, bottom: bottom + 24 });
+function padding(bottom: number, safeTop: number, canvasH: number): maplibregl.PaddingOptions {
+  const top = safeTop + 108;
+  return { top, left: 32, right: 72, bottom: Math.max(0, Math.min(bottom + 24, canvasH - top - MIN_FIT_H)) };
+}
+
+function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl.PaddingOptions) {
+  const bounds: LngLatBoundsLike = [
+    [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
+    [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
+  ];
+  map.fitBounds(bounds, { padding: pad, maxZoom: 17 });
+}
 
 async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions) {
   showUser(map, user);
@@ -38,12 +54,7 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
 
   const f = scene.focus;
   if (f?.kind === "bounds" && f.bounds) {
-    const [a, b] = f.bounds;
-    const bounds: LngLatBoundsLike = [
-      [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
-      [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
-    ];
-    map.fitBounds(bounds, { padding: pad, maxZoom: 17 });
+    fitFocus(map, f.bounds, pad);
   } else if (f) {
     const center = f.kind === "user" ? user : (f.point ?? highlight);
     if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
@@ -90,7 +101,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       () => (anchorRef.current = null),
     );
   };
-  const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0);
+  const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0, container.current?.clientHeight ?? 0);
 
   useEffect(() => {
     let map: maplibregl.Map | undefined;
@@ -151,6 +162,15 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     void applyScene(mapRef.current, scene, user, pad(bottomPadding));
     rankLabels(mapRef.current);
   }, [scene]);
+
+  // The sheet moved to another snap: fit the scene again above it once it has settled.
+  useEffect(() => {
+    const map = mapRef.current;
+    const bounds = latest.current.scene.focus?.bounds;
+    if (!map || !ready.current || latest.current.scene.focus?.kind !== "bounds" || !bounds) return;
+    const id = setTimeout(() => fitFocus(map, bounds, pad(bottomPadding)), SETTLE_MS);
+    return () => clearTimeout(id);
+  }, [bottomPadding]);
 
   useEffect(() => {
     const { user, bottomPadding } = latest.current;

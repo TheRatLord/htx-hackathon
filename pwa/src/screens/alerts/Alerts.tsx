@@ -7,7 +7,6 @@ import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
 import { useLang, useT } from "../../i18n/index.ts";
 import { alertsForRoute } from "../../lib/alerts.ts";
-import { formatDateRange } from "../../lib/format.ts";
 import { routeRef, useRoutesLoaded } from "../../lib/routes.ts";
 import { compareRouteNames } from "../../lib/sortRoutes.ts";
 import { AlertBox } from "../../ui/AlertBox.tsx";
@@ -16,31 +15,26 @@ import { AppBar } from "../../ui/AppBar.tsx";
 import { Button } from "../../ui/Button.tsx";
 import { FilterChip } from "../../ui/FilterChip.tsx";
 import { Icon } from "../../ui/Icon.tsx";
-import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { UpdatedAgo } from "../../ui/UpdatedAgo.tsx";
 import styles from "./alerts.module.css";
 import { alertRouteRefs } from "./routeRefs.ts";
 import { useMyRoutes } from "./useMyRoutes.ts";
-
-/** Badges beyond this many collapse to "+N" (some detours list a dozen routes). */
-const MAX_BADGES = 6;
 
 const firstRouteName = (a: Alert) => a.routes.map((r) => r.route).sort(compareRouteNames)[0] ?? "~";
 
 function AlertItem({ alert, demo }: { alert: Alert; demo: boolean }) {
   const lang = useLang();
   const navigate = useNavigate();
-  const routes = alertRouteRefs(alert);
   return (
-    <li className={styles.item}>
-      <div className={styles.meta}>
-        {routes.slice(0, MAX_BADGES).map((r) => (
-          <RouteBadge key={r.id} route={r} size="sm" />
-        ))}
-        {routes.length > MAX_BADGES && <span className={styles.moreBadges}>+{routes.length - MAX_BADGES}</span>}
-        <span className={styles.dates}>{formatDateRange(alert.activeFrom, alert.activeUntil, lang)}</span>
-      </div>
-      <AlertBox alert={alert} lang={lang} compact demo={demo} onOpen={() => navigate(`/more/alerts/${encodeURIComponent(alert.id)}`)} />
+    <li>
+      <AlertBox
+        alert={alert}
+        lang={lang}
+        compact="list"
+        demo={demo}
+        routes={alertRouteRefs(alert)}
+        onOpen={() => navigate(`/more/alerts/${encodeURIComponent(alert.id)}`)}
+      />
     </li>
   );
 }

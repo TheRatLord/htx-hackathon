@@ -1,7 +1,7 @@
 // Props of every section-C component (spec C). Screens compose these components and
 // never restyle them; a needed variant is requested in docs/design/requests.md.
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import type { ApiError } from "../api/client.ts";
 import type { Alert, Dep, NearbyRoute, NearbyTransitCenter, RouteRef, Status, StopSummary } from "../api/types.ts";
 import type { Lang, Vars } from "../i18n/index.ts";
@@ -38,6 +38,13 @@ export interface LiveStripProps {
   emptyText?: string;
 }
 
+/** One fact on the strip in its digits, e.g. "about **7** min" (D13's ride step). */
+export interface StripFact {
+  lead?: string;
+  value: string | number;
+  unit: string;
+}
+
 /** C.5a */
 export interface NearbyStopCardProps {
   stop: StopSummary;
@@ -49,6 +56,8 @@ export interface NearbyStopCardProps {
   onOpen: () => void;
   onOpenRoute: (routeId: string) => void;
   onWalk: () => void;
+  /** The first route row, for screens that size the sheet to show it (D2 fold rule M2). */
+  firstRowRef?: Ref<HTMLLIElement>;
 }
 
 export interface WalkButtonProps {
@@ -126,6 +135,8 @@ export interface BottomSheetProps {
 export interface SheetHeaderProps {
   title: string;
   titleAlign?: "start" | "center";
+  /** "stop" is the 20sp Bold stop title (the default when centred); "title" the 22sp Regular sheet title. */
+  titleSize?: "title" | "stop";
   sub?: ReactNode;
   right?: ReactNode;
 }
@@ -171,6 +182,8 @@ export interface ButtonProps {
   fullWidth?: boolean;
   href?: string;
   external?: boolean;
+  /** What `external` adds to the accessible name; default "(opens RideMETRO.org)". */
+  externalLabel?: string;
   /** Toggle buttons (Save, Track Bus Stop). */
   pressed?: boolean;
   ariaLabel?: string;
@@ -192,6 +205,8 @@ export interface SegmentedOption<V extends string> {
   value: V;
   label: string;
   sub?: string;
+  /** The label drawn at 18 or 21sp, as a sample of what it picks (D1's A / A+ / A++). */
+  labelSize?: "large" | "xlarge";
 }
 
 export interface SegmentedControlProps<V extends string> {
@@ -205,8 +220,11 @@ export interface SegmentedControlProps<V extends string> {
 export interface AlertBoxProps {
   alert: Alert;
   lang: Lang;
-  compact?: boolean;
+  /** true drops the description and dates; "list" (D14) drops only the description. */
+  compact?: boolean | "list";
   demo?: boolean;
+  /** Badges before the effect word (D14); past 6 the rest read "+N". */
+  routes?: RouteRef[];
   onOpen: () => void;
 }
 
@@ -234,13 +252,20 @@ export type SheetBannerProps =
 /** C.13 */
 export interface TimelineStep {
   kind: "walk" | "board" | "ride" | "alight" | "transfer" | "arrive";
+  /** Before the route badge: "BOARD [80] to MLK & PARK VILLAGE". */
+  titleLead?: string;
   title: string;
   lines: string[];
   time?: string;
   status?: Status;
   route?: RouteRef;
   stopId?: string;
+  /** An alert row (warning icon, alert colours); it opens the alert. Use kind "ride" inside a ride. */
   alert?: Alert;
+  /** The alert row comes from demo data: it carries the Demo tag. */
+  demo?: boolean;
+  /** The leg's line colour on a row without a badge (get off, alert rows); defaults to `route.color`. */
+  legColor?: string;
   /** Duration badge ("6 min"). */
   duration?: string;
 }
@@ -254,8 +279,10 @@ export interface StepListProps {
 
 /** C.14 */
 export interface BayDiagramProps {
-  platforms: { stopId: string; label: string; bays: string[]; routesByBay?: Record<string, string[]> }[];
-  highlight?: string;
+  /** `label` is the visible "PLATFORM 2 · STOP #79"; `spokenName` ("Platform 2") goes in each tile's label. */
+  platforms: { stopId: string; label: string; spokenName?: string; bays: string[]; routesByBay?: Record<string, string[]> }[];
+  /** Every bay the selected route leaves from. */
+  highlight?: { stopId: string; bay: string }[];
   onBayPress: (bay: string) => void;
   handAuthored?: boolean;
 }
@@ -306,7 +333,7 @@ export interface UpdatedAgoProps {
 
 export interface NotifyPermissionCardProps {
   context: NotifyContext;
-  onDone: (result: "granted" | "declined") => void;
+  onDone?: (result: "granted" | "declined") => void;
 }
 
 export interface ListRowProps {
