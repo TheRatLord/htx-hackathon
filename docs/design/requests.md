@@ -68,3 +68,51 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   be untrue there.
 - **10 (card labels):** the LiveStrip keeps its spec label "16 minutes, scheduled"
   (`markScheduled: true`); cards follow C.5a and leave the scheduled default unspoken.
+
+## Hidden map's attribution shows on top of tab and page screens
+- From: D (D17 Fares, also Recent, More, Alerts)
+- Where: src/app/AppShell.tsx / src/map (MapLibre attribution control)
+- Need: after visiting Explore, "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" and its (i)
+  button stay visible over the bottom of /fares, /recent, /more (the map is `visibility: hidden`,
+  but the attribution control still paints above the Frame). Hide it with the map, or give the
+  Frame a stacking context above the map layer.
+- Status: open
+
+## AlertBox: route badges and dates without the description (D14 list)
+- From: D (D14 Service Alerts)
+- Where: src/ui/AlertBox.tsx
+- Need: D14 items show route badges, effect + header and dates, but not the long detour
+  description (METRO's are 10+ lines). Today D14 renders a badges + dates line above the
+  `compact` box itself; an AlertBox `routes` slot, or a variant that keeps dates and drops only
+  the description, would let the box own that layout.
+- Status: open
+
+## Group /arrivals into SavedStopRow routes in src/lib
+- From: D (D16 Recent)
+- Where: src/lib (new helper), used by src/ui/SavedStopRow callers
+- Need: `savedStopRoutes(arrivals: Arrival[]): SavedStopRoute[]` (one entry per route and
+  direction). D16 has a local copy in screens/recent/SavedStops.tsx; module A's Explore saved row
+  needs the same grouping. Also: when the preferred route has no departure in the window, C.5b
+  wants it shown with "No buses in the next 3 hours", which needs its direction and headsign
+  (not in an empty /arrivals answer), so the helper could take the stop's serving patterns.
+- Status: open
+
+## useAlerts(): expose when the alerts were fetched
+- From: D (D14 footer "Source: METRO · Updated 1 min ago")
+- Where: src/api/alertsStore.ts
+- Need: an `updatedAt` field. D14 reads `queryClient.getQueryState(keys.alerts()).dataUpdatedAt` today.
+- Status: open
+
+## formatDateRange with a start time (D15)
+- From: D (D15 Alert detail)
+- Where: src/lib/format.ts
+- Need: D15's spec line is "From Sep 25, 5:00 AM until Oct 3"; `formatDateRange` has no time.
+  An `{ withTime: true }` option for the start would match it. D15 shows the date-only form now.
+- Status: open
+
+## SegmentedControl: per-option label size (Welcome A / A+ / A++)
+- From: D (D1 Welcome)
+- Where: src/ui/SegmentedControl.tsx
+- Need: D1 draws the text-size glyphs at 16 / 18 / 21sp. Screens can't restyle components, so
+  Welcome shows "A", "A+", "A++" at one size with "Standard / Large / Extra large" under them.
+- Status: open
