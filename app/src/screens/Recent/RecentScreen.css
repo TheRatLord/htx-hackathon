@@ -1,0 +1,17 @@
+/* Recent tab. The list parts are styled in ./lists.css. */
+
+/* Quiet text button in the section header; the pill shows on hover and press. */
+.recent-clear.btn {
+  margin-right: calc(var(--s-1) * -1);
+  padding: 0 var(--s-2);
+  background: transparent;
+  font-size: var(--t-small);
+}
+.recent-clear.btn:active {
+  background: var(--accent-soft);
+}
+@media (hover: hover) {
+  .recent-clear.btn:hover {
+    background: var(--accent-soft);
+  }
+}
