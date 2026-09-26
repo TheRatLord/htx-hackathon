@@ -56,6 +56,8 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
 
 - Iteration 1: created `ridemetro-app` from `origin/main` (push refused, see Blocked). Built foundation F0 and Home T1; typecheck, 50 unit tests and build pass; Home and Nearby checked at 390x844 in light and dark with no console errors or warnings.
 
+- Iteration 1 (cont.): fixed sheet drag for fast flicks (window listeners); drafted README (T9) and Playwright smoke + screenshot specs (T8). Pan, button/scroll/pinch zoom, dark mode and reduced motion e2e checks pass. Launched workers for T3, T5, T6 in worktrees.
+
 ## Next
 
-Launch T3 (Routes), T5 (Stop), T6 (Fares) in parallel; then T2, T4, T7; then T8, T9; then T10, T11.
+Review and merge T3, T5, T6 when their workers finish. Then launch T2, T4, T7. Then run the full smoke + screenshot specs (T8), verify README (T9), then T10, T11.
