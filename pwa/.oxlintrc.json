@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "react",
+    "typescript",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/refs": "off",
+    "react/set-state-in-effect": "off",
+    "react/purity": "off"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "dev-dist/**",
+    "node_modules/**",
+    "test-results/**",
+    "playwright-report/**"
+  ]
+}
