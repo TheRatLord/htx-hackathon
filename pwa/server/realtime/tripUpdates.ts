@@ -3,7 +3,7 @@
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { config } from "../config.ts";
 import { TtlCache } from "../lib/cache.ts";
-import { fetchUpstream } from "../lib/upstream.ts";
+import { fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
 
 const URL_BASE = "https://api.ridemetro.org/GtfsRealtime/TripUpdates";
 const { FeedMessage, TripDescriptor, TripUpdate } = GtfsRealtimeBindings.transit_realtime;
@@ -31,7 +31,8 @@ export function tripUpdates(): Promise<Map<string, TripRealtime>> {
   return cache.get("feed", async () => {
     const { body } = await fetchUpstream<Uint8Array>({
       service: "metro-tripupdates",
-      url: `${URL_BASE}?subscription-key=${config.metroApiKey ?? ""}`,
+      url: URL_BASE,
+      headers: metroKeyHeader(config.metroApiKey),
       fixtureKey: "tripupdates",
       binary: true,
       timeoutMs: 10_000,

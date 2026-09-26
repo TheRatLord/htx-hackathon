@@ -5,10 +5,13 @@ import type { FeatureCollection } from "geojson";
 import type maplibregl from "maplibre-gl";
 import type { GeoJSONSource } from "maplibre-gl";
 import type { ClientStop, LatLon, TransitCenterSummary } from "../../api/types.ts";
+import { anchorOffset, CHIP_PLACEMENTS } from "../placement.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
 
 export const STOPS_SOURCE = "stops";
 const TCS_SOURCE = "transit-centers";
+/** The few stops whose ID chip shows at walking zoom, each with the side MapView chose for it. */
+const NEAR_LABELS_SOURCE = "stops-near-labels";
 const PIN_LAYERS = ["tc-pin", "stops-pin", "stops-pin-far"];
 /** How far outside a pin's square a tap still hits it. */
 const TAP_SLOP = 12;
@@ -67,10 +70,11 @@ export const BOTTOM_TRANSIT_LAYER = "stops-pin-far";
 export function addTransitLayers(map: maplibregl.Map) {
   const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
   highlighted = undefined;
-  nearIds = [];
+  nearKey = "";
   coveredIds = [];
   map.addSource(STOPS_SOURCE, { type: "geojson", data: empty });
   map.addSource(TCS_SOURCE, { type: "geojson", data: empty });
+  map.addSource(NEAR_LABELS_SOURCE, { type: "geojson", data: empty });
   const text = token("--c-text");
 
   // Two chip layers, one look: the nearest few stops from zoom 16, every stop from 18. A chip on
@@ -134,14 +138,29 @@ export function addTransitLayers(map: maplibregl.Map) {
     },
   });
   map.addLayer({ id: "stops-label", type: "symbol", source: STOPS_SOURCE, minzoom: LABEL_ALL_ZOOM, layout: chipLayout, paint: { "text-color": text } });
+  // The nearest few: each on the side MapView found clear of the sheet, chrome and other pins, and
+  // a saved stop's with a star before its number ("★ 2958", the stop the rider opened the app for).
   map.addLayer({
     id: "stops-label-near",
     type: "symbol",
-    source: STOPS_SOURCE,
+    source: NEAR_LABELS_SOURCE,
     minzoom: 16,
     maxzoom: LABEL_ALL_ZOOM,
-    filter: ["in", ["get", "id"], ["literal", []]],
-    layout: chipLayout,
+    layout: {
+      ...chipLayout,
+      "text-field": [
+        "case",
+        ["==", ["get", "saved"], 1],
+        ["format", ["image", "chip-star"], {}, ["concat", "\u2009", ["get", "id"]], {}],
+        ["get", "id"],
+      ] as unknown as Expr,
+      "text-variable-anchor-offset": [
+        "match",
+        ["get", "side"],
+        ...Object.entries(CHIP_PLACEMENTS).flatMap(([key, p]) => [key, ["literal", anchorOffset(p)]]),
+        ["literal", anchorOffset(CHIP_PLACEMENTS.below)],
+      ] as unknown as Expr,
+    },
     paint: { "text-color": text },
   });
   map.addLayer({
@@ -177,7 +196,7 @@ export function setQuiet(map: maplibregl.Map, quiet: boolean) {
 }
 
 let highlighted: string | undefined;
-let nearIds: string[] = [];
+let nearKey = "";
 let coveredIds: string[] = [];
 
 function applyFilters(map: maplibregl.Map) {
@@ -186,7 +205,6 @@ function applyFilters(map: maplibregl.Map) {
   map.setFilter("stops-pin", hidden.length ? shown : null);
   map.setFilter("stops-pin-far", hidden.length ? shown : null);
   map.setFilter("stops-label", hidden.length ? shown : null);
-  map.setFilter("stops-label-near", ["all", ["in", ["get", "id"], ["literal", nearIds]], shown]);
   map.setFilter("stops-notch", hidden.length ? ["all", ["has", "bearing"], shown] : ["has", "bearing"]);
 }
 
@@ -208,14 +226,29 @@ export function setHighlightedStop(map: maplibregl.Map, stopId: string | undefin
   applyFilters(map);
 }
 
+export interface NearLabel {
+  stop: ClientStop;
+  /** A CHIP_PLACEMENTS key. */
+  side: string;
+  saved: boolean;
+}
+
 /**
- * The stops whose ID chip shows at walking zoom (MapView picks the nearest ones whose chip is on
- * screen and clear of the sheet, search bar and FABs: a chip cut by the sheet's edge read as noise).
+ * The stops whose ID chip shows at walking zoom, and where (MapView picks the nearest ones whose
+ * chip fits on screen, clear of the sheet, search bar, FABs and, where it can, the other pins).
  */
-export function setNearLabels(map: maplibregl.Map, ids: string[]) {
-  if (ids.length === nearIds.length && ids.every((id, i) => id === nearIds[i])) return;
-  nearIds = ids;
-  applyFilters(map);
+export function setNearLabels(map: maplibregl.Map, labels: NearLabel[]) {
+  const key = labels.map((l) => `${l.stop.id}:${l.side}:${l.saved ? 1 : 0}`).join();
+  if (key === nearKey) return;
+  nearKey = key;
+  (map.getSource(NEAR_LABELS_SOURCE) as GeoJSONSource | undefined)?.setData({
+    type: "FeatureCollection",
+    features: labels.map(({ stop, side, saved }, sort) => ({
+      type: "Feature",
+      properties: { id: stop.id, side, saved: saved ? 1 : 0, sort },
+      geometry: { type: "Point", coordinates: [stop.lon, stop.lat] },
+    })),
+  });
 }
 
 export type TransitTap = { kind: "stop" | "tc"; id: string };

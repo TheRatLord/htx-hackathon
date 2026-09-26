@@ -194,6 +194,8 @@ export function addMarkerImages(map: maplibregl.Map) {
   add("dot-stop", dot(14, "#fff", navy, 3));
   const label = chip(token("--c-outline-strong"), false);
   add("label-chip", label.data, label.options);
+  // The star before a saved stop's ID chip ("★ 2958"): the map font has no ★ glyph.
+  add("chip-star", image(14, 14, (ctx) => glyph(ctx, iconPath("star_filled"), -1, -1, 16, token("--c-accent-icon"))));
   const callout = chip(token("--c-outline"), true);
   add("callout", callout.data, callout.options);
 }

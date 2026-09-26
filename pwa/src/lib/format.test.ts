@@ -72,8 +72,8 @@ describe("sideLine and localiseSide", () => {
   const stop = { kind: "stop", directionLabel: "Westbound", side: "North side of Lamar St" };
 
   it("drops the compass word next to a route line", () => {
-    expect(sideLine(stop, { withCompass: false, lang: "en" })).toBe("On the north side of Lamar St");
-    expect(sideLine(stop, { withCompass: false, lang: "es" })).toBe("En el lado norte de Lamar St");
+    expect(sideLine(stop, { withCompass: false, lang: "en" })).toBe("North side of Lamar St");
+    expect(sideLine(stop, { withCompass: false, lang: "es" })).toBe("Lado norte de Lamar St");
   });
 
   it("keeps it where no route line is shown", () => {

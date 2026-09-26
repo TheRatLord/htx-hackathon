@@ -12,8 +12,9 @@ import { t, useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
+import { useSaved } from "../state/saved.ts";
 import { addMarkerImages } from "./layers/images.ts";
-import { addSceneLayers, drawScene, hideSceneLabels, setLabelSides, showUser, TALL_PINS } from "./layers/scene.ts";
+import { addSceneLayers, drawScene, hideSceneLabels, legLabelId, setLabelSides, showUser, TALL_PINS } from "./layers/scene.ts";
 import {
   addTransitLayers,
   LABELLED_NEAREST,
@@ -21,12 +22,14 @@ import {
   setCoveredStops,
   setHighlightedStop,
   setNearLabels,
+  type NearLabel,
   setQuiet,
   showTransitCenters,
   STOPS_SOURCE,
   stopsCollection,
   transitAt,
 } from "./layers/transit.ts";
+import { around, lineRects, midpoint, overlaps, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -137,9 +140,6 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   }
 }
 
-type Rect = { l: number; t: number; r: number; b: number };
-const overlaps = (a: Rect, b: Rect) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
-
 /**
  * The map's own chrome, in canvas px: every element marked `data-map-obstacle` (the search bar and
  * overlay slot, the FAB column) and the attribution's (i).
@@ -155,38 +155,41 @@ function chrome(container: HTMLElement): Rect[] {
   return out;
 }
 
-/** What covers the map: the sheet (from its height) and the chrome. */
-function obstacles(container: HTMLElement, sheetH: number): Rect[] {
-  return [{ l: -Infinity, t: container.getBoundingClientRect().height - sheetH, r: Infinity, b: Infinity }, ...chrome(container)];
-}
-
 /** A pin's square (28dp from zoom 16, 20dp below) plus a little room, around its point. */
-const PIN_BOX = { l: -16, t: -16, r: 16, b: 16 };
+const PIN_BOX = square(16);
+/** A tall pin's head (place, destination), 40dp above its point. */
+const TALL_BOX: Rect = { l: -16, t: -40, r: 16, b: 0 };
+/** The highlighted 36dp pin with its "Stop 342" callout above it. */
+const HIGHLIGHT_BOX: Rect = { l: -70, t: -80, r: 70, b: 20 };
+/** What a listed stop needs clear of the chrome: its pin, and room for an ID chip beside it. */
+const TAGGED_ROOM: Rect = { l: -44, t: -20, r: 44, b: 20 };
+/** A nudge never moves the map further than this (px): past it, the rider loses their bearings. */
+const MAX_NUDGE = 160;
 
-/** A stop's pin with its ID chip under it (or above it), in canvas px around the pin's point. */
-const CHIP_BOX = { l: -34, t: -44, r: 34, b: 46 };
 /**
- * Where a scene marker's label lands first: centred above its marker (above the pin head for a tall
- * pin), as wide as its text (bold 14px, about 8px a character, wrapping at ~140px), plus the pin.
+ * The smallest pan that brings every listed stop in `blocked` out from under the chrome (Plan Trip,
+ * Locate, the search bar), keeping the rider's dot and the other listed stops on the map strip.
+ * Home's "Planear viaje", wider than "Plan Trip", hid stop 567 (card 2) in Spanish (42).
  */
-function markerLabelBox(label: string, tall: boolean): Rect {
-  const w = Math.min(label.length * 8, 140) / 2 + 6;
-  return tall ? { l: -w, t: -100, r: w, b: 8 } : { l: -w, t: -50, r: w, b: 16 };
-}
-
-/** The label beside its marker instead, on the left ("l") or the right ("r"), matching scene-labels' "l"/"r" keys. */
-function markerSideBox(label: string, tall: boolean, side: "l" | "r"): Rect {
-  const w = Math.min(label.length * 8, 140) + 12;
-  const gap = tall ? 25 : 36;
-  const t = tall ? -46 : -22;
-  const b = tall ? 6 : 22;
-  return side === "l" ? { l: -gap - w, t, r: -gap + 6, b } : { l: gap - 6, t, r: gap + w, b };
-}
-
-function clear(p: { x: number; y: number }, box: Rect, obs: Rect[], w: number): boolean {
-  const r = { l: p.x + box.l, t: p.y + box.t, r: p.x + box.r, b: p.y + box.b };
-  if (r.l < 0 || r.r > w || r.t < 0) return false;
-  return !obs.some((o) => overlaps(r, o));
+function nudgeFor(blocked: Pt[], keep: Pt[], covering: Rect[], w: number, mapBottom: number): [number, number] | undefined {
+  const options: [number, number][] = [];
+  for (const p of blocked)
+    for (const o of covering) {
+      const need = around(p, TAGGED_ROOM);
+      if (!overlaps(need, o)) continue;
+      options.push([need.r - o.l + 4, 0], [need.l - o.r - 4, 0], [0, need.b - o.t + 4], [0, need.t - o.b - 4]);
+    }
+  options.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+  const fits = (q: Pt, box: Rect) => {
+    const r = around(q, box);
+    return r.l >= 0 && r.r <= w && r.t >= 0 && r.b <= mapBottom && !covering.some((o) => overlaps(r, o));
+  };
+  return options.find(
+    ([dx, dy]) =>
+      Math.hypot(dx, dy) <= MAX_NUDGE &&
+      blocked.every((p) => fits({ x: p.x - dx, y: p.y - dy }, square(20))) &&
+      keep.every((p) => fits({ x: p.x - dx, y: p.y - dy }, PIN_BOX)),
+  );
 }
 
 /** Where stop-ID labels are ranked from: the rider, else the scene's focus, else the map centre. */
@@ -217,8 +220,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const ready = useRef(false);
   const anchorRef = useRef<LatLon | null>(null);
   const hadUser = useRef(Boolean(user));
-  const latest = useRef({ scene, user, bottomPadding, onCenterChange, navigate, tcData });
-  latest.current = { scene, user, bottomPadding, onCenterChange, navigate, tcData };
+  const savedIds = useSaved().stops.map((s) => s.id);
+  const nudgeArmed = useRef(false);
+  const latest = useRef({ scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds });
+  latest.current = { scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds };
 
   const rankLabels = (map: maplibregl.Map) => {
     const { scene, user } = latest.current;
@@ -228,64 +233,108 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     anchorRef.current = anchor;
     // A failed load is forgotten, so the next camera move or scene tries again.
     void loadStops().then(
-      (stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops.values(), anchor)),
+      (stops) => {
+        // The map may have been removed (unmount) while stops.json loaded.
+        if (!ready.current || mapRef.current !== map) return;
+        (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops.values(), anchor));
+      },
       () => (anchorRef.current = null),
     );
   };
   /**
-   * After the camera or the sheet settles: the ID chips go on the nearest stops whose chip is on
-   * screen and clear of the sheet and chrome, and scene labels that would be covered are left out.
+   * After the camera or the sheet settles: every scene label and the ID chips of the listed and
+   * nearest stops go on a side clear of the sheet and chrome (placement.ts); a stop whose pin sits
+   * under the chrome is left out. When a listed stop is under the chrome, the map is nudged once
+   * so it shows (`nudgeArmed`: once per scene or sheet snap, never after the rider's own pan).
    */
   const placeLabels = (map: maplibregl.Map) => {
     const el = container.current;
     if (!el || !ready.current) return;
-    const { scene, user, bottomPadding } = latest.current;
-    const obs = obstacles(el, bottomPadding);
-    const w = el.clientWidth;
-    // Above or below the pin first; else beside it on a clear side; else left out.
-    const hidden: string[] = [];
-    const sides: Record<string, "l" | "r"> = {};
-    for (const m of scene.markers ?? []) {
-      if (!m.label) continue;
-      const p = map.project([m.point.lon, m.point.lat]);
-      const tall = TALL_PINS.has(m.kind);
-      if (clear(p, markerLabelBox(m.label, tall), obs, w)) continue;
-      const side = (["l", "r"] as const).find((s) => clear(p, markerSideBox(m.label!, tall, s), obs, w));
-      if (side) sides[m.id] = side;
-      else hidden.push(m.id);
-    }
-    setLabelSides(map, sides);
-    hideSceneLabels(map, hidden);
-    el.classList.toggle(styles.noAttrib, el.clientHeight - bottomPadding < ATTRIB_MIN_MAP_H);
-    void loadStops().then((stops) => {
+    el.classList.toggle(styles.noAttrib, el.clientHeight - latest.current.bottomPadding < ATTRIB_MIN_MAP_H);
+    const place = (stops?: Map<string, ClientStop>) => {
       if (!ready.current || mapRef.current !== map) return;
-      const b = map.getBounds();
-      const { scene: now } = latest.current;
+      const { scene, user, bottomPadding, savedIds } = latest.current;
+      const w = el.clientWidth;
+      const mapBottom = el.clientHeight - bottomPadding;
       const covering = chrome(el);
-      const rank = rankFrom(labelAnchor(map, now, latest.current.user ?? user));
+      const proj = (p: LatLon): Pt => map.project([p.lon, p.lat]);
+      const onScreen = (r: Rect) => r.r > 0 && r.l < w && r.b > 0 && r.t < mapBottom;
+      const hard: Rect[] = [{ l: -Infinity, t: mapBottom, r: Infinity, b: Infinity }, ...covering];
+      if (user) hard.push(around(proj(user), square(14)));
+      for (const m of scene.markers ?? []) hard.push(around(proj(m.point), TALL_PINS.has(m.kind) ? TALL_BOX : square(12)));
+      for (const v of scene.vehicles ?? []) hard.push(around(proj(v.point), square(12)));
+      const highlight = scene.highlightStopId ? stops?.get(scene.highlightStopId) : undefined;
+      if (highlight) hard.push(around(proj(highlight), HIGHLIGHT_BOX));
+      const lines = [...(scene.legs ?? []).map((l) => l.coords), ...(scene.routeLine ? [scene.routeLine.coords] : [])].flatMap((coords) =>
+        lineRects(coords.map(([lon, lat]) => proj({ lat, lon }))).filter(onScreen),
+      );
+
+      // Scene labels first: the markers' ("Board 80 · #11424") and the ride legs' route numbers.
+      const items = [
+        ...(scene.markers ?? []).flatMap((m) => (m.label ? [{ id: m.id, point: m.point, text: m.label, kind: TALL_PINS.has(m.kind) ? ("tall" as const) : ("dot" as const) }] : [])),
+        ...(scene.legs ?? []).flatMap((l, i) => {
+          const mid = l.label ? midpoint(l.coords) : undefined;
+          return mid ? [{ id: legLabelId(i), point: { lon: mid[0], lat: mid[1] }, text: l.label!, kind: "leg" as const }] : [];
+        }),
+      ];
+      const sides: Record<string, string> = {};
+      const hidden: string[] = [];
+      for (const it of items) {
+        const spot = placeSceneLabel(proj(it.point), it.text, it.kind, { width: w, hard, soft: lines });
+        if (!spot) hidden.push(it.id);
+        else {
+          sides[it.id] = spot.key;
+          hard.push(spot.box);
+        }
+      }
+      setLabelSides(map, sides);
+      hideSceneLabels(map, hidden);
+      if (!stops) return;
+
+      const b = map.getBounds();
+      const rank = rankFrom(labelAnchor(map, scene, user));
       // The scene's own stops (the cards listed in the sheet) are tagged first, then the nearest.
-      const tagged = new Set(now.tagStopIds ?? []);
-      const inView: { s: ClientStop; r: number }[] = [];
+      const tagged = scene.tagStopIds ?? [];
+      const taggedAt = new Map(tagged.map((id, i) => [id, i]));
+      const pinHalf = map.getZoom() >= 16 ? 14 : 10;
+      const inView: { s: ClientStop; p: Pt; r: number }[] = [];
       const covered: string[] = [];
-      for (const s of stops.values()) {
-        if (s.id === now.highlightStopId || !b.contains([s.lon, s.lat])) continue;
-        const p = map.project([s.lon, s.lat]);
-        const pin = { l: p.x + PIN_BOX.l, t: p.y + PIN_BOX.t, r: p.x + PIN_BOX.r, b: p.y + PIN_BOX.b };
-        if (covering.some((o) => overlaps(pin, o))) {
+      const blocked: Pt[] = [];
+      for (const s of stopsWithin(stops, b.getWest(), b.getSouth(), b.getEast(), b.getNorth())) {
+        if (s.id === scene.highlightStopId) continue;
+        const p = proj(s);
+        if (covering.some((o) => overlaps(around(p, PIN_BOX), o))) {
           covered.push(s.id);
+          if (taggedAt.has(s.id) && p.y < mapBottom) blocked.push(p);
           continue;
         }
-        if (s.kind !== "rail") inView.push({ s, r: tagged.has(s.id) ? -1 : rank(s) });
+        if (s.kind !== "rail") inView.push({ s, p, r: taggedAt.get(s.id) ?? 1e6 + rank(s) });
       }
       inView.sort((a, c) => a.r - c.r);
-      const ids: string[] = [];
-      for (const { s } of inView) {
-        if (ids.length >= Math.max(LABELLED_NEAREST, tagged.size)) break;
-        if (clear(map.project([s.lon, s.lat]), CHIP_BOX, obs, w)) ids.push(s.id);
-      }
+      const pins = inView.filter(({ p }) => p.y < mapBottom).map(({ p }) => around(p, square(pinHalf)));
+      const labels: NearLabel[] = [];
+      const want = Math.max(LABELLED_NEAREST, tagged.length);
+      if (map.getZoom() >= 16)
+        for (const { s, p } of inView) {
+          if (labels.length >= want) break;
+          const saved = savedIds.includes(s.id);
+          const spot = placeChip(p, s.id, { width: w, hard, soft: [...pins, ...lines] }, saved ? 16 : 0);
+          if (spot) {
+            labels.push({ stop: s, side: spot.key, saved });
+            hard.push(spot.box);
+          } else if (taggedAt.has(s.id) && covering.some((o) => overlaps(around(p, TAGGED_ROOM), o))) blocked.push(p);
+        }
       setCoveredStops(map, covered);
-      setNearLabels(map, ids);
-    }, () => undefined);
+      setNearLabels(map, labels);
+
+      if (!nudgeArmed.current || map.isMoving()) return;
+      nudgeArmed.current = false;
+      if (!blocked.length) return;
+      const keep = [...inView.filter(({ s }) => taggedAt.has(s.id)).map(({ p }) => p), ...(user ? [proj(user)] : [])].filter((p) => p.y < mapBottom);
+      const shift = nudgeFor(blocked, keep, covering, w, mapBottom);
+      if (shift) map.panBy(shift, { duration: 300 });
+    };
+    void loadStops().then(place, () => place());
   };
   const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0, container.current?.clientHeight ?? 0);
 
@@ -334,6 +383,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         // A fix that arrived before the map loaded is this scene's first: the user effect below
         // must not treat the next GPS update as the first fix and move the camera again.
         hadUser.current = Boolean(user);
+        nudgeArmed.current = true;
         void applyScene(m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
       });
     });
@@ -350,6 +400,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const { user, bottomPadding } = latest.current;
     if (!mapRef.current || !ready.current) return;
     const map = mapRef.current;
+    nudgeArmed.current = true;
     void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
     rankLabels(map);
     // `lang`: marker labels built by the screen are re-drawn in the new language.
@@ -362,6 +413,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     if (!map || !ready.current) return;
     const bounds = latest.current.scene.focus?.bounds;
     const id = setTimeout(() => {
+      nudgeArmed.current = true;
       if (latest.current.scene.focus?.kind === "bounds" && bounds) fitFocus(map, bounds, fitPad(latest.current.scene, pad(bottomPadding)));
       else placeLabels(map);
     }, SETTLE_MS);
@@ -379,6 +431,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const first = !hadUser.current && user;
     hadUser.current = Boolean(user);
     const { scene, bottomPadding } = latest.current;
+    if (first && scene.focus?.kind === "user") nudgeArmed.current = true;
     if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
     else showUser(map, user);
     rankLabels(map);
@@ -387,6 +440,11 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   useEffect(() => {
     if (mapRef.current && ready.current && tcData) showTransitCenters(mapRef.current, tcData);
   }, [tcData]);
+
+  // A stop saved or unsaved: its chip gains or loses the star.
+  useEffect(() => {
+    if (mapRef.current && ready.current) placeLabels(mapRef.current);
+  }, [savedIds.join()]);
 
   return (
     <>

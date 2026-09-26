@@ -2,7 +2,7 @@
 
 import { config } from "../config.ts";
 import { TtlCache } from "../lib/cache.ts";
-import { fetchUpstream } from "../lib/upstream.ts";
+import { fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
 
 const BASE = "https://api.ridemetro.org/data";
 /** METRO's agency/feed prefix on every OData id. */
@@ -39,8 +39,13 @@ const vehiclesCache = new TtlCache<ODataVehicle[]>(15_000, 1);
 export const hasTransitApi = () => Boolean(config.metroTransitApiKey) && !config.offline;
 
 async function get<T>(path: string, fixtureKey: string): Promise<T[]> {
-  const url = `${BASE}${path}?subscription-key=${config.metroTransitApiKey ?? ""}`;
-  const { body } = await fetchUpstream<{ value: T[] }>({ service: "metro-odata", url, fixtureKey, timeoutMs: 6000 });
+  const { body } = await fetchUpstream<{ value: T[] }>({
+    service: "metro-odata",
+    url: `${BASE}${path}`,
+    headers: metroKeyHeader(config.metroTransitApiKey),
+    fixtureKey,
+    timeoutMs: 6000,
+  });
   return body.value;
 }
 

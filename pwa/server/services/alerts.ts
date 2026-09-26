@@ -6,7 +6,7 @@ import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { PWA_ROOT, config } from "../config.ts";
 import { findRoute, findStop } from "../gtfs/store.ts";
 import { TtlCache } from "../lib/cache.ts";
-import { fetchUpstream } from "../lib/upstream.ts";
+import { fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
 
 const { FeedMessage, Alert: PbAlert } = GtfsRealtimeBindings.transit_realtime;
 const ALERTS_URL = "https://api.ridemetro.org/v2alertspb/alerts.pb";
@@ -63,7 +63,8 @@ async function loadAlerts() {
     try {
       const { body } = await fetchUpstream<Uint8Array>({
         service: "metro-alerts",
-        url: `${ALERTS_URL}?subscription-key=${config.metroApiKey}`,
+        url: ALERTS_URL,
+        headers: metroKeyHeader(config.metroApiKey),
         fixtureKey: "alerts",
         binary: true,
       });

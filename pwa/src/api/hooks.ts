@@ -29,6 +29,7 @@ import type {
 
 const LIVE_POLL_MS = 30_000;
 const VEHICLE_POLL_MS = 15_000;
+const VEHICLE_RETRY_MS = 60_000;
 
 export function useHealth() {
   return useQuery({ queryKey: keys.health(), queryFn: () => apiGet<Health>("/health"), staleTime: 5 * 60_000 });
@@ -181,14 +182,20 @@ export function useVehicles(routeId: string | undefined, opts: { enabled: boolea
   return useQuery({
     queryKey: keys.vehicles(routeId),
     queryFn: async () => {
-      const res = await apiGet<{ vehicles: Vehicle[]; available?: false }>("/vehicles", { route: routeId });
-      // No key, or offline: the server says so with a 200 (no failed request in the console).
-      if (res.available === false) throw new ApiError("realtime_unavailable", 503, "Live bus positions are unavailable.");
+      const res = await apiGet<{ vehicles: Vehicle[]; available?: false; reason?: "no-key" | "offline" | "upstream" }>("/vehicles", { route: routeId });
+      // Unavailable: the server says so with a 200 (no failed request in the console). A passing
+      // upstream failure is not the same as no key: it is retried, less often.
+      if (res.available === false)
+        throw new ApiError(res.reason === "upstream" ? "realtime_down" : "realtime_unavailable", 503, "Live bus positions are unavailable.");
       return res;
     },
     enabled: opts.enabled,
-    // Stop polling once the server has said live positions are unavailable.
-    refetchInterval: (q) => (q.state.error instanceof ApiError && q.state.error.code === "realtime_unavailable" ? false : VEHICLE_POLL_MS),
+    // No key or offline: stop polling. The feed down for a moment (one timeout used to stop live
+    // buses for the rest of the ride): back off to once a minute and keep trying.
+    refetchInterval: (q) => {
+      const code = q.state.error instanceof ApiError ? q.state.error.code : undefined;
+      return code === "realtime_unavailable" ? false : code === "realtime_down" ? VEHICLE_RETRY_MS : VEHICLE_POLL_MS;
+    },
     retry: false,
   });
 }

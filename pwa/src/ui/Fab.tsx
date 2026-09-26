@@ -15,9 +15,11 @@ export function Fab(props: FabProps) {
       );
     case "planTrip":
       return (
-        <button type="button" className={`${styles.fab} ${styles.extended}`} onClick={props.onPress}>
+        // At Extra large on a narrow phone the label is visually hidden (still its name): the wide
+        // button covered 40% of the map strip there (46).
+        <button type="button" className={`${styles.fab} ${styles.extended} ${styles.planTrip}`} onClick={props.onPress}>
           <Icon name="route_plan" />
-          {t("map.planTrip")}
+          <span className={styles.label}>{t("map.planTrip")}</span>
         </button>
       );
     case "routeAlerts":

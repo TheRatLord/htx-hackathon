@@ -1,10 +1,9 @@
 // The root frame around every screen: the one persistent map (shown only under ExploreLayout),
 // the bottom nav (all screens but Welcome), focus-on-navigate and the Explore tab's memory.
 
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import type { LatLon } from "../api/types.ts";
-import { MapView } from "../map/MapView.tsx";
 import { MapCenterContext, MapSceneContext, type MapScene } from "../map/scene.ts";
 import { useLocation as useRiderLocation } from "../state/location.tsx";
 import styles from "./AppShell.module.css";
@@ -12,6 +11,12 @@ import { BottomNav } from "./BottomNav.tsx";
 import { useFocusOnNavigate } from "./focus.ts";
 import { rememberExploreUrl } from "./lastExplore.ts";
 import { MapHostContext } from "./mapHost.ts";
+
+/**
+ * MapLibre (about 285 kB gzipped, and its CSS) loads with the first Explore visit, not with every
+ * cold start: Welcome, Fares, Recent and More never show the map.
+ */
+const MapView = lazy(() => import("../map/MapView.tsx").then((m) => ({ default: m.MapView })));
 
 export function AppShell() {
   const { pathname, search } = useLocation();
@@ -42,13 +47,15 @@ export function AppShell() {
             <div className={styles.stage}>
               {mapMounted && (
                 <div className={`${styles.map} ${mapVisible ? "" : styles.hidden}`}>
-                  <MapView
-                    scene={scene}
-                    user={rider.status === "fix" ? rider.fix : undefined}
-                    bottomPadding={sheetH}
-                    locateNonce={locateNonce}
-                    onCenterChange={setCenter}
-                  />
+                  <Suspense fallback={null}>
+                    <MapView
+                      scene={scene}
+                      user={rider.status === "fix" ? rider.fix : undefined}
+                      bottomPadding={sheetH}
+                      locateNonce={locateNonce}
+                      onCenterChange={setCenter}
+                    />
+                  </Suspense>
                 </div>
               )}
               <Outlet />
