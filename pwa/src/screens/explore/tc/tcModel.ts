@@ -2,6 +2,7 @@
 // grouped by bay. Pure functions over the /api/transit-centers/:id answer.
 
 import type { Arrival, RouteRef, TransitCenterDetail } from "../../../api/types.ts";
+import { upcoming } from "../../../lib/format.ts";
 import { canonicalRouteId, routeRef, routeRefByName, toRouteRef } from "../../../lib/routes.ts";
 import { compareRouteNames } from "../../../lib/sortRoutes.ts";
 
@@ -14,7 +15,10 @@ export interface DepartureRow {
   deps: Arrival[];
 }
 
-const refFor = (id: string, name: string, color = "var(--c-brand-navy)"): RouteRef =>
+/** METRO's bus navy, for a route the static table doesn't know. */
+const BUS_NAVY = "#004080";
+
+const refFor = (id: string, name: string, color = BUS_NAVY): RouteRef =>
   routeRef(id) ?? toRouteRef({ id, name, color, textColor: "#FFFFFF" });
 
 /** Every route at the center: bay routes plus the ones METRO publishes without a bay, in route-number order. */
@@ -31,11 +35,18 @@ export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoute
 export const servesRoute = (bay: Pick<Bay, "routes">, routeId: string) =>
   bay.routes.some((r) => canonicalRouteId(r.routeId) === canonicalRouteId(routeId));
 
-/** Departures as rows of one route, direction and headsign, in the order they leave. */
-export function departureRows(deps: Arrival[], routeId?: string): DepartureRow[] {
+/**
+ * Upcoming departures (C.2: more than a minute past is dropped) as rows of one route, direction
+ * and headsign, in the order they leave. A trip listed twice (the server can repeat one) counts once.
+ */
+export function departureRows(deps: Arrival[], now: number, routeId?: string): DepartureRow[] {
   const rows = new Map<string, DepartureRow>();
-  for (const d of deps) {
+  const seen = new Set<string>();
+  for (const d of upcoming(deps, now)) {
     if (routeId && canonicalRouteId(d.routeId) !== canonicalRouteId(routeId)) continue;
+    const trip = `${d.tripId}|${d.departureTime}`;
+    if (seen.has(trip)) continue;
+    seen.add(trip);
     const key = `${d.routeId}|${d.directionLabel}|${d.headsign}`;
     let row = rows.get(key);
     if (!row) {
@@ -45,6 +56,29 @@ export function departureRows(deps: Arrival[], routeId?: string): DepartureRow[]
     row.deps.push(d);
   }
   return [...rows.values()];
+}
+
+export type BayListItem<B> = { kind: "bay"; bay: B; rows: DepartureRow[] } | { kind: "quiet"; bays: B[] };
+
+/** Bays in list order, with each run of 2+ bays that have no departures folded into one "quiet" line. */
+export function foldQuietBays<B>(bays: { bay: B; rows: DepartureRow[] }[]): BayListItem<B>[] {
+  const out: BayListItem<B>[] = [];
+  const flush = (run: B[]) => {
+    if (run.length === 1) out.push({ kind: "bay", bay: run[0], rows: [] });
+    else if (run.length > 1) out.push({ kind: "quiet", bays: run });
+  };
+  let run: B[] = [];
+  for (const b of bays) {
+    if (b.rows.length) {
+      flush(run);
+      run = [];
+      out.push({ kind: "bay", ...b });
+    } else {
+      run.push(b.bay);
+    }
+  }
+  flush(run);
+  return out;
 }
 
 /** One diagram block per platform stop, bays in letter order; platforms in name order ("Platform 1" first). */
