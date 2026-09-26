@@ -2,11 +2,12 @@
 
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
+import type { useT } from "../../i18n/index.ts";
 import { notifyPermission } from "../../lib/notify.ts";
 import type { LocationState } from "../../state/location.tsx";
 import { setPrefs } from "../../state/prefs.ts";
 
-type T = (key: string) => string;
+type T = ReturnType<typeof useT>;
 
 /** "On", "Finding your location…", "Blocked in browser settings", "Can't find your location" or "Not asked yet". */
 export function locationStatusText(loc: Pick<LocationState, "status" | "requested">, t: T): string {

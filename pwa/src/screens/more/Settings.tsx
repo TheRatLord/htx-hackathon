@@ -1,11 +1,12 @@
 // D19 Settings: one page of radio groups; the More rows deep-link to each group by #anchor.
 
-import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router";
+import type { ReactNode } from "react";
 import type { Dep, NearbyRoute, StopSummary } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
 import { useT } from "../../i18n/index.ts";
+import { notifyPermission } from "../../lib/notify.ts";
+import { useNow } from "../../state/clock.ts";
 import { useLocation } from "../../state/location.tsx";
 import { usePrefs, type Prefs } from "../../state/prefs.ts";
 import { AppBar } from "../../ui/AppBar.tsx";
@@ -16,7 +17,12 @@ import { SectionHeader } from "../../ui/SectionHeader.tsx";
 import styles from "./more.module.css";
 import { locationStatusText, notifyStatusText, useScrollToHash, useShowWelcome } from "./shared.ts";
 
-const COMING_SOON = ["Tiếng Việt", "中文", "العربية"];
+/** Named in their own language and script, so screen readers and fonts pick the right one. */
+const COMING_SOON: { name: string; lang: string; dir?: "rtl" }[] = [
+  { name: "Tiếng Việt", lang: "vi" },
+  { name: "中文", lang: "zh" },
+  { name: "العربية", lang: "ar", dir: "rtl" },
+];
 
 function Group({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return (
@@ -45,10 +51,11 @@ function RadioGroup<K extends keyof Prefs>({ label, pref, options }: { label: st
   );
 }
 
+const noop = () => {};
+
 /** Stop 342 as a static sample, so the rider sees the chosen text size and pace on a real card. */
 function PreviewCard() {
-  const navigate = useNavigate();
-  const [now] = useState(() => Date.now());
+  const now = useNow();
   const dep = (min: number): Dep => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule", tripId: `preview-${min}` });
   const stop: StopSummary = {
     id: "342",
@@ -70,8 +77,7 @@ function PreviewCard() {
     headsign: "N Shepherd P&R",
     departures: [16, 46].map((m) => ({ ...dep(m), minutesAway: m, delaySeconds: 0 })),
   };
-  const open = () => navigate("/explore/stop/342");
-  return <NearbyStopCard stop={stop} walkDistanceM={170} routes={[route]} onOpen={open} onOpenRoute={open} onWalk={() => navigate("/explore/stop/342/walk")} />;
+  return <NearbyStopCard stop={stop} walkDistanceM={170} routes={[route]} onOpen={noop} onOpenRoute={noop} onWalk={noop} />;
 }
 
 export default function Settings() {
@@ -96,9 +102,17 @@ export default function Settings() {
             { value: "es", label: t("more.lang.es") },
           ]}
         />
-        {COMING_SOON.map((name) => (
-          <ListRow key={name} kind="radio" label={name} sub={t("common.comingSoon")} disabled />
-        ))}
+        <p className={styles.note}>
+          {t("common.comingSoon")}:{" "}
+          {COMING_SOON.map(({ name, lang, dir }, i) => (
+            <span key={lang}>
+              {i > 0 && " · "}
+              <bdi lang={lang} dir={dir}>
+                {name}
+              </bdi>
+            </span>
+          ))}
+        </p>
       </Group>
 
       <Group id="text-size" label={t("more.textSize")}>
@@ -112,7 +126,8 @@ export default function Settings() {
           ]}
         />
         <p className={styles.note}>{t("settings.preview")}</p>
-        <div className={styles.preview}>
+        {/* A sample only: nothing on it can be tapped, so testing a size never leaves Settings. */}
+        <div className={styles.preview} inert>
           <PreviewCard />
         </div>
       </Group>
@@ -126,7 +141,7 @@ export default function Settings() {
             { value: "slower", label: t("more.pace.slower"), sub: t("more.paceSub.slower") },
           ]}
         />
-        <p className={styles.note}>{t("settings.paceNote")}</p>
+        <p className={styles.note}>{t("settings.paceNote", { tooSoon: t("status.tooSoon") })}</p>
       </Group>
 
       <Group id="location" label={t("more.location")}>
@@ -141,6 +156,7 @@ export default function Settings() {
 
       <Group id="notifications" label={t("more.notifications")}>
         <p className={styles.text}>{notifyStatusText(t)}</p>
+        {notifyPermission() === "denied" && <p className={styles.note}>{t("settings.notifyChromeSteps")}</p>}
         <p className={styles.note}>{t("settings.notifyNote")}</p>
       </Group>
 

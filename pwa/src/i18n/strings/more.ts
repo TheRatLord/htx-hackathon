@@ -37,8 +37,9 @@ const strings: Strings = {
     settings: {
       title: "Settings",
       preview: "Preview",
-      paceNote: "Changes walk times and \"Leaves before you get there\" everywhere.",
+      paceNote: "Changes walk times and \"{tooSoon}\" everywhere.",
       notifyNote: "Used only during a trip, to warn you before your stop.",
+      notifyChromeSteps: "In Chrome, tap ⋮ › Settings › Site settings › Notifications, then allow this site.",
     },
     about: {
       title: "About this prototype",
@@ -101,8 +102,9 @@ const strings: Strings = {
     settings: {
       title: "Configuración",
       preview: "Vista previa",
-      paceNote: "Cambia los tiempos a pie y \"Sale antes de que llegue\" en toda la app.",
+      paceNote: "Cambia los tiempos a pie y \"{tooSoon}\" en toda la app.",
       notifyNote: "Solo se usan durante un viaje, para avisarle antes de su parada.",
+      notifyChromeSteps: "En Chrome, toque ⋮ › Configuración › Configuración de sitios › Notificaciones y permita este sitio.",
     },
     about: {
       title: "Acerca de este prototipo",

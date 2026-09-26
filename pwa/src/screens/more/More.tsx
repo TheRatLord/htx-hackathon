@@ -7,10 +7,9 @@ import { usePrefs } from "../../state/prefs.ts";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { MetroMark } from "../../ui/MetroMark.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { links } from "./links.ts";
 import styles from "./more.module.css";
 import { locationStatusText, notifyStatusText, useShowWelcome } from "./shared.ts";
-
-const RIDEMETRO_URL = "https://www.ridemetro.org";
 
 export default function More() {
   const t = useT();
@@ -32,8 +31,8 @@ export default function More() {
         <ListRow kind="internal" label={t("more.routeSchedules")} href="/more/routes" />
         <ListRow kind="internal" label={t("more.serviceAlerts")} href="/more/alerts" />
         <ListRow kind="internal" label={t("more.fares")} href="/fares" />
-        <ListRow kind="external" label={t("more.howToRide")} href={`${RIDEMETRO_URL}/riding-metro`} />
-        <ListRow kind="external" label={t("more.rideMetroOrg")} href={RIDEMETRO_URL} />
+        <ListRow kind="external" label={t("more.howToRide")} href={links.howToRide} />
+        <ListRow kind="external" label={t("more.rideMetroOrg")} href={links.rideMetro} />
       </section>
 
       <section className={styles.group}>
@@ -48,7 +47,7 @@ export default function More() {
 
       <section className={styles.group}>
         <SectionHeader label={t("more.contact")} tone="blue" />
-        <ListRow kind="external" label={t("more.customerService")} href="tel:+17136354000" />
+        <ListRow kind="external" label={t("more.customerService")} href={links.customerService} />
       </section>
 
       <section className={styles.group}>
