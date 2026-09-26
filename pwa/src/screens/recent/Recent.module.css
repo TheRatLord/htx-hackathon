@@ -1,0 +1,75 @@
+/* The title row sits on the page background, as today's Recent app bar. */
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: var(--appbar-h);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--gutter);
+  background: var(--c-background);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+}
+
+.hint {
+  margin: 0;
+  padding: 0 var(--gutter) var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  margin: 0;
+  padding: 0 var(--gutter) var(--sp-2);
+  list-style: none;
+}
+
+.editRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--touch-gap);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+.trip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 56px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--gutter);
+}
+
+/* Plain wrapping text, so a long place name breaks like a sentence at large text sizes. */
+.tripText {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.tripText svg {
+  vertical-align: -4px;
+}
+
+.originDot {
+  display: inline-block;
+  margin-inline-end: var(--sp-2);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+}
