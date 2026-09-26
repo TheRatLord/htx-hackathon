@@ -33,16 +33,19 @@ import {
 const RESULTS = resolve(import.meta.dirname, ".results");
 mkdirSync(RESULTS, { recursive: true });
 
-/** Spec E targets (the "Target" column) and this spec's promised counts. */
+/**
+ * `target` is the hard limit: never more steps than today's RideMETRO flow takes (the task's
+ * required counts, docs/baseline-steps.md). `spec` is what the design spec promises; they now agree.
+ */
 const TARGET: Record<string, { target: number; spec: number; baseline: string }> = {
-  F10: { target: 3, spec: 2, baseline: "14" },
+  F10: { target: 2, spec: 2, baseline: "14" },
   F1: { target: 1, spec: 1, baseline: "2 (4)" },
   F2: { target: 0, spec: 0, baseline: "3" },
-  F3: { target: 4, spec: 3, baseline: "10" },
+  F3: { target: 3, spec: 3, baseline: "10" },
   F4: { target: 2, spec: 2, baseline: "impossible" },
   F5: { target: 4, spec: 4, baseline: "9 (18)" },
   F6: { target: 2, spec: 2, baseline: "6, partial" },
-  F7: { target: 2, spec: 1, baseline: "2 (14)" },
+  F7: { target: 1, spec: 1, baseline: "2 (14)" },
   F8: { target: 5, spec: 5, baseline: "9, partial" },
   F9: { target: 1, spec: 1, baseline: "1 (wall)" },
   F11: { target: 3, spec: 3, baseline: "6, partial" },
