@@ -195,7 +195,7 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
           onBayPress={onBayPress}
         />
       )}
-      {tc.source === "hand-authored-demo" && <p className={styles.note}>{tc.sourceNote ?? t("bay.handAuthored")}</p>}
+      {tc.source === "hand-authored-demo" && <p className={styles.note}>{t("bay.handAuthored")}</p>}
       {showList && (
         <div className={styles.list}>
           {items.map((item) =>

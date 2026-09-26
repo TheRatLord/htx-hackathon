@@ -6,6 +6,7 @@ import { useArrivals, useRouteNext } from "../../../api/hooks.ts";
 import type { Dep, Vehicle } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
 import { ageMinutes, STALE_VEHICLE_S, upcoming } from "../../../lib/format.ts";
+import { MAX_WALK_MINUTES } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
@@ -242,7 +243,7 @@ function ExpandedStop({ routeId, stop, scheduled }: { routeId: string; stop: Rou
           <Button
             variant="tonal"
             icon="directions_walk"
-            label={t("route.walk")}
+            label={walk.minutes <= MAX_WALK_MINUTES ? t("route.walkMin", { min: walk.minutes }) : t("route.walk")}
             ariaLabel={t("route.walkA11y", { id: stop.id })}
             href={`/explore/stop/${encodeURIComponent(stop.id)}/walk?route=${route}&d=${Math.round(walk.distanceM)}`}
           />

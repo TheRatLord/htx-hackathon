@@ -33,7 +33,7 @@ export function parseRouteStopQuery(q: string): { route: string; stop: string } 
 }
 
 /** "westheimer and kirby", "Main & Lamar", "Main @ Gray": the rider wants the stops at a corner. */
-export function isCornerQuery(q: string): boolean {
+function isCornerQuery(q: string): boolean {
   return /\s(and|&|@)\s|[&@]/i.test(q.trim());
 }
 
