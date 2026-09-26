@@ -19,6 +19,7 @@ import {
   GPS,
   horizontalOverflow,
   launch,
+  mapAnnotate,
   pinPosition,
   Rider,
   SAVED_2958,
@@ -206,6 +207,7 @@ for (const vp of VIEWPORTS) {
       await page.waitForTimeout(1500); // map tiles and pin labels
       const rider = new Rider(page);
       const pin = await pinPosition(page, "342");
+      mapAnnotate(info, "pin 342", pin);
       const sheetTop = (await page.getByRole("region").first().boundingBox())!.y;
       const barBottom = await (await searchBar(page)).boundingBox().then((b) => b!.y + b!.height);
       const inStrip = Boolean(pin && pin.y > barBottom && pin.y < sheetTop && pin.x > 0 && pin.x < vp.width);
