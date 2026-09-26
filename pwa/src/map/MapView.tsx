@@ -671,6 +671,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         attributionControl: false,
         pitchWithRotate: false,
         dragRotate: false,
+        // Labels appear at once, fully drawn. With MapLibre's 300ms fade a tag placed after a nudge
+        // could stay invisible until the next repaint: HMNS's "688 · 2504" and the street names
+        // were placed (queryRenderedFeatures found them) but not on screen (07).
+        fadeDuration: 0,
       });
       map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "bottom-left");
       // Collapsed to its (i) button until tapped. MapLibre 5.x opens a compact attribution
