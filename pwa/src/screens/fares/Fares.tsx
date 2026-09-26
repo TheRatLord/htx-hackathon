@@ -10,6 +10,7 @@ import { Dialog } from "../../ui/Dialog.tsx";
 import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { links } from "../more/links.ts";
 import { useScrollToHash } from "../more/shared.ts";
 import styles from "./Fares.module.css";
 
@@ -41,7 +42,7 @@ export default function Fares() {
   const asOf = new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long", timeZone: "UTC" }).format(new Date(fares.asOf));
 
   return (
-    <>
+    <div className={styles.page}>
       <h1 tabIndex={-1} className={styles.title}>
         {t("fares.title")}
       </h1>
@@ -63,8 +64,8 @@ export default function Fares() {
       <FareTable items={fares.reduced} lang={lang} />
 
       <div className={styles.links}>
-        <ListRow kind="external" label={t("fares.reducedHow")} href={fares.links.reduced} />
-        <ListRow kind="external" label={t("fares.whereToBuy")} href={fares.links.fares} />
+        <ListRow kind="external" label={t("fares.reducedHow")} href={links.reducedFares} />
+        <ListRow kind="external" label={t("fares.whereToBuy")} href={links.whereToBuy} />
       </div>
       <p className={`${styles.caption} ${styles.asOf}`}>
         {t("fares.asOf", { date: asOf })} {note && `${note}.`}
@@ -77,6 +78,6 @@ export default function Fares() {
         body={t("fares.handoffBody")}
         actions={[{ label: t("common.ok"), variant: "text", onPress: () => setHandoff(false) }]}
       />
-    </>
+    </div>
   );
 }

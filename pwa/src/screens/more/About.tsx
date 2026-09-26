@@ -1,6 +1,7 @@
 // D21 About this prototype: data sources, whether live times are on, and the METRO handoff.
 
-import pkg from "../../../package.json";
+// The named import keeps the rest of package.json out of the bundle.
+import { version as appVersion } from "../../../package.json";
 import { useHealth } from "../../api/hooks.ts";
 import type { Health } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
@@ -56,7 +57,7 @@ export default function About() {
         </section>
       )}
 
-      <p className={styles.caption}>{t("about.version", { version: pkg.version })}</p>
+      <p className={styles.caption}>{t("about.version", { version: appVersion })}</p>
     </div>
   );
 }

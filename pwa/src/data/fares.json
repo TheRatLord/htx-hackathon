@@ -72,10 +72,6 @@
       }
     }
   ],
-  "links": {
-    "fares": "https://www.ridemetro.org/fares",
-    "reduced": "https://www.ridemetro.org/fares/reduced-fares"
-  },
   "parkAndRideRoutes": [
     "202",
     "204",
