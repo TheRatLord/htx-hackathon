@@ -20,7 +20,8 @@
     "web:build": "tsc -p tsconfig.app.json --noEmit && vite build",
     "web:preview": "vite preview --host",
     "typecheck:web": "tsc -p tsconfig.app.json --noEmit",
-    "shoot": "tsx scripts/shoot.ts"
+    "shoot": "tsx scripts/shoot.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.3.0",
@@ -39,6 +40,8 @@
     "react-router": "^7.18.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "1.62.1",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
