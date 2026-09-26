@@ -152,6 +152,8 @@ export interface SheetHeaderProps {
   title: string;
   /** Small grey line above the title, part of the heading: "Stops near" over a place name, so the name alone gets the title line. */
   overline?: string;
+  /** A small link at the end of the overline row ("✕ My location" in place mode); only drawn with an overline. */
+  overlineAction?: { label: string; ariaLabel?: string; icon?: IconName; onPress: () => void };
   titleAlign?: "start" | "center";
   /** "stop" is the 20sp Bold stop title (the default when centred); "title" the 22sp Regular sheet title. */
   titleSize?: "title" | "stop";

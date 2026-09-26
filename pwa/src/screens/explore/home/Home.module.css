@@ -14,15 +14,6 @@
   margin-inline: 0;
 }
 
-/* D4: "Back to my location" with the UpdatedAgo beside it (wraps under it when there is no room). */
-.backToMe {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0 var(--sp-2);
-}
-
 .notice {
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);

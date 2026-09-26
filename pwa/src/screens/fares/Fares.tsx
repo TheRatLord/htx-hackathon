@@ -1,5 +1,5 @@
 // D17 Fares: a compact ticket stub that hands off to METRO, plus the fare table from src/data/fares.json.
-// Every value there is unconfirmed, and the screen says so once, in the caption at the foot, while
+// Every value there is unconfirmed, and the screen says so once, in the caption under the table, while
 // `confirmedByMetro` is false. Reduced fares (seniors, riders with disabilities) come right after the
 // base fare, so the rows many older riders need are on the first screen.
 
@@ -69,14 +69,15 @@ export default function Fares() {
       <SectionHeader label={t("fares.passes")} tone="variant" />
       <FareTable items={others} lang={lang} />
 
-      <div className={styles.links}>
-        <ListRow kind="external" label={t("fares.reducedHow")} href={links.reducedFares} />
-        <ListRow kind="external" label={t("fares.whereToBuy")} href={links.whereToBuy} />
-      </div>
+      {/* The table's foot, right under the prices it flags (on the first screen at 412x800, F9). */}
       <p className={`${styles.caption} ${styles.asOf}`}>
         {t("fares.asOf", { date: asOf })}
         {note && ` ${note}`}
       </p>
+      <div className={styles.links}>
+        <ListRow kind="external" label={t("fares.reducedHow")} href={links.reducedFares} />
+        <ListRow kind="external" label={t("fares.whereToBuy")} href={links.whereToBuy} />
+      </div>
 
       <Dialog
         open={handoff}

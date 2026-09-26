@@ -11,7 +11,7 @@ import type { SheetHeaderProps } from "./types.ts";
  * (end). A start-aligned title shares their row ("‹ Route 40 near you   ⌃"), so no row is spent
  * on Back alone; a centred stop title keeps "‹ Back" on a row above it.
  */
-export function SheetHeader({ title, overline, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
+export function SheetHeader({ title, overline, overlineAction, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
   const t = useT();
   const chrome = useContext(SheetChromeContext);
   const host = chrome?.host;
@@ -63,6 +63,12 @@ export function SheetHeader({ title, overline, titleAlign = "start", titleSize =
             <p className={styles.overline} aria-hidden="true">
               {overline}
             </p>
+            {overlineAction && (
+              <button type="button" className={styles.overlineAction} aria-label={overlineAction.ariaLabel} onClick={overlineAction.onPress}>
+                {overlineAction.icon && <Icon name={overlineAction.icon} size={20} />}
+                {overlineAction.label}
+              </button>
+            )}
             {toggle}
           </div>
           {text}

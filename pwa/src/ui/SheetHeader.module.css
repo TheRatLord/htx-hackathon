@@ -168,3 +168,27 @@
 .withBack {
   align-items: center;
 }
+
+/* "✕ My location" at the end of the overline row: a link-styled 48dp target, no row of its own. */
+.overlineAction {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-2);
+  border: none;
+  border-radius: var(--touch-min);
+  background: none;
+  color: var(--c-link-text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.overlineAction:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+.overlineAction + .toggle {
+  margin-left: 0;
+}

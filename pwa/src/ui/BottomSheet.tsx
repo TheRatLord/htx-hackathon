@@ -134,7 +134,7 @@ export function BottomSheet({
       <div className={styles.body} hidden={Boolean(showPeek)}>
         {children}
       </div>
-      {footer && snap !== "peek" && <div className={styles.footer}>{footer}</div>}
+      {footer && snap !== "peek" && <div className={styles.footer} data-sheet-footer="">{footer}</div>}
     </section>
   );
 }

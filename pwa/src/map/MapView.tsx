@@ -13,7 +13,7 @@ import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
 import { addMarkerImages } from "./layers/images.ts";
-import { addSceneLayers, drawScene, hideSceneLabels, showUser, TALL_PINS } from "./layers/scene.ts";
+import { addSceneLayers, drawScene, hideSceneLabels, setLabelSides, showUser, TALL_PINS } from "./layers/scene.ts";
 import {
   addTransitLayers,
   LABELLED_NEAREST,
@@ -166,12 +166,21 @@ const PIN_BOX = { l: -16, t: -16, r: 16, b: 16 };
 /** A stop's pin with its ID chip under it (or above it), in canvas px around the pin's point. */
 const CHIP_BOX = { l: -34, t: -44, r: 34, b: 46 };
 /**
- * Where a scene marker's label may land: centred above its marker (above the pin head for a tall
- * pin), or below it, as wide as its text (bold 14px, about 8px a character, wrapping at ~140px).
+ * Where a scene marker's label lands first: centred above its marker (above the pin head for a tall
+ * pin), as wide as its text (bold 14px, about 8px a character, wrapping at ~140px), plus the pin.
  */
 function markerLabelBox(label: string, tall: boolean): Rect {
   const w = Math.min(label.length * 8, 140) / 2 + 6;
-  return tall ? { l: -w, t: -100, r: w, b: 8 } : { l: -w, t: -50, r: w, b: 54 };
+  return tall ? { l: -w, t: -100, r: w, b: 8 } : { l: -w, t: -50, r: w, b: 16 };
+}
+
+/** The label beside its marker instead, on the left ("l") or the right ("r"), matching scene-labels' "l"/"r" keys. */
+function markerSideBox(label: string, tall: boolean, side: "l" | "r"): Rect {
+  const w = Math.min(label.length * 8, 140) + 12;
+  const gap = tall ? 25 : 36;
+  const t = tall ? -46 : -22;
+  const b = tall ? 6 : 22;
+  return side === "l" ? { l: -gap - w, t, r: -gap + 6, b } : { l: gap - 6, t, r: gap + w, b };
 }
 
 function clear(p: { x: number; y: number }, box: Rect, obs: Rect[], w: number): boolean {
@@ -233,12 +242,20 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const { scene, user, bottomPadding } = latest.current;
     const obs = obstacles(el, bottomPadding);
     const w = el.clientWidth;
-    hideSceneLabels(
-      map,
-      (scene.markers ?? [])
-        .filter((m) => m.label && !clear(map.project([m.point.lon, m.point.lat]), markerLabelBox(m.label, TALL_PINS.has(m.kind)), obs, w))
-        .map((m) => m.id),
-    );
+    // Above or below the pin first; else beside it on a clear side; else left out.
+    const hidden: string[] = [];
+    const sides: Record<string, "l" | "r"> = {};
+    for (const m of scene.markers ?? []) {
+      if (!m.label) continue;
+      const p = map.project([m.point.lon, m.point.lat]);
+      const tall = TALL_PINS.has(m.kind);
+      if (clear(p, markerLabelBox(m.label, tall), obs, w)) continue;
+      const side = (["l", "r"] as const).find((s) => clear(p, markerSideBox(m.label!, tall, s), obs, w));
+      if (side) sides[m.id] = side;
+      else hidden.push(m.id);
+    }
+    setLabelSides(map, sides);
+    hideSceneLabels(map, hidden);
     el.classList.toggle(styles.noAttrib, el.clientHeight - bottomPadding < ATTRIB_MIN_MAP_H);
     void loadStops().then((stops) => {
       if (!ready.current || mapRef.current !== map) return;
