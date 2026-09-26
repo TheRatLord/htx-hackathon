@@ -3,6 +3,7 @@ import { useT } from "../i18n/index.ts";
 import { Icon, type IconName } from "../ui/Icon.tsx";
 import styles from "./BottomNav.module.css";
 import { lastExploreUrl } from "./lastExplore.ts";
+import { markTabTap } from "./tabEntries.ts";
 
 const TABS: { key: string; base: string; icon: IconName }[] = [
   { key: "explore", base: "/explore", icon: "map_pin" },
@@ -22,7 +23,7 @@ export function BottomNav() {
         // Explore returns to the sub-screen the rider left; tapped again it goes home.
         const to = tab.key === "explore" && !active ? lastExploreUrl() : tab.base;
         return (
-          <Link key={tab.key} to={to} className={styles.tab} aria-current={active ? "page" : undefined}>
+          <Link key={tab.key} to={to} className={styles.tab} aria-current={active ? "page" : undefined} onClick={markTabTap}>
             <span className={styles.pill}>
               <Icon name={tab.icon} />
             </span>

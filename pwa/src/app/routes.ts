@@ -7,6 +7,8 @@ const PARENTS: [RegExp, (m: RegExpMatchArray, query: URLSearchParams) => string]
   [/^\/explore\/stop\/([^/]+)\/(schedule|walk)$/, (m, q) => `/explore/stop/${m[1]}${q.get("route") ? `?route=${encodeURIComponent(q.get("route")!)}` : ""}`],
   // An itinerary returns to its list, keeping the trip.
   [/^\/explore\/plan\/\d+$/, (_, q) => planUrl(parsePlanQuery(q))],
+  // Select Itinerary returns to the form with the same From / To; the form returns to the map.
+  [/^\/explore\/plan$/, (_, q) => (q.get("to") && q.get("edit") !== "1" ? planUrl(parsePlanQuery(q), { edit: true }) : "/explore")],
   [/^\/explore\/.+$/, () => "/explore"],
   [/^\/more\/alerts\/.+$/, () => "/more/alerts"],
   [/^\/more\/.+$/, () => "/more"],
