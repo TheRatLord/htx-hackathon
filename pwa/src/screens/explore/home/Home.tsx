@@ -42,6 +42,8 @@ const SEARCH_BAR_H = 60;
 /** M1: the map strip left above the half sheet. */
 const mapMin = (vh: number) => (vh >= 740 ? 180 : 120);
 const foldCap = (vh: number) => vh - NAV_H - SEARCH_BAR_H - mapMin(vh);
+/** D4 may take more of a tall screen; on a short one the FABs would run into the search bar. */
+const placeCap = (vh: number) => (vh >= 740 ? 0.75 * vh : foldCap(vh));
 
 /** The transit center detail is fetched only when one is within 1,000 m. */
 function WithTransitCenter({ id, children }: { id?: string; children: (tc?: TransitCenterDetail) => ReactNode }) {
@@ -101,7 +103,8 @@ function NearbyBody({ anchor, origin, place, nearby, tc }: NearbyBodyProps) {
   const t = useT();
   const firstCard = useRef<HTMLDivElement>(null);
   const ids = nearby.data?.stops.map((s) => s.stop.id).join() ?? "";
-  useHalfUpTo(() => firstCard.current?.querySelector("li") ?? firstCard.current, foldCap, `${anchor.kind}|${ids}`);
+  // D4's longer title and "Back to my location" need more room; its map only has to show the place.
+  useHalfUpTo(() => firstCard.current?.querySelector("li") ?? firstCard.current, place ? placeCap : foldCap, `${anchor.kind}|${ids}`);
   return (
     <>
       <HomeScene anchor={anchor} />
