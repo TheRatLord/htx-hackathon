@@ -28,3 +28,20 @@ describe("pickExpanded", () => {
     expect(pickExpanded(serving, [], now)?.routeId).toBe("040");
   });
 });
+
+describe("pickExpanded with ?route= on a split route", () => {
+  const split = [entry("040", "Northbound", "N SHEPHERD P&R"), entry("040", "Northbound", "PINEMONT"), entry("041", "Westbound", "TMC TC")];
+
+  it("expands the pattern of that route with the soonest trip", () => {
+    const arrivals = [
+      arrival("041", "Westbound", "TMC TC", 2),
+      arrival("040", "Northbound", "PINEMONT", 6),
+      arrival("040", "Northbound", "N SHEPHERD P&R", 12),
+    ];
+    expect(pickExpanded(split, arrivals, now, "040")?.headsign).toBe("PINEMONT");
+  });
+
+  it("falls back to the route's first pattern when neither has a trip", () => {
+    expect(pickExpanded(split, [arrival("041", "Westbound", "TMC TC", 2)], now, "040")?.headsign).toBe("N SHEPHERD P&R");
+  });
+});
