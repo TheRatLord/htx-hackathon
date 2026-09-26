@@ -58,6 +58,11 @@
   background: rgb(0 0 0 / 5%);
 }
 
+/* Inside the box, so the ring is not cut by its edge. */
+.place:focus-visible {
+  outline-offset: -3px;
+}
+
 .placeholder {
   color: var(--c-text-variant);
 }
@@ -142,17 +147,13 @@
   gap: var(--sp-2);
 }
 
-.chipsScroll {
-  display: flex;
-  gap: var(--sp-2);
+/* Full-bleed inside the sheet body: ChipRow keeps its own gutter. */
+.bleed {
   margin: 0 calc(-1 * var(--gutter));
-  padding: 0 var(--gutter);
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.chipsScroll > * {
-  flex: none;
+.nowrap {
+  white-space: nowrap;
 }
 
 .otherTime {

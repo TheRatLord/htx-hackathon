@@ -4,10 +4,11 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate, useNavigationType } from "react-router";
 import { useSearch } from "../../../api/hooks.ts";
-import type { Itinerary } from "../../../api/types.ts";
+import type { Itinerary, TransitLeg } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
+import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
 import { itineraryScene, useSettledSheetHeight } from "../../../features/trip/scene.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
@@ -15,8 +16,8 @@ import { formatLatLon, parseLatLon } from "../../../lib/geo.ts";
 import { parsePlanQuery, planUrl, type PlanQuery, type PlanSort } from "../../../lib/planQuery.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { isOff, useLocation as useRider } from "../../../state/location.tsx";
-import { tripActions } from "../../../state/trip.ts";
 import { Button } from "../../../ui/Button.tsx";
+import { ChipRow } from "../../../ui/ChipRow.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { FilterChip } from "../../../ui/FilterChip.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
@@ -29,6 +30,7 @@ import { FromToBox, TimeChips, useWhenText, type FromView } from "./PlanForm.tsx
 import styles from "./plan.module.css";
 import { sortItineraries } from "./sortItineraries.ts";
 import { isReady, planKey, usePlanResponse } from "./usePlanResponse.ts";
+import { useStartTrip } from "./useStartTrip.ts";
 
 const SORTS: PlanSort[] = ["soonest", "transfers", "walk"];
 const LATER_MS = 30 * 60_000;
@@ -46,8 +48,9 @@ function LandmarkNote({ query }: { query: PlanQuery }) {
 
 function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const t = useT();
+  const lang = useLang();
   const when = useWhenText(query);
-  const from = query.fromName === t("common.myLocation") ? t("plan.myLocationShort") : (query.fromName ?? query.from ?? "");
+  const from = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang);
   const to = query.toName ?? query.to ?? "";
   return (
     <button type="button" className={styles.summary} onClick={onEdit} aria-label={t("plan.summaryA11y", { from, to, when })}>
@@ -115,16 +118,22 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
     ));
   return (
     <>
-      <div className={styles.chipsScroll} role="group" aria-label={t("plan.sort.label")}>
-        {SORTS.map((s) => (
-          <FilterChip
-            key={s}
-            label={t(`plan.sort.${s}`)}
-            selected={(query.sort ?? "soonest") === s}
-            onPress={() => onChange({ ...query, sort: s === "soonest" ? undefined : s })}
-          />
-        ))}
-      </div>
+      {sample && <SheetBanner kind="demo" text={t("plan.fixtureBanner")} />}
+      {/* Nothing to sort while loading, empty or with one trip. */}
+      {(response?.itineraries.length ?? 0) > 1 && (
+        <div className={styles.bleed}>
+          <ChipRow ariaLabel={t("plan.sort.label")}>
+            {SORTS.map((s) => (
+              <FilterChip
+                key={s}
+                label={t(`plan.sort.${s}`)}
+                selected={(query.sort ?? "soonest") === s}
+                onPress={() => onChange({ ...query, sort: s === "soonest" ? undefined : s })}
+              />
+            ))}
+          </ChipRow>
+        </div>
+      )}
       {list}
       {response?.itineraries.length ? (
         <>
@@ -140,9 +149,19 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
 function Peek({ it, toName, onStart }: { it: Itinerary; toName: string; onStart: () => void }) {
   const t = useT();
   const lang = useLang();
+  // "leaves" means the bus here, as on the card, never the start of the walk.
+  const ride = it.legs.find((l): l is TransitLeg => l.type === "transit");
   return (
     <div className={styles.peek}>
-      <p>{t("plan.peek", { place: toName, min: it.durationMin, time: formatClock(it.startTime, lang) })}</p>
+      <p>
+        {t("plan.peek", { place: toName, min: it.durationMin })}
+        {ride && (
+          <>
+            {" · "}
+            {t("plan.peekLeaves", { route: ride.route.name })} <span className={styles.nowrap}>{formatClock(ride.departureTime, lang)}</span>
+          </>
+        )}
+      </p>
       <Button variant="tonal" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={onStart} />
     </div>
   );
@@ -181,13 +200,22 @@ export default function Plan() {
   const change = (q: PlanQuery, toEdit = edit) => navigate(planUrl(q, { edit: toEdit }), { replace: true });
   const pick = (field: "from" | "to") => navigate(`/explore/search?pick=${field}&returnTo=${encodeURIComponent(planUrl(query))}`);
 
-  // From defaults to the rider's location, frozen at the first fix, so the plan runs as soon as it arrives.
+  // From defaults to the rider's location, frozen at the first fix, so the plan runs as soon as it
+  // arrives. It has no name in the URL: it is shown as "My current location" in the current language.
   const fix = rider.fix;
   const needsFrom = !query.from;
   useEffect(() => {
-    if (needsFrom && fix) change({ ...query, from: formatLatLon(fix), fromName: t("common.myLocation") });
+    if (needsFrom && fix) change({ ...query, from: formatLatLon(fix), fromName: undefined });
     // `query` and `change` are rebuilt from the URL each render; the fix arriving is the trigger.
   }, [needsFrom, fix]);
+
+  // The planner starts from the rider, so it asks (once) for a location nobody has asked for yet.
+  const askedFix = useRef(false);
+  useEffect(() => {
+    if (askedFix.current || !needsFrom || rider.status !== "prompt" || rider.requested) return;
+    askedFix.current = true;
+    rider.request();
+  }, [needsFrom, rider.status, rider.requested, rider.request]);
 
   // The Plan Trip FAB opens the planner with no destination: go straight to choosing one.
   const askedTo = useRef(false);
@@ -209,19 +237,13 @@ export default function Plan() {
   const sheetH = useSettledSheetHeight();
   useMapScene(first ? itineraryScene(first, lang) : endpointsScene(query), [first, query.from, query.to, lang, sheetH]);
 
-  const fromView: FromView = query.from
-    ? { kind: "place", name: query.fromName ?? query.from }
-    : isOff(rider.status) || (rider.status === "prompt" && !rider.requested)
-      ? { kind: "off" }
-      : { kind: "finding" };
+  // Only denied and unavailable are "off"; a location not asked for yet is still being found (C.17).
+  const fromView: FromView = query.from ? { kind: "place", name: fromLabel(query, lang) } : isOff(rider.status) ? { kind: "off" } : { kind: "finding" };
 
   const swap = () =>
     change({ ...query, from: query.to, fromName: query.toName, to: query.from, toName: query.from ? query.fromName : undefined });
 
-  const start = (it: Itinerary) => {
-    tripActions.start(it);
-    navigate("/explore/trip");
-  };
+  const start = useStartTrip(response);
 
   const resultsList = ready && (
     <Results query={query} plan={plan} onChange={change} onPickFrom={() => pick("from")} />
@@ -235,7 +257,6 @@ export default function Plan() {
       peek={first && <Peek it={first} toName={query.toName ?? ""} onStart={() => start(first)} />}
     >
       <div className={styles.body}>
-        {response?.source === "offline-fixture" && <SheetBanner kind="demo" text={t("plan.fixtureBanner")} />}
         {results ? (
           <>
             <Summary query={query} onEdit={() => change(query, true)} />
@@ -247,7 +268,7 @@ export default function Plan() {
             <TimeChips query={query} onChange={(q) => change(q)} />
             {fromView.kind === "off" && (
               <>
-                {!rider.requested && <Button variant="text" icon="my_location" label={t("banner.turnOnLocation")} onPress={rider.request} />}
+                {rider.status === "unavailable" && <Button variant="text" icon="my_location" label={t("banner.turnOnLocation")} onPress={rider.request} />}
                 <Button variant="primary" fullWidth disabled label={t("plan.planMyTrip")} disabledReason={t("plan.chooseStartFirst")} />
               </>
             )}
