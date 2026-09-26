@@ -22,13 +22,21 @@
   visibility: hidden;
 }
 
-.compactButton {
+.compactRow {
   display: flex;
   align-items: center;
+  gap: var(--sp-2);
+  padding-right: var(--gutter);
+}
+
+.compactButton {
+  display: flex;
+  flex: 1;
+  align-items: center;
   gap: var(--sp-3);
-  width: 100%;
+  min-width: 0;
   min-height: var(--touch-min);
-  padding: var(--sp-1) var(--gutter);
+  padding: var(--sp-1) 0 var(--sp-1) var(--gutter);
   border: none;
   background: none;
   text-align: start;
@@ -71,10 +79,47 @@
   overflow-wrap: anywhere;
 }
 
+/* "⇅ Change": a small tonal pill beside the direction, not a link at the far edge. */
 .compactAction {
+  display: flex;
   flex: none;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 40px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  border: none;
+  border-radius: var(--r-pill, 999px);
+  background: var(--c-nav-bg);
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
+}
+
+/* Save route: a 48dp star, like the stop sheet's Save. */
+.star {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin-right: calc(-1 * var(--sp-2));
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-primary);
+}
+
+.star:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.street {
+  color: var(--c-text-variant);
+}
+
+/* "Mandell St (2953)" stays on one line where it fits; a longer one still wraps rather than overflow. */
+.cross {
+  display: inline-block;
+  max-width: 100%;
 }
 
 .page {
@@ -254,6 +299,13 @@
   background: var(--c-brand-navy);
   color: #fff;
   transform: translate(-50%, -50%);
+}
+
+/* A bus placed by the timetable, not by GPS: outlined, so it never passes for a live one. */
+.busScheduled {
+  border: 2px solid var(--c-brand-navy);
+  background: var(--c-surface);
+  color: var(--c-brand-navy);
 }
 
 .busStale {

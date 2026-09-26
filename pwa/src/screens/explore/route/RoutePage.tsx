@@ -18,6 +18,7 @@ import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
 import { AppBar } from "../../../ui/AppBar.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
+import { Icon } from "../../../ui/Icon.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { SegmentedControl } from "../../../ui/SegmentedControl.tsx";
@@ -77,16 +78,19 @@ function SaveRoute({ route }: { route: RouteDetail }) {
     saved.removeRoute(route.id);
     toast({ message: t("route.removedToast"), action: { label: t("common.undo"), onPress: () => saved.addRoute(entry) } });
   };
-  // "Save route": elsewhere the app saves stops, so the button says what it saves.
+  // A star button, as on the stop sheet: it leaves the title row to Back and the route name.
+  // Its name says what it saves ("Save route 82 Westheimer"); the toast confirms.
   return (
-    <Button
-      variant="tonal"
-      icon={on ? "star_filled" : "star"}
-      label={on ? t("common.saved") : t("route.saveRoute")}
-      ariaLabel={t("route.saveRouteA11y", { name: routeTitle(route) })}
-      pressed={on}
-      onPress={toggle}
-    />
+    <button
+      type="button"
+      className={styles.star}
+      aria-label={t("route.saveRouteA11y", { name: routeTitle(route) })}
+      aria-pressed={on}
+      title={on ? t("common.saved") : t("route.saveRoute")}
+      onClick={toggle}
+    >
+      <Icon name={on ? "star_filled" : "star"} size={28} />
+    </button>
   );
 }
 
@@ -196,16 +200,30 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
           // Once the header scrolls away this keeps the route and direction in view (a tap goes back up to
           // change it), and labels the time column so "5 min" always reads as the next bus at that stop.
           <div ref={compact} className={styles.compact} data-shown={scrolledPast} aria-hidden={!scrolledPast}>
-            <button
-              type="button"
-              className={styles.compactButton}
-              tabIndex={scrolledPast ? 0 : -1}
-              onClick={() => marker.current?.closest("main")?.scrollTo({ top: 0 })}
-            >
-              <RouteBadge route={ref} size="sm" />
-              <span className={styles.compactText}>{directionCaps}</span>
-              {other && <span className={styles.compactAction}>{t("route.change")}</span>}
-            </button>
+            <div className={styles.compactRow}>
+              <button
+                type="button"
+                className={styles.compactButton}
+                tabIndex={scrolledPast ? 0 : -1}
+                onClick={() => marker.current?.closest("main")?.scrollTo({ top: 0 })}
+              >
+                <RouteBadge route={ref} size="sm" />
+                <span className={styles.compactText}>{directionCaps}</span>
+              </button>
+              {/* Right next to the direction it changes: one tap turns the list around. */}
+              {other && (
+                <button
+                  type="button"
+                  className={styles.compactAction}
+                  tabIndex={scrolledPast ? 0 : -1}
+                  aria-label={t("route.changeA11y", { direction: rail ? toHeadsign(other.headsigns) : directionWord(other.label, lang) })}
+                  onClick={() => setDirection(other.directionId)}
+                >
+                  <Icon name="swap_vert" size={20} />
+                  {t("route.change")}
+                </button>
+              )}
+            </div>
             <p className={styles.columnHead}>
               <span>{t("route.stopColumn")}</span>
               <span>{nextLabel}</span>

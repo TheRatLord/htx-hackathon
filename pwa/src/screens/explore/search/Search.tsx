@@ -41,8 +41,10 @@ const SECTION_LABEL: Record<SearchSection["kind"], string> = {
   routes: "search.routes",
 };
 
-const atUrl = (r: { lat?: number; lon?: number; title: string }) =>
-  `/explore?at=${formatLatLon({ lat: r.lat!, lon: r.lon! })}&label=${encodeURIComponent(r.title)}`;
+type Located = SearchResult & { lat: number; lon: number };
+/** Places come with coordinates; one that doesn't can't be shown on the map or routed to, so it is left out. */
+const located = (r: SearchResult): r is Located => r.lat !== undefined && r.lon !== undefined;
+const atUrl = (r: Located) => `/explore?at=${formatLatLon(r)}&label=${encodeURIComponent(r.title)}`;
 
 export default function Search() {
   const t = useT();
@@ -93,17 +95,17 @@ export default function Search() {
     recentsActions.addSearch(query);
     navigate(url);
   };
-  const choose = (result: Parameters<typeof encodePick>[2]) => {
+  const choose = (field: "from" | "to", result: Parameters<typeof encodePick>[2]) => {
     if (query) recentsActions.addSearch(query);
-    navigate(encodePick(returnTo, pick!, result), { replace: true });
+    navigate(encodePick(returnTo, field, result), { replace: true });
   };
   const stopResult = (id: string, title: string): SearchResult => ({ type: "stop", id, title, subtitle: "" });
   const openSaved = (s: SavedStop) =>
-    pick ? choose(stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}${s.preferredRouteId ? `?route=${encodeURIComponent(s.preferredRouteId)}` : ""}`);
+    pick ? choose(pick, stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}${s.preferredRouteId ? `?route=${encodeURIComponent(s.preferredRouteId)}` : ""}`);
   const openRecentStop = (s: { id: string; name: string }) =>
-    pick ? choose(stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}`);
+    pick ? choose(pick, stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}`);
   const openRouteStop = (routeId: string, dir: 0 | 1, s: RouteStop) =>
-    pick ? choose(stopResult(s.id, s.name)) : go(`/explore/route/${encodeURIComponent(routeId)}?dir=${dir}&stop=${encodeURIComponent(s.id)}`);
+    pick ? choose(pick, stopResult(s.id, s.name)) : go(`/explore/route/${encodeURIComponent(routeId)}?dir=${dir}&stop=${encodeURIComponent(s.id)}`);
 
   const shortcut = query ? parseRouteStopQuery(query) : undefined;
   const routeQuery = isRouteQuery(query);
@@ -119,12 +121,12 @@ export default function Search() {
   const renderSection = (section: SearchSection) => {
     switch (section.kind) {
       case "places": {
-        const landmarks = section.items.filter((r) => r.type === "landmark");
-        const places = section.items.filter((r) => r.type === "place");
+        const landmarks = section.items.filter((r): r is Located => r.type === "landmark" && located(r));
+        const places = section.items.filter((r): r is Located => r.type === "place" && located(r));
         const hidden = allPlacesFor === query ? 0 : Math.max(0, places.length - (landmarks.length ? 0 : MAX_PLACES));
         const rows = [...landmarks, ...places.slice(0, places.length - hidden)].map((r, i) =>
           pick ? (
-            <SimpleRow key={r.id} icon="place" title={r.title} lines={[r.subtitle]} onPress={() => choose(r)} />
+            <SimpleRow key={r.id} icon="place" title={r.title} lines={[r.subtitle]} onPress={() => choose(pick, r)} />
           ) : (
             <PlaceRow
               key={r.id}
@@ -135,7 +137,7 @@ export default function Search() {
               onOpenStop={(stop) => go(`/explore/stop/${encodeURIComponent(stop.id)}`)}
               onNear={() => go(atUrl(r))}
               onDirections={() =>
-                go(planUrl({ to: r.type === "landmark" ? `landmark:${r.id}` : formatLatLon({ lat: r.lat!, lon: r.lon! }), toName: r.title }))
+                go(planUrl({ to: r.type === "landmark" ? `landmark:${r.id}` : formatLatLon(r), toName: r.title }))
               }
             />
           ),
@@ -156,7 +158,7 @@ export default function Search() {
           <TransitCenterRow
             key={tc.id}
             tc={tc}
-            onOpen={() => (pick ? choose(stopResult(tc.stopIds[0], tc.name)) : go(`/explore/tc/${encodeURIComponent(tc.id)}`))}
+            onOpen={() => (pick ? choose(pick, stopResult(tc.stopIds[0], tc.name)) : go(`/explore/tc/${encodeURIComponent(tc.id)}`))}
           />
         ));
       case "stops":
@@ -166,7 +168,7 @@ export default function Search() {
             result={r}
             idMatch={routeQuery && r.id === query}
             walkable={!pick}
-            onOpen={() => (pick ? choose(r) : go(`/explore/stop/${encodeURIComponent(r.id)}`))}
+            onOpen={() => (pick ? choose(pick, r) : go(`/explore/stop/${encodeURIComponent(r.id)}`))}
             onWalk={(d) => go(`/explore/stop/${encodeURIComponent(r.id)}/walk?d=${Math.round(d)}`)}
           />
         ));
@@ -179,7 +181,16 @@ export default function Search() {
 
   let body;
   if (!query) {
-    body = <EmptyQuery pick={Boolean(pick)} onOpenStop={openSaved} onOpenRecentStop={openRecentStop} onRecent={setText} />;
+    body = (
+      <EmptyQuery
+        pick={Boolean(pick)}
+        onOpenStop={openSaved}
+        onOpenRecentStop={openRecentStop}
+        onRecent={setText}
+        onOpenRoute={(id) => navigate(`/explore/route/${encodeURIComponent(id)}`)}
+        onAllRoutes={() => navigate("/more/routes")}
+      />
+    );
   } else if (search.isError && !search.data) {
     body = <ErrorState error={search.error} onRetry={() => void search.refetch()} />;
   } else if (!search.data) {
@@ -229,7 +240,7 @@ export default function Search() {
       }
     >
       <div className={styles.content}>
-        {pick && fix && <SimpleRow icon="my_location" title={t("common.myLocation")} onPress={() => choose({ kind: "my-location", point: fix })} />}
+        {pick && fix && <SimpleRow icon="my_location" title={t("common.myLocation")} onPress={() => choose(pick, { kind: "my-location", point: fix })} />}
         {body}
       </div>
     </ExploreSheet>

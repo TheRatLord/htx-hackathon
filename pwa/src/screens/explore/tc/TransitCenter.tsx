@@ -215,7 +215,6 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
       <div className={styles.footer}>
         <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={onRefresh} />
         <ScheduleCaption />
-        <p className={styles.source}>{tc.source === "hand-authored-demo" ? t("tc.sourceDemo") : t("tc.source")}</p>
       </div>
     </div>
   );
@@ -328,7 +327,7 @@ function SingleBayBanner({
       )}
       <div className={styles.bannerActions}>
         <Button variant="tonal" icon="calendar_month" label={t("tc.schedule")} href={`/explore/stop/${stop}/schedule?route=${route}`} />
-        <Button variant="tonal" label={`${t("route.stopDetails")} ›`} href={`/explore/stop/${stop}?route=${route}`} />
+        <Button variant="tonal" icon="bus_stop" label={`${t("route.stopDetails")} ›`} href={`/explore/stop/${stop}?route=${route}`} />
       </div>
     </div>
   );

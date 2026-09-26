@@ -254,14 +254,3 @@
   font-size: 12px;
   font-weight: var(--fw-bold);
 }
-
-.examples {
-  padding: var(--sp-2) 0 0;
-}
-
-.exampleChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
-  padding: 0 var(--gutter);
-}
