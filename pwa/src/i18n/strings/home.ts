@@ -7,7 +7,9 @@ const strings: Strings = {
       title: "Nearby stops",
       titleOff: "Find your stop",
       finding: "Finding stops near you…",
-      nearPlace: "Near {place}",
+      nearPlace: "Stops near {place}",
+      // D4: an overline above the place name, so the title is the name alone.
+      stopsNear: "Stops near",
       backToMe: "Back to my location",
       chipLabel: "Your route:",
       chipLabelPlace: "Routes here:",
@@ -18,8 +20,17 @@ const strings: Strings = {
       nearestFar: "The closest stops are a longer walk:",
       planTrip: "Plan Trip",
       loadError: "We couldn't load stops near you.",
-      // D4 cards: "walk from there" (a landmark's curated short name will replace it).
+      // D4 cards: "4 min walk from the museum". A landmark's category names it; others say "from there".
       walkFromThere: "from there",
+      walkFromKind: {
+        airport: "from the airport",
+        university: "from campus",
+        museum: "from the museum",
+        park: "from the park",
+        medical: "from the medical center",
+        shopping: "from the shops",
+        venue: "from the venue",
+      },
       route: {
         title: "Route {name} near you",
         seeAll: "See all Route {name} stops ›",
@@ -32,7 +43,8 @@ const strings: Strings = {
       title: "Paradas cercanas",
       titleOff: "Encuentre su parada",
       finding: "Buscando paradas cerca de usted…",
-      nearPlace: "Cerca de {place}",
+      nearPlace: "Paradas cerca de {place}",
+      stopsNear: "Paradas cerca de",
       backToMe: "Volver a mi ubicación",
       chipLabel: "Su ruta:",
       chipLabelPlace: "Rutas aquí:",
@@ -44,6 +56,15 @@ const strings: Strings = {
       planTrip: "Planear viaje",
       loadError: "No pudimos cargar las paradas cercanas.",
       walkFromThere: "desde allí",
+      walkFromKind: {
+        airport: "desde el aeropuerto",
+        university: "desde el campus",
+        museum: "desde el museo",
+        park: "desde el parque",
+        medical: "desde el centro médico",
+        shopping: "desde las tiendas",
+        venue: "desde el lugar",
+      },
       route: {
         title: "Ruta {name} cerca de usted",
         seeAll: "Ver todas las paradas de la ruta {name} ›",

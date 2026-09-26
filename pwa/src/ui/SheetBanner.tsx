@@ -19,6 +19,18 @@ export function SheetBanner(props: SheetBannerProps) {
         </div>
       );
     case "location-off":
+      // Under a saved stop the rider already has what they came for: one row, not the full card.
+      if (props.compact)
+        return (
+          <div className={styles.compact}>
+            <p className={styles.compactText}>
+              <Icon name="place" color="var(--c-text-variant)" />
+              {t("banner.locationOffTitle")}
+            </p>
+            {!props.blocked && <Button variant="text" label={t("banner.turnOn")} onPress={props.onTurnOn} />}
+            {props.blocked && <p className={styles.steps}>{t("banner.chromeSteps")}</p>}
+          </div>
+        );
       return (
         <div className={styles.card}>
           <p className={styles.title}>

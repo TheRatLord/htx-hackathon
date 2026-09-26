@@ -7,7 +7,8 @@ import { parseLatLon } from "../../../lib/geo.ts";
 import { isOff, useLocation } from "../../../state/location.tsx";
 
 export type HomeAnchor =
-  | { kind: "place"; point: LatLon; label: string; param: string }
+  /** `category`: a landmark's kind ("museum"), for "4 min walk from the museum". */
+  | { kind: "place"; point: LatLon; label: string; param: string; category?: string }
   | { kind: "user"; point: LatLon }
   | { kind: "finding" }
   /** `blocked`: the browser won't ask again, so the card shows the settings steps instead of a button. */
@@ -17,7 +18,7 @@ export function useHomeAnchor(): HomeAnchor {
   const [params] = useSearchParams();
   const rider = useLocation();
   const at = parseLatLon(params.get("at"));
-  if (at) return { kind: "place", point: at, label: params.get("label") ?? "", param: params.get("at")! };
+  if (at) return { kind: "place", point: at, label: params.get("label") ?? "", param: params.get("at")!, category: params.get("kind") ?? undefined };
   // The last known fix stays useful while a new one is found.
   if (rider.fix) return { kind: "user", point: rider.fix };
   // `prompt` before anyone asked (Not now, or a deep link) is "off" with Turn on location, not a spinner.
@@ -36,5 +37,7 @@ export type Place = { param: string; name: string; short: string };
 
 /** The query string that keeps D4's place when moving between the home views. */
 export function placeQuery(anchor: HomeAnchor): string {
-  return anchor.kind === "place" ? `at=${encodeURIComponent(anchor.param)}&label=${encodeURIComponent(anchor.label)}` : "";
+  if (anchor.kind !== "place") return "";
+  const kind = anchor.category ? `&kind=${encodeURIComponent(anchor.category)}` : "";
+  return `at=${encodeURIComponent(anchor.param)}&label=${encodeURIComponent(anchor.label)}${kind}`;
 }

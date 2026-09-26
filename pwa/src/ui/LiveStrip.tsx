@@ -51,7 +51,7 @@ export function FactStrip({ facts }: { facts: StripFact[] }) {
  * in the window and `nextService` known, the next bus is still the big number: "5:47 AM" over
  * "First bus · in 3 hr 17 min" (today) or "No more trips today · Sun" (a later day).
  */
-export function LiveStrip({ deps, loading, emptyText, nextService }: LiveStripProps) {
+export function LiveStrip({ deps, loading, emptyText, nextService, caption }: LiveStripProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -80,15 +80,17 @@ export function LiveStrip({ deps, loading, emptyText, nextService }: LiveStripPr
       </div>
     );
   }
+  const captionLine = caption && <p className={styles.caption}>{caption}</p>;
   if (!shown.length) {
     return (
-      <div className={styles.strip}>
+      <div className={`${styles.strip} ${caption ? styles.withCaption : ""}`}>
         <p className={styles.empty}>{emptyText ?? t("strip.noBuses3h")}</p>
+        {captionLine}
       </div>
     );
   }
-  return (
-    <ul ref={list} className={`${styles.strip} ${styles.oneRow}`} aria-label={t("strip.label")}>
+  const times = (
+    <ul ref={list} className={`${caption ? styles.row : styles.strip} ${styles.oneRow}`} aria-label={t("strip.label")}>
       {shown.map((d) => (
         <li
           key={`${d.tripId}-${d.departureTime}`}
@@ -101,5 +103,12 @@ export function LiveStrip({ deps, loading, emptyText, nextService }: LiveStripPr
         </li>
       ))}
     </ul>
+  );
+  if (!captionLine) return times;
+  return (
+    <div className={`${styles.strip} ${styles.withCaption}`}>
+      {times}
+      {captionLine}
+    </div>
   );
 }

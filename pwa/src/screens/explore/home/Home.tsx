@@ -8,7 +8,7 @@ import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/t
 import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
-import { useLang, useT } from "../../../i18n/index.ts";
+import { hasKey, useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { DOWNTOWN, haversineM } from "../../../lib/geo.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
@@ -37,6 +37,12 @@ import { useHalfUpTo } from "./useHalfUpTo.ts";
 /** Panning further than this from the list's anchor offers "Search this area" (C.16). */
 const SEARCH_AREA_M = 300;
 const HOME_ZOOM = 16;
+/**
+ * Location off: the map shows downtown from a point about 60px (125 m) north of DOWNTOWN, so the
+ * Theater District rail stations sit in open map below the "Showing Downtown Houston" pill instead
+ * of under it (36, 37).
+ */
+const DOWNTOWN_VIEW = { lat: DOWNTOWN.lat + 0.0011, lon: DOWNTOWN.lon };
 /** Below this viewport height (with Extra large text) the chips go after card #1. */
 const SHORT_SCREEN = 700;
 
@@ -73,7 +79,7 @@ function HomeScene({ anchor }: { anchor: HomeAnchor }) {
             focus: { kind: "point", point: at, zoom: HOME_ZOOM },
             markers: [{ id: "place", point: at, kind: "place", label: anchor.kind === "place" ? anchor.label : undefined }],
           }
-        : { focus: { kind: "point", point: DOWNTOWN, zoom: HOME_ZOOM - 1 } },
+        : { focus: { kind: "point", point: DOWNTOWN_VIEW, zoom: HOME_ZOOM - 1 } },
     [anchor.kind, at?.lat, at?.lon],
   );
   return null;
@@ -133,7 +139,9 @@ export default function Home() {
   const routeParam = params.get("route");
   const routeId = routeParam ? canonicalRouteId(routeParam) : undefined;
   const origin = anchor.kind === "place" || anchor.kind === "user" ? anchor.point : undefined;
-  const place: Place | undefined = anchor.kind === "place" ? { param: anchor.param, name: anchor.label, short: t("home.walkFromThere") } : undefined;
+  const fromKey = anchor.kind === "place" && anchor.category ? `home.walkFromKind.${anchor.category}` : "";
+  const short = fromKey && hasKey(fromKey) ? t(fromKey) : t("home.walkFromThere");
+  const place: Place | undefined = anchor.kind === "place" ? { param: anchor.param, name: anchor.label, short } : undefined;
   const nearby = useNearby(origin, { precise: true });
   const data = origin ? nearby.data : undefined;
   const banner = useSheetBanner(anchor, data);
@@ -166,12 +174,20 @@ export default function Home() {
   const chipsLater = !routeId && textSize === "xlarge" && window.innerHeight < SHORT_SCREEN && Boolean(data?.stops.length);
   // Location off with a saved stop: the saved stop first, then the prompt (37).
   const offFirst = !routeId && banner?.kind === "location-off" && saved.stops.length > 0;
+  // Location off and nothing saved: the prompt is all there is, so no "Show list" chevron (36).
+  const noList = !routeId && anchor.kind === "off" && saved.stops.length === 0;
   const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
 
   return (
     // D4 has one way back, "Back to my location" (its UpdatedAgo shares that row, as a place name
     // fills the title row); D3 keeps the sheet's "‹ Back".
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId ? back : undefined}>
+    <ExploreSheet ariaLabel={title} noList={noList} header={
+        <SheetHeader
+          title={place && !routeId ? place.name : title}
+          overline={place && !routeId ? t("home.stopsNear") : undefined}
+          sub={place ? undefined : updated}
+        />
+      } onBack={routeId ? back : undefined}>
       <div className={styles.body}>
         {place && !routeId && (
           <div className={styles.backToMe}>
@@ -192,7 +208,7 @@ export default function Home() {
             data={data}
             tc={tc}
             chipsAfterFirst={data && chipsLater ? chips : undefined}
-            afterSaved={banner && offFirst ? <SheetBanner {...banner} /> : undefined}
+            afterSaved={banner?.kind === "location-off" && offFirst ? <SheetBanner {...banner} compact /> : undefined}
           />
         )}
       </div>

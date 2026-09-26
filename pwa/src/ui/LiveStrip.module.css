@@ -11,6 +11,24 @@
   color: #fff;
 }
 
+/* The times row inside a strip that also has a caption line. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  align-items: flex-start;
+}
+
+.withCaption {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: var(--sp-1);
+}
+
+.withCaption .empty {
+  align-self: flex-start;
+}
+
 .facts {
   gap: 0 var(--sp-6);
   align-items: baseline;
@@ -55,7 +73,8 @@
 }
 
 /* White, not Live green: "First bus · in 3 hr" is a scheduled time. */
-.nextCaption {
+.nextCaption,
+.caption {
   color: rgb(255 255 255 / 88%);
   font-weight: var(--fw-medium);
 }

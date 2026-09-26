@@ -52,3 +52,29 @@
   background: var(--c-warn-bg);
   color: var(--c-warn-text);
 }
+
+/* One row: "⌖ Location is off        Turn on". The text button carries the 48dp touch height. */
+.compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  min-height: 56px;
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.compactText {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--sp-1);
+  align-items: center;
+  padding-block: var(--sp-2);
+  font-weight: var(--fw-medium);
+}
+
+.compact .steps {
+  flex: 1 1 100%;
+  padding: 0 var(--sp-2) var(--sp-2) 0;
+}

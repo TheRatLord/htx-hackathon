@@ -348,7 +348,7 @@ for (const vp of VIEWPORTS) {
       await rider.tap(place.getByRole("button", { name: "Stops near" }).first(), "Stops near on 'Houston Museum of Natural Science'");
       await expect(page).toHaveURL(/at=.*label=Houston/);
       await expectFocusOnH1(page);
-      const missing = await goalOnScreen(page, ["Near Houston Museum of Natural Science", "Main St @ Remington Ln (688)", "On the east side of Main St", "NORTHBOUND to GREENSPOINT TC"], strict);
+      const missing = await goalOnScreen(page, [/Stops near\s+Houston Museum of Natural Science/, /walk from the museum/, "Main St @ Remington Ln (688)", "On the east side of Main St", "NORTHBOUND to GREENSPOINT TC"], strict);
       const card = page.getByRole("button", { name: /^Main St @ Remington Ln \(688\)/ });
       await expect(card).toBeVisible();
       await rider.attach(info, "F11");
