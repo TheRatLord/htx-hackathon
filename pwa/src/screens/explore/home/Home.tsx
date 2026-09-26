@@ -75,6 +75,17 @@ function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBanne
 const TAGGED = 3;
 /** D4 frames the place with its nearest stop when the two fit one screen at HOME_ZOOM. */
 const PLACE_FRAME_M = 400;
+/** What a listed stop's pin, pointer and tag take above its point, clear of the search bar. */
+const LABEL_ROOM_PX = 64;
+/** The map camera's right margin (MapView's padding), and the room kept left of the FAB column. */
+const CAMERA_RIGHT_PX = 72;
+const FAB_GAP_PX = 16;
+
+/** Degrees of latitude that `px` screen pixels span at `zoom` (MapLibre's 512px tiles). */
+function degForPx(px: number, lat: number, zoom: number): number {
+  const mPerPx = (40_075_016 * Math.cos((lat * Math.PI) / 180)) / (512 * 2 ** zoom);
+  return (px * mPerPx) / 111_320;
+}
 
 function HomeScene({ anchor, data }: { anchor: HomeAnchor; data?: NearbyResponse }) {
   const saved = useSaved();
@@ -86,7 +97,21 @@ function HomeScene({ anchor, data }: { anchor: HomeAnchor; data?: NearbyResponse
   // D4: centred between the place and its nearest stop at the usual zoom (where stop IDs show), so
   // the rider sees the stop and which way to walk (07). A bounds fit zoomed out past the ID chips.
   const near = at && listed[0] && haversineM(at.lat, at.lon, listed[0].lat, listed[0].lon) < PLACE_FRAME_M ? listed[0] : undefined;
-  const placeCenter = at && (near ? { lat: (at.lat + near.lat) / 2, lon: (at.lon + near.lon) / 2 } : at);
+  // Raised by half the room a stop's tag (or the place's pin) takes above its point, so the pair's
+  // whole drawing is centred on the map strip: centred on the points alone, the stop's tag met the
+  // search bar and was dropped (688 · 2504 untagged, 07).
+  // And moved right by half the width the FAB column takes past the camera's 72px right margin
+  // ("Plan Trip" is ~150px wide): centred on the camera, the museum pin sat under Plan Trip and the
+  // map's own nudge moved it out only after a moment.
+  const fabExtra = Math.max(0, (document.querySelector<HTMLElement>("[data-map-fabs]")?.offsetWidth ?? 0) + FAB_GAP_PX - CAMERA_RIGHT_PX);
+  const placeCenter =
+    at &&
+    (near
+      ? {
+          lat: (at.lat + near.lat) / 2 + degForPx(LABEL_ROOM_PX / 2, at.lat, HOME_ZOOM),
+          lon: (at.lon + near.lon) / 2 + degForPx(fabExtra / 2, at.lat, HOME_ZOOM) / Math.cos((at.lat * Math.PI) / 180),
+        }
+      : at);
   useMapScene(
     {
       tagStopIds,
