@@ -71,9 +71,6 @@ export function BottomSheet({
   const [uncontrolledIndex, setUncontrolledIndex] = useState(defaultIndex);
   const index = controlledIndex ?? uncontrolledIndex;
   const [dragOffset, setDragOffset] = useState<number | null>(null);
-  const drag = useRef<{ startY: number; startH: number; lastY: number; lastT: number; v: number; moved: boolean } | null>(
-    null,
-  );
 
   // A drag ends with a click on whatever is under the finger; swallow it.
   const justDragged = useRef(false);
@@ -122,52 +119,72 @@ export function BottomSheet({
     if (!isOpenFully && bodyRef.current) bodyRef.current.scrollTop = 0;
   }, [isOpenFully]);
 
-  const onPointerDown = (e: PointerEvent<HTMLElement>, fromBody = false) => {
-    if (e.button !== 0) return;
-    // In the body, only take over when the sheet isn't scrollable yet,
-    // or it's scrolled to the top and the finger moves down (checked on move).
-    if (fromBody && isOpenFully && (bodyRef.current?.scrollTop ?? 0) > 0) return;
-    drag.current = { startY: e.clientY, startH: restingH, lastY: e.clientY, lastT: e.timeStamp, v: 0, moved: false };
-  };
+  // Latest values for the window-level drag listeners.
+  const latest = useRef({ snaps, maxH, restingH, isOpenFully, setIndex });
+  latest.current = { snaps, maxH, restingH, isOpenFully, setIndex };
+  const stopDrag = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopDrag.current?.(), []);
 
-  const onPointerMove = (e: PointerEvent<HTMLElement>, fromBody = false) => {
-    const d = drag.current;
-    if (!d) return;
-    const dy = e.clientY - d.startY;
-    if (!d.moved) {
-      if (Math.abs(dy) < 6) return;
-      // Fully open body: dragging up means scroll, so let the browser handle it.
-      if (fromBody && isOpenFully && dy < 0) {
-        drag.current = null;
-        return;
+  /**
+   * Start tracking a possible drag. Moves are read from window so a fast
+   * flick that leaves the sheet still counts; nothing is captured, so taps
+   * on buttons inside the sheet keep working.
+   */
+  const startDrag = (e: PointerEvent<HTMLElement>, fromBody: boolean) => {
+    if (e.button !== 0 || !e.isPrimary) return;
+    const L = latest.current;
+    // Fully open and scrolled: the body scrolls instead of dragging.
+    if (fromBody && L.isOpenFully && (bodyRef.current?.scrollTop ?? 0) > 0) return;
+    stopDrag.current?.();
+    const d = { startY: e.clientY, startH: L.restingH, lastY: e.clientY, lastT: e.timeStamp, v: 0, moved: false, h: L.restingH };
+
+    const onMove = (ev: globalThis.PointerEvent) => {
+      const dy = ev.clientY - d.startY;
+      if (!d.moved) {
+        if (Math.abs(dy) < 6) return;
+        // Fully open body: dragging up means scroll, so let the browser handle it.
+        if (fromBody && latest.current.isOpenFully && dy < 0) {
+          cleanup();
+          return;
+        }
+        d.moved = true;
       }
-      d.moved = true;
-      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-    }
-    const dt = Math.max(1, e.timeStamp - d.lastT);
-    d.v = (e.clientY - d.lastY) / dt;
-    d.lastY = e.clientY;
-    d.lastT = e.timeStamp;
-    let h = d.startH - dy;
-    // Rubber-band past the ends.
-    if (h > maxH) h = maxH + (h - maxH) * 0.25;
-    if (h < snaps[0]) h = snaps[0] - (snaps[0] - h) * 0.25;
-    setDragOffset(h);
-  };
+      const dt = Math.max(1, ev.timeStamp - d.lastT);
+      d.v = (ev.clientY - d.lastY) / dt;
+      d.lastY = ev.clientY;
+      d.lastT = ev.timeStamp;
+      const { maxH: top, snaps: sn } = latest.current;
+      let h = d.startH - dy;
+      // Rubber-band past the ends.
+      if (h > top) h = top + (h - top) * 0.25;
+      if (h < sn[0]) h = sn[0] - (sn[0] - h) * 0.25;
+      d.h = h;
+      setDragOffset(h);
+    };
 
-  const onPointerUp = () => {
-    const d = drag.current;
-    drag.current = null;
-    if (!d || !d.moved) return;
-    justDragged.current = true;
-    window.setTimeout(() => (justDragged.current = false), 0);
-    const h = dragOffset ?? restingH;
-    const projected = h - d.v * VELOCITY_PROJECTION_MS;
-    let best = 0;
-    for (let i = 1; i < snaps.length; i++)
-      if (Math.abs(snaps[i] - projected) < Math.abs(snaps[best] - projected)) best = i;
-    setDragOffset(null);
-    setIndex(best);
+    const onUp = () => {
+      cleanup();
+      if (!d.moved) return;
+      justDragged.current = true;
+      window.setTimeout(() => (justDragged.current = false), 0);
+      const { snaps: sn, setIndex: set } = latest.current;
+      const projected = d.h - d.v * VELOCITY_PROJECTION_MS;
+      let best = 0;
+      for (let i = 1; i < sn.length; i++) if (Math.abs(sn[i] - projected) < Math.abs(sn[best] - projected)) best = i;
+      setDragOffset(null);
+      set(best);
+    };
+
+    function cleanup() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      stopDrag.current = null;
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    stopDrag.current = cleanup;
   };
 
   const cycle = () => setIndex(safeIndex === snaps.length - 1 ? 0 : safeIndex + 1);
@@ -182,18 +199,12 @@ export function BottomSheet({
     }
   };
 
-  const dragHandlers = {
-    onPointerDown: (e: PointerEvent<HTMLElement>) => onPointerDown(e),
-    onPointerMove: (e: PointerEvent<HTMLElement>) => onPointerMove(e),
-    onPointerUp,
-    onPointerCancel: onPointerUp,
-    onClickCapture: (e: MouseEvent) => {
-      if (justDragged.current) {
-        e.stopPropagation();
-        e.preventDefault();
-        justDragged.current = false;
-      }
-    },
+  const swallowClickAfterDrag = (e: MouseEvent) => {
+    if (justDragged.current) {
+      e.stopPropagation();
+      e.preventDefault();
+      justDragged.current = false;
+    }
   };
 
   const stateName = ['peek', 'half', 'full'][Math.min(safeIndex, 2)] ?? 'full';
@@ -207,7 +218,11 @@ export function BottomSheet({
       data-sheet-state={stateName}
       data-sheet-index={safeIndex}
     >
-      <div className="sheet__grab" {...dragHandlers}>
+      <div
+        className="sheet__grab"
+        onPointerDown={(e) => startDrag(e, false)}
+        onClickCapture={swallowClickAfterDrag}
+      >
         <button
           type="button"
           className="sheet__handle"
@@ -227,11 +242,8 @@ export function BottomSheet({
         }`}
         aria-hidden={hideBodyAtFirstSnap && safeIndex === 0 ? true : undefined}
         style={{ paddingBottom: bottomPadding + 24 }}
-        onPointerDown={(e) => onPointerDown(e, true)}
-        onPointerMove={(e) => onPointerMove(e, true)}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onClickCapture={dragHandlers.onClickCapture}
+        onPointerDown={(e) => startDrag(e, true)}
+        onClickCapture={swallowClickAfterDrag}
       >
         {children}
       </div>
