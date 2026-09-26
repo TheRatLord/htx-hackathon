@@ -1,0 +1,41 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  min-height: 24px;
+  padding: 0 var(--gutter);
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+}
+
+.row {
+  position: relative;
+}
+
+.scroller {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: var(--sp-1) var(--gutter);
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.more {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  min-width: var(--touch-min);
+  padding: 0 var(--sp-4) 0 var(--sp-8);
+  border: none;
+  background: linear-gradient(to right, transparent, var(--c-surface) 40%);
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}

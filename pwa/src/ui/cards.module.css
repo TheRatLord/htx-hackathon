@@ -1,0 +1,116 @@
+/* Shared by the stop cards (C.5): --c-card, radius 10, padding 12, no shadow. The whole card body
+   is one button (.hit) stretched under the content; nested buttons sit above it. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+.hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  border-radius: inherit;
+  background: none;
+}
+
+.hit:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.name {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--c-text-variant);
+}
+
+.divider {
+  margin: var(--sp-1) 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.row:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.noService {
+  color: var(--c-text-variant);
+}
+
+.link {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+.route {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}

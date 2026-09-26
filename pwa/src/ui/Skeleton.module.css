@@ -1,0 +1,40 @@
+.skeleton {
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.stop-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 150px;
+  padding: var(--card-pad);
+}
+
+.row {
+  min-height: var(--touch-min);
+}
+
+.strip {
+  min-height: var(--strip-h);
+  border-radius: 0;
+}
+
+.line {
+  height: 18px;
+  border-radius: 4px;
+  background: var(--c-disabled-bg);
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

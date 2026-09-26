@@ -1,0 +1,29 @@
+.strip {
+  display: flex;
+  gap: var(--sp-8);
+  align-items: center;
+  min-height: var(--strip-h);
+  padding: var(--sp-2) var(--gutter);
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+.item {
+  flex: none;
+}
+
+.placeholder {
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+.empty {
+  font-size: var(--fs-body);
+}

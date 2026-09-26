@@ -1,0 +1,39 @@
+.diagram {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.label {
+  margin-bottom: var(--sp-1);
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+}
+
+.bays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.bay {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-chip);
+  background: var(--c-surface);
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-bold);
+}
+
+.bay[aria-pressed="true"] {
+  border: 2px solid var(--c-primary);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+}

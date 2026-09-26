@@ -1,0 +1,26 @@
+.fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: var(--fab);
+  min-height: var(--fab);
+  border: none;
+  border-radius: var(--r-box);
+  background: var(--c-surface);
+  box-shadow: var(--e-2);
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+}
+
+.extended {
+  padding: 0 var(--sp-4);
+}
+
+.alert {
+  color: var(--c-alert-text);
+}
+
+.fab:active {
+  background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
+}

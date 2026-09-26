@@ -1,0 +1,33 @@
+.header {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+.title {
+  flex: 1 1 auto;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+  overflow-wrap: anywhere;
+}
+
+.center {
+  flex-direction: column;
+  text-align: center;
+}
+
+.center .title {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.sub,
+.right {
+  flex: none;
+}
