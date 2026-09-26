@@ -24,7 +24,9 @@ export async function notify(title: string, body: string, tag: string): Promise<
   if (notifyPermission() !== "granted") return;
   const timeout = new Promise<undefined>((resolve) => setTimeout(resolve, SW_READY_TIMEOUT_MS));
   const registration = await Promise.race([navigator.serviceWorker.ready, timeout]);
-  if (registration) await registration.showNotification(title, { body, tag, vibrate: BUZZ } as NotificationOptions);
+  // data.url: the screen a tap returns to (public/sw-notify.js).
+  const data = { url: location.pathname + location.search };
+  if (registration) await registration.showNotification(title, { body, tag, data, vibrate: BUZZ } as NotificationOptions);
   else vibrate(BUZZ);
 }
 
