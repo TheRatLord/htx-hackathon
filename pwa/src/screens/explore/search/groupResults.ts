@@ -1,10 +1,20 @@
 // D5's client-side grouping and order of /api/search results.
 
 import type { SearchResult, TransitCenterSummary } from "../../../api/types.ts";
+import { haversineM } from "../../../lib/geo.ts";
 import { stopMatches } from "../route/stopMatch.ts";
 
+/** A transit center or stop that belongs to a landmark (Hobby Airport's TC and its stop). */
+export interface Attached {
+  tcs: TransitCenterSummary[];
+  stops: SearchResult[];
+}
+
+/** A TC or stop this close to a landmark is shown under it, not as a separate result. */
+const ATTACH_M = 400;
+
 export type SearchSection =
-  | { kind: "places"; items: SearchResult[] }
+  | { kind: "places"; items: SearchResult[]; attached: Map<string, Attached> }
   | { kind: "transitCenters"; items: TransitCenterSummary[] }
   | { kind: "stops"; items: SearchResult[] }
   | { kind: "routes"; items: SearchResult[] };
@@ -50,10 +60,24 @@ export function groupResults(results: SearchResult[], tcs: TransitCenterSummary[
   for (const tc of tcs) if (!tcHits.has(tc.id) && stopMatches({ id: "", name: tc.name }, q)) tcHits.set(tc.id, tc);
 
   const places = [...results.filter((r) => r.type === "landmark"), ...results.filter((r) => r.type === "place")];
+  // One answer per landmark: "Hobby Airport" once, with its transit center and stop under it.
+  const attached = new Map<string, Attached>();
+  const taken = new Set<string>();
+  for (const lm of places.filter((p) => p.type === "landmark" && p.lat !== undefined && p.lon !== undefined)) {
+    const near = (p: { lat: number; lon: number }) => haversineM(lm.lat!, lm.lon!, p.lat, p.lon) <= ATTACH_M;
+    const own = new Set((lm.nearbyStops ?? []).map((s) => s.id));
+    const a: Attached = {
+      tcs: [...tcHits.values()].filter((tc) => !taken.has(`tc:${tc.id}`) && (tc.stopIds.some((id) => own.has(id)) || near(tc))),
+      stops: stops.filter((r) => !taken.has(`stop:${r.id}`) && r.stop && (own.has(r.id) || near(r.stop))),
+    };
+    a.tcs.forEach((tc) => taken.add(`tc:${tc.id}`));
+    a.stops.forEach((r) => taken.add(`stop:${r.id}`));
+    if (a.tcs.length || a.stops.length) attached.set(lm.id, a);
+  }
   const sections: SearchSection[] = [
-    { kind: "transitCenters", items: [...tcHits.values()] },
-    { kind: "places", items: places },
-    { kind: "stops", items: stops },
+    { kind: "transitCenters", items: [...tcHits.values()].filter((tc) => !taken.has(`tc:${tc.id}`)) },
+    { kind: "places", items: places, attached },
+    { kind: "stops", items: stops.filter((r) => !taken.has(`stop:${r.id}`)) },
     { kind: "routes", items: results.filter((r) => r.type === "route") },
   ];
   const hasLandmark = places.some((p) => p.type === "landmark");

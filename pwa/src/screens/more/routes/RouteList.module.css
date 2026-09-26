@@ -14,5 +14,5 @@
 .badge {
   display: flex;
   flex: none;
-  min-width: 72px;
+  min-width: 60px;
 }

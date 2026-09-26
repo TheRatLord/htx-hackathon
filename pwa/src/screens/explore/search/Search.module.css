@@ -162,7 +162,7 @@
 }
 
 .hint {
-  padding: var(--sp-4) var(--gutter);
+  padding: var(--sp-2) var(--gutter);
   color: var(--c-text-variant);
 }
 
@@ -192,4 +192,76 @@
   border-radius: var(--r-alert);
   background: var(--c-warn-bg);
   color: var(--c-warn-text);
+}
+
+/* Route direction pills carry the destination ("Eastbound to DOWNTOWN"), so each takes its own line. */
+.directionPills {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.chevron {
+  display: flex;
+  flex: none;
+  align-self: center;
+  color: var(--c-text-variant);
+}
+
+/* A landmark's own transit center and stop, indented under its title. */
+.subRows {
+  display: flex;
+  flex: 1 0 calc(100% - 36px);
+  flex-direction: column;
+  max-width: calc(100% - 36px);
+  margin: 0 0 var(--sp-2) 36px;
+  border-left: 2px solid var(--c-divider);
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-3);
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.subRow:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.subRow .text {
+  flex: 1;
+}
+
+.subTitle {
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.tcTileSm {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-chip);
+  background: var(--c-brand-navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+}
+
+.examples {
+  padding: var(--sp-2) 0 0;
+}
+
+.exampleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: 0 var(--gutter);
 }

@@ -113,8 +113,9 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
   const t = useT();
   const now = useNow();
   const deps = upcoming(next.map(scheduledDep), now);
-  // A scheduled time never says "Now" (C.2), so a trip due this minute gives way to the one after it.
-  const shown = deps.find((d) => Date.parse(d.departureTime) - now >= 60_000);
+  // A scheduled time never says "Now" (C.2): a trip still ahead reads "1 min", the same as the strip when
+  // the row is opened, and one already gone gives way to the next.
+  const shown = deps.find((d) => Date.parse(d.departureTime) > now);
   const dueNow = !shown && deps.length > 0;
   const stale = vehicle && vehicle.ageSeconds > STALE_VEHICLE_S;
   return (
@@ -130,7 +131,13 @@ function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicl
         </>
       )}
       <button type="button" className={styles.stopButton} aria-expanded={expanded} onClick={onToggle}>
-        <span className={`${styles.node} ${nearest || expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
+        {nearest ? (
+          <span className={styles.nodeNearest} aria-hidden="true">
+            <Icon name="my_location" size={20} />
+          </span>
+        ) : (
+          <span className={`${styles.node} ${expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
+        )}
         <span className={styles.stopText}>
           <span className={styles.stopName}>
             {stop.name} <span className={styles.stopId}>({stop.id})</span>

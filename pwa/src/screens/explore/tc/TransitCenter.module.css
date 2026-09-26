@@ -10,8 +10,39 @@
   padding: 0 var(--gutter);
 }
 
+/* "16 bays" and the Walk here button on one line. */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
 .meta {
   color: var(--c-text-variant);
+}
+
+/* "Show bay map ⌄": one row that opens the diagram. */
+.mapToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+  border-bottom: 1px solid var(--c-divider);
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
 }
 
 /* "Route 58 leaves from Bay M" on the bay-tag blue, as in C.5. */
@@ -75,13 +106,20 @@
   scroll-margin-top: var(--sp-2);
 }
 
+/* "Bay C · Platform 1": the one heading level of the list, in sentence case. */
 .bayTitle {
   margin-bottom: var(--sp-1);
-  color: var(--c-text-variant);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  font-weight: var(--fw-medium);
-  text-transform: uppercase;
+  font-weight: var(--fw-bold);
+}
+
+/* The "Show bay map" row above already draws the line. */
+.list > .bay:first-child .bayTitle {
+  padding-top: 0;
+  border-top: none;
 }
 
 .row {
