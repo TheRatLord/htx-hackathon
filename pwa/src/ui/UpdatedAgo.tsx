@@ -28,7 +28,7 @@ const STALE_S = 90;
  * row), the same words stacked in one 48dp button, "Updated just now" over "↻ Refresh", so they fit
  * beside the title at 360dp in every language. Not a live region. Offline, "Refresh" reads "Try again".
  */
-export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
+export function UpdatedAgo({ at, onRefresh, compact, short }: UpdatedAgoProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -54,7 +54,7 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   else if (stale) text = t("updated.stale", { n: ageMinutes(atMs, now) });
   else {
     // Under a minute old it is simply "just now": seconds read as machine output.
-    if (ageS < 60) text = t("updated.justNow");
+    if (ageS < 60) text = t(compact && short ? "updated.justNowShort" : "updated.justNow");
     else text = t("updated.ago", { ago: t("updated.min", { n: ageMinutes(atMs, now) }) });
   }
   if (offline) {

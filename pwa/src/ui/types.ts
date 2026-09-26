@@ -25,8 +25,8 @@ export interface TimeValueProps {
   dep: Dep;
   size: "minutes" | "strip" | "body";
   walkMin?: number;
-  /** Show the clock time even under an hour (one format per row: DepTimes' `clockRow`). */
-  clock?: boolean;
+  /** No status word: the row says it once on a line of its own (DepTimes' leading too-soon bus). */
+  noWord?: boolean;
 }
 
 export interface StatusWordProps {
@@ -360,6 +360,8 @@ export interface UpdatedAgoProps {
   at: string;
   onRefresh: () => void;
   compact?: boolean;
+  /** With `compact`: "Just now" for "Updated just now" (Extra large on a short screen, beside the title). */
+  short?: boolean;
 }
 
 export interface NotifyPermissionCardProps {

@@ -120,7 +120,11 @@ interface NearbyBodyProps {
 /** D2 / D4 below the chips: the saved row (D2), the stop cards and the footer. */
 function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst, afterSaved }: NearbyBodyProps) {
   const t = useT();
+  const saved = useSaved();
   const firstRow = useRef<HTMLLIElement>(null);
+  // "After card #1": with a saved stop that card is the saved one (03-xlarge-360: after the first
+  // nearby card, the chips were two cards down).
+  const savedFirst = !place && saved.stops.length > 0;
   const ids = data?.stops.map((s) => s.stop.id).join() ?? "";
   // M2/M3: grow to card #1's first route row.
   useHalfUpTo(() => firstRow.current, foldCap, `${anchor.kind}|${ids}`);
@@ -128,9 +132,10 @@ function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst, 
     <>
       <HomeScene anchor={anchor} data={data} />
       {!place && <SavedRow origin={anchor.kind === "user" ? anchor.point : undefined} />}
+      {savedFirst && chipsAfterFirst}
       {afterSaved}
       {origin ? (
-        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} afterFirst={chipsAfterFirst} />
+        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} afterFirst={savedFirst ? undefined : chipsAfterFirst} />
       ) : (
         anchor.kind === "finding" && <LoadingCards />
       )}
@@ -197,12 +202,14 @@ export default function Home() {
   const noList = !routeId && anchor.kind === "off" && saved.stops.length === 0;
   // D4 says once where the walk times start ("Walk times from the museum"): the pills say only
   // "4 min walk". "Just now · Refresh" took that row on its own (07); the list refreshes itself.
-  // Extra large on a short screen drops it too, for one more route row above the nav (46).
+  // Extra large on a short screen keeps it, as "Just now / ↻ Refresh" so "Nearby stops" stays on
+  // one line beside it: without it the rider couldn't see how fresh the times were (03-xlarge-360).
   const updated =
     place && !routeId ? (
       <span className={styles.walkFrom}>{t("home.walkTimesFrom", { from: short })}</span>
     ) : (
-      !routeId && !chipsLater && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />
+      !routeId &&
+      nearby.data && <UpdatedAgo compact short={chipsLater} at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />
     );
 
   return (

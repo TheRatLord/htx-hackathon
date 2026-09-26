@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client.ts";
 import type { Dep } from "../api/types.ts";
-import { clockRow, departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, stopTitle, upcoming } from "./format.ts";
+import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, stopTitle, upcoming } from "./format.ts";
 import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
@@ -199,24 +199,20 @@ describe("stopTitle", () => {
     expect(stopTitle("Main St @ Martin Luther King Jr Blvd", "1", "en")).toBe("Main St @ Martin Luther King Jr Blvd\u00a0(1)");
     expect(stopTitle("Northwest Transit Center", "2", "en")).toBe("Northwest Transit Center\u00a0(2)");
   });
+  it("at Extra large keeps a cross street whole only when it still fits a line", () => {
+    expect(stopTitle("Westheimer Rd @ Montrose Blvd", "2958", "en", { xl: true })).toBe("Westheimer Rd @ Montrose Blvd\u00a0(2958)");
+    expect(stopTitle("Fannin St @ McKinney St", "246", "en", { xl: true })).toBe("Fannin St @ McKinney\u00a0St\u00a0(246)");
+  });
 });
 
-describe("clockRow", () => {
+describe("the time rule, per time", () => {
   const now = Date.parse("2026-09-25T12:00:00-05:00");
-  const dep = (min: number) => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule" as const, tripId: `t${min}` });
-  it("applies the one rule per time: minutes under an hour, the clock time from an hour", () => {
-    const [a, b] = [dep(2), dep(62)];
-    expect(clockRow([a, b], now, false)).toEqual({ deps: [a, b], clock: false });
-    expect(formatDeparture(a.departureTime, now, { status: "scheduled", lang: "en" })).toBe("2 min");
-    expect(formatDeparture(b.departureTime, now, { status: "scheduled", lang: "en" })).toBe("1:02 PM");
+  const dep = (min: number) => new Date(now + min * 60_000).toISOString();
+  it("minutes under an hour, the clock time from an hour", () => {
+    expect(formatDeparture(dep(2), now, { status: "scheduled", lang: "en" })).toBe("2 min");
+    expect(formatDeparture(dep(62), now, { status: "scheduled", lang: "en" })).toBe("1:02 PM");
   });
   it("never turns a bus under an hour into a clock time because the next one is far off", () => {
-    const row = [dep(37), dep(97)];
-    expect(clockRow(row, now, false)).toEqual({ deps: row, clock: false });
-    expect(formatDeparture(row[0].departureTime, now, { status: "scheduled", lang: "en" })).toBe("37 min");
-  });
-  it("leaves an offline row alone (every time is a clock time there)", () => {
-    const row = [dep(2), dep(62)];
-    expect(clockRow(row, now, true)).toEqual({ deps: row, clock: false });
+    expect(formatDeparture(dep(37), now, { status: "scheduled", lang: "en" })).toBe("37 min");
   });
 });

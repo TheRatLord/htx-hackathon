@@ -20,12 +20,12 @@ const splitClock = (text: string) => (text.includes(":") ? splitUnit(text) : und
  * Offline, every time is a scheduled clock time. With `walkMin`, a bus that leaves before the
  * rider can get there is greyed with "Leaves before you get there" (canceled wins).
  */
-export function TimeValue({ dep, size, walkMin, clock }: TimeValueProps) {
+export function TimeValue({ dep, size, walkMin, noWord }: TimeValueProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
   const offline = useOffline();
-  const { status, text, tooSoon } = departureView(dep, now, { walkMin, offline, clock, lang });
+  const { status, text, tooSoon } = departureView(dep, now, { walkMin, offline, lang });
   const realtime = !tooSoon && (status === "live" || status === "simulated");
   // A small "PM" keeps a row of clock times as narrow as one of minutes (38, offline).
   const parts = size === "strip" ? splitUnit(text) : splitClock(text);
@@ -52,7 +52,7 @@ export function TimeValue({ dep, size, walkMin, clock }: TimeValueProps) {
         {realtime && size !== "strip" && arcs}
       </span>
       <span className={styles.word}>
-        {tooSoon ? t("status.tooSoon") : <StatusWord status={status} />}
+        {noWord ? null : tooSoon ? t("status.tooSoon") : <StatusWord status={status} />}
         {realtime && size === "strip" && arcs}
       </span>
     </span>

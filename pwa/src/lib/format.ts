@@ -86,13 +86,13 @@ type Shown = { kind: "now" } | { kind: "min"; m: number } | { kind: "clock" };
  * otherwise the clock time. Offline, always the clock time (the cache may be old).
  * A scheduled time never says "Now": the bus may already have gone.
  */
-function shown(departureTime: string, now: number, opts: { offline?: boolean; clock?: boolean; status: Status }): Shown {
+function shown(departureTime: string, now: number, opts: { offline?: boolean; status: Status }): Shown {
   const diff = Date.parse(departureTime) - now;
   const realtime = opts.status === "live" || opts.status === "simulated";
   // A scheduled bus still ahead but under a minute away is "1 min", never its clock time
   // ("12:01 PM" at 12:00:30 beside "8 min" read as two formats for one thing).
   const m = !realtime && diff > 0 ? Math.max(1, Math.floor(diff / 60_000)) : Math.floor(diff / 60_000);
-  if (opts.offline || m >= 60 || (m <= 0 && !realtime) || (opts.clock && m > 0)) return { kind: "clock" };
+  if (opts.offline || m >= 60 || (m <= 0 && !realtime)) return { kind: "clock" };
   return m <= 0 ? { kind: "now" } : { kind: "min", m };
 }
 
@@ -101,13 +101,13 @@ export function showsClock(dep: Dep, now: number, offline?: boolean): boolean {
   return shown(dep.departureTime, now, { offline, status: statusOf(dep) }).kind === "clock";
 }
 
-export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; clock?: boolean; status: Status; lang: Lang }): string {
+export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; status: Status; lang: Lang }): string {
   const s = shown(departureTime, now, opts);
   if (s.kind === "clock") return formatClock(departureTime, opts.lang);
   return s.kind === "now" ? t("time.now", undefined, opts.lang) : t("time.min", { n: s.m }, opts.lang);
 }
 
-/**
+/*
  * THE time rule, the same on every card, strip, sheet and step (no legend needed: the unit says
  * which is which): a bus under an hour away is "N min", one an hour or more away is its clock
  * time with a small "PM" ("1:02 PM"). Each time follows the rule on its own, so a row can read
@@ -115,12 +115,7 @@ export function formatDeparture(departureTime: string, now: number, opts: { offl
  * Offline every time is a clock time (the cache may be old). A row never switches a time under an
  * hour to its clock time because a later bus is far off ("12:37 PM" for a bus 37 min away beside
  * "52 min" on the strip was two rules for one thing).
- *
- * Kept as a function so every row goes through one place; `clock` is always false now.
  */
-export function clockRow<T extends Dep>(shown: T[], _now: number, _offline: boolean): { deps: T[]; clock: boolean } {
-  return { deps: shown, clock: false };
-}
 
 export interface DepartureView {
   /** Offline, every time is shown as scheduled. */
@@ -131,20 +126,20 @@ export interface DepartureView {
 }
 
 /** How one departure displays, for TimeValue and every accessible label (C.2). */
-export function departureView(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; clock?: boolean; lang: Lang }): DepartureView {
+export function departureView(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; lang: Lang }): DepartureView {
   const status = opts.offline ? "scheduled" : statusOf(dep);
   const tooSoon = opts.walkMin !== undefined && status !== "canceled" && canMakeIt(opts.walkMin, dep, now) === "no";
-  return { status, text: formatDeparture(dep.departureTime, now, { offline: opts.offline, clock: opts.clock, status, lang: opts.lang }), tooSoon };
+  return { status, text: formatDeparture(dep.departureTime, now, { offline: opts.offline, status, lang: opts.lang }), tooSoon };
 }
 
 /**
  * The spoken form of a departure: "16 minutes, Live", "7:02 PM, Leaves before you get there".
  * Scheduled is the unmarked default; `markScheduled` says it anyway (the LiveStrip's "16 minutes, scheduled").
  */
-export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; clock?: boolean; markScheduled?: boolean; lang: Lang }): string {
+export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; markScheduled?: boolean; lang: Lang }): string {
   const { lang } = opts;
   const view = departureView(dep, now, opts);
-  const s = shown(dep.departureTime, now, { offline: opts.offline, clock: opts.clock, status: view.status });
+  const s = shown(dep.departureTime, now, { offline: opts.offline, status: view.status });
   const value = s.kind === "min" ? t("time.minutesA11y", { count: s.m }, lang) : view.text;
   const word = view.tooSoon
     ? t("status.tooSoon", undefined, lang)
@@ -210,12 +205,20 @@ export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang:
 /** A cross street this short wraps as one piece: "Fannin St @ / McKinney St (246)", never "McKinney / St (246)". */
 const KEEP_CROSS_STREET = 20;
 
-export function stopTitle(name: string, id: string, lang: Lang): string {
+/** At Extra large a card's name column holds about 17 characters: "McKinney St (246)" still fits. */
+const KEEP_CROSS_STREET_XL = 17;
+
+/**
+ * `xl` (Extra large text): a cross street kept whole must still fit a line there, or
+ * "Montrose Blvd (2958)" broke inside the number ("Montrose Blvd ( / 2958)", with "@" alone on the
+ * line above). Too long, it wraps at its spaces: "Westheimer Rd / @ Montrose / Blvd (2958)".
+ */
+export function stopTitle(name: string, id: string, lang: Lang, opts: { xl?: boolean } = {}): string {
   const title = t("stopLine.title", { name, id }, lang).replace(/ \(([^()]+)\)$/, "\u00a0($1)");
   const at = title.lastIndexOf(" @ ");
   if (at < 0) return title;
   const tail = title.slice(at + 3);
-  return tail.length <= KEEP_CROSS_STREET ? `${title.slice(0, at + 3)}${tail.replace(/ /g, "\u00a0")}` : title;
+  return tail.length <= (opts.xl ? KEEP_CROSS_STREET_XL : KEEP_CROSS_STREET) ? `${title.slice(0, at + 3)}${tail.replace(/ /g, "\u00a0")}` : title;
 }
 
 /** "Eastbound" (es "Hacia el este") for a direction label; unknown labels stay as METRO wrote them. */

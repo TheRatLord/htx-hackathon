@@ -4,7 +4,7 @@ import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
 import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
-import { DepTimes, shownDeps } from "./DepTimes.tsx";
+import { catchableDeps, DepTimes } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
 import tcStyles from "./TransitCenterCard.module.css";
@@ -19,7 +19,7 @@ function groupRows(deps: TcDeparture[], now: number, walkMin: number): TcDepartu
     groups.set(key, [...(groups.get(key) ?? []), d]);
   }
   // Rows whose buses the rider can still reach come first (the same rule as DepTimes).
-  const first = (g: TcDeparture[]) => Date.parse((shownDeps(g, now, walkMin)[0] ?? g[0]).departureTime);
+  const first = (g: TcDeparture[]) => Date.parse((catchableDeps(g, now, walkMin)[0] ?? g[0]).departureTime);
   return [...groups.values()].sort((a, b) => first(a) - first(b));
 }
 

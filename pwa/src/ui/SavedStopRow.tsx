@@ -38,7 +38,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
   const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
   const shown = pickRoute(routes, preferredRouteId, now);
   const extra = routes.length - 1;
-  const title = stopTitle(name, stopId, lang);
+  const title = stopTitle(name, stopId, lang, { xl });
   const dir = shown?.directionLabel && shown.route.mode !== "rail" ? directionWord(shown.directionLabel, lang) : "";
   if (compact) {
     const next = shown ? upcoming(shown.deps, now).filter((d) => !d.canceled).slice(0, 2) : [];
