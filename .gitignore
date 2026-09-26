@@ -6,3 +6,6 @@ challenge-reports-full.md
 .env.*
 !.env.example
 ux-audit/baseline/
+
+# Playwright e2e output (pwa/tests/e2e)
+pwa/tests/e2e/.results/
