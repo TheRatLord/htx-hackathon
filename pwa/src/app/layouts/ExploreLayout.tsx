@@ -106,7 +106,7 @@ export function ExploreLayout() {
   // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip).
   const topBar =
     onTrip && arriveAt ? (
-      <StatusBanner item={{ kind: "trip-active", arriveAt }} />
+      <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete" }} />
     ) : (
       !chrome?.hideSearchBar && <MapSearchBar onPress={() => navigate("/explore/search")} />
     );

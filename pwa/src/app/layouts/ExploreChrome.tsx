@@ -17,6 +17,8 @@ export interface ExploreChromeOptions {
   banner?: "search-this-area" | null;
   /** D5, D13. On /explore/trip with an active trip, the trip bar takes the search bar's place. */
   hideSearchBar?: boolean;
+  /** D13's Arrived step: the trip bar reads "✓ Trip complete · arrived 11:00 PM". */
+  tripBar?: "complete";
 }
 
 export interface SheetControl {
