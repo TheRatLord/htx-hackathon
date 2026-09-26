@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTransitCenters } from "../api/hooks.ts";
-import type { LatLon } from "../api/types.ts";
+import type { ClientStop, LatLon } from "../api/types.ts";
 import { t, useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
@@ -18,6 +18,7 @@ import {
   addTransitLayers,
   LABELLED_NEAREST,
   rankFrom,
+  setCoveredStops,
   setHighlightedStop,
   setNearLabels,
   setQuiet,
@@ -30,8 +31,18 @@ import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
 
-/** Label ranking is recomputed only when the anchor moves this far. */
+/** Label ranking is recomputed only when the anchor moves this far (the rider or the scene's point). */
 const RESORT_M = 50;
+/**
+ * Without either, the anchor is the map centre: re-ranking (re-sending all 8,797 stops to the map's
+ * worker) on every pan made panning janky on low-end phones. The ranking only picks which of two
+ * overlapping pins wins at zoom 15, so a coarse anchor is enough.
+ */
+const RESORT_CENTRE_M = 800;
+/** Below this much visible map (px), the attribution (i) is hidden: it sat on the only stops shown (46). */
+const ATTRIB_MIN_MAP_H = 300;
+/** A fit keeps its stops this far from the FAB column: a pin and its ID label (half a chip wide). */
+const FAB_LABEL_ROOM = 40;
 /** A fitted scene is fitted again this long after the sheet stops changing height. */
 const SETTLE_MS = 300;
 /** Right fit padding when a callout is drawn: the FAB column (72) plus half a street-name callout. */
@@ -59,7 +70,7 @@ function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl
     [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
     [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
   ];
-  const want = { top: pad.top ?? 0, bottom: pad.bottom ?? 0, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) };
+  const want = fabClear(map, { top: pad.top ?? 0, bottom: pad.bottom ?? 0, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) });
   // MapLibre adds the padding an earlier easeTo left on the map to fitBounds' own (Home's
   // sheet-height bottom plus this one's could exceed the canvas: "Map cannot fit", and the camera
   // never moved to the route's stops). Ask only for the difference, so the total is `want`.
@@ -71,6 +82,26 @@ function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl
     right: want.right - (cur.right ?? 0),
   };
   map.fitBounds(bounds, { padding: delta, maxZoom: 17 });
+}
+
+/**
+ * The FAB column ("Plan Trip" is ~150px wide, not the 72px a round FAB needs) covers the bottom
+ * right of the map. A fit keeps its content out from under it, by padding the right or the bottom,
+ * whichever leaves the larger box: route near you drew card 1's stop under Plan Trip (05).
+ */
+function fabClear(map: maplibregl.Map, want: { top: number; bottom: number; left: number; right: number }) {
+  const canvas = map.getContainer().getBoundingClientRect();
+  const fabs = document.querySelector<HTMLElement>("[data-map-fabs]")?.getBoundingClientRect();
+  if (!fabs?.width) return want;
+  // Room for a stop's ID label beside its pin, too, not just the pin.
+  const right = Math.max(want.right, canvas.right - fabs.left + FAB_LABEL_ROOM);
+  const bottom = Math.max(want.bottom, canvas.bottom - fabs.top + FAB_LABEL_ROOM);
+  const w = canvas.width - want.left;
+  const h = canvas.height - want.top;
+  const byRight = (w - right) * (h - want.bottom);
+  const byBottom = (w - want.right) * (h - bottom);
+  if (h - bottom < MIN_FIT_H) return { ...want, right };
+  return byRight >= byBottom ? { ...want, right } : { ...want, bottom };
 }
 
 /** A walk or trip's callout is centred on its pin: keep the pin far enough from the FAB column for it to clear. */
@@ -110,18 +141,27 @@ type Rect = { l: number; t: number; r: number; b: number };
 const overlaps = (a: Rect, b: Rect) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
 
 /**
- * What covers the map, in canvas px: the sheet (from its height) and every element marked
- * `data-map-obstacle` (the search bar and overlay slot, the FAB column).
+ * The map's own chrome, in canvas px: every element marked `data-map-obstacle` (the search bar and
+ * overlay slot, the FAB column) and the attribution's (i).
  */
-function obstacles(container: HTMLElement, sheetH: number): Rect[] {
+function chrome(container: HTMLElement): Rect[] {
   const box = container.getBoundingClientRect();
-  const out: Rect[] = [{ l: -Infinity, t: box.height - sheetH, r: Infinity, b: Infinity }];
-  for (const el of document.querySelectorAll<HTMLElement>("[data-map-obstacle]")) {
+  const out: Rect[] = [];
+  const els = [...document.querySelectorAll<HTMLElement>("[data-map-obstacle]"), ...container.querySelectorAll<HTMLElement>(".maplibregl-ctrl-attrib")];
+  for (const el of els) {
     const r = el.getBoundingClientRect();
     if (r.width && r.height) out.push({ l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top });
   }
   return out;
 }
+
+/** What covers the map: the sheet (from its height) and the chrome. */
+function obstacles(container: HTMLElement, sheetH: number): Rect[] {
+  return [{ l: -Infinity, t: container.getBoundingClientRect().height - sheetH, r: Infinity, b: Infinity }, ...chrome(container)];
+}
+
+/** A pin's square (28dp from zoom 16, 20dp below) plus a little room, around its point. */
+const PIN_BOX = { l: -16, t: -16, r: 16, b: 16 };
 
 /** A stop's pin with its ID chip under it (or above it), in canvas px around the pin's point. */
 const CHIP_BOX = { l: -34, t: -44, r: 34, b: 46 };
@@ -174,7 +214,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const rankLabels = (map: maplibregl.Map) => {
     const { scene, user } = latest.current;
     const anchor = labelAnchor(map, scene, user);
-    if (anchorRef.current && haversineM(anchorRef.current.lat, anchorRef.current.lon, anchor.lat, anchor.lon) < RESORT_M) return;
+    const fixed = Boolean(user ?? scene.focus?.point);
+    if (anchorRef.current && haversineM(anchorRef.current.lat, anchorRef.current.lon, anchor.lat, anchor.lon) < (fixed ? RESORT_M : RESORT_CENTRE_M)) return;
     anchorRef.current = anchor;
     // A failed load is forgotten, so the next camera move or scene tries again.
     void loadStops().then(
@@ -198,18 +239,34 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         .filter((m) => m.label && !clear(map.project([m.point.lon, m.point.lat]), markerLabelBox(m.label, TALL_PINS.has(m.kind)), obs, w))
         .map((m) => m.id),
     );
+    el.classList.toggle(styles.noAttrib, el.clientHeight - bottomPadding < ATTRIB_MIN_MAP_H);
     void loadStops().then((stops) => {
       if (!ready.current || mapRef.current !== map) return;
       const b = map.getBounds();
-      const rank = rankFrom(labelAnchor(map, latest.current.scene, latest.current.user ?? user));
-      const inView = [...stops.values()]
-        .filter((s) => s.kind !== "rail" && s.id !== scene.highlightStopId && b.contains([s.lon, s.lat]))
-        .sort((a, c) => rank(a) - rank(c));
+      const { scene: now } = latest.current;
+      const covering = chrome(el);
+      const rank = rankFrom(labelAnchor(map, now, latest.current.user ?? user));
+      // The scene's own stops (the cards listed in the sheet) are tagged first, then the nearest.
+      const tagged = new Set(now.tagStopIds ?? []);
+      const inView: { s: ClientStop; r: number }[] = [];
+      const covered: string[] = [];
+      for (const s of stops.values()) {
+        if (s.id === now.highlightStopId || !b.contains([s.lon, s.lat])) continue;
+        const p = map.project([s.lon, s.lat]);
+        const pin = { l: p.x + PIN_BOX.l, t: p.y + PIN_BOX.t, r: p.x + PIN_BOX.r, b: p.y + PIN_BOX.b };
+        if (covering.some((o) => overlaps(pin, o))) {
+          covered.push(s.id);
+          continue;
+        }
+        if (s.kind !== "rail") inView.push({ s, r: tagged.has(s.id) ? -1 : rank(s) });
+      }
+      inView.sort((a, c) => a.r - c.r);
       const ids: string[] = [];
-      for (const s of inView) {
-        if (ids.length === LABELLED_NEAREST) break;
+      for (const { s } of inView) {
+        if (ids.length >= Math.max(LABELLED_NEAREST, tagged.size)) break;
         if (clear(map.project([s.lon, s.lat]), CHIP_BOX, obs, w)) ids.push(s.id);
       }
+      setCoveredStops(map, covered);
       setNearLabels(map, ids);
     }, () => undefined);
   };

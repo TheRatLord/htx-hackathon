@@ -68,6 +68,7 @@ export function addTransitLayers(map: maplibregl.Map) {
   const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
   highlighted = undefined;
   nearIds = [];
+  coveredIds = [];
   map.addSource(STOPS_SOURCE, { type: "geojson", data: empty });
   map.addSource(TCS_SOURCE, { type: "geojson", data: empty });
   const text = token("--c-text");
@@ -152,8 +153,9 @@ export function addTransitLayers(map: maplibregl.Map) {
       "text-field": ["get", "name"],
       "text-font": LABEL_FONT_BOLD,
       "text-size": 14,
-      "text-anchor": "top",
-      "text-offset": [0, 1.6],
+      // Below the tile when there is room, else above or beside it: with the rider standing at the
+      // TC, a fixed anchor collided with their dot and the name was dropped (06).
+      "text-variable-anchor-offset": ["top", [0, 1.6], "bottom", [0, -1.6], "left", [1.8, 0], "right", [-1.8, 0]],
       "text-max-width": 9,
     },
     paint: { "text-color": token("--c-brand-navy"), "text-halo-color": "#fff", "text-halo-width": 2 },
@@ -176,14 +178,27 @@ export function setQuiet(map: maplibregl.Map, quiet: boolean) {
 
 let highlighted: string | undefined;
 let nearIds: string[] = [];
+let coveredIds: string[] = [];
 
 function applyFilters(map: maplibregl.Map) {
-  const notHighlighted: maplibregl.FilterSpecification = ["!=", ["get", "id"], highlighted ?? ""];
-  map.setFilter("stops-pin", highlighted ? notHighlighted : null);
-  map.setFilter("stops-pin-far", highlighted ? notHighlighted : null);
-  map.setFilter("stops-label", highlighted ? notHighlighted : null);
-  map.setFilter("stops-label-near", ["all", ["in", ["get", "id"], ["literal", nearIds]], notHighlighted]);
-  map.setFilter("stops-notch", highlighted ? ["all", ["has", "bearing"], notHighlighted] : ["has", "bearing"]);
+  const hidden = [...coveredIds, ...(highlighted ? [highlighted] : [])];
+  const shown: maplibregl.FilterSpecification = ["!", ["in", ["get", "id"], ["literal", hidden]]];
+  map.setFilter("stops-pin", hidden.length ? shown : null);
+  map.setFilter("stops-pin-far", hidden.length ? shown : null);
+  map.setFilter("stops-label", hidden.length ? shown : null);
+  map.setFilter("stops-label-near", ["all", ["in", ["get", "id"], ["literal", nearIds]], shown]);
+  map.setFilter("stops-notch", hidden.length ? ["all", ["has", "bearing"], shown] : ["has", "bearing"]);
+}
+
+/**
+ * Stops whose pin sits under the map's own buttons (search bar, FAB column, attribution): they are
+ * left out rather than drawn half-hidden under "Plan Trip", where a rider could neither read nor tap
+ * them. Panning brings them back.
+ */
+export function setCoveredStops(map: maplibregl.Map, ids: string[]) {
+  if (ids.length === coveredIds.length && ids.every((id, i) => id === coveredIds[i])) return;
+  coveredIds = ids;
+  applyFilters(map);
 }
 
 /** Hides one stop's normal pin and label while the scene shows it enlarged with its callout. */

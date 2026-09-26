@@ -25,3 +25,6 @@ export function canMakeIt(walkMin: number, dep: { departureTime: string }, now: 
   if (left < walkMin + 2) return "tight";
   return "yes";
 }
+
+/** Beyond this, a walk shows its distance instead of minutes (walk buttons, search rows, TC Walk). */
+export const MAX_WALK_MINUTES = 20;

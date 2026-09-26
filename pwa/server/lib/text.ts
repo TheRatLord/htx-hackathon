@@ -91,7 +91,7 @@ export function intersectionKey(name: string): string | null {
 }
 
 /** Optimal string alignment distance, bailing out above `max`. */
-export function editDistance(a: string, b: string, max = 2): number {
+function editDistance(a: string, b: string, max = 2): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
   const prev2 = new Array<number>(b.length + 1).fill(0);
   let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -113,7 +113,7 @@ export function editDistance(a: string, b: string, max = 2): number {
 }
 
 /** Similarity of one query token against one candidate token (0..1). */
-export function tokenSimilarity(q: string, c: string, allowPrefix: boolean): number {
+function tokenSimilarity(q: string, c: string, allowPrefix: boolean): number {
   if (q === c) return 1;
   if (allowPrefix && q.length >= 2 && c.startsWith(q)) return 0.85;
   if (/^\d+$/.test(q) || /^\d+$/.test(c)) return 0;

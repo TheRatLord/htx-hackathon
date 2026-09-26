@@ -1,12 +1,18 @@
 import { addDays, localDate, serviceDayStart, weekdayIndex } from "../lib/time.ts";
 import { gtfs } from "./store.ts";
 
+/** Per-date service tables, least recently used first. Bounded: `?date=` comes from clients. */
 const activeCache = new Map<string, Uint8Array>();
+const ACTIVE_CACHE_MAX = 30;
 
 /** Which service ids (by index) run on a Houston calendar date. */
 export function activeServices(date: string): Uint8Array {
   const cached = activeCache.get(date);
-  if (cached) return cached;
+  if (cached) {
+    activeCache.delete(date);
+    activeCache.set(date, cached);
+    return cached;
+  }
   const { meta } = gtfs();
   const idx = new Map(meta.services.map((s, i) => [s, i]));
   const active = new Uint8Array(meta.services.length);
@@ -20,6 +26,7 @@ export function activeServices(date: string): Uint8Array {
     if (i !== undefined && cd.date === date) active[i] = cd.type === 1 ? 1 : 0;
   }
   activeCache.set(date, active);
+  while (activeCache.size > ACTIVE_CACHE_MAX) activeCache.delete(activeCache.keys().next().value!);
   return active;
 }
 

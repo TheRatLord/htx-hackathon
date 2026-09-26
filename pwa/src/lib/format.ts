@@ -32,6 +32,9 @@ export function formatDuration(mins: number, tr: (key: string, vars?: Record<str
   return m ? tr("time.hrMin", { h, m }) : tr("time.hr", { h });
 }
 
+/** A bus last seen longer ago than this is drawn grey and labelled "Last seen N min ago" (map and route timeline). */
+export const STALE_VEHICLE_S = 120;
+
 /** Whole minutes since `ms` (never negative): the one rounding for "last seen 2 min ago" everywhere. */
 export function ageMinutes(ms: number, now: number): number {
   return Math.max(0, Math.floor((now - ms) / 60_000));

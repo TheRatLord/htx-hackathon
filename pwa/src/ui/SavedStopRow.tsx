@@ -33,23 +33,25 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
   return (
     <article className={`${styles.card} ${rowStyles.row}`}>
       <button type="button" className={styles.hit} aria-label={title} onClick={onOpen} />
-      <div className={styles.top}>
-        <h2 className={`${styles.name} ${rowStyles.name}`}>
-          <Icon name="star_filled" size={20} color="var(--c-accent-icon)" />
-          {title}
-        </h2>
-        {moreSaved && (
-          <button type="button" className={rowStyles.more} onClick={moreSaved.onPress}>
-            {t("card.moreSaved", { count: moreSaved.count })} ›
-          </button>
+      <div className={styles.head}>
+        <div className={styles.top}>
+          <h2 className={`${styles.name} ${rowStyles.name}`}>
+            <Icon name="star_filled" size={20} color="var(--c-accent-icon)" />
+            {title}
+          </h2>
+          {moreSaved && (
+            <button type="button" className={rowStyles.more} onClick={moreSaved.onPress}>
+              {t("card.moreSaved", { count: moreSaved.count })} ›
+            </button>
+          )}
+        </div>
+        {side && <p className={styles.meta}>{side}</p>}
+        {walkDistanceM !== undefined && onWalk && (
+          <div className={styles.walkSlot}>
+            <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />
+          </div>
         )}
       </div>
-      {(side || (walkDistanceM !== undefined && onWalk)) && (
-        <div className={styles.metaRow}>
-          <p className={styles.meta}>{side}</p>
-          {walkDistanceM !== undefined && onWalk && <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />}
-        </div>
-      )}
       <hr className={styles.divider} />
       {shown && (
         <div className={rowStyles.route}>

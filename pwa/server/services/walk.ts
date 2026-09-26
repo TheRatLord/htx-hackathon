@@ -75,13 +75,13 @@ export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestinatio
   // Only real answers are cached: a street route, or OSRM's deliberate "no route" / an
   // implausible detour (both fall back to a straight line). A timeout or 5xx is not cached, so
   // the next request asks OSRM again instead of serving a straight line for 24 h.
-  const load = async (): Promise<WalkRoute> => {
-    if (opts.fast && Date.now() - osrmFailedAt < OSRM_BACKOFF_MS) throw new UpstreamError("osrm", "osrm skipped after a recent failure");
+  const load = (fast: boolean) => async (): Promise<WalkRoute> => {
+    if (fast && Date.now() - osrmFailedAt < OSRM_BACKOFF_MS) throw new UpstreamError("osrm", "osrm skipped after a recent failure");
     const { body } = await fetchUpstream<OsrmResponse>({
       service: "osrm",
       url: `${OSRM}/${coords}?overview=full&geometries=geojson&steps=true`,
       fixtureKey: `foot/${coords}`,
-      ...(opts.fast && { timeoutMs: FAST_TIMEOUT_MS }),
+      ...(fast && { timeoutMs: FAST_TIMEOUT_MS }),
     }).catch((err: unknown) => {
       // A missing offline fixture is not OSRM being down.
       if (!config.offline) osrmFailedAt = Date.now();
@@ -98,7 +98,15 @@ export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestinatio
       steps: describeSteps(route.legs.flatMap((l) => l.steps), destination),
     };
   };
-  return cache.get(`${coords}|${destination?.label ?? ""}`, load).catch((err: unknown) => straightLine(from, to, destination, (err as Error).message));
+  const key = `${coords}|${destination?.label ?? ""}`;
+  const fast = Boolean(opts.fast);
+  let ownLoad = false;
+  const first = cache.get(key, () => ((ownLoad = true), load(fast)()));
+  // Fast and full callers share one cache entry. A full caller (the Walk screen) that joined a
+  // fast load (/nearby's 2 s timeout, or its skip after a failure) and saw it fail asks again with
+  // the full timeout, instead of showing a straight line the full request would have replaced.
+  const result = fast ? first : first.catch((err: unknown) => (ownLoad ? Promise.reject(err) : cache.get(key, load(false))));
+  return result.catch((err: unknown) => straightLine(from, to, destination, (err as Error).message));
 }
 
 function durations(distanceM: number, durationS: number) {

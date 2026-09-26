@@ -29,6 +29,22 @@
   padding-top: var(--chip-band);
 }
 
+/* Inline in a line of text ("Also here: [11] ›"). */
+.xs {
+  min-width: 36px;
+  min-height: 28px;
+  font-size: var(--fs-body);
+  vertical-align: middle;
+}
+
+.xs .band {
+  height: 4px;
+}
+
+.xs .name {
+  padding-top: 4px;
+}
+
 .sm {
   min-width: var(--chip-route-sm);
   min-height: var(--chip-route-sm);

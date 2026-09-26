@@ -4,6 +4,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { LatLon } from "../api/types.ts";
 import { roundedKey } from "../lib/geo.ts";
+import { createSignal } from "../lib/signal.ts";
 
 export type WalkDistanceSource = "osrm" | "estimate";
 
@@ -16,7 +17,7 @@ interface Entry {
 const REFINE_THRESHOLD = 0.1;
 
 const cache = new Map<string, Entry>();
-const listeners = new Set<() => void>();
+const signal = createSignal();
 const keyOf = (from: LatLon, stopId: string) => `${roundedKey(from)}|${stopId}`;
 
 /** Records a distance; returns the entry now in effect. */
@@ -29,14 +30,11 @@ export function recordWalkDistance(from: LatLon, stopId: string, distanceM: numb
   if (!replace) return prev;
   const entry = { distanceM, source };
   cache.set(key, entry);
-  listeners.forEach((l) => l());
+  signal.notify();
   return entry;
 }
 
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe } = signal;
 
 /**
  * The best-known distance. `seedM` (a card's /nearby distance, or Walk's `?d=`) is recorded as the

@@ -4,24 +4,25 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { ApiError } from "../api/client.ts";
+import { createSignal } from "../lib/signal.ts";
 
 let networkDown = false;
-const listeners = new Set<() => void>();
+const signal = createSignal();
 
 /** Called by the QueryCache after every query: a success clears the flag, a network error sets it. */
 export function reportQueryResult(error: unknown) {
   const down = error instanceof ApiError && error.code === "network";
   if (down === networkDown) return;
   networkDown = down;
-  listeners.forEach((l) => l());
+  signal.notify();
 }
 
 function subscribe(listener: () => void) {
-  listeners.add(listener);
+  const off = signal.subscribe(listener);
   window.addEventListener("online", listener);
   window.addEventListener("offline", listener);
   return () => {
-    listeners.delete(listener);
+    off();
     window.removeEventListener("online", listener);
     window.removeEventListener("offline", listener);
   };

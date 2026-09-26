@@ -6,18 +6,14 @@ import { useOffline } from "../state/offline.ts";
 import { Icon } from "./Icon.tsx";
 import styles from "./UpdatedAgo.module.css";
 import type { UpdatedAgoProps } from "./types.ts";
+import { createSignal } from "../lib/signal.ts";
 
 // How many sheet-header UpdatedAgo lines (`compact`) are on screen. While one is, it says "Offline —
 // times from 12:07 PM" at the top of the sheet, and the Explore layout drops its own offline banner
 // over the map (one message, once). A line at the foot of a sheet (the stop sheet) is below the
 // fold, so the map banner stays.
 let mounted = 0;
-const listeners = new Set<() => void>();
-const notify = () => listeners.forEach((l) => l());
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe, notify } = createSignal();
 
 /** True while an UpdatedAgo line is showing (it carries the offline status then). */
 export function useUpdatedAgoShown(): boolean {
@@ -42,17 +38,21 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
       notify();
     };
   }, [compact]);
-  const ageS = Math.max(0, Math.round((now - Date.parse(at)) / 1000));
+  const atMs = Date.parse(at);
+  // No real fetch time yet (placeholder data keeps `dataUpdatedAt` at 0): say nothing rather than
+  // "Not updated for 29,000,000 min" or "times from 6:00 PM" (the 1970 epoch).
+  if (!(atMs > 0)) return null;
+  const ageS = Math.max(0, Math.round((now - atMs) / 1000));
   const stale = !offline && ageS > STALE_S;
   let text: string;
   // The clock time never breaks across lines ("12:11 / PM").
   if (offline) text = t("updated.offline", { time: formatClock(at, lang).replace(/\s/g, "\u00a0") });
-  else if (stale) text = t("updated.stale", { n: ageMinutes(Date.parse(at), now) });
+  else if (stale) text = t("updated.stale", { n: ageMinutes(atMs, now) });
   else {
     // Under a minute old it is simply "just now": seconds read as machine output.
     if (ageS < 60) text = t(compact ? "updated.justNowShort" : "updated.justNow");
     else {
-      const ago = t("updated.min", { n: ageMinutes(Date.parse(at), now) });
+      const ago = t("updated.min", { n: ageMinutes(atMs, now) });
       text = compact ? ago : t("updated.ago", { ago });
     }
   }

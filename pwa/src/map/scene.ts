@@ -7,6 +7,11 @@ import type { LatLon } from "../api/types.ts";
 
 export interface MapScene {
   focus?: { kind: "user" | "point" | "bounds"; point?: LatLon; bounds?: [LatLon, LatLon]; zoom?: number };
+  /**
+   * Stops the sheet lists (Home's cards, route near you, a place's stops): their ID chips are shown
+   * first, before the stops nearest the rider, so every card's stop can be found on the map.
+   */
+  tagStopIds?: string[];
   /** Enlarged pin; on a scene with `legs` (walk, trip) also a white callout with the stop's name. */
   highlightStopId?: string;
   /** The selected route, [lon, lat] pairs. */
@@ -19,32 +24,25 @@ export interface MapScene {
   vehicles?: { id: string; point: LatLon; label: string; ageSeconds?: number }[];
 }
 
-export interface MapContextValue {
-  scene: MapScene;
-  setScene: (scene: MapScene) => void;
-  /** Current sheet height in px, so camera moves keep content above the sheet. */
-  padding: { bottom: number };
-  /** The map centre after the last pan or zoom (for "Search this area"). */
-  center?: LatLon;
-}
-
-export const MapContext = createContext<MapContextValue | null>(null);
-
-function useMapContext(): MapContextValue {
-  const ctx = useContext(MapContext);
-  if (!ctx) throw new Error("Map hooks must be used inside AppShell");
-  return ctx;
-}
+/**
+ * Two contexts, so a screen re-renders only for what it reads: `setScene` never changes, and the
+ * map centre changes after each pan. (One value with the sheet height in it re-rendered every
+ * Explore screen per pixel of a sheet drag.)
+ */
+export const MapSceneContext = createContext<((scene: MapScene) => void) | null>(null);
+export const MapCenterContext = createContext<LatLon | undefined>(undefined);
 
 /** `deps` work like useEffect's: the scene is re-applied when they change. */
 export function useMapScene(scene: MapScene, deps: unknown[]): void {
-  const { setScene } = useMapContext();
+  const setScene = useContext(MapSceneContext);
+  if (!setScene) throw new Error("Map hooks must be used inside AppShell");
   useEffect(() => {
     setScene(scene);
     return () => setScene({});
   }, [setScene, ...deps]);
 }
 
+/** The map centre after the last pan or zoom (for "Search this area"). */
 export function useMapCenter(): LatLon | undefined {
-  return useMapContext().center;
+  return useContext(MapCenterContext);
 }

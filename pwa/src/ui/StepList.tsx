@@ -45,10 +45,15 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
                 {s.route && <RouteBadge route={s.route} size="sm" />}
                 <span className={styles.titleText}>{s.title}</span>
               </span>
+              {/* The duration ends the last grey line as plain text ("12:15 PM · 26 stops · 16 min"):
+                  a boxed "16 min" read as a route chip or a button. */}
               {s.lines.map((l, j) => (
-                <span key={j}>{l}</span>
+                <span key={j} className={styles.line}>
+                  {l}
+                  {s.duration && j === s.lines.length - 1 && ` · ${s.duration}`}
+                </span>
               ))}
-              {s.duration && <span className={styles.duration}>{s.duration}</span>}
+              {s.duration && !s.lines.length && <span className={styles.line}>{s.duration}</span>}
               {s.demo && <DemoTag />}
             </span>
             {s.time && (

@@ -53,7 +53,8 @@
   display: none;
 }
 
-/* An opaque button after the scroller, never over a chip. */
+/* A text button after the scroller, never over a chip. No fill of its own: it takes whatever the
+   page or sheet behind it is (white sheet, lavender TC page), so it never reads as a stray box. */
 .more {
   display: inline-flex;
   flex: none;
@@ -61,7 +62,7 @@
   min-width: var(--touch-min);
   padding: 0 var(--gutter) 0 var(--sp-2);
   border: none;
-  background: var(--c-surface);
+  background: none;
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
   white-space: nowrap;

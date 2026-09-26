@@ -3,7 +3,7 @@
 
 import type { Arrival, DataSource } from "../../shared/types.ts";
 import { scheduledDepartures } from "../gtfs/schedule.ts";
-import { gtfs } from "../gtfs/store.ts";
+import { gtfs, tripInfo } from "../gtfs/store.ts";
 import { stopsNear } from "../gtfs/spatial.ts";
 import { formatDistance, haversineM } from "../lib/geo.ts";
 import { getArrivals } from "./arrivals.ts";
@@ -40,10 +40,18 @@ export interface NearbyStop {
   /**
    * For a route serving the stop with nothing in the 2-hour window (late night): its next
    * scheduled departure within 18 hours, so the card says "First bus 5:10 AM" rather than
-   * only "No buses in the next 2 hours". Keyed by route id.
+   * only "No buses in the next 2 hours", with the direction it runs ("SOUTHBOUND to DOWNTOWN TC").
+   * Keyed by route id.
    */
-  laterFirst?: Record<string, string>;
+  laterFirst?: Record<string, LaterFirst>;
   realtimeSources: DataSource[];
+}
+
+/** A route's next scheduled departure after a gap, and which way that bus goes. */
+export interface LaterFirst {
+  departureTime: string;
+  directionLabel: string;
+  headsign: string;
 }
 
 export interface NearbyTransitCenter {
@@ -118,17 +126,21 @@ export async function getNearby(lat: number, lon: number, opts: { radiusM?: numb
 /** Beyond the 2-hour window, how far ahead a route's next departure is looked up. */
 const LATER_FIRST_MS = 18 * 3600_000;
 
-function firstLaterByRoute(stopIdx: number, routeIds: string[], running: Set<string>, now: number): Record<string, string> | undefined {
+function firstLaterByRoute(stopIdx: number, routeIds: string[], running: Set<string>, now: number): Record<string, LaterFirst> | undefined {
   const g = gtfs();
-  let out: Record<string, string> | undefined;
+  let out: Record<string, LaterFirst> | undefined;
   for (const routeId of routeIds) {
     const routeIdx = g.routeIndex.get(routeId);
     if (running.has(routeId) || routeIdx === undefined) continue;
     const [first] = scheduledDepartures(stopIdx, now, now + LATER_FIRST_MS, { routeIdx: new Set([routeIdx]), limit: 1 });
-    if (first) (out ??= {})[routeId] = new Date(first.epochMs).toISOString();
+    if (!first) continue;
+    const trip = tripInfo(first.tripIdx);
+    (out ??= {})[routeId] = { departureTime: new Date(first.epochMs).toISOString(), directionLabel: trip.directionLabel, headsign: trip.headsign };
   }
   return out;
 }
+
+const DEPS_PER_ROUTE = 3;
 
 function groupByRoute(arrivals: Arrival[]): NearbyRoute[] {
   const groups = new Map<string, NearbyRoute>();
@@ -148,7 +160,9 @@ function groupByRoute(arrivals: Arrival[]): NearbyRoute[] {
       };
       groups.set(key, g);
     }
-    if (g.departures.length < 2) {
+    // Three, not two: the card leaves out a bus the rider can't walk to in time (DepTimes), and
+    // it still shows two times ("23 min · 43 min", not a lone "23 min").
+    if (g.departures.length < DEPS_PER_ROUTE) {
       const { departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId, source } = a;
       g.departures.push({ departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId, source });
     }

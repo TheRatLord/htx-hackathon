@@ -16,7 +16,10 @@ export class TtlCache<V> {
     }
     const value = load();
     this.map.set(key, { value, expires: Date.now() + ttlMs });
-    value.catch(() => this.map.delete(key));
+    // Only this load's own entry: a newer load that replaced it (after the TTL) stays.
+    value.catch(() => {
+      if (this.map.get(key)?.value === value) this.map.delete(key);
+    });
     while (this.map.size > this.maxEntries) this.map.delete(this.map.keys().next().value!);
     return value;
   }

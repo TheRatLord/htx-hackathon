@@ -151,13 +151,8 @@
   font-weight: var(--fw-medium);
 }
 
-.duration {
-  align-self: flex-start;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--c-outline);
-  border-radius: var(--r-chip);
-  background: var(--c-surface);
-  font-size: var(--fs-body);
+.line {
+  color: var(--c-text-variant);
 }
 
 .time {

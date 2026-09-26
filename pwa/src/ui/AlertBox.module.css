@@ -26,21 +26,16 @@
   min-width: 0;
 }
 
-/* "⚠ Stop moved: …", the icon hanging beside the first line. */
-.lead {
-  display: flex;
-  gap: var(--sp-2);
-  align-items: flex-start;
-}
-
-.lead > svg {
-  flex: none;
-}
-
 .headline {
-  flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* "⚠ Stop moved: …": the icon on the first line's baseline. */
+.headline > svg {
+  display: inline-block;
+  margin-inline-end: var(--sp-1);
+  vertical-align: -3px;
 }
 
 .description {
@@ -53,13 +48,6 @@
 }
 
 .meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.badges {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

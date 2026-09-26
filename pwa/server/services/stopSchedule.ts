@@ -36,6 +36,17 @@ function departuresOn(stopIdx: number, routeIdx: number, serviceDate: string): n
  * Weekday / Saturday / Sunday tabs). `nextServiceFirst` is always relative to now, and is left
  * out (null) for a date other than the current service day.
  */
+const DATE_BACK_DAYS = 7;
+const DATE_AHEAD_DAYS = 60;
+
+/** "20260926" and a real day (not "20261399"). */
+function isCalendarDate(date: string): boolean {
+  const m = /^(\d{4})(\d{2})(\d{2})$/.exec(date);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]);
+}
+
 export function getStopSchedule(stopId: string, routeId: string, now = Date.now(), date?: string): StopSchedule {
   const g = gtfs();
   const stop = findStop(stopId);
@@ -53,7 +64,10 @@ export function getStopSchedule(stopId: string, routeId: string, now = Date.now(
   const late = departuresOn(stopIdx, routeIdx, yesterday);
   const current = late.some((t) => t >= now) ? yesterday : today;
   if (date && date !== current) {
-    if (!/^\d{8}$/.test(date)) throw new ApiError(400, "BAD_DATE", '"date" must be a service date like 20260926');
+    if (!isCalendarDate(date)) throw new ApiError(400, "BAD_DATE", '"date" must be a service date like 20260926');
+    // Only dates a rider would ask for (the D7 day tabs): a client can't fill the per-date service cache.
+    if (date < addDays(today, -DATE_BACK_DAYS) || date > addDays(today, DATE_AHEAD_DAYS))
+      throw new ApiError(400, "BAD_DATE", `"date" must be within ${DATE_AHEAD_DAYS} days of today`);
     const times = departuresOn(stopIdx, routeIdx, date);
     return {
       stopId: stop.id,

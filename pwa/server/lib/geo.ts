@@ -42,7 +42,7 @@ export function circularMean(samples: { bearing: number; weight: number }[]): { 
 }
 
 /** Local equirectangular projection in meters, accurate enough at city scale. */
-export function projector(lat0: number) {
+function projector(lat0: number) {
   const kx = (Math.cos(rad(lat0)) * Math.PI * R) / 180;
   const ky = (Math.PI * R) / 180;
   return {
