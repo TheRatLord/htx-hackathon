@@ -27,14 +27,22 @@ export function loadRoutes(): Promise<void> {
   return loading;
 }
 
+/** GTFS bus ids are zero-padded ("080"); URLs and riders say "80". */
+const padded = (id: string) => id.padStart(3, "0");
+
 /** Accepts "080", "80" or "Red", like the server. */
 export function routeRef(id: string): RouteRef | undefined {
-  return byId.get(id) ?? byId.get(id.padStart(3, "0")) ?? byName.get(id.toLowerCase());
+  return byId.get(id) ?? byId.get(padded(id)) ?? byName.get(id.toLowerCase());
+}
+
+/** The GTFS id for "80", "080" or "Red", so two spellings of one route compare equal (even before routes.json loads). */
+export function canonicalRouteId(id: string): string {
+  return routeRef(id)?.id ?? padded(id);
 }
 
 /** For transit-center `unassignedRoutes`, which carry short names such as "219". */
 export function routeRefByName(shortName: string): RouteRef | undefined {
-  return byName.get(shortName.toLowerCase()) ?? byId.get(shortName.padStart(3, "0"));
+  return byName.get(shortName.toLowerCase()) ?? byId.get(padded(shortName));
 }
 
 /** A RouteRef for a route as the API describes it; `mode` comes from routes.json when loaded. */

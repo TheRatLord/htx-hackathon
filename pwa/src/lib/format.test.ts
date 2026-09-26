@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatClock, formatDeparture, formatDistance, headsignLine, sideLine, statusOf, upcoming } from "./format.ts";
-import { localiseSide, walkStepText } from "./i18nServer.ts";
+import { ApiError } from "../api/client.ts";
+import type { Dep } from "../api/types.ts";
+import { departureA11y, formatClock, formatDeparture, formatDistance, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
+import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
 const NOW = Date.parse("2026-09-26T00:00:00Z");
@@ -95,5 +97,56 @@ describe("walkStepText", () => {
     expect(walkStepText({ ...step, maneuver: "end of road", modifier: "right" }, "en")).toBe("Turn right");
     expect(walkStepText({ ...step, maneuver: "new name", modifier: "straight", street: "Main St" }, "en")).toBe("Continue on Main St");
     expect(walkStepText({ ...step, maneuver: "arrive", street: "Lamar St @ Main St" }, "en")).toBe("Arrive at Lamar St @ Main St");
+  });
+
+  it("gives the first heading in the rider's language", () => {
+    const depart = { ...step, maneuver: "depart", compass: "southeast" as const, street: "Calhoun Rd" };
+    expect(walkStepText(depart, "en")).toBe("Head southeast on Calhoun Rd");
+    expect(walkStepText(depart, "es")).toBe("Camine hacia el sureste por Calhoun Rd");
+  });
+
+  it("falls back to the server's instruction when a needed field is missing", () => {
+    expect(walkStepText({ ...step, maneuver: "depart", street: "Calhoun Rd" }, "en")).toBe(step.instruction);
+  });
+});
+
+describe("departureA11y", () => {
+  const dep = (min: number, extra: Partial<Dep> = {}): Dep => ({
+    departureTime: at(min),
+    isRealtime: false,
+    canceled: false,
+    source: "schedule",
+    tripId: "t",
+    ...extra,
+  });
+
+  it("speaks minutes and every non-default status", () => {
+    expect(departureA11y(dep(16), NOW, { lang: "en" })).toBe("16 minutes");
+    expect(departureA11y(dep(16), NOW, { markScheduled: true, lang: "en" })).toBe("16 minutes, Scheduled");
+    expect(departureA11y(dep(4, { isRealtime: true, source: "metro-arrivals-api" }), NOW, { lang: "en" })).toBe("4 minutes, Live");
+    expect(departureA11y(dep(4, { isRealtime: true, source: "simulated" }), NOW, { lang: "en" })).toBe("4 minutes, Live (demo)");
+    expect(departureA11y(dep(12, { canceled: true }), NOW, { walkMin: 20, lang: "en" })).toBe("12 minutes, Canceled");
+  });
+
+  it("says when the bus leaves before the rider can walk there, and uses clock times offline", () => {
+    expect(departureA11y(dep(2), NOW, { walkMin: 5, lang: "en" })).toBe("2 minutes, Leaves before you get there");
+    expect(departureA11y(dep(16, { isRealtime: true, source: "metro-arrivals-api" }), NOW, { offline: true, lang: "en" })).toBe("7:16 PM");
+  });
+});
+
+describe("platformLabel", () => {
+  it("takes the part after the dash, or the stop number", () => {
+    expect(platformLabel({ id: "79", name: "Northwest Transit Center - Platform 2" }, "en")).toBe("Platform 2");
+    expect(platformLabel({ id: "79", name: "Northwest Transit Center" }, "es")).toBe("Parada #79");
+  });
+});
+
+describe("errorText", () => {
+  it("localises by code and falls back when a placeholder has no value", () => {
+    const err = new ApiError("stop_not_found", 404, "We couldn't find stop #99.");
+    expect(errorText(err, { id: "99" }, "es")).toBe("No encontramos la parada #99. Revise el número en el letrero de la parada.");
+    expect(errorText(err, undefined, "en")).toBe("We couldn't find stop #99.");
+    expect(errorText(err, undefined, "es")).toBe("Algo salió mal. Intente de nuevo.");
+    expect(errorText(new ApiError("brand_new_code", 500, "Server text"), undefined, "en")).toBe("Server text");
   });
 });

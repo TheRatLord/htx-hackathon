@@ -32,7 +32,7 @@ export function parsePlanQuery(search: URLSearchParams): PlanQuery {
   return q;
 }
 
-export function planSearchParams(q: PlanQuery): URLSearchParams {
+function planSearchParams(q: PlanQuery): URLSearchParams {
   const p = new URLSearchParams();
   for (const k of ["from", "fromName", "to", "toName", "time"] as const) if (q[k]) p.set(k, q[k]!);
   if (q.arriveBy) p.set("arriveBy", "1");

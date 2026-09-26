@@ -3,6 +3,7 @@
 
 import type { Alert, Itinerary } from "../api/types.ts";
 import { hasKey, t, type Lang } from "../i18n/index.ts";
+import { canonicalRouteId } from "./routes.ts";
 
 export function effectWord(effect: string, lang: Lang): string {
   const key = `alert.effect.${effect}`;
@@ -17,7 +18,7 @@ export function alertText(alert: Alert, field: "header" | "description", lang: L
   return { text, englishOnly: lang !== "en" && Boolean(text) };
 }
 
-const sameRoute = (a: string, b: string) => a === b || a.padStart(3, "0") === b.padStart(3, "0");
+const sameRoute = (a: string, b: string) => canonicalRouteId(a) === canonicalRouteId(b);
 
 export function alertsForRoute(alerts: Alert[], routeId: string): Alert[] {
   return alerts.filter((a) => a.routes.some((r) => sameRoute(r.routeId, routeId)));

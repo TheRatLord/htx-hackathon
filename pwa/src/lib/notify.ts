@@ -14,10 +14,17 @@ export async function requestNotify(): Promise<NotifyPermission> {
   return Notification.requestPermission();
 }
 
+const BUZZ = [200, 100, 200];
+/** `serviceWorker.ready` never settles when no worker is registered (e.g. `vite dev`). */
+const SW_READY_TIMEOUT_MS = 3_000;
+
+/** Shows a notification through the service worker; without one, it still buzzes. */
 export async function notify(title: string, body: string, tag: string): Promise<void> {
   if (notifyPermission() !== "granted") return;
-  const registration = await navigator.serviceWorker.ready;
-  await registration.showNotification(title, { body, tag, vibrate: [200, 100, 200] } as NotificationOptions);
+  const timeout = new Promise<undefined>((resolve) => setTimeout(resolve, SW_READY_TIMEOUT_MS));
+  const registration = await Promise.race([navigator.serviceWorker.ready, timeout]);
+  if (registration) await registration.showNotification(title, { body, tag, vibrate: BUZZ } as NotificationOptions);
+  else vibrate(BUZZ);
 }
 
 export function vibrate(pattern: number | number[]) {
