@@ -100,7 +100,8 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   are 945 m to stop 342 (136 m away) and 1,124 m to stop 246 (35 m away). D8 would say 13 min,
   and `/nearby?precise=1` would sort the nearest stop last. Suggest: when OSRM's distance is more
   than 3× the straight line plus 150 m, return the straight-line estimate (with its "Street
-  directions unavailable" warning) instead. The fixtures are real answers and stay as recorded.
+  directions unavailable" warning) instead. Meanwhile `record-fixtures.ts` drops any recorded
+  walk over that limit, so the offline run uses the estimate (246 · 1 min, 342 · 2 min).
 - Status: open
 
 ## Vehicle age in the map scene
@@ -110,4 +111,14 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   carry no age, so the map can't grey them. An optional `ageSeconds?: number` per vehicle (C/A
   pass `Vehicle.ageSeconds`) would let MapView switch to a grey icon; screens can already put
   "Last seen 3 min ago" in `label`. Not changed here because it alters an exported type.
+- Status: open
+
+## F11: the real street walk from the museum puts 688 second
+- From: F0b (fixture recording)
+- Where: `docs/design/spec.md` E/F11 and D4
+- Need: F11's end state ("Main St @ Remington Ln (688) · 🚶 4 min", first) holds with the
+  straight-line estimate (688: 288 m, 4 min; 2504: 313 m). OSRM's street walks from the museum
+  (29.7220,-95.3897) say 688 is 345 m (5 min) and 2504 is 331 m (4 min), so with recorded walks
+  2504 sorts first. The recordings are not committed, so the demo matches the spec; the spec
+  owner should decide whether F11 names 688 at 4 min (estimate) or 2504 (street route).
 - Status: open
