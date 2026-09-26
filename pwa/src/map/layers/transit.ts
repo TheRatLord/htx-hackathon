@@ -229,6 +229,11 @@ let coveredIds: string[] = [];
 
 /** Stops whose own pin, notch and chip are not drawn: covered by the chrome or a cluster pin, or highlighted. */
 const hiddenIds = () => [...coveredIds, ...(highlighted ? [highlighted] : [])];
+// Dev builds only: the layout guards (tests/e2e/helpers.ts) read which stop pins are hidden under a
+// cluster or the enlarged pin from here, instead of re-deriving it from the stops-pin filter.
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  (window as unknown as { __transit: unknown }).__transit = { coveredIds: () => [...coveredIds], highlighted: () => highlighted };
+}
 /** The layers applyFilters hides `hiddenIds` from. */
 const FILTERED = new Set(["stops-pin", "stops-pin-far", "stops-label", "stops-notch"]);
 

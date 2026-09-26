@@ -15,15 +15,18 @@
 //       'Also at 12:30 PM' for the same trip)
 //   G9  a half sheet at its peek never slices a line of text or a button at the tab bar
 //       (03-home-saved-xlarge-360: 'The 1 min bus leaves before you get there' cut in half;
-//       47-stop-342-xlarge-360: Schedule / Track bus cut in half)
+//       47-stop-342-xlarge-360: Schedule / Track bus cut in half; 46-home-xlarge-360: the 51's
+//       'DOWNTOWN TC' cut in half with no saved stop)
 //   G10 a place's stop list tags its listed stops on the map, inside the visible strip (07-place-hmns)
+//   G11 Route 82's expanded 2958 and Home's saved 2958 agree on whether the first bus can be caught
+//       (18-route-82-stop-2958 showed '1 min' as the lead time beside 'Walk 3 min' while Home said
+//       'The 1 min bus leaves before you get there', same frozen instant)
 //
-// A map answer read from the sources' data because maplibre's feature index kept throwing (helpers.ts
-// MapPoint.fromData) is annotated "map-from-data" on the test: it says what the app asked the map to
-// draw, not what was drawn.
+// Map answers (G6, G10) come only from what maplibre drew (helpers.ts pinPosition / tagPosition):
+// when its feature index keeps throwing the guard fails, it never answers from the app's own data.
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { firstTimeBox, GPS, launch, mapAnnotate, ONBOARDED, pinPosition, SAVED_2958, settle, tagPosition, type Gps } from "./helpers.ts";
+import { firstTimeBox, GPS, launch, ONBOARDED, pinPosition, SAVED_2958, settle, tagPosition, type Gps } from "./helpers.ts";
 
 const PLAN_Q = "from=29.71990%2C-95.34220&to=landmark%3Ahobby-airport&toName=Hobby+Airport";
 const prefs = (lang: "en" | "es", textSize: "standard" | "xlarge") => ({ "ridemetro.prefs": { welcomed: true, lang, textSize, walkPace: "normal" } });
@@ -96,12 +99,25 @@ async function slicedAtNav(page: Page): Promise<string[]> {
         if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(a).overflowY)) clip = Math.min(clip, a.getBoundingClientRect().bottom);
       return clip;
     };
-    const cut = (top: number, bottom: number, clip: number) => top < clip - 2 && bottom > clip + 2;
+    const cut = (top: number, bottom: number, clip: number) => top < clip - 1 && bottom > clip + 1;
     const out: string[] = [];
-    // A button or link is one control: it is sliced as a whole. A tappable card (it holds a heading,
-    // or is taller than two rows) is a container: its own lines are checked one by one instead.
+    // A button or link is one control: it is sliced as a whole. A tappable card or row (it holds a
+    // heading, is taller than two rows, or its text runs on more than one line, like a route row's
+    // headsign over its times) is a container: its own lines are checked one by one instead, so a
+    // row whose route chip peeks above the tab bar with none of its text is not a sliced button.
     const sel = "button, a[href], [role=button]";
-    const isCard = (b: Element) => Boolean(b.querySelector("h1, h2, h3, h4")) || b.getBoundingClientRect().height > 120;
+    const textLines = (b: Element) => {
+      const tops = new Set<number>();
+      const w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+      for (let n = w.nextNode() as Text | null; n; n = w.nextNode() as Text | null) {
+        if (!n.data.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(n);
+        for (const r of Array.from(range.getClientRects())) if (r.height > 0) tops.add(Math.round(r.top / 4));
+      }
+      return tops.size;
+    };
+    const isCard = (b: Element) => Boolean(b.querySelector("h1, h2, h3, h4")) || b.getBoundingClientRect().height > 120 || textLines(b) > 1;
     for (const b of Array.from(sheet.querySelectorAll<HTMLElement>(sel))) {
       const r = b.getBoundingClientRect();
       if (r.height === 0 || isCard(b) || getComputedStyle(b).visibility === "hidden") continue;
@@ -117,8 +133,11 @@ async function slicedAtNav(page: Page): Promise<string[]> {
       const range = document.createRange();
       range.selectNodeContents(n);
       const clip = clipOf(n.parentElement);
+      // A line box runs from the font's ascent to its descent: the glyphs' capitals start about a fifth
+      // of the way down and sit on a baseline about four fifths down. The line is sliced when the edge
+      // crosses that band (a cut through the leading above the caps or a descender tail shows no text).
       for (const r of Array.from(range.getClientRects()))
-        if (r.height > 0 && cut(r.top, r.bottom, clip)) out.push(`text "${n.data.trim().slice(0, 40)}" line y ${Math.round(r.top)}–${Math.round(r.bottom)}, cut at ${Math.round(clip)}`);
+        if (r.height > 0 && cut(r.top + 0.2 * r.height, r.top + 0.78 * r.height, clip)) out.push(`text "${n.data.trim().slice(0, 40)}" line y ${Math.round(r.top)}–${Math.round(r.bottom)}, cut at ${Math.round(clip)}`);
     }
     return out;
   }, nav.y);
@@ -196,14 +215,13 @@ test.describe("layout guards", () => {
     expect(warned || norm(homeFirst?.text) === norm(stopFirst!.text), `Home's saved card says ${homeFirst?.text ?? "nothing"} first; the stop sheet says ${stopFirst!.text}, and Home doesn't say the bus leaves before you get there`).toBe(true);
   });
 
-  test("G6 first listed stop has a pin in the map strip: Home, Spanish 360x640", async ({ page }, info) => {
+  test("G6 first listed stop has a pin in the map strip: Home, Spanish 360x640", async ({ page }) => {
     await open(page, "/explore", { storage: prefs("es", "standard"), small: true });
     await page.waitForTimeout(1500);
     const first = page.locator("article h2, article h3").filter({ hasText: /\(\d+\)/ }).first();
     await expect(first).toBeVisible();
     const id = (await first.innerText()).match(/\((\d+)\)/)![1];
     const pin = await pinPosition(page, id);
-    mapAnnotate(info, `pin ${id}`, pin);
     const bar = (await page.getByRole("button", { name: /^Buscar un lugar/ }).first().boundingBox())!;
     const sheetTop = (await page.getByRole("region").first().boundingBox())!.y;
     const barBottom = bar.y + bar.height;
@@ -238,6 +256,12 @@ test.describe("layout guards", () => {
   for (const v of [
     { name: "Home, saved 2958", path: "/explore", gps: GPS.montrose, storage: SAVED_2958 },
     { name: "stop 342", path: "/explore/stop/342?route=040", gps: GPS.downtown, storage: {} },
+    // Home with no saved stop: the first screen a new rider sees (46-home-xlarge-360 at downtown),
+    // and the other places the flows start from, so a card mix not seen in the judged set is covered too.
+    { name: "Home, no saved stop, downtown", path: "/explore", gps: GPS.downtown, storage: {} },
+    { name: "Home, no saved stop, Montrose", path: "/explore", gps: GPS.montrose, storage: {} },
+    { name: "Home, no saved stop, UH", path: "/explore", gps: GPS.uh, storage: {} },
+    { name: "Home, no saved stop, Northwest TC", path: "/explore", gps: GPS.nwtc, storage: {} },
   ])
     for (const size of ["standard", "xlarge"] as const)
       test(`G9 the peek sheet ends on whole lines and buttons: ${v.name}, ${size} 360x640`, async ({ page }) => {
@@ -246,7 +270,36 @@ test.describe("layout guards", () => {
         expect(await slicedAtNav(page), "cut in half by the tab bar at the sheet's peek").toEqual([]);
       });
 
-  test("G10 a place's listed stops are tagged on the map: Stops near the Houston Museum of Natural Science", async ({ page }, info) => {
+  test("G11 Route 82's stop 2958 and Home's saved 2958 agree that the first bus leaves before you get there", async ({ page }) => {
+    const leaves = /leaves before you get there/i;
+    const caption = async (scope: Locator) => {
+      const el = scope.getByText(leaves).filter({ visible: true }).first();
+      return (await el.isVisible().catch(() => false)) ? (await el.innerText()).replace(/\s+/g, " ").trim() : null;
+    };
+    await open(page, "/explore", { gps: GPS.montrose, storage: { ...ONBOARDED, ...SAVED_2958 } });
+    const card = page.locator("article").filter({ has: page.locator("h2", { hasText: "Westheimer Rd @ Montrose Blvd" }) }).first();
+    await expect(card).toBeVisible();
+    const home = await caption(card);
+    await keepShot(page, "G11 home saved 2958");
+
+    await page.getByRole("button", { name: "Search for a place, stop or route" }).first().tap();
+    await expect(page.getByRole("searchbox")).toBeFocused();
+    await page.keyboard.type("82", { delay: 20 });
+    await settle(page, 1000);
+    await page.getByRole("button", { name: "82 Westheimer, Eastbound to DOWNTOWN" }).first().tap();
+    await settle(page);
+    await page.getByRole("button", { name: /^Westheimer Rd @ Montrose Blvd \(2958\)/ }).first().tap();
+    await settle(page);
+    await page.waitForTimeout(1000); // the expanded row's arrivals load
+    // The route view is the page's top sheet now; Home's card is gone with the screen it was on.
+    await expect(page.getByRole("button", { name: /^Westheimer Rd @ Montrose Blvd \(2958\)/, expanded: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Stop details/ }).filter({ visible: true }).first()).toBeVisible();
+    const route = await caption(page.locator("body"));
+    await keepShot(page, "G11 route 82 stop 2958");
+    expect(route, `Home's saved 2958 says ${home ? `"${home}"` : "its first bus can be caught"}; Route 82's expanded 2958 says ${route ? `"${route}"` : "nothing about it"}`).toBe(home);
+  });
+
+  test("G10 a place's listed stops are tagged on the map: Stops near the Houston Museum of Natural Science", async ({ page }) => {
     await open(page, "/explore", { gps: GPS.eastDowntown });
     await page.getByRole("button", { name: "Search for a place, stop or route" }).first().tap();
     await expect(page.getByRole("searchbox")).toBeFocused();
@@ -264,7 +317,6 @@ test.describe("layout guards", () => {
     const missing: string[] = [];
     for (const id of ids) {
       const tag = await tagPosition(page, id);
-      mapAnnotate(info, `tag ${id}`, tag);
       if (!tag || tag.y < strip.top || tag.y > strip.bottom || tag.x < 0 || tag.x > strip.right) missing.push(`${id}: ${tag ? `tag anchored at ${Math.round(tag.x)},${Math.round(tag.y)}` : "no tag drawn"}`);
     }
     expect(missing, `listed stops ${ids.join(", ")} tagged inside the map strip y ${Math.round(strip.top)}–${Math.round(strip.bottom)}`).toEqual([]);

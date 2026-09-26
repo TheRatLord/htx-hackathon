@@ -3,11 +3,13 @@ import { useNavigate } from "react-router";
 import { useArrivals, useHealth, useStopSchedule } from "../../../api/hooks.ts";
 import type { Arrival, StopSummary } from "../../../api/types.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { headsignLine, upcoming } from "../../../lib/format.ts";
+import { formatDeparture, headsignLine, statusOf, upcoming } from "../../../lib/format.ts";
+import { canMakeIt } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
 import { useOffline } from "../../../state/offline.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
+import { shownDeps } from "../../../ui/DepTimes.tsx";
 import { LiveStrip } from "../../../ui/LiveStrip.tsx";
 import { NotifyPermissionCard } from "../../../ui/NotifyPermissionCard.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
@@ -29,10 +31,12 @@ interface ExpandedRouteProps {
   stopActions?: ReactNode;
   /** 360 or Extra large: drop "Telephone / Heights" so the headsign and strip stay above the fold. */
   hideLongName?: boolean;
+  /** The rider's walk to the stop, when known: a first bus they can't reach is named under the strip. */
+  walkMin?: number;
 }
 
 /** D6: the expanded route: header row, the blue strip (the answer, first), the stop's Walk here / Save, then Schedule / Track. */
-export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopActions, hideLongName }: ExpandedRouteProps) {
+export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopActions, hideLongName, walkMin }: ExpandedRouteProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -55,6 +59,16 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopAction
   const liveMissing = !offline && realtimeOn && strip.data && !strip.data.realtimeSources.length;
   const headline = headsignLine(route, entry.directionLabel, entry.headsign, lang);
   useTrackStop({ on: tracking, deps, routeName: entry.name, headsign: headline, stopName: stop.name });
+
+  // The same rule as Home's saved card and the route page (DepTimes): a bus the rider can't walk to
+  // in time, ahead of one they can, is named under the times ("The 1 min bus leaves before you get
+  // there"), and buses before it are dropped, so the stop sheet never calls a bus catchable that
+  // Home greys (18). Offline, clock times make no such claim.
+  const stripDeps = offline ? deps : shownDeps(deps, now, walkMin);
+  const catchable = (d: Arrival) => walkMin === undefined || canMakeIt(walkMin, d, now) !== "no";
+  const shownUp = upcoming(stripDeps, now);
+  const lead = !offline && shownUp.length > 1 && !shownUp[0].canceled && !catchable(shownUp[0]) && shownUp.slice(1).some((d) => !d.canceled && catchable(d)) ? shownUp[0] : undefined;
+  const caption = lead && t("status.tooSoonLead", { time: formatDeparture(lead.departureTime, now, { status: statusOf(lead), lang }) });
 
   const emptyText = crowdedOut ? t("stop.crowdedOut", { headsign: entry.headsign }) : undefined;
   // The next trip after now: later today when one remains (late night), else the next service day.
@@ -82,7 +96,7 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopAction
             <Button variant="text" label={t("common.tryAgain")} onPress={() => void strip.refetch()} />
           </div>
         ) : (
-          <LiveStrip deps={deps} loading={strip.isPending} emptyText={emptyText} nextService={nextService} />
+          <LiveStrip deps={stripDeps} loading={strip.isPending} emptyText={emptyText} nextService={nextService} caption={caption || undefined} />
         )}
       </div>
       {liveMissing && <p className={styles.note}>{t("stop.liveUnavailable")}</p>}

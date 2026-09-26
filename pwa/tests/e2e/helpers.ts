@@ -261,10 +261,8 @@ export async function hookMap(page: Page) {
   await expect.poll(() => page.evaluate(() => Boolean((window as unknown as { __map?: unknown }).__map)), { timeout: 5000 }).toBe(true);
 }
 
-/** A pin or tag on the map. `fromData` marks an answer read from the data the app gave the map's
- * sources because maplibre's feature index kept throwing: the app asked for it to be drawn there, but
- * nothing confirmed it was drawn. Guards annotate such answers (see `mapAnnotate`). */
-export type MapPoint = { x: number; y: number; fromData?: true };
+/** A pin or tag as drawn on the map: page coordinates of the feature maplibre rendered. */
+export type MapPoint = { x: number; y: number };
 
 /** Page coordinates of a rendered stop pin, or null when it is not drawn (or not in the map strip). */
 export async function pinPosition(page: Page, stopId: string): Promise<MapPoint | null> {
@@ -276,44 +274,57 @@ export async function tagPosition(page: Page, stopId: string): Promise<MapPoint 
   return mapPoint(page, stopId, "tag");
 }
 
-/** Records on the test that a map answer came from source data, not from what was drawn. */
-export function mapAnnotate(info: { annotations: { type: string; description?: string }[] }, what: string, p: MapPoint | null) {
-  if (p?.fromData) info.annotations.push({ type: "map-from-data", description: `${what}: maplibre's feature index kept throwing; answered from the sources' data, not from the drawn map` });
-}
-
 async function mapPoint(page: Page, stopId: string, kind: "pin" | "tag"): Promise<MapPoint | null> {
   await hookMap(page);
   // queryRenderedFeatures throws maplibre's "Out of bounds" (FeatureIndex) while a tile is being
   // re-parsed, which can last a few seconds after a camera move or a label nudge. That is a moment,
-  // not an answer: wait for the map to go idle and ask again for up to 3 s, then read the point from
-  // the map's sources (queryMap), flagged fromData.
-  const deadline = Date.now() + 3000;
-  for (;;) {
-    const final = Date.now() > deadline;
-    const r = await queryMap(page, stopId, kind, final);
+  // not an answer: wait for the map to go idle and ask again for up to 3 s. A GeoJSON tile whose
+  // feature index maplibre left empty after a setData can stay that way until the next update (seen
+  // at 412x800 and 360x640, 1 load in 3), so after that each try first hands the sources the same data
+  // again and repaints, which rebuilds the index. Every answer is read from what was drawn: when the
+  // map still can't say, the guard fails rather than answer from the app's own data.
+  const plainUntil = Date.now() + 3000;
+  for (let rebuilds = 0; ; ) {
+    const rebuild = Date.now() > plainUntil;
+    if (rebuild) rebuilds++;
+    const r = await queryMap(page, stopId, kind, rebuild);
     if (r.ok) return r.pin;
-    if (final || !/Out of bounds|not hooked/.test(r.error)) throw new Error(`${kind}Position(${stopId}): ${r.error}`);
+    if (rebuilds >= 3 || !/Out of bounds|not hooked/.test(r.error)) throw new Error(`${kind}Position(${stopId}): ${r.error}${rebuilds ? ` (still failing after ${rebuilds} source rebuilds)` : ""}`);
     await page.waitForTimeout(250);
   }
 }
 
 type MapQuery = { ok: true; pin: MapPoint | null } | { ok: false; error: string };
 
-function queryMap(page: Page, stopId: string, kind: "pin" | "tag", final = false): Promise<MapQuery> {
-  return page.evaluate(async ({ id, kind, final }): Promise<MapQuery> => {
+function queryMap(page: Page, stopId: string, kind: "pin" | "tag", rebuild = false): Promise<MapQuery> {
+  return page.evaluate(async ({ id, kind, rebuild }): Promise<MapQuery> => {
     type F = { properties: { id: string; ids?: string }; geometry: { type: string; coordinates: [number, number] } };
+    type Src = { setData?: (d: unknown) => void; serialize?: () => { data?: unknown } };
     type M = {
       queryRenderedFeatures: (o?: unknown) => F[];
       project: (c: [number, number]) => { x: number; y: number };
       getCanvas: () => HTMLCanvasElement;
       loaded: () => boolean;
-      getLayer: (id: string) => unknown;
+      getLayer: (id: string) => { source?: string } | undefined;
+      getSource: (id: string) => Src | undefined;
+      triggerRepaint: () => void;
       once: (ev: string, fn: () => void) => void;
     };
     const m = (window as unknown as { __map?: M }).__map;
     if (!m) return { ok: false, error: "map not hooked yet" };
-    // Mid-render (tiles loading, a camera ease): let the frame finish first, but never hang on it.
-    if (!m.loaded()) await new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
+    const idle = () => new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
+    const wanted = kind === "pin" ? ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
+    const layers = wanted.filter((l) => m.getLayer(l));
+    if (rebuild) {
+      // Same data, fresh tiles: the source re-parses them and the feature index is built again.
+      for (const s of new Set(layers.map((l) => m.getLayer(l)?.source).filter(Boolean) as string[])) {
+        const src = m.getSource(s);
+        const data = src?.serialize?.().data;
+        if (src?.setData && data !== undefined) src.setData(data);
+      }
+      m.triggerRepaint();
+      await idle();
+    } else if (!m.loaded()) await idle(); // mid-render (tiles loading, a camera ease): let the frame finish, but never hang on it
     // One layer at a time: a query that touches a GeoJSON tile whose index is being rebuilt throws
     // maplibre's "Out of bounds" (DictionaryCoder). A layer that throws is skipped.
     // A stacked pin or tag ("567 · 259") stands for every stop in its `ids`.
@@ -323,12 +334,6 @@ function queryMap(page: Page, stopId: string, kind: "pin" | "tag", final = false
       const r = m.getCanvas().getBoundingClientRect();
       return { x: r.left + p.x, y: r.top + p.y };
     };
-    const onCanvas = (p: { x: number; y: number }) => {
-      const c = m.getCanvas().getBoundingClientRect();
-      return p.x >= c.left && p.x <= c.right && p.y >= c.top && p.y <= c.bottom;
-    };
-    const wanted = kind === "pin" ? ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
-    const layers = wanted.filter((l) => m.getLayer(l));
     let error = "";
     for (const layer of layers) {
       try {
@@ -338,41 +343,8 @@ function queryMap(page: Page, stopId: string, kind: "pin" | "tag", final = false
         error = `${layer}: ${String(e)}`;
       }
     }
-    if (!error) return { ok: true, pin: null };
-    if (!final) return { ok: false, error };
-    // Still throwing at the deadline: a GeoJSON tile whose feature index maplibre left empty after a
-    // setData can stay that way until the next update, while its pins draw fine (seen at 412x800 and
-    // 360x640, 1 load in 3). Answer from the data the app gave the sources instead, flagged fromData.
-    type Src = { serialize?: () => { data?: unknown } };
-    const q = m as unknown as { getSource: (s: string) => Src | undefined; getFilter: (l: string) => unknown; getZoom: () => number };
-    const features = (s: string) => {
-      const d = q.getSource(s)?.serialize?.().data as { features?: F[] } | undefined;
-      return d && typeof d === "object" && Array.isArray(d.features) ? d.features : [];
-    };
-    let f: F | undefined;
-    if (kind === "tag") {
-      // stops-label-near draws every feature it is given (allow-overlap, from zoom 16).
-      if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
-      f = features("stops-near-labels").find(has);
-    } else {
-      // From zoom 16 every stop is drawn (stops-pin allows overlap) unless the stops-pin filter hides
-      // it (under the map's buttons, or enlarged by the scene), and then as the stacked pin naming it.
-      if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
-      // The filter is ["!", ["in", ["get", "id"], ["literal", [ids…]]]]: collect every literal array of
-      // strings in the expression, whatever its nesting.
-      const hidden = new Set<string>();
-      const walk = (e: unknown): void => {
-        if (!Array.isArray(e)) return;
-        if (e[0] === "literal" && Array.isArray(e[1])) for (const v of e[1]) hidden.add(String(v));
-        else e.forEach(walk);
-      };
-      walk(q.getFilter("stops-pin"));
-      f = (hidden.has(id) ? undefined : features("stops").find(has)) ?? features("stops-clusters").find(has);
-    }
-    if (!f) return { ok: true, pin: null };
-    const p = at(f.geometry.coordinates);
-    return { ok: true, pin: onCanvas(p) ? { ...p, fromData: true } : null };
-  }, { id: stopId, kind, final });
+    return error ? { ok: false, error } : { ok: true, pin: null };
+  }, { id: stopId, kind, rebuild });
 }
 
 // ---------- F-rubric probes ----------

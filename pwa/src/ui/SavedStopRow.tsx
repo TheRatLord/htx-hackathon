@@ -62,7 +62,11 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
       </article>
     );
   }
-  const fullSide = side ? [dir, side].filter(Boolean).join(" · ") : undefined;
+  // Extra large: only the side of the street ("South side of Westheimer Rd"), since the headsign
+  // already says "EASTBOUND", and it goes last in the card: under the name it pushed the times and
+  // "The 1 min bus leaves before you get there" under the tab bar (03-xlarge-360).
+  const fullSide = side ? [xl ? "" : dir, side].filter(Boolean).join(" · ") : undefined;
+  const sideLine = fullSide && <p className={`${styles.meta} ${xl ? rowStyles.sideLast : ""}`}>{fullSide}</p>;
   return (
     <article className={`${styles.card} ${rowStyles.row}`}>
       <button type="button" className={styles.hit} aria-label={title} onClick={onOpen} />
@@ -78,7 +82,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
             </button>
           )}
         </div>
-        {fullSide && <p className={`${styles.meta} ${rowStyles.side}`}>{fullSide}</p>}
+        {!xl && sideLine}
         {walkDistanceM !== undefined && onWalk && (
           <div className={styles.walkSlot}>
             <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />
@@ -102,6 +106,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
           </div>
         </div>
       )}
+      {xl && sideLine}
     </article>
   );
 }
