@@ -26,13 +26,20 @@
   align-self: center;
 }
 
+/* --node-y: the node's centre, level with the first line of the step's title. */
 .rail {
+  --node-y: calc(var(--sp-2) + var(--lh-body) / 2);
   position: relative;
   display: flex;
   flex: none;
   justify-content: center;
   width: 40px;
-  padding-top: var(--sp-3);
+  padding-top: calc(var(--node-y) - 8px);
+}
+
+/* "You are here" sits above the title. */
+.belowHere {
+  --node-y: calc(var(--sp-2) + var(--lh-body) * 1.5 + 2px);
 }
 
 .rail::before {
@@ -46,7 +53,8 @@
   background: var(--leg, var(--c-route-line));
 }
 
-.walk::before {
+.walk::before,
+.afterWalk::after {
   width: 0;
   margin-left: -2px;
   border-left: 4px dotted var(--c-text-variant);
@@ -56,12 +64,21 @@
 /* The line starts at the first node and at a boarding node, and stops at the get-off node. */
 .item:first-child .rail::before,
 .board::before {
-  top: 20px;
+  top: var(--node-y);
 }
 
 .alight::before {
   bottom: auto;
-  height: 20px;
+  height: var(--node-y);
+}
+
+/* The walk before a boarding node runs on to its ring. */
+.afterWalk::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: calc(var(--node-y) - 8px);
 }
 
 .arrive::before,

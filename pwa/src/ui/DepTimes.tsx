@@ -10,16 +10,16 @@ export function DepTimes({ deps, max = 2, walkMin }: { deps: Dep[]; max?: number
   const shown = upcoming(deps, now).slice(0, max);
   return (
     <span className={styles.times}>
-      {shown.map((d, i) => (
-        <span key={`${d.tripId}-${d.departureTime}`} className={styles.item}>
-          {i > 0 && (
+      <span className={styles.line}>
+        {shown.map((d) => (
+          <span key={`${d.tripId}-${d.departureTime}`} className={styles.item}>
             <span className={styles.sep} aria-hidden="true">
               ·
             </span>
-          )}
-          <TimeValue dep={d} size="minutes" walkMin={walkMin} />
-        </span>
-      ))}
+            <TimeValue dep={d} size="minutes" walkMin={walkMin} />
+          </span>
+        ))}
+      </span>
     </span>
   );
 }

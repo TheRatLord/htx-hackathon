@@ -4,7 +4,7 @@
   /* Numbers line up across items; a status word hangs under its own number. */
   align-items: flex-start;
   min-height: var(--strip-h);
-  padding: 14px var(--gutter);
+  padding: var(--sp-3) var(--gutter);
   background: var(--c-brand-blue-deep);
   color: #fff;
   overflow-x: auto;

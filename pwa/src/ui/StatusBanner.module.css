@@ -10,6 +10,20 @@
   color: #fff;
 }
 
+.lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  font-weight: var(--fw-medium);
+}
+
+.tail {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
 .offline {
   background: var(--c-offline-bg);
 }
@@ -18,9 +32,11 @@
   background: var(--c-brand-blue-deep);
 }
 
+/* Its 48dp target overlaps the banner's padding, so the banner stays 48dp tall. */
 .open {
   flex: none;
   min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-1)) 0;
   white-space: nowrap;
   border: none;
   background: none;

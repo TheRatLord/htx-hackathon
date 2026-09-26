@@ -88,14 +88,17 @@
   color: var(--c-text-variant);
 }
 
+/* The card's last line: its text sits 8dp under the rows like any row, and its 48dp target
+   runs down over the card's bottom padding instead of adding space above the text. */
 .link {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   min-height: var(--touch-min);
-  padding: 0;
+  margin: calc(-1 * var(--sp-1)) 0 calc(-1 * var(--card-pad));
+  padding: var(--sp-1) 0 0;
   border: none;
   background: none;
   color: var(--c-link-text);
@@ -109,9 +112,7 @@
   align-items: center;
 }
 
-.inline {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-2);
+.sep {
+  margin: 0 var(--sp-1);
+  color: var(--c-text-variant);
 }
