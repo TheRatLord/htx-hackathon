@@ -18,6 +18,12 @@ export interface LocationState {
   fix?: Fix;
   /** True when the fix comes from `?demoLoc=` (the UI shows the "Demo location" chip). */
   demo: boolean;
+  /**
+   * True once watching has started (permission already granted, or request() called). `prompt`
+   * with `requested === false` means nobody has asked yet: show "Turn on location", not a spinner.
+   */
+  requested: boolean;
+  /** Starts (or restarts, after `unavailable`) watching; the browser asks for permission if needed. */
   request(): void;
 }
 
@@ -38,8 +44,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [demo] = useState(demoLocation);
   const [status, setStatus] = useState<LocationStatus>(demo ? "fix" : "unknown");
   const [fix, setFix] = useState<Fix | undefined>(demo && { ...demo, accuracyM: 5, at: Date.now() });
-  // Watching starts once permission is granted or the rider asks (request()).
-  const [wanted, setWanted] = useState(false);
+  // Watching starts once permission is granted or the rider asks; each request() restarts it.
+  const [requests, setRequests] = useState(0);
   const hasFix = useRef(false);
 
   useEffect(() => {
@@ -51,12 +57,16 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     let perm: PermissionStatus | undefined;
     const onChange = () => {
       if (!perm) return;
-      if (perm.state === "granted") setWanted(true);
+      if (perm.state === "granted") setRequests((n) => n + 1);
       else if (perm.state === "denied") setStatus("denied");
       else if (!hasFix.current) setStatus("prompt");
     };
+    if (!navigator.permissions) {
+      setStatus("prompt");
+      return;
+    }
     navigator.permissions
-      ?.query({ name: "geolocation" })
+      .query({ name: "geolocation" })
       .then((p) => {
         perm = p;
         p.addEventListener("change", onChange);
@@ -67,7 +77,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   }, [demo]);
 
   useEffect(() => {
-    if (demo || !wanted) return;
+    if (demo || !requests) return;
     let watchId: number | undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     const start = () => {
@@ -102,10 +112,13 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVisibility);
       stop();
     };
-  }, [demo, wanted]);
+  }, [demo, requests]);
 
-  const request = useCallback(() => setWanted(true), []);
-  const value = useMemo(() => ({ status, fix, demo: Boolean(demo), request }), [status, fix, demo, request]);
+  const request = useCallback(() => setRequests((n) => n + 1), []);
+  const value = useMemo(
+    () => ({ status, fix, demo: Boolean(demo), requested: Boolean(demo) || requests > 0, request }),
+    [status, fix, demo, requests, request],
+  );
   return <LocationContext value={value}>{children}</LocationContext>;
 }
 
