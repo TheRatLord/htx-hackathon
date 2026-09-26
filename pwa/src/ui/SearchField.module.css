@@ -36,3 +36,13 @@
 .input::placeholder {
   color: var(--c-text-secondary);
 }
+
+/* The focus ring goes round the pill, not the rectangular input inside it. */
+.field:has(.input:focus-visible) {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+.input:focus-visible {
+  outline-color: transparent;
+}
