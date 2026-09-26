@@ -1,10 +1,11 @@
 // D11 Plan Your Trip + Select Itinerary: the familiar form while a field is missing (or `edit=1`),
-// then the results with the form collapsed to one summary row, opened at full.
+// then the results with the form collapsed to one summary row, opened at half so the selected
+// option's route shows on the map above the list.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useNavigationType } from "react-router";
 import type { Itinerary, TransitLeg } from "../../../api/types.ts";
-import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
+import { ExploreSheet, useExploreChrome, useSheet, useSheetElement } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromIsRider, fromLabel } from "../../../features/trip/origin.ts";
@@ -24,6 +25,8 @@ import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { ItineraryCard, SharedAlerts, useSharedAlerts } from "./ItineraryCard.tsx";
 import { FromToBox, PlacePicks, usePlacePicks, useWhenText, WhenRow, type FromView } from "./PlanForm.tsx";
+import { noSearchBarCap } from "../home/fold.ts";
+import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { PlanHeader } from "./PlanHeader.tsx";
 import styles from "./plan.module.css";
 import { foldRepeats, sortItineraries } from "./sortItineraries.ts";
@@ -63,19 +66,21 @@ function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const t = useT();
   const lang = useLang();
   const when = useWhenText(query);
-  const from = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang);
+  const rider = fromIsRider(query);
+  const from = rider ? t("plan.myLocationShort") : fromLabel(query, lang);
   const to = query.toName ?? query.to ?? "";
   return (
     // Mouse and touch convenience only: the "Edit ›" button below is the accessible control.
-    <div className={styles.summary} onClick={onEdit}>
+    // On a short screen it is one row, and "My location →" (the default start) is left out.
+    <div className={rider ? `${styles.summary} ${styles.summaryFromRider}` : styles.summary} onClick={onEdit}>
       <span className={styles.summaryPlaces}>
-        <span>
+        <span className={styles.summaryFrom}>
           <span className={styles.smallDot} />
           {from}
         </span>
-        <span>
-          → <Icon name="place" size={20} color="var(--c-dest-pin)" />
-          {to}
+        <span className={styles.summaryTo}>
+          <span className={styles.summaryFrom}>→</span> <Icon name="place" size={20} color="var(--c-dest-pin)" />
+          <span className={styles.summaryToName}>{to}</span>
         </span>
       </span>
       <span className={styles.summaryWhen}>
@@ -99,11 +104,13 @@ function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
 interface ResultsProps {
   query: PlanQuery;
   plan: ReturnType<typeof usePlanResponse>;
+  selectedId: string | undefined;
+  onSelect: (it: Itinerary) => void;
   onChange: (q: PlanQuery, edit?: boolean) => void;
   onPickFrom: () => void;
 }
 
-function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
+function Results({ query, plan, selectedId, onSelect, onChange, onPickFrom }: ResultsProps) {
   const t = useT();
   const lang = useLang();
   const { response } = plan;
@@ -146,6 +153,8 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
             key={it.id}
             it={it}
             href={planUrl(query, { index })}
+            selected={it.id === selectedId}
+            onSelect={() => onSelect(it)}
             sharedAlerts={shared.ids}
             toPlace={toPlace(query)}
             later={later.map((l) => ({ it: l.it, href: planUrl(query, { index: l.index }) }))}
@@ -208,7 +217,7 @@ export default function Plan() {
   const navType = useNavigationType();
   const { search } = useLocation();
   const rider = useRider();
-  const { setSnap } = useSheet();
+  const { snap, setSnap } = useSheet();
   const onBack = useBack();
   const params = new URLSearchParams(search);
   const query = parsePlanQuery(params);
@@ -253,7 +262,7 @@ export default function Plan() {
   const { response } = plan;
   const resultKey = results && response ? JSON.stringify(planKey(query)) : "";
   useEffect(() => {
-    if (resultKey) setSnap("full");
+    if (resultKey) setSnap("half");
   }, [resultKey, setSnap]);
   // The form opens with the sheet up, so the places to tap show above the nav, not an empty map (21).
   const form = !results;
@@ -261,8 +270,22 @@ export default function Plan() {
     if (form) setSnap("full");
   }, [form, setSnap]);
 
-  const first = response ? sortItineraries(response.itineraries, query.sort)[0]?.it : undefined;
-  useMapScene(first ? itineraryScene(first, lang) : endpointsScene(query), [first, query.from, query.to, lang]);
+  // The option drawn on the map: the one the rider tapped, else the top card. A new plan or a new sort
+  // order starts again from the top card.
+  const sorted = response ? sortItineraries(response.itineraries, query.sort) : [];
+  const [picked, setPicked] = useState<{ key: string; id: string }>();
+  const orderKey = `${resultKey}|${query.sort ?? ""}`;
+  const selected = (picked?.key === orderKey && sorted.find((x) => x.it.id === picked.id)?.it) || sorted[0]?.it;
+  const select = (it: Itinerary) => {
+    setPicked({ key: orderKey, id: it.id });
+    // A tap from the full list drops it to half, so the route it just drew is in view.
+    if (snap === "full") setSnap("half");
+  };
+  useMapScene(selected ? itineraryScene(selected, lang) : endpointsScene(query), [selected, query.from, query.to, lang]);
+  // The half sheet grows until card 1 shows whole, down to its Board line and "Details ›", and never
+  // so far that the map strip above it goes.
+  const sheet = useSheetElement();
+  useHalfUpTo(() => (results ? sheet?.querySelector<HTMLElement>("article") : null), noSearchBarCap, `${orderKey}|${sorted.length}`);
 
   // Only denied and unavailable are "off"; a location not asked for yet is still being found (C.17).
   const fromView: FromView = query.from ? { kind: "place", name: fromLabel(query, lang) } : isOff(rider.status) ? { kind: "off" } : { kind: "finding" };
@@ -274,7 +297,7 @@ export default function Plan() {
   const picks = usePlacePicks(query);
 
   const resultsList = ready && (
-    <Results query={query} plan={plan} onChange={change} onPickFrom={() => pick("from")} />
+    <Results query={query} plan={plan} selectedId={selected?.id} onSelect={select} onChange={change} onPickFrom={() => pick("from")} />
   );
 
   return (
@@ -282,7 +305,7 @@ export default function Plan() {
       ariaLabel={title}
       onBack={onBack}
       header={<PlanHeader title={title} />}
-      peek={first && <Peek it={first} toName={query.toName ?? ""} onStart={() => start(first)} />}
+      peek={selected && <Peek it={selected} toName={query.toName ?? ""} onStart={() => start(selected)} />}
     >
       <div className={styles.body}>
         {results ? (

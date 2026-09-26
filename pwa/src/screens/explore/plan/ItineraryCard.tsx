@@ -143,16 +143,23 @@ function Clock({ iso }: { iso: string }) {
  * sorted by it) over the trip's minutes; then when to leave, one Board line and the alert kind.
  * `later` are the same buses from the same stops later on, said on one line instead of more cards:
  * "Also at 12:30 PM ›".
+ *
+ * A tap selects the card, and the map above the half sheet draws its route. The selected card's
+ * "Details ›" opens My Itinerary, so switching between options never leaves the map.
  */
 export function ItineraryCard({
   it,
   href,
+  selected,
+  onSelect,
   sharedAlerts = new Set(),
   later = [],
   toPlace = false,
 }: {
   it: Itinerary;
   href: string;
+  selected: boolean;
+  onSelect: () => void;
   /** The trip ends at a place (not a stop): the strip ends with the walk to it. */
   toPlace?: boolean;
   sharedAlerts?: ReadonlySet<string>;
@@ -175,9 +182,8 @@ export function ItineraryCard({
     return formatClock(r?.departureTime ?? x.startTime, lang);
   };
   return (
-    <article className={styles.card}>
-      {/* The whole card opens Details, as on v2.71: no second link in a footer. */}
-      <Link to={href} className={styles.cardMain} >
+    <article className={selected ? `${styles.card} ${styles.cardSelected}` : styles.card}>
+      <button type="button" className={styles.cardMain} aria-pressed={selected} onClick={onSelect}>
         <span className={styles.cardTop}>
           <ModeStrip it={it} toPlace={toPlace} />
           <span className={styles.durationCol}>
@@ -205,7 +211,12 @@ export function ItineraryCard({
         {tight.length > 0 && <Warning>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</Warning>}
         {ride && <BoardLine ride={ride} />}
         <AlertsLine it={it} shared={sharedAlerts} />
-      </Link>
+      </button>
+      {selected && (
+        <Link to={href} className={styles.detailsLink}>
+          {t("common.details")}&nbsp;›
+        </Link>
+      )}
       {later.length > 0 && (
         <p className={styles.later}>
           <span>{t("plan.alsoAt")}</span>
