@@ -20,11 +20,10 @@ import { Button } from "../../../ui/Button.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
-import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { ItineraryCard } from "./ItineraryCard.tsx";
-import { FromToBox, TimeChips, useWhenText, type FromView } from "./PlanForm.tsx";
+import { FromToBox, PlacePicks, usePlacePicks, useWhenText, WhenRow, type FromView } from "./PlanForm.tsx";
 import styles from "./plan.module.css";
 import { sortItineraries } from "./sortItineraries.ts";
 import { isReady, planKey, usePlanResponse } from "./usePlanResponse.ts";
@@ -134,7 +133,6 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
     ));
   return (
     <>
-      {sample && <SheetBanner kind="demo" text={t("plan.fixtureBanner")} />}
       {/* Nothing to sort while loading, empty or with one trip. */}
       {(response?.itineraries.length ?? 0) > 1 && (
         <SortPicker sort={query.sort ?? "soonest"} onChange={(s) => onChange({ ...query, sort: s === "soonest" ? undefined : s })} />
@@ -144,6 +142,8 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
         <>
           <ScheduleCaption />
           <p className={styles.caption}>{t("plan.fareNote")}</p>
+          {/* Sample (offline) trips are said once, in small print at the end, not above the answer. */}
+          {sample && <p className={styles.caption}>{t("plan.fixtureNote")}</p>}
         </>
       ) : null}
     </>
@@ -161,10 +161,9 @@ function Peek({ it, toName, onStart }: { it: Itinerary; toName: string; onStart:
       <p>
         {t("plan.peek", { place: toName, min: it.durationMin })}
         {ride && (
-          <>
-            {" · "}
+          <span className={styles.peekLine}>
             {t("plan.peekLeaves", { route: ride.route.name })} <span className={styles.nowrap}>{formatClock(ride.departureTime, lang)}</span>
-          </>
+          </span>
         )}
       </p>
       <Button variant="primary" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={onStart} />
@@ -249,6 +248,7 @@ export default function Plan() {
     change({ ...query, from: query.to, fromName: query.toName, to: query.from, toName: query.from ? query.fromName : undefined });
 
   const start = useStartTrip(response);
+  const picks = usePlacePicks(query);
 
   const resultsList = ready && (
     <Results query={query} plan={plan} onChange={change} onPickFrom={() => pick("from")} />
@@ -269,8 +269,9 @@ export default function Plan() {
           </>
         ) : (
           <>
-            <FromToBox query={query} from={fromView} onPick={pick} onSwap={swap} />
-            <TimeChips query={query} onChange={(q) => change(q)} />
+            <FromToBox query={query} from={fromView} onPick={pick} onSwap={swap} onClearTo={() => change({ ...query, to: undefined, toName: undefined })} />
+            <WhenRow query={query} onChange={(q) => change(q)} />
+            {!query.to && <PlacePicks picks={picks} onPick={(p) => change({ ...query, to: p.to, toName: p.toName }, false)} />}
             {fromView.kind === "off" && (
               <>
                 {rider.status === "unavailable" && <Button variant="text" icon="my_location" label={t("banner.turnOnLocation")} onPress={rider.request} />}

@@ -43,7 +43,7 @@
   align-items: center;
   width: 100%;
   min-height: 60px;
-  padding: var(--sp-2) 100px var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) 72px var(--sp-2) var(--sp-4);
   border: none;
   background: none;
   color: var(--c-text);
@@ -67,16 +67,44 @@
   color: var(--c-text-variant);
 }
 
-/* An empty field looks like one: white, outlined, as on the search bar. */
-.emptyField {
+/* The destination looks like a field, empty or filled: white, outlined, as on the search bar. */
+.field {
   flex: 1;
   min-width: 0;
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--c-outline-strong);
   border-radius: var(--r-alert);
   background: var(--c-surface);
+}
+
+/* Room for the clear (×) button inside the field's right end. */
+.toRow .field {
+  padding-right: 44px;
+}
+
+.fieldEmpty {
   color: var(--c-text-variant);
   font-weight: var(--fw-regular);
+}
+
+.toRow {
+  position: relative;
+}
+
+.clear {
+  position: absolute;
+  top: 50%;
+  right: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-text-variant);
 }
 
 .placeAlert {
@@ -118,12 +146,12 @@
   }
 }
 
-/* The line stops short of the Swap pill, which sits over its right end. */
+/* The line runs under the round swap button, as on v2.71. */
 .between {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  padding: 0 128px 0 var(--sp-4);
+  padding: 0 0 0 var(--sp-4);
   color: var(--c-text-variant);
 }
 
@@ -134,22 +162,84 @@
   border-top: 1px solid var(--c-outline-strong);
 }
 
+/* v2.71's round swap button, sitting on the divider at the box's right. */
 .swap {
   position: absolute;
   top: 50%;
   right: var(--sp-3);
   display: inline-flex;
-  gap: var(--sp-1);
   align-items: center;
-  min-height: var(--touch-min);
-  padding: 0 var(--sp-3);
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
   transform: translateY(-50%);
-  border: none;
-  border-radius: var(--r-pill);
+  border: 1px solid var(--c-outline);
+  border-radius: 50%;
   background: var(--c-surface);
   box-shadow: var(--e-1);
   color: var(--c-text);
+}
+
+/* "🕒 Leave now ▾": one row, like v2.71's "Leave at  now". */
+.whenRow {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-4);
+  border: none;
+  border-radius: var(--r-box);
+  background: var(--c-card);
+  color: var(--c-text);
   font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+.whenRow > span {
+  flex: 1;
+}
+
+.whenRow:active {
+  background: var(--c-chip-inactive);
+}
+
+/* Recent and saved places under the form. */
+.picks ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picksTitle {
+  margin: var(--sp-1) 0;
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.pick {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-1);
+  border: none;
+  border-bottom: 1px solid var(--c-divider);
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.pick > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pick:active {
+  background: rgb(0 0 0 / 5%);
 }
 
 /* ---------- Chips ---------- */
@@ -371,12 +461,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.divider {
-  width: 100%;
-  margin: var(--sp-1) 0;
-  border: none;
-  border-top: 1px solid var(--c-divider);
-}
 
 .boardLine {
   display: flex;
@@ -394,10 +478,9 @@
 
 .leaves {
   display: flex;
-  gap: var(--sp-2);
-  align-items: baseline;
-  font-size: var(--fs-heading);
-  line-height: var(--lh-heading);
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
@@ -424,21 +507,7 @@
   min-height: var(--touch-min);
 }
 
-.cardFoot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0 var(--sp-2);
-}
 
-.details {
-  display: inline-flex;
-  margin-left: auto;
-  align-items: center;
-  min-height: var(--touch-min);
-  padding: 0 var(--sp-2);
-}
 
 /* ---------- Peek rows (D11, D12) ---------- */
 
@@ -472,4 +541,35 @@
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);
   font-weight: var(--fw-bold);
+}
+
+/* The fare under the duration, as on v2.71 ("50 min" / "Local fare $1.25"). */
+.durationCol {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.fareSmall {
+  color: var(--c-text-variant);
+  white-space: nowrap;
+}
+
+/* The boarding block: a tinted inset instead of a divider, so it reads as "where to stand". */
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
+}
+
+.alertOne {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

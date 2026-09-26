@@ -17,7 +17,7 @@ const strings: Strings = {
         head: "Wait at stop #{id}",
         headSide: "Wait at stop #{id}, {side}",
         planned: "Scheduled {time}",
-        plannedFirst: "The first time is your {route}, planned for {time}.",
+        plannedFirst: "First time: your {route}, scheduled {time}",
         boardBus: "Board the bus marked",
         boardTrain: "Board the train marked",
       },
@@ -33,8 +33,6 @@ const strings: Strings = {
       basis: {
         location: "Based on your location",
         schedule: "Based on the schedule",
-        fixture: "Sample trip: use Next step to move along",
-        fixtureShort: "Sample trip: tap Next step to move along.",
         simulated: "Based on a simulated location (demo)",
       },
       warn: {
@@ -81,7 +79,7 @@ const strings: Strings = {
         head: "Espere en la parada #{id}",
         headSide: "Espere en la parada #{id}, {side}",
         planned: "Programado a las {time}",
-        plannedFirst: "La primera hora es su {route}, planeado para las {time}.",
+        plannedFirst: "Primera hora: su {route}, programado a las {time}",
         boardBus: "Suba al autobús que dice",
         boardTrain: "Suba al tren que dice",
       },
@@ -97,8 +95,6 @@ const strings: Strings = {
       basis: {
         location: "Según su ubicación",
         schedule: "Según el horario",
-        fixture: "Viaje de ejemplo: use Paso siguiente para avanzar",
-        fixtureShort: "Viaje de ejemplo: toque Paso siguiente para avanzar.",
         simulated: "Según una ubicación simulada (demo)",
       },
       warn: {

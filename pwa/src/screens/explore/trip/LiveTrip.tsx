@@ -18,6 +18,7 @@ import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip
 import { destinationOf, useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
 import { useWakeLock } from "../../../features/trip/wakeLock.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
+import { ageMinutes } from "../../../lib/format.ts";
 import { boundsOf, formatLatLon } from "../../../lib/geo.ts";
 import { notify, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
@@ -170,7 +171,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
               id: vehicle.vehicleId,
               point: vehicle,
               ageSeconds: vehicle.ageSeconds,
-              label: vehicle.ageSeconds > VEHICLE_STALE_S ? t("trip.vehicleStale", { min: Math.round(vehicle.ageSeconds / 60) }) : t("trip.vehicle", { route: vehicle.route }),
+              label: vehicle.ageSeconds > VEHICLE_STALE_S ? t("trip.vehicleStale", { min: ageMinutes(0, vehicle.ageSeconds * 1000) }) : t("trip.vehicle", { route: vehicle.route }),
             },
           ]
         : [],
@@ -184,9 +185,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     ? t("trip.basis.simulated")
     : live.source === "location"
       ? t("trip.basis.location")
-      : live.source === "none"
-        ? t("trip.basis.fixture")
-        : t("trip.basis.schedule");
+      : t("trip.basis.schedule");
 
   const [confirmEnd, setConfirmEnd] = useState(false);
   const end = () => {
@@ -263,26 +262,25 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
             originName={originName}
             onNavigate={navigate}
             onDone={end}
+            // Previous / Next share a row with the step's own action (Walking directions).
+            actions={
+              step.kind !== "arrived" && (
+                <>
+                  {stepIndex > 0 && <Button variant="tonal" label={`‹ ${t("trip.prev")}`} onPress={() => live.goTo(stepIndex - 1)} />}
+                  <Button variant="primary" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
+                </>
+              )
+            }
           />
         </section>
         <NotifyPermissionCard context="trip" />
         {step.kind !== "arrived" && (
-          <div className={styles.controls}>
-            {stepIndex > 0 && <Button variant="tonal" label={`‹ ${t("trip.prev")}`} onPress={() => live.goTo(stepIndex - 1)} />}
-            <Button variant="primary" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
-          </div>
-        )}
-        {step.kind !== "arrived" && (
-          <div className={styles.endRow}>
-            <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
-          </div>
-        )}
-        {/* The two notes share one caption line at the bottom (the ride step's caption already names its basis). */}
-        {step.kind !== "arrived" && (
-          <p className={styles.caption}>
-            {t("trip.keepOpen")}
-            {active.fixture && !simFix && step.kind !== "ride" && ` ${t("trip.basis.fixtureShort")}`}
-          </p>
+          <>
+            <p className={styles.caption}>{t("trip.keepOpen")}</p>
+            <div className={styles.endRow}>
+              <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
+            </div>
+          </>
         )}
         {simAllowed && step.kind !== "arrived" && (
           <div className={styles.sim}>

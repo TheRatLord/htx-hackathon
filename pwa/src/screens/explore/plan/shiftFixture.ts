@@ -1,6 +1,8 @@
 // Offline demo plans are recordings: their times are moved to "now" so a sample trip reads as
 // one you could take (spec D11). Every timestamp moves by the same whole number of minutes, and far
-// enough that card 1's first bus is still catchable after the walk to it.
+// enough that card 1's first bus is still catchable after the walk to it. The shift is rounded up
+// to a 5-minute step, so the list, the itinerary, its map and the live trip (each maybe computed a
+// minute apart) all show the same sample times.
 
 import type { Itinerary, Leg, PlanResponse } from "../../../api/types.ts";
 import { walkMinutes, type WalkPace } from "../../../lib/walk.ts";
@@ -8,6 +10,10 @@ import { walkMinutes, type WalkPace } from "../../../lib/walk.ts";
 const MINUTE = 60_000;
 /** Minutes between reaching the stop and the bus leaving: one more than canMakeIt's "tight" margin. */
 const LEAD_MIN = 3;
+/** The shift is a whole number of these, so a minute's difference between screens never shows. */
+const STEP_MS = 5 * MINUTE;
+
+const stepUp = (ms: number) => Math.ceil(ms / STEP_MS) * STEP_MS;
 
 const shiftIso = (iso: string, ms: number) => new Date(Date.parse(iso) + ms).toISOString();
 
@@ -36,12 +42,12 @@ export function shiftFixture(response: PlanResponse, now: number, pace: WalkPace
   if (response.source !== "offline-fixture" || !response.recordedAt) return response;
   const base = Math.round((now - Date.parse(response.recordedAt)) / MINUTE) * MINUTE;
   const [first] = response.itineraries;
-  const ms = base + (first ? catchableShift(shiftItinerary(first, base), now, pace) : 0);
+  const ms = stepUp(base + (first ? catchableShift(shiftItinerary(first, base), now, pace) : 0));
   return { ...response, itineraries: response.itineraries.map((it) => shiftItinerary(it, ms)) };
 }
 
 /** A sample trip started later than it was planned moves forward again, so it never starts in the past. */
 export function startableFixture(it: Itinerary, now: number, pace: WalkPace): Itinerary {
   const ms = catchableShift(it, now, pace);
-  return ms ? shiftItinerary(it, ms) : it;
+  return ms ? shiftItinerary(it, stepUp(ms)) : it;
 }
