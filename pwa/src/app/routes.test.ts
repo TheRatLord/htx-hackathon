@@ -15,6 +15,14 @@ describe("parentOf", () => {
     expect(parentOf("/explore/stop/342/schedule")).toBe("/explore/stop/342");
   });
 
+  it("steps from Select Itinerary back to the form, then to the map", () => {
+    expect(parentOf("/explore/plan", "?from=29.72%2C-95.34&fromName=UH&to=landmark%3Ahobby&toName=Hobby")).toBe(
+      "/explore/plan?from=29.72%2C-95.34&fromName=UH&to=landmark%3Ahobby&toName=Hobby&edit=1",
+    );
+    expect(parentOf("/explore/plan", "?to=landmark%3Ahobby&toName=Hobby&edit=1")).toBe("/explore");
+    expect(parentOf("/explore/plan")).toBe("/explore");
+  });
+
   it("keeps the trip on the way back from an itinerary", () => {
     expect(parentOf("/explore/plan/0", "?from=29.72,-95.34&fromName=UH&to=landmark%3Ahobby&toName=Hobby&sort=walk")).toBe(
       "/explore/plan?from=29.72%2C-95.34&fromName=UH&to=landmark%3Ahobby&toName=Hobby&sort=walk",
