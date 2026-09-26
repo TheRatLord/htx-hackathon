@@ -6,7 +6,7 @@ import type { SearchResult, StopSummary, TransitCenterSummary } from "../../../a
 import { hasKey, useLang, useT } from "../../../i18n/index.ts";
 import { directionWord, displayHeadsign, formatDistance, sideLine, stopTitle } from "../../../lib/format.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
-import { estimateWalk } from "../../../lib/walk.ts";
+import { estimateWalk, MAX_WALK_MINUTES } from "../../../lib/walk.ts";
 import { useLocation } from "../../../state/location.tsx";
 import { usePrefs } from "../../../state/prefs.ts";
 import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
@@ -61,7 +61,7 @@ export function SimpleRow(props: { icon: IconName | "tc"; title: string; lines?:
 
 /**
  * "Closest stop: Hobby Airport (10567)" over "Eastbound · 3 min walk": two whole lines, so a wrap never
- * leaves a "·" hanging at a line end. The same two lines in the place row and in its sub-row.
+ * leaves a "·" hanging at a line end. Shown as a tappable sub-row under every place.
  */
 interface ClosestStop {
   title: string;
@@ -81,21 +81,6 @@ function useClosestStop(place: { lat?: number; lon?: number }, stop: StopSummary
   }
   // A plain space before "(688)": the F11 check reads this line as text.
   return { title: t("search.closestStop", { stop: t("stopLine.title", { name: stop.name, id: stop.id }) }), detail: detail.join(SEP) };
-}
-
-/** The closest-stop lines inside the place row; screen readers hear one sentence ("… (688) · Northbound"). */
-function ClosestLines({ closest }: { closest: ClosestStop }) {
-  return (
-    <>
-      <span className={styles.line}>{closest.title}</span>
-      {closest.detail && (
-        <>
-          <span className="visually-hidden"> · </span>
-          <span className={styles.line}>{closest.detail}</span>
-        </>
-      )}
-    </>
-  );
 }
 
 /**
@@ -119,7 +104,8 @@ interface PlaceRowProps {
   onNear: () => void;
   onDirections: () => void;
   onOpenTc?: (tc: TransitCenterSummary) => void;
-  onOpenStop?: (stop: SearchResult) => void;
+  /** Opens a stop by its id (the closest stop, or another stop listed under the place). */
+  onOpenStop?: (stopId: string) => void;
 }
 
 export function PlaceRow({ result, actions, attached, onNear, onDirections, onOpenTc, onOpenStop }: PlaceRowProps) {
@@ -128,39 +114,34 @@ export function PlaceRow({ result, actions, attached, onNear, onDirections, onOp
   const subtitle = usePlaceSubtitle(result);
   const closestStop = result.nearbyStops?.[0];
   const closest = useClosestStop(result, closestStop);
-  // The closest stop, when it is also a result, becomes its own tappable line under the place.
-  const closestAttached = closestStop && attached?.stops.find((s) => s.id === closestStop.id);
-  const otherStops = attached?.stops.filter((s) => s !== closestAttached) ?? [];
+  // The closest stop is always its own tappable sub-row under the place (the same shape for every
+  // place: Hobby, the museum), so it is one tap away. A result for that stop is folded into it.
+  const otherStops = attached?.stops.filter((s) => s.id !== closestStop?.id) ?? [];
+  const subRows = Boolean(closest) || Boolean(attached?.tcs.length) || otherStops.length > 0;
   return (
     <div className={styles.row}>
-      <RowBody
-        icon="place"
-        title={result.title}
-        lines={[subtitle]}
-        extra={closest && !closestAttached ? <ClosestLines closest={closest} /> : undefined}
-        onPress={onNear}
-      />
+      <RowBody icon="place" title={result.title} lines={[subtitle]} onPress={onNear} />
       {actions && (
         <div className={styles.pills}>
           <Button variant="tonal" icon="route_plan" label={t("search.directions")} onPress={onDirections} />
           <Button variant="tonal" icon="bus_stop" label={t("search.stopsNear")} onPress={onNear} />
         </div>
       )}
-      {attached && (
+      {subRows && (
         <ul className={styles.subRows}>
-          {attached.tcs.map((tc) => (
+          {attached?.tcs.map((tc) => (
             <li key={tc.id}>
               <SubRow icon="tc" title={t("search.tcAt", { name: tc.name })} line={t("tc.bays", { count: tc.bayCount })} onPress={() => onOpenTc?.(tc)} />
             </li>
           ))}
-          {closestAttached && closest && (
+          {closest && closestStop && (
             <li>
-              <SubRow icon="bus_stop" title={closest.title} line={closest.detail || undefined} onPress={() => onOpenStop?.(closestAttached)} />
+              <SubRow icon="bus_stop" title={closest.title} line={closest.detail || undefined} onPress={() => onOpenStop?.(closestStop.id)} />
             </li>
           )}
           {otherStops.map((s) => (
             <li key={s.id}>
-              <SubRow icon="bus_stop" title={stopTitle(s.title, s.id, lang)} onPress={() => onOpenStop?.(s)} />
+              <SubRow icon="bus_stop" title={stopTitle(s.title, s.id, lang)} onPress={() => onOpenStop?.(s.id)} />
             </li>
           ))}
         </ul>
@@ -206,8 +187,6 @@ export function TransitCenterRow({ tc, onOpen }: { tc: TransitCenterSummary; onO
   );
 }
 
-/** Past this the Walk pill is left out: the row already says how far away the stop is. */
-const MAX_WALK_MIN = 20;
 
 interface StopRowProps {
   result: SearchResult;
@@ -246,7 +225,7 @@ function StopRowBody({ result, stop, idMatch, walkable, onOpen, onWalk }: StopRo
         lines={[line]}
         onPress={onOpen}
       />
-      {walkable && walk && walk.minutes <= MAX_WALK_MIN && (
+      {walkable && walk && walk.minutes <= MAX_WALK_MINUTES && (
         <span className={styles.walk}>
           <Button
             variant="tonal"
@@ -269,6 +248,7 @@ export function RouteRow({ result, onOpen }: { result: SearchResult; onOpen: (di
   const detail = useRoute(result.id);
   const ref = toRouteRef(result.route ?? { id: result.id, name: result.title, color: "#004080", textColor: "#FFFFFF" });
   const directions = detail.data?.directions ?? [];
+  const shortName = result.title.startsWith(`${ref.name} `) ? result.title.slice(ref.name.length + 1) : undefined;
   return (
     <div className={styles.row}>
       <button type="button" className={styles.body} onClick={() => onOpen(detail.data ? nearestDirection(detail.data, fix) : 0)}>
@@ -277,29 +257,46 @@ export function RouteRow({ result, onOpen }: { result: SearchResult; onOpen: (di
           <RouteBadge route={ref} size="sm" />
         </span>
         <span className={`${styles.text} ${styles.routeTitle}`}>
-          <span className={styles.title}>{result.title}</span>
+          <span className={styles.title}>
+            {/* "[82] Westheimer": the chip already shows the number, so it is only spoken (and still matched as "82 Westheimer"). */}
+            {shortName ? (
+              <>
+                <span className="visually-hidden">{ref.name} </span>
+                {shortName}
+              </>
+            ) : (
+              result.title
+            )}
+          </span>
         </span>
         <span className={styles.chevron} aria-hidden="true">
           <Icon name="chevron_right" />
         </span>
       </button>
       {directions.length > 0 && (
-        // "Eastbound to DOWNTOWN": the destination tells the rider which one is theirs.
-        <div className={`${styles.pills} ${styles.directionPills}`}>
+        // One compact row per direction, "Eastbound to DOWNTOWN ›", in the same sub-row style as a
+        // place's closest stop: the destination tells the rider which one is theirs.
+        <ul className={`${styles.subRows} ${styles.directionRows}`}>
           {directions.map((d) => {
             const to = t("route.to", { headsign: displayHeadsign(d.headsigns[0] ?? "") });
             const label = ref.mode === "rail" ? to : `${directionWord(d.label, lang)} ${to}`;
             return (
-              <Button
-                key={d.directionId}
-                variant="tonal"
-                label={label}
-                ariaLabel={t("search.openRouteA11y", { route: result.title, direction: `${directionWord(d.label, lang)} ${t("route.to", { headsign: d.headsigns[0] ?? "" })}` })}
-                onPress={() => onOpen(d.directionId)}
-              />
+              <li key={d.directionId}>
+                <button
+                  type="button"
+                  className={styles.subRow}
+                  aria-label={t("search.openRouteA11y", { route: result.title, direction: `${directionWord(d.label, lang)} ${t("route.to", { headsign: d.headsigns[0] ?? "" })}` })}
+                  onClick={() => onOpen(d.directionId)}
+                >
+                  <span className={`${styles.text} ${styles.subTitle}`}>{label}</span>
+                  <span className={styles.chevron} aria-hidden="true">
+                    <Icon name="chevron_right" />
+                  </span>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
       <div className={styles.alertLine}>
         <AlertStatusLine scope="route" name={t(ref.mode === "rail" ? "routeName.railA11y" : "routeName.a11y", { name: ref.name })} alerts={alerts.forRoute(result.id)} />

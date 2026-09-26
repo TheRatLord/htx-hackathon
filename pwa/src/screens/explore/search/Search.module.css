@@ -194,10 +194,9 @@
   color: var(--c-warn-text);
 }
 
-/* Route direction pills carry the destination ("Eastbound to DOWNTOWN"), so each takes its own line. */
-.directionPills {
-  flex-direction: column;
-  align-items: flex-start;
+/* A route's directions: compact rows under its title, not full-width pills. */
+.directionRows {
+  margin-top: calc(-1 * var(--sp-1));
 }
 
 .chevron {

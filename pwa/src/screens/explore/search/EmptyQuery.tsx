@@ -1,5 +1,5 @@
 // D5 before anything is typed: the rider's saved stops and routes, recently viewed routes and stops,
-// recent searches, then one hint line (with the example of each kind of query) and a way to browse routes.
+// recent searches, then one short hint line and a way to browse routes.
 
 import { useArrivals } from "../../../api/hooks.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
@@ -115,7 +115,7 @@ export function EmptyQuery({ pick, onOpenStop, onOpenRecentStop, onRecent, onOpe
         </section>
       )}
       <section className={styles.section}>
-        {/* One line that says what can be typed, each with an example from a real sign or map. */}
+        {/* One short line that says what can be typed. */}
         <p className={styles.hint}>{t("search.hint")}</p>
         {!pick && <SimpleRow icon="directions_bus" title={t("search.allRoutes")} lines={[t("search.allRoutesLine")]} onPress={onAllRoutes} />}
       </section>
