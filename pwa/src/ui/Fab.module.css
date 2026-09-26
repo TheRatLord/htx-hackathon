@@ -21,6 +21,10 @@
   color: var(--c-alert-text);
 }
 
+.advisory {
+  color: var(--c-brand-navy);
+}
+
 .fab:active {
   background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
 }

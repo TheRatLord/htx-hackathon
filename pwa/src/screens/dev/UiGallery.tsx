@@ -293,6 +293,7 @@ export default function UiGallery() {
       <Section title="C.9 Fabs">
         <div className={`${styles.mapTint} ${styles.col}`} style={{ alignItems: "flex-end" }}>
           <Fab kind="routeAlerts" count={1} onPress={() => {}} />
+          <Fab kind="routeAlerts" count={1} advisory onPress={() => {}} />
           <Fab kind="locate" onPress={() => {}} />
           <Fab kind="planTrip" onPress={() => {}} />
           <Fab kind="myTrip" onPress={() => {}} />

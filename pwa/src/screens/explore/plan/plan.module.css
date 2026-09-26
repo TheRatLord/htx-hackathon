@@ -632,7 +632,20 @@
   padding: var(--sp-3) var(--sp-1) var(--sp-1) calc(var(--gutter) - var(--sp-3));
 }
 
-.headerBack,
+.headerBack {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
 .headerToggle {
   display: grid;
   flex: none;
@@ -656,7 +669,7 @@
   font-size: var(--fs-title);
   line-height: var(--lh-title);
   font-weight: var(--fw-regular);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .headerToggle {
@@ -664,7 +677,9 @@
 }
 
 .headerRight {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: end;
 }
 
 .headerRight + .headerToggle {
