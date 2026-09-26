@@ -179,9 +179,10 @@ export function MapView() {
     const pts = scene.fit;
     const padding = {
       top: (scene.paddingTop ?? 96) + 24,
-      bottom: bottomInset + 32,
+      // Pin captions hang ~48px below their point; keep them clear of the sheet.
+      bottom: bottomInset + 64,
       left: 56,
-      right: 88,
+      right: 108, // clear of the zoom and locate buttons
     };
     const h = map.getContainer().clientHeight;
     // If the sheet leaves too little room, fit what we can.

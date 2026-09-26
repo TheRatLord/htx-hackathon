@@ -16,11 +16,6 @@ const SHEET_SNAPS = [0.62, 0.92];
 /** How long the pretend "sending" of a problem report takes. */
 const REPORT_SENDING_MS = 900;
 const PANEL_ID = 'stop-panel';
-/**
- * Degrees of latitude to keep clear below the stop when fitting the map, so
- * the pin's "4 min" caption isn't hidden under the sheet.
- */
-const CAPTION_ROOM = 0.0005;
 
 type ReportState = 'sending' | 'sent';
 
@@ -59,9 +54,8 @@ export function StopScreen({ stopId }: { stopId: string }) {
         caption: `${s.walkMinutes} min`,
         active: s.stop.id === stopId,
       })),
-      fit: stop
-        ? [USER_POSITION, stop.position, [stop.position[0], stop.position[1] - CAPTION_ROOM]]
-        : [USER_POSITION, ...nearby.map((s) => s.stop.position)],
+      // Keep every numbered pin in view so the rider can hop between stops.
+      fit: [USER_POSITION, ...nearby.map((s) => s.stop.position)],
       fitKey: `stop-${stopId}`,
       paddingTop: 16,
       controlsTop: 16,
