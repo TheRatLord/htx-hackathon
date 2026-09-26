@@ -1,6 +1,21 @@
+/* Painted above the (hidden) map's attribution control (requests.md). */
+.screen {
+  position: relative;
+  z-index: 3;
+  min-height: 100%;
+  background: var(--c-background);
+}
+
 .find {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--gutter);
+}
+
+/* As wide as the widest badge ("Purple"), so every route name starts at the same x. */
+.badge {
+  display: flex;
+  flex: none;
+  min-width: 72px;
 }
