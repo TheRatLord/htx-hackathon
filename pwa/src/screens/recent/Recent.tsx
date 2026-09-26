@@ -3,11 +3,10 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import type { RouteRef } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useLang, useT } from "../../i18n/index.ts";
 import { sideLine } from "../../lib/format.ts";
-import { planUrl } from "../../lib/planQuery.ts";
+import { planUrl, type PlanQuery } from "../../lib/planQuery.ts";
 import { routeRef, useRoutesLoaded } from "../../lib/routes.ts";
 import { useRecents, type RecentStop } from "../../state/recents.ts";
 import { useSaved } from "../../state/saved.ts";
@@ -18,12 +17,13 @@ import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { routeRefOr } from "../alerts/routeRefs.ts";
 import styles from "./Recent.module.css";
 import { SavedStops } from "./SavedStops.tsx";
 
 function RouteChips({ routes }: { routes: { id: string; name: string }[] }) {
   const navigate = useNavigate();
-  const refs = routes.map((r): RouteRef => routeRef(r.id) ?? { id: r.id, name: r.name, color: "#004080", textColor: "#FFFFFF", mode: "bus" });
+  const refs = routes.map((r) => routeRefOr(r.id, r.name));
   return (
     <div className={styles.chips}>
       {refs.map((r) => (
@@ -51,6 +51,40 @@ function RecentStopRow({ stop }: { stop: RecentStop }) {
   );
 }
 
+/** A trip end the planner saved without a name: a stop id, or a place picked on the map ("29.6457,-95.2789"). */
+function placeName(value: string | undefined, name: string | undefined, t: ReturnType<typeof useT>): string {
+  if (name) return name;
+  if (!value) return t("common.myLocation");
+  return /^\d+$/.test(value) ? t("card.stopNumber", { id: value }) : t("recent.chosenPlace");
+}
+
+function RecentTrip({ query }: { query: PlanQuery }) {
+  const t = useT();
+  const from = placeName(query.from, query.fromName, t);
+  const to = placeName(query.to, query.toName, t);
+  return (
+    <div className={styles.trip}>
+      <span className={styles.tripText}>
+        <span className={styles.place}>
+          <span className={styles.originDot} aria-hidden="true" />
+          {from}
+        </span>
+        <span className={styles.place}>
+          <Icon name="place" size={20} color="var(--c-dest-pin)" />
+          {to}
+        </span>
+      </span>
+      {/* The time is dropped: planning again means leaving now. */}
+      <Button
+        variant="text"
+        label={t("recent.planAgain")}
+        ariaLabel={t("recent.planAgainA11y", { from, to })}
+        href={planUrl({ ...query, time: undefined, arriveBy: undefined })}
+      />
+    </div>
+  );
+}
+
 export default function Recent() {
   const t = useT();
   const navigate = useNavigate();
@@ -65,7 +99,7 @@ export default function Recent() {
   const empty = !hasRecents && saved.stops.length === 0 && saved.routes.length === 0;
 
   return (
-    <>
+    <div className={styles.page}>
       <div className={styles.titleRow}>
         <h1 tabIndex={-1} className={styles.title}>
           {t("recent.title")}
@@ -110,28 +144,9 @@ export default function Recent() {
           {recents.trips.length > 0 && (
             <section>
               <SectionHeader label={t("recent.recentTrips")} tone="variant" />
-              {recents.trips.map(({ query }) => {
-                const from = query.fromName ?? t("common.myLocation");
-                const to = query.toName ?? query.to ?? "";
-                return (
-                  <div key={`${query.from}|${query.to}`} className={styles.trip}>
-                    <span className={styles.tripText}>
-                      <span className={styles.originDot} aria-hidden="true" />
-                      {from}
-                      <span aria-hidden="true"> → </span>
-                      <Icon name="place" size={20} color="var(--c-dest-pin)" />
-                      {to}
-                    </span>
-                    {/* The time is dropped: planning again means leaving now. */}
-                    <Button
-                      variant="text"
-                      label={t("recent.planAgain")}
-                      ariaLabel={t("recent.planAgainA11y", { from, to })}
-                      href={planUrl({ ...query, time: undefined, arriveBy: undefined })}
-                    />
-                  </div>
-                );
-              })}
+              {recents.trips.map(({ query }) => (
+                <RecentTrip key={`${query.from}|${query.to}`} query={query} />
+              ))}
             </section>
           )}
         </>
@@ -154,6 +169,6 @@ export default function Recent() {
           },
         ]}
       />
-    </>
+    </div>
   );
 }
