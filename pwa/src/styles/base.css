@@ -41,6 +41,13 @@ p {
   outline-offset: 2px;
 }
 
+/* Titles take focus after a navigation only so screen readers start there; they are not controls.
+   Android Chrome draws :focus-visible on them when a screen opens with no tap first (a PWA launch
+   redirecting / to /explore, a notification tap), which reads as a stray box around the title. */
+h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
 button,
 input,
 select,
