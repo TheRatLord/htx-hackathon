@@ -27,9 +27,35 @@ export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoute
 }
 
 /**
- * The center's routes in the order the departures list below names them (platform, then bay, then the
- * soonest departure in each bay, then routes without a bay), so the first chip is the first route the
- * rider reads in the list. Routes with nothing listed follow in number order. `first` (a chosen route) leads.
+ * Where each route is first named in the departures list below (platform, then bay, then the soonest
+ * departure in each bay, then routes without a bay). `first` (a chosen route) leads at -1.
+ */
+export function routeListOrder(
+  tc: Pick<TransitCenterDetail, "bays" | "stopIds" | "unassignedDepartures">,
+  names: Map<string, string>,
+  now: number,
+  first?: string,
+): Map<string, number> {
+  const order = new Map<string, number>();
+  if (first) order.set(canonicalRouteId(first), -1);
+  const note = (id: string) => {
+    if (!order.has(id)) order.set(id, order.size);
+  };
+  for (const p of platformsOf(tc, names)) for (const b of p.bays) for (const r of departureRows(b.departures, now)) note(r.route.id);
+  for (const r of departureRows(tc.unassignedDepartures, now)) note(r.route.id);
+  return order;
+}
+
+/** The center's routes (tcRoutes) sorted by `order`; routes it doesn't name follow in number order. */
+export function orderRoutes(routes: RouteRef[], order: Map<string, number>): RouteRef[] {
+  const at = (r: RouteRef) => order.get(r.id) ?? order.get(canonicalRouteId(r.id)) ?? Infinity;
+  // Array.sort is stable: routes with nothing listed keep tcRoutes' number order.
+  return [...routes].sort((a, b) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1));
+}
+
+/**
+ * The center's routes in the order the departures list below names them, so the first chip is the
+ * first route the rider reads in the list. Routes with nothing listed follow in number order.
  */
 export function routesInListOrder(
   tc: Pick<TransitCenterDetail, "bays" | "stopIds" | "unassignedRoutes" | "unassignedDepartures">,
@@ -37,16 +63,7 @@ export function routesInListOrder(
   now: number,
   first?: string,
 ): RouteRef[] {
-  const order = new Map<string, number>();
-  const note = (id: string) => {
-    if (!order.has(id)) order.set(id, order.size);
-  };
-  for (const p of platformsOf(tc, names)) for (const b of p.bays) for (const r of departureRows(b.departures, now)) note(r.route.id);
-  for (const r of departureRows(tc.unassignedDepartures, now)) note(r.route.id);
-  const lead = first && canonicalRouteId(first);
-  const at = (r: RouteRef) => (r.id === lead ? -1 : (order.get(r.id) ?? Infinity));
-  // Array.sort is stable: routes with nothing listed keep tcRoutes' number order.
-  return tcRoutes(tc).sort((a, b) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1));
+  return orderRoutes(tcRoutes(tc), routeListOrder(tc, names, now, first));
 }
 
 export const servesRoute = (bay: Pick<Bay, "routes">, routeId: string) =>
