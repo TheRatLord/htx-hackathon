@@ -4,10 +4,12 @@
 import { useEffect, useRef } from "react";
 import { useArrivals, useRouteNext } from "../../../api/hooks.ts";
 import type { Dep, Vehicle } from "../../../api/types.ts";
-import { useT } from "../../../i18n/index.ts";
-import { ageMinutes, STALE_VEHICLE_S, upcoming } from "../../../lib/format.ts";
-import { MAX_WALK_MINUTES } from "../../../lib/walk.ts";
+import { useLang, useT } from "../../../i18n/index.ts";
+import { ageMinutes, formatDeparture, STALE_VEHICLE_S, statusOf, upcoming } from "../../../lib/format.ts";
+import { canMakeIt, MAX_WALK_MINUTES } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
+import { useOffline } from "../../../state/offline.ts";
+import { shownDeps } from "../../../ui/DepTimes.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { LiveStrip } from "../../../ui/LiveStrip.tsx";
@@ -251,10 +253,21 @@ function ExpandedStop({ routeId, stop, scheduled }: { routeId: string; stop: Rou
   const arrivals = useArrivals(stop.id, { route: routeId, limit: 4 });
   const route = encodeURIComponent(routeId);
   const failed = arrivals.isError && !arrivals.data;
+  const lang = useLang();
+  const now = useNow();
+  const offline = useOffline();
+  // The same rule as Home's saved card (DepTimes): a bus the rider can't walk to in time, ahead of one
+  // they can, is named under the times ("The 1 min bus leaves before you get there"), so this strip
+  // and Home never disagree about whether the first bus is catchable. Buses before it are dropped.
+  const walkMin = walk?.minutes;
+  const deps = shownDeps(failed ? (scheduled ? [scheduled] : []) : (arrivals.data?.arrivals ?? []), now, walkMin);
+  const catchable = (d: Dep) => walkMin === undefined || canMakeIt(walkMin, d, now) !== "no";
+  const lead = deps.length > 1 && !deps[0].canceled && !catchable(deps[0]) && deps.slice(1).some((d) => !d.canceled && catchable(d)) ? deps[0] : undefined;
+  const caption = lead && t("status.tooSoonLead", { time: formatDeparture(lead.departureTime, now, { offline, status: offline ? "scheduled" : statusOf(lead), lang }) });
   return (
     <div className={styles.panel}>
       {failed && <p className={styles.panelNote}>{t("route.liveUnavailable")}</p>}
-      <LiveStrip deps={failed ? (scheduled ? [scheduled] : []) : (arrivals.data?.arrivals ?? [])} loading={arrivals.isPending && !failed} />
+      <LiveStrip deps={deps} loading={arrivals.isPending && !failed} caption={caption || undefined} />
       <div className={styles.pills}>
         <Button variant="tonal" label={`${t("route.stopDetails")} ›`} href={`/explore/stop/${encodeURIComponent(stop.id)}?route=${route}`} />
         {walk && (
