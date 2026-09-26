@@ -30,13 +30,16 @@ export function EmptyQuery({ pick, onOpenStop, onRecent }: EmptyQueryProps) {
   return (
     <>
       {saved.length > 0 && (
-        <section className={`${styles.section} ${styles.saved}`}>
-          {saved.map((s) =>
-            pick ? (
-              <SimpleRow key={s.id} icon="star_filled" title={t("stopLine.title", { name: s.name, id: s.id })} onPress={() => onOpenStop(s)} />
-            ) : (
-              <SavedRow key={s.id} stop={s} onOpen={() => onOpenStop(s)} />
-            ),
+        <section className={styles.section}>
+          <SectionHeader tone="variant" label={t("search.saved")} />
+          {pick ? (
+            saved.map((s) => <SimpleRow key={s.id} icon="star_filled" title={t("stopLine.title", { name: s.name, id: s.id })} onPress={() => onOpenStop(s)} />)
+          ) : (
+            <div className={styles.saved}>
+              {saved.map((s) => (
+                <SavedRow key={s.id} stop={s} onOpen={() => onOpenStop(s)} />
+              ))}
+            </div>
           )}
         </section>
       )}
@@ -46,7 +49,9 @@ export function EmptyQuery({ pick, onOpenStop, onRecent }: EmptyQueryProps) {
           {searches.map((s) => (
             <div key={s.q} className={styles.recent}>
               <button type="button" className={styles.recentQuery} onClick={() => onRecent(s.q)}>
-                <Icon name="schedule" color="var(--c-text-variant)" />
+                <span className={styles.recentIcon}>
+                  <Icon name="schedule" color="var(--c-text-variant)" />
+                </span>
                 {s.q}
               </button>
               <Button variant="text" label={t("common.remove")} ariaLabel={t("search.removeRecentA11y", { q: s.q })} onPress={() => recents.removeSearch(s.q)} />

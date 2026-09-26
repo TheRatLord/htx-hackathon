@@ -7,7 +7,7 @@ import { SectionHeader } from "../../../ui/SectionHeader.tsx";
 import type { RouteStop } from "../route/routeGeo.ts";
 import { stopMatches } from "../route/stopMatch.ts";
 import { useDirectionWord } from "../route/useDirectionWord.ts";
-import { SimpleRow } from "./ResultRows.tsx";
+import { SEP, SimpleRow } from "./ResultRows.tsx";
 import styles from "./Search.module.css";
 
 interface Props {
@@ -36,7 +36,7 @@ function Matches({ route, name, stop, onPick }: Props & { name: string }) {
         <SimpleRow
           key={`${d.directionId}-${s.id}`}
           icon="bus_stop"
-          title={`${t("stopLine.title", { name: s.name, id: s.id })} · ${dirLabel(d.label)}`}
+          title={`${t("stopLine.title", { name: s.name, id: s.id })}${SEP}${dirLabel(d.label)}`}
           onPress={() => onPick(route, d.directionId, s)}
         />
       ))}

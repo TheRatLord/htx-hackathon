@@ -7,12 +7,13 @@ import type { SearchResult, TransitCenterSummary } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
-import { useT } from "../../../i18n/index.ts";
+import { useLang, useT } from "../../../i18n/index.ts";
 import { formatLatLon } from "../../../lib/geo.ts";
 import { encodePick, planUrl } from "../../../lib/planQuery.ts";
 import { useLocation } from "../../../state/location.tsx";
 import { recentsActions } from "../../../state/recents.ts";
 import type { SavedStop } from "../../../state/saved.ts";
+import { Button } from "../../../ui/Button.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { SearchField } from "../../../ui/SearchField.tsx";
 import { SectionHeader } from "../../../ui/SectionHeader.tsx";
@@ -25,7 +26,13 @@ import { RouteStopShortcut } from "./RouteStopShortcut.tsx";
 import styles from "./Search.module.css";
 
 const DEBOUNCE_MS = 250;
-const ADDRESS_WARNING = /^Address search is unavailable/;
+/**
+ * OpenStreetMap places shown before "More places". Curated landmarks always show, and when one
+ * matched it is the answer, so the places wait behind the link and the stops stay in view.
+ */
+const MAX_PLACES = 3;
+/** Server warnings (English) the client can say in the rider's language; others show in English only. */
+const KNOWN_WARNINGS: [RegExp, string][] = [[/^Address search is unavailable/, "search.addressUnavailable"]];
 
 const SECTION_LABEL: Record<SearchSection["kind"], string> = {
   places: "search.places",
@@ -39,6 +46,7 @@ const atUrl = (r: { lat?: number; lon?: number; title: string }) =>
 
 export default function Search() {
   const t = useT();
+  const lang = useLang();
   const navigate = useNavigate();
   const onBack = useBack();
   const { fix } = useLocation();
@@ -49,6 +57,8 @@ export default function Search() {
   const pick = pickField === "from" || pickField === "to" ? pickField : undefined;
   const returnTo = params.get("returnTo") ?? planUrl({});
   const [text, setText] = useState(q);
+  // "More places" opens the rest for this query only.
+  const [allPlacesFor, setAllPlacesFor] = useState<string>();
 
   usePageTitle(t("search.title"));
   useExploreChrome({ hideSearchBar: true, fabs: [] });
@@ -96,18 +106,25 @@ export default function Search() {
   const shortcut = query ? parseRouteStopQuery(query) : undefined;
   const sections = search.data && query ? groupResults(search.data.results, tcs.data?.transitCenters ?? [], query) : [];
   const shownSections = pick ? sections.filter((s) => s.kind !== "routes") : sections;
-  const warnings = (search.data && query ? search.data.warnings : []).map((w) => (ADDRESS_WARNING.test(w) ? t("search.addressUnavailable") : w));
+  const warnings = (search.data && query ? search.data.warnings : []).flatMap((w) => {
+    const known = KNOWN_WARNINGS.find(([pattern]) => pattern.test(w));
+    return known ? [t(known[1])] : lang === "en" ? [w] : [];
+  });
 
   const renderSection = (section: SearchSection) => {
     switch (section.kind) {
-      case "places":
-        return section.items.map((r) =>
+      case "places": {
+        const landmarks = section.items.filter((r) => r.type === "landmark");
+        const places = section.items.filter((r) => r.type === "place");
+        const hidden = allPlacesFor === query ? 0 : Math.max(0, places.length - (landmarks.length ? 0 : MAX_PLACES));
+        const rows = [...landmarks, ...places.slice(0, places.length - hidden)].map((r, i) =>
           pick ? (
             <SimpleRow key={r.id} icon="place" title={r.title} lines={[r.subtitle]} onPress={() => choose(r)} />
           ) : (
             <PlaceRow
               key={r.id}
               result={r}
+              actions={r.type === "landmark" || i === 0}
               onNear={() => go(atUrl(r))}
               onDirections={() =>
                 go(planUrl({ to: r.type === "landmark" ? `landmark:${r.id}` : formatLatLon({ lat: r.lat!, lon: r.lon! }), toName: r.title }))
@@ -115,6 +132,17 @@ export default function Search() {
             />
           ),
         );
+        return (
+          <>
+            {rows}
+            {hidden > 0 && (
+              <div className={styles.more}>
+                <Button variant="text" label={t("search.morePlaces", { count: hidden })} onPress={() => setAllPlacesFor(query)} />
+              </div>
+            )}
+          </>
+        );
+      }
       case "transitCenters":
         return section.items.map((tc: TransitCenterSummary) => (
           <TransitCenterRow
@@ -184,8 +212,9 @@ export default function Search() {
       ariaLabel={t("search.title")}
       header={
         <div className={styles.header}>
-          {/* Not focusable on purpose: the input keeps the autofocus and the keyboard stays open. */}
-          <h1 className="visually-hidden">{label}</h1>
+          {/* Not focusable on purpose: the input keeps the autofocus and the keyboard stays open.
+              In pick mode it is shown, so the rider sees which field of the planner is being filled. */}
+          <h1 className={pick ? styles.pickTitle : "visually-hidden"}>{label}</h1>
           <SearchField value={text} onChange={setText} onBack={onBack} label={label} placeholder={t("map.searchPlaceholder")} />
         </div>
       }
