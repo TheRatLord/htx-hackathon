@@ -22,9 +22,9 @@ export const config = {
   demoRealtime: flag("DEMO_REALTIME"),
   /**
    * The API runs behind a reverse proxy that appends the client's address to X-Forwarded-For.
-   * Off, the header is ignored (a client could set it to dodge the rate limit).
+   * Off, the header is ignored (a client could set it to dodge the rate limit). On by default on Vercel, whose edge sets it.
    */
-  trustProxy: flag("TRUST_PROXY"),
+  trustProxy: flag("TRUST_PROXY") || Boolean(process.env.VERCEL),
   /** Browser origins allowed to call the API besides localhost, e.g. "https://ridemetro.example.org". */
   corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean),
   userAgent: "htx-metro-hackathon-demo (hackathon prototype; contact via github)",

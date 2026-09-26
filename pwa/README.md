@@ -44,6 +44,21 @@ session (`?demoLoc=off` clears it). `/dev/ui` shows every shared component.
 **Android emulator:** geolocation needs a secure context, so run `adb reverse tcp:5173 tcp:5173`,
 open `http://localhost:5173` in Chrome on the emulator, and set the GPS with `adb emu geo fix <lon> <lat>`.
 
+## Deploying (Vercel)
+
+The Vercel project deploys from Git: `main` goes to production, other branches get preview URLs.
+Its **Root Directory must be `pwa`**. `vercel.json` sets the rest:
+
+- The build runs `npm run data:build && npm run web:build`. The GTFS download and the generated server
+  data happen at build time, and the static app is served from `dist/`.
+- `api/index.ts` wraps the same Hono app as `server/index.ts`. Every `/api/*` path is rewritten to it,
+  and `server/data` and `server/fixtures` are bundled with the function.
+- Other paths fall back to `index.html` so deep links work. `sw.js` is served with `no-cache`.
+- Set `METRO_API_KEY` and `METRO_TRANSIT_API_KEY` in the project's environment variables. The rate
+  limiter trusts Vercel's `X-Forwarded-For` automatically (`VERCEL` is set).
+
+To check a deploy locally, run `npx vercel build`, which writes `.vercel/output` (gitignored).
+
 ## Screenshots: `scripts/shoot.ts`
 
 A Playwright (Chromium) CLI for checking screens without a device:
