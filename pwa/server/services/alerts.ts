@@ -25,7 +25,8 @@ export interface Alert {
 }
 
 export interface AlertsResult {
-  source: "metro" | "demo";
+  /** "unavailable": a METRO key is configured but the live feed failed; never fall back to demo alerts then. */
+  source: "metro" | "demo" | "unavailable";
   sourceNote?: string;
   alerts: Alert[];
 }
@@ -64,8 +65,8 @@ async function loadAlerts() {
         binary: true,
       });
       return { source: "metro" as const, raw: parseAlerts(body) };
-    } catch (err) {
-      return { source: "demo" as const, sourceNote: `METRO alerts unavailable (${(err as Error).message}); showing demo alerts.`, raw: demoAlerts() };
+    } catch {
+      return { source: "unavailable" as const, sourceNote: "METRO alerts could not be loaded.", raw: [] };
     }
   }
   const why = config.offline ? "offline mode" : "no METRO_API_KEY configured";

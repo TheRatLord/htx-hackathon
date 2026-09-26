@@ -38,7 +38,7 @@ for (const [from, to] of trips) {
   console.log(`plan ${from.name} -> ${to.name}: ${res.itineraries.length} itineraries`);
   for (const leg of res.itineraries[0]?.legs ?? []) {
     if (leg.type === "walk" && leg.distanceM > 20) {
-      await walkRoute(leg.from, leg.to, leg.to.id ? `stop #${leg.to.id}` : undefined);
+      await walkRoute(leg.from, leg.to, leg.to.id ? { label: `stop #${leg.to.id}`, name: leg.to.name } : undefined);
       console.log(`  walk ${leg.from.name} -> ${leg.to.name}`);
     }
   }

@@ -53,11 +53,13 @@ export async function getStopDetail(id: string) {
   };
 }
 
-export async function getTransitCenterDetail(id: string) {
+export async function getTransitCenterDetail(id: string, now = Date.now()) {
   const tc = transitCenters().find((t) => t.id === id || t.stopIds.includes(id));
   if (!tc) throw new ApiError(404, "TRANSIT_CENTER_NOT_FOUND", `No transit center called "${id}".`);
-  const results = await Promise.all(tc.stopIds.map((s) => getArrivals(s, { limit: 40, horizonMin: 90 })));
+  // A high limit so busy platforms are never cut off inside the window; `windowEnd` says what the window covered.
+  const results = await Promise.all(tc.stopIds.map((s) => getArrivals(s, { limit: 200, horizonMin: 90, now })));
   const departures = results.flatMap((r) => r.arrivals.map((a) => ({ ...a, stopId: r.stopId })));
+  const lastMs = Math.max(...departures.map((d) => Date.parse(d.departureTime)));
   return {
     ...tc,
     bays: tc.bays.map((b) => ({
@@ -65,6 +67,7 @@ export async function getTransitCenterDetail(id: string) {
       departures: departures.filter((d) => d.stopId === b.stopId && d.bay === b.bay).slice(0, 4),
     })),
     unassignedDepartures: departures.filter((d) => !d.bay).slice(0, 10),
+    windowEnd: departures.length ? new Date(lastMs).toISOString() : null,
     source: tc.source,
     realtimeSources: results[0]?.realtimeSources ?? [],
   };
