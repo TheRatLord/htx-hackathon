@@ -24,6 +24,8 @@ const strings: Strings = {
       loadError: "We couldn't load stops near you.",
       // D4 cards: "4 min walk from the museum". A landmark's category names it; others say "from there".
       walkFromThere: "from there",
+      // D4, under the place name: "Walk times from the museum".
+      walkTimesFrom: "Walk times {from}",
       walkFromKind: {
         airport: "from the airport",
         university: "from campus",
@@ -59,6 +61,7 @@ const strings: Strings = {
       planTrip: "Planear viaje",
       loadError: "No pudimos cargar las paradas cercanas.",
       walkFromThere: "desde allí",
+      walkTimesFrom: "Tiempos a pie {from}",
       walkFromKind: {
         airport: "desde el aeropuerto",
         university: "desde el campus",

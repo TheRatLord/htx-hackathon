@@ -25,6 +25,12 @@
   min-width: 0;
 }
 
+/* "🚶 Walk 2 min" keeps one line: it gets the wider share, Save the rest (47). */
+.pillsCompact > :first-child {
+  flex-grow: 1.6;
+  white-space: nowrap;
+}
+
 /* The offline row under the stop name: centred like the name it qualifies. */
 .offline {
   display: flex;
@@ -157,4 +163,24 @@
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   font-weight: var(--fw-medium);
+}
+
+/* "Route 40 later today": the next clock times after the strip, in rows of three. */
+.later {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.laterTimes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5em, 1fr));
+  gap: var(--sp-2) var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
 }

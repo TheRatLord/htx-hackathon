@@ -11,7 +11,7 @@ import { ExploreSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { sideLine } from "../../../lib/format.ts";
+import { sideLine, upcoming } from "../../../lib/format.ts";
 import { errorText } from "../../../lib/i18nServer.ts";
 import { canonicalRouteId } from "../../../lib/routes.ts";
 import { useClientStop } from "../../../lib/stops.ts";
@@ -38,6 +38,7 @@ import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 import { CollapsedRoute } from "./CollapsedRoute.tsx";
 import { ExpandedRoute } from "./ExpandedRoute.tsx";
+import { LaterToday } from "./LaterToday.tsx";
 import { departuresOf, pickExpanded, servingKey } from "./serving.ts";
 import styles from "./StopSheet.module.css";
 
@@ -94,8 +95,9 @@ function WalkHere({ stop, routeId, compact }: { stop: StopDetail["stop"]; routeI
   const { distanceM } = useWalkDistance(fix, stop.id, seed);
   const min = distanceM !== undefined ? t("time.min", { n: walkMinutes(distanceM, walkPace) }) : undefined;
   const full = min ? t("common.walkHereMin", { min }) : t("common.walkHere");
-  // Narrow screen or Extra large text: "🚶 2 min" so Save shares the row and stays above the fold (47).
-  const label = compact && min ? min : full;
+  // Narrow screen or Extra large text: "🚶 Walk 2 min" so Save shares the row. The word stays: a bare
+  // "2 min" under the strip read as "bus in 2 min" (47).
+  const label = compact && min ? t("common.walkMin", { min }) : full;
   return (
     <Button
       variant="tonal"
@@ -130,6 +132,11 @@ function Loaded({ detail }: { detail: StopDetail }) {
   const expanded = pickExpanded(serving, arrivals, now, routeParam ? canonicalRouteId(routeParam) : undefined);
   const others = serving.filter((s) => s !== expanded);
   const updatedAt = mixed.data?.generatedAt ?? detail.arrivals.generatedAt;
+  // The legend explains only the time styles on screen: none when every time is scheduled (13).
+  const soon = upcoming(arrivals, now);
+  const present = [...(soon.some((a) => a.isRealtime && !a.canceled) ? (["live"] as const) : []), ...(soon.some((a) => a.canceled) ? (["canceled"] as const) : [])];
+  // "Later today" starts after the strip's 4 times.
+  const stripLast = expanded ? upcoming(departuresOf(expanded, arrivals), now).slice(0, 4).at(-1) : undefined;
 
   const expand = (routeId: string) =>
     setParams(
@@ -204,7 +211,10 @@ function Loaded({ detail }: { detail: StopDetail }) {
           ))}
         </ul>
       )}
-      <Legend />
+      {expanded && !offline && (
+        <LaterToday stopId={stop.id} routeId={expanded.routeId} routeName={expanded.name} afterMs={stripLast ? Date.parse(stripLast.departureTime) : now} />
+      )}
+      <Legend present={present} />
       {!offline && (
         <div className={styles.updated}>
           <UpdatedAgo at={updatedAt} onRefresh={() => void mixed.refetch()} />

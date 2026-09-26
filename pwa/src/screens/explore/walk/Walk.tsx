@@ -91,7 +91,8 @@ export default function Walk() {
   // Only Locate: Plan Trip would sit over the walk's start or end (G.4, screens choose their FABs).
   useExploreChrome({ fabs: ["locate"] });
 
-  const stop = useStop(stopId);
+  // Name and position only: the next bus comes from NextBus's own arrivals poll.
+  const stop = useStop(stopId, { refetchInterval: false });
   const target = stop.data?.stop;
   const osrm = useWalk(origin, stopId);
   const walk = osrm.data;
