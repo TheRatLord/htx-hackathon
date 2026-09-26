@@ -293,8 +293,17 @@
 .modes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-1);
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.modeSep {
+  display: inline-flex;
   align-items: center;
+  min-height: 40px;
+  padding: 0 2px;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
 }
 
 .modeRide {
@@ -311,11 +320,19 @@
 .modeWalk {
   display: inline-flex;
   align-items: center;
+  min-height: 40px;
   font-weight: var(--fw-medium);
 }
 
-.duration {
+.durationCol {
+  display: flex;
   flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.duration {
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);
   font-weight: var(--fw-bold);

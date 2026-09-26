@@ -100,8 +100,8 @@ function Running({ active }: { active: ActiveTrip }) {
   const vehicles = useVehicles(ride?.route.id, { enabled: Boolean(ride?.tripId) && !active.fixture });
   const vehicle = ride?.tripId ? vehicles.data?.vehicles.find((v) => v.tripId === ride.tripId) : undefined;
 
-  const highlightStopId =
-    step.kind === "walk" ? step.ride.board.id : step.kind === "wait" ? step.ride.board.id : step.kind === "ride" ? stops?.[rideIndex + 1]?.id : undefined;
+  // The boarding pins are already labelled; on a ride, the next stop gets the callout.
+  const highlightStopId = step.kind === "ride" ? stops?.[rideIndex + 1]?.id : undefined;
   const legIndex = "legIndex" in step ? step.legIndex : it.legs.length - 1;
   const sheetH = useSettledSheetHeight();
   const scene = useMemo((): MapScene => {
@@ -184,7 +184,7 @@ function Running({ active }: { active: ActiveTrip }) {
       header={
         <div className={styles.stepHeader}>
           <h1 tabIndex={-1} className={styles.stepOf}>
-            {t("trip.stepOf", { n, total })}
+            {step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
           </h1>
           <Button
             variant="text"
@@ -210,7 +210,7 @@ function Running({ active }: { active: ActiveTrip }) {
             onDone={end}
           />
         </section>
-        {active.fixture && step.kind !== "ride" && step.kind !== "arrived" && <p className={styles.caption}>{basis}</p>}
+        {active.fixture && !simFix && step.kind !== "ride" && step.kind !== "arrived" && <p className={styles.caption}>{t("trip.basis.fixture")}</p>}
         <NotifyPermissionCard context="trip" onDone={() => undefined} />
         {step.kind !== "arrived" && (
           <div className={styles.controls}>
@@ -218,8 +218,8 @@ function Running({ active }: { active: ActiveTrip }) {
             <Button variant="tonal" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
           </div>
         )}
-        <p className={styles.caption}>{t("trip.keepOpen")}</p>
-        {simAllowed && (
+        {step.kind !== "arrived" && <p className={styles.caption}>{t("trip.keepOpen")}</p>}
+        {simAllowed && step.kind !== "arrived" && (
           <div className={styles.sim}>
             <Button
               variant="outline"
@@ -230,9 +230,11 @@ function Running({ active }: { active: ActiveTrip }) {
             {simFix && <p className={styles.caption}>{t("trip.sim.note")}</p>}
           </div>
         )}
-        <div>
-          <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
-        </div>
+        {step.kind !== "arrived" && (
+          <div>
+            <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
+          </div>
+        )}
       </div>
       <Dialog
         open={confirmEnd}
