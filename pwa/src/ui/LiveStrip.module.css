@@ -1,9 +1,10 @@
 .strip {
   display: flex;
   gap: var(--sp-8);
-  align-items: center;
+  /* Numbers line up across items; a status word hangs under its own number. */
+  align-items: flex-start;
   min-height: var(--strip-h);
-  padding: var(--sp-2) var(--gutter);
+  padding: 14px var(--gutter);
   background: var(--c-brand-blue-deep);
   color: #fff;
   overflow-x: auto;
@@ -16,6 +17,11 @@
 
 .item {
   flex: none;
+}
+
+.placeholder,
+.empty {
+  align-self: center;
 }
 
 .placeholder {

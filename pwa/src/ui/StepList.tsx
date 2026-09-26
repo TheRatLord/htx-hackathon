@@ -7,9 +7,9 @@ import type { StepListProps, TimelineStep } from "./types.ts";
 
 const MARKER: Record<TimelineStep["kind"], string> = {
   walk: styles.walk,
-  board: styles.ride,
+  board: `${styles.ride} ${styles.board}`,
   ride: styles.ride,
-  alight: styles.ride,
+  alight: `${styles.ride} ${styles.alight}`,
   transfer: styles.transfer,
   arrive: styles.arrive,
 };
@@ -30,7 +30,7 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
               <span className={styles.title}>
                 {s.kind === "walk" && <Icon name="directions_walk" size={20} />}
                 {s.route && <RouteBadge route={s.route} size="sm" />}
-                {s.title}
+                <span className={styles.titleText}>{s.title}</span>
               </span>
               {s.lines.map((l, j) => (
                 <span key={j}>{l}</span>

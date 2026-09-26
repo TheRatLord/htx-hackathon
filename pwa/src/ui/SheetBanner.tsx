@@ -12,8 +12,10 @@ export function SheetBanner(props: SheetBannerProps) {
       return (
         <div className={styles.trip}>
           <p className={styles.tripText}>{t("banner.tripPlanned", { place: props.place, time: props.leaveAt })}</p>
-          <Button variant="text" label={t("common.open")} onPress={props.onOpen} />
-          <Button variant="text" label={t("common.clear")} onPress={props.onClear} />
+          <span className={styles.tripActions}>
+            <Button variant="text" label={t("common.open")} onPress={props.onOpen} />
+            <Button variant="text" label={t("common.clear")} onPress={props.onClear} />
+          </span>
         </div>
       );
     case "location-off":

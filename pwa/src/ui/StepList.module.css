@@ -53,6 +53,17 @@
   background: none;
 }
 
+/* The line starts at the first node and at a boarding node, and stops at the get-off node. */
+.item:first-child .rail::before,
+.board::before {
+  top: 20px;
+}
+
+.alight::before {
+  bottom: auto;
+  height: 20px;
+}
+
 .arrive::before,
 .transfer::before {
   background: none;
@@ -84,10 +95,20 @@
 
 .title {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--sp-2);
-  align-items: center;
+  align-items: flex-start;
   font-weight: var(--fw-bold);
+}
+
+.title > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.titleText {
+  flex: 1;
+  min-width: 0;
+  align-self: center;
 }
 
 .here {
