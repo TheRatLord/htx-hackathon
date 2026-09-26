@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Arrival, ClientRoute } from "../../../api/types.ts";
 import { primeRoutes } from "../../../lib/routes.ts";
-import { departureRows, foldQuietBays, platformsOf, routesByNextDeparture, servesRoute, tcRoutes } from "./tcModel.ts";
+import { departureRows, foldQuietBays, platformsOf, routesInListOrder, servesRoute, tcRoutes } from "./tcModel.ts";
 
 const route = (id: string, displayName: string): ClientRoute => ({
   id,
@@ -52,7 +52,7 @@ describe("tcRoutes", () => {
   });
 });
 
-describe("routesByNextDeparture", () => {
+describe("routesInListOrder", () => {
   const now = Date.parse("2026-01-01T18:00:00Z");
   const dep = (routeId: string, time: string) => ({ ...arrival(routeId, "X", time), stopId: "79" });
   const withDeps = {
@@ -64,11 +64,15 @@ describe("routesByNextDeparture", () => {
     ],
     unassignedDepartures: [dep("219", "2026-01-01T18:20:00Z")],
   };
-  it("puts the routes leaving soonest first, then the rest in number order", () => {
-    expect(routesByNextDeparture(withDeps, now).map((r) => r.name)).toEqual(["85", "219", "58", "66"]);
+  const names = new Map([
+    ["79", "Northwest Transit Center - Platform 2"],
+    ["13170", "Northwest Transit Center - Platform 1"],
+  ]);
+  it("names routes in the order the departures list shows them (platform, bay), then the rest in number order", () => {
+    expect(routesInListOrder(withDeps, names, now).map((r) => r.name)).toEqual(["85", "58", "219", "66"]);
   });
   it("leads with a chosen route", () => {
-    expect(routesByNextDeparture(withDeps, now, "66").map((r) => r.name)).toEqual(["66", "85", "219", "58"]);
+    expect(routesInListOrder(withDeps, names, now, "66").map((r) => r.name)).toEqual(["66", "85", "58", "219"]);
   });
 });
 

@@ -28,7 +28,7 @@ import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
-import { departureRows, foldQuietBays, platformsOf, routesByNextDeparture, servesRoute, type Bay, type DepartureRow } from "./tcModel.ts";
+import { departureRows, foldQuietBays, platformsOf, routesInListOrder, servesRoute, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
 
 const bayId = (bay: string) => `bay-${bay}`;
@@ -95,10 +95,12 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   });
 
   const routeParam = params.get("route");
-  // Chips in the order their routes next leave (a route opened from a link leads), so they match the
-  // departures below. The order is set once per center: chips never move under the rider's finger.
+  const names = new Map(tc.platforms.flatMap((p) => (p.name ? [[p.stopId, p.name] as const] : [])));
+  // Chips in the order the departures list below names their routes (a route opened from a link leads),
+  // so the first chip is the first route the rider reads. The order is set once per center: chips never
+  // move under the rider's finger.
   const routes = useMemo(
-    () => routesByNextDeparture(tc, now, routeParam ?? undefined),
+    () => routesInListOrder(tc, names, now, routeParam ?? undefined),
     [tc.id],
   );
   const selected = routeParam ? routes.find((r) => r.id === canonicalRouteId(routeParam)) : undefined;
@@ -113,7 +115,6 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
       { replace: true },
     );
 
-  const names = new Map(tc.platforms.flatMap((p) => (p.name ? [[p.stopId, p.name] as const] : [])));
   const platforms = platformsOf(tc, names);
   const platformName = (stopId: string) => {
     const name = names.get(stopId);
@@ -358,7 +359,7 @@ function SingleBayBanner({
         <NoDepartures windowEnd={tc.windowEnd} />
       )}
       <div className={styles.bannerActions}>
-        <Button variant="tonal" icon="calendar_month" label={t("tc.schedule")} href={`/explore/stop/${stop}/schedule?route=${route}`} />
+        <Button variant="tonal" icon="calendar_month" label={t("tc.fullSchedule")} href={`/explore/stop/${stop}/schedule?route=${route}`} />
         <Button variant="tonal" icon="bus_stop" label={`${t("route.stopDetails")} ›`} href={`/explore/stop/${stop}?route=${route}`} />
       </div>
     </div>

@@ -53,6 +53,12 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
     const before = i > 0 ? firstAhead(stops[i - 1].id) : undefined;
     if (here !== undefined && before !== undefined && here < before) busBefore.add(stop.id);
   });
+  // The stop right above a bus (live or by the timetable) has just been passed: its time is the bus
+  // after that one. It is greyed and says so, so "7 min" above "1 min" reads as two different buses.
+  const justPassed = new Set<string>();
+  stops.forEach((stop, i) => {
+    if (i > 0 && (busBefore.has(stop.id) || vehiclesAt.has(stop.id))) justPassed.add(stops[i - 1].id);
+  });
   const list = useRef<HTMLOListElement>(null);
   // Only the first target of each direction scrolls; later taps expand in place.
   const initial = useRef<{ directionKey: string; stopId: string } | null>(null);
@@ -99,10 +105,9 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
 
   return (
     <ol ref={list} className={styles.timeline}>
-      {stops.map((stop, i) => (
+      {stops.map((stop) => (
         <StopRow
           key={stop.id}
-          sameStreet={i > 0 && onStreet(stops[i - 1].name) === onStreet(stop.name)}
           routeId={routeId}
           rail={rail}
           stop={stop}
@@ -112,6 +117,7 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
           nearest={stop.id === nearestId}
           vehicle={vehiclesAt.get(stop.id)}
           scheduledBus={busBefore.has(stop.id)}
+          passed={justPassed.has(stop.id)}
           onToggle={() => onToggle(stop.id)}
         />
       ))}
@@ -123,8 +129,6 @@ export function StopTimeline({ routeId, rail, directionKey, stops, expandedId, n
 const onStreet = (name: string) => name.match(/^(.+?) @ /)?.[1];
 
 interface StopRowProps {
-  /** The stop is on the same street as the one before it, so the street is set quieter and the cross street leads. */
-  sameStreet: boolean;
   routeId: string;
   rail: boolean;
   stop: RouteStop;
@@ -136,10 +140,12 @@ interface StopRowProps {
   vehicle?: Vehicle;
   /** By the timetable, a bus is between the stop above and this one now (drawn only when no live bus is). */
   scheduledBus: boolean;
+  /** The bus drawn under this stop has just left it; the time shown is the one after. */
+  passed: boolean;
   onToggle: () => void;
 }
 
-function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nearest, vehicle, scheduledBus, onToggle }: StopRowProps) {
+function StopRow({ routeId, rail, stop, next, loading, expanded, nearest, vehicle, scheduledBus, passed, onToggle }: StopRowProps) {
   const t = useT();
   const now = useNow();
   const deps = upcoming(next.map(scheduledDep), now);
@@ -149,7 +155,7 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
   const dueNow = !shown && deps.length > 0;
   const stale = vehicle && vehicle.ageSeconds > STALE_VEHICLE_S;
   return (
-    <li className={styles.stop} data-stop={stop.id} data-expanded={expanded}>
+    <li className={styles.stop} data-stop={stop.id} data-expanded={expanded} data-passed={passed && !expanded}>
       {/* The bus between the stop above and this one, said in words on its own line: the next-bus times
           restart here ("7 min" above, "1 min" below), and an unlabelled glyph read as a data error. */}
       {(vehicle || scheduledBus) && (
@@ -176,14 +182,21 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
           <span className={`${styles.node} ${expanded ? styles.nodeFilled : ""}`} aria-hidden="true" />
         )}
         <span className={styles.stopText}>
-          <StopName name={stop.name} id={stop.id} showStreet={!sameStreet || expanded} />
+          <StopName name={stop.name} id={stop.id} />
+          {passed && !expanded && <span className={styles.passedLine}>{t(rail ? "route.trainJustLeft" : "route.busJustLeft")}</span>}
           {nearest && <NearestLine stop={stop} />}
         </span>
         {/* Expanded, the live strip below is the one answer for this stop. */}
         {!expanded && (
           <span className={styles.next}>
             {shown ? (
-              <TimeValue dep={shown} size="body" />
+              <>
+                <TimeValue dep={shown} size="body" />
+                {/* What the number is, on every row: the next bus to reach this stop. */}
+                <span className={styles.nextCaption} aria-hidden="true">
+                  {t(rail ? "route.nextTrainCaption" : "route.nextBusCaption")}
+                </span>
+              </>
             ) : (
               <>
                 <span aria-hidden="true">{t("route.noNext")}</span>
@@ -200,11 +213,11 @@ function StopRow({ sameStreet, routeId, rail, stop, next, loading, expanded, nea
 
 /**
  * One name form in every row, open or closed: the cross street and number in bold ("Mandell St (2953)"),
- * which never break apart. The street the bus runs along goes on a grey line under it on the first
- * stop of a run along that street and on the open row, so a tap never renames the row under the
- * rider's finger. Screen readers hear the whole name first ("Westheimer Rd @ Mandell St (2953)").
+ * which never break apart, and the street the bus runs along on a grey line under it. Every row and
+ * every state uses it, so a tap never renames the row under the rider's finger. Screen readers hear
+ * the whole name first ("Westheimer Rd @ Mandell St (2953)").
  */
-function StopName({ name, id, showStreet }: { name: string; id: string; showStreet: boolean }) {
+function StopName({ name, id }: { name: string; id: string }) {
   const street = onStreet(name);
   const cross = street ? name.slice(street.length + 3) : name;
   return (
@@ -217,7 +230,7 @@ function StopName({ name, id, showStreet }: { name: string; id: string; showStre
           <span className={styles.stopId}>({id})</span>
         </span>
       </span>
-      {street && showStreet && (
+      {street && (
         <span className={styles.street} aria-hidden="true">
           {street}
         </span>
