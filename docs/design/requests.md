@@ -68,3 +68,74 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   be untrue there.
 - **10 (card labels):** the LiveStrip keeps its spec label "16 minutes, scheduled"
   (`markScheduled: true`); cards follow C.5a and leave the scheduled default unspoken.
+
+## OSRM walks through the downtown tunnel network
+- From: A (D2, D3, D8; flows F1, F4, F10)
+- Where: server/services/walk.ts (`walkRoute`, used by `/walk` and `/nearby?precise=1`)
+- Need: with live OSRM, the F1/F4/F10 GPS (29.7563,-95.3639) snaps to the pedestrian tunnels:
+  342 comes back as 945 m (13 min) instead of ~177 m, and 246/247/567 as 1.0–1.2 km, so they sort
+  last on home, D3's 567 card reads "16 min" and D8 shows "Turn left onto East McKinney Tunnel".
+  Suggest rejecting an OSRM answer (fall back to the estimate) when any step's street matches
+  /tunnel/i or its distance is more than ~2.5× the straight line. Offline fixtures are unaffected.
+- Status: open
+
+## sortRouteChips should compare walk minutes, not metres
+- From: A (D2 item 4, F1)
+- Where: src/lib/sortRoutes.ts
+- Need: the spec's order at the F1 GPS (6, 11, 40, 41, 51, …, [40] 3rd) only comes out when
+  distances are compared at minute granularity; by metres, 11/51/52/137 (118 m) beat 6 (158 m) and
+  40 (177 m) and [40] is 7th. Worked around in `screens/explore/home/chips.ts` (passes
+  `walkMinutes(d)` as the distance); move that into the helper and drop the workaround.
+- Status: open
+
+## RouteDirectionCard shows nothing when a direction has no departure
+- From: A (D3, late night / F7 at night)
+- Where: src/ui/RouteDirectionCard.tsx
+- Need: with `deps` empty the card has no time line at all. It should read "No buses in the next
+  2 hours" (`card.noBuses2h`), like NearbyStopCard's no-service row.
+- Status: open
+
+## `enabled` option on useStop, useRoute, useTransitCenter
+- From: A (D2 TC card, saved row, D3 cards)
+- Where: src/api/hooks.ts
+- Need: these hooks fetch unconditionally, so optional fetches are done by rendering a child
+  component only when needed (`WithTransitCenter` in home/Home.tsx, `WithIdleRoute` in
+  home/SavedRow.tsx, `CardWithDetail` in home/DirectionCard.tsx). An `enabled` flag would allow plain hooks.
+- Status: open
+
+## A shared client stop lookup (/data/stops.json)
+- From: A (D6 loading title, D3 side of street)
+- Where: src/lib (MapView.tsx has a private `stopsById` loader)
+- Need: `useClientStop(id)` so D6's loading state can show "Name (ID)" from the cached file (spec
+  D6 States) and D3 can read `side` without a `/api/stops/:id` call per card. Today D6 falls back
+  to the saved/recent name or "Stop #342", and D3 calls `useStop` for stops not in `/nearby`.
+- Status: open
+
+## Map marker kind "place" (black pin)
+- From: A (D4 place, D8 `fromName` origin)
+- Where: src/map/scene.ts, MapView.tsx
+- Need: spec D4 wants a black `place` pin labelled with the place; `markers[].kind` has no such
+  kind, so D4/D8 use "destination" (red) for now.
+- Status: open
+
+## Button `external` names RideMETRO.org for every link
+- From: A (D8 "Open in Google Maps ↗")
+- Where: src/ui/Button.tsx
+- Need: `external` always appends "(opens RideMETRO.org)". D8 works around it with `onPress`
+  → `window.open`. Suggest an `externalLabel` prop (or a neutral "(opens in a new tab)").
+- Status: open
+
+## Walk: fitBounds padding hides the start under the FABs
+- From: A (D8)
+- Where: src/map/MapView.tsx (`applyScene` padding `right: 72`)
+- Need: the extended "Plan Trip" FAB is ~130 dp wide, so a walk starting at the right edge ends
+  up under it. Use the FAB column's real width as right padding (or hide Plan Trip on D8).
+- Status: open
+
+## Smaller items
+- From: A
+- SheetHeader has no left-aligned 20sp Bold title (spec D8 "Walk to …"); D8 uses the default 22sp
+  Regular title.
+- Weekday + clock ("Sat 5:12 AM") and service-date ("Fri, Sep 25") formatting live in
+  `screens/explore/stop/when.ts`; move them to src/lib/format.ts if another module needs them.
+- Status: open
