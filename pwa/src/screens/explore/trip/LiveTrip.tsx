@@ -31,9 +31,9 @@ import { Button } from "../../../ui/Button.tsx";
 import { Dialog } from "../../../ui/Dialog.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { NotifyPermissionCard } from "../../../ui/NotifyPermissionCard.tsx";
-import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { StepList } from "../../../ui/StepList.tsx";
 import { useToast } from "../../../ui/Toast.tsx";
+import { PlanHeader } from "../plan/PlanHeader.tsx";
 import { StepCard } from "./StepCard.tsx";
 import styles from "./trip.module.css";
 
@@ -47,7 +47,7 @@ function NoTrip() {
   const onBack = useBack();
   useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
   return (
-    <ExploreSheet ariaLabel={t("trip.title")} onBack={onBack} header={<SheetHeader title={t("trip.title")} />}>
+    <ExploreSheet ariaLabel={t("trip.title")} onBack={onBack} header={<PlanHeader title={t("trip.title")} />}>
       <EmptyState icon="route_plan" title={t("trip.none.title")} body={t("trip.none.body")} action={{ label: t("trip.none.action"), onPress: () => navigate("/explore/plan") }} />
     </ExploreSheet>
   );
@@ -235,7 +235,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     const rows = itineraryTimeline(it, { fromName: originName, toName: destination.name, pace: walkPace, lang });
     const here = rider.fix;
     return (
-      <ExploreSheet ariaLabel={t("trip.allSteps")} onBack={onBack} header={<SheetHeader title={t("trip.allSteps")} />}>
+      <ExploreSheet ariaLabel={t("trip.allSteps")} onBack={onBack} header={<PlanHeader title={t("trip.allSteps")} />}>
         <div className={styles.body}>
           <Button
             variant="tonal"
@@ -267,7 +267,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
       onBack={onBack}
       header={
         // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
-        <SheetHeader
+        <PlanHeader
           title={step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
           right={
             <Button

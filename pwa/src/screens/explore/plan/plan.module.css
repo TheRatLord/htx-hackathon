@@ -390,6 +390,7 @@
 /* ---------- Itinerary card ---------- */
 
 .card {
+  container: itcard / inline-size;
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
@@ -416,11 +417,29 @@
 
 .cardTop {
   display: flex;
-  gap: var(--sp-2);
-  align-items: flex-start;
+  flex-wrap: wrap-reverse;
+  gap: var(--sp-1) var(--sp-2);
+  /* wrap-reverse flips the cross axis: flex-end is the top of the line. */
+  align-items: flex-end;
   justify-content: space-between;
 }
 
+.cardTop > .durationCol {
+  margin-left: auto;
+}
+
+/* A narrow card: the arrival is on a line of its own above the strip, "12:59 PM  47 min" in one row. */
+@container itcard (max-width: 340px) {
+  .cardTop > .durationCol {
+    flex-direction: row;
+    gap: var(--sp-2);
+    align-items: baseline;
+  }
+}
+
+/* v2.71's strip, final walk included. When it can't share a line with the arrival (360dp, Spanish,
+   large text), the arrival moves up to its own line on the right and the strip gets the card's full
+   width (.cardTop wrap-reverse), so no leg drops to a line of its own (22-360). */
 .modes {
   display: flex;
   flex-wrap: wrap;
@@ -600,4 +619,54 @@
 /* v2.71's sort chips under the summary, full-bleed: ChipRow keeps its own gutter. */
 .sortChips {
   margin: calc(-1 * var(--sp-1)) calc(-1 * var(--gutter)) 0;
+}
+
+/* ---------- "‹ Plan Your Trip ... ⌄": Back, title and toggle on one row (PlanHeader) ---------- */
+
+.header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0;
+  /* Clears the grab bar drawn over the top of the header. */
+  padding: var(--sp-3) var(--sp-1) var(--sp-1) calc(var(--gutter) - var(--sp-3));
+}
+
+.headerBack,
+.headerToggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-link-text);
+}
+
+.headerBack:active,
+.headerToggle:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+.headerTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+  overflow-wrap: anywhere;
+}
+
+.headerToggle {
+  margin-left: auto;
+}
+
+.headerRight {
+  flex: none;
+}
+
+.headerRight + .headerToggle {
+  margin-left: 0;
 }

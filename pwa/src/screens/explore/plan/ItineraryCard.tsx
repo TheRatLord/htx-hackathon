@@ -21,7 +21,8 @@ import styles from "./plan.module.css";
 function BoardLine({ ride }: { ride: TransitLeg }) {
   const t = useT();
   const lang = useLang();
-  const time = formatClock(ride.departureTime, lang);
+  // "12:10 p.m." never breaks at the end of the line.
+  const time = formatClock(ride.departureTime, lang).replace(/ /g, "\u00a0");
   const text = ride.board.id
     ? t("plan.boardAt", { route: ride.route.name, id: ride.board.id, time })
     : `${t("plan.board")} ${ride.route.name} · ${time}`;
@@ -41,7 +42,7 @@ function BoardLine({ ride }: { ride: TransitLeg }) {
 function Warning({ children, advisory = false, clamp = false }: { children: ReactNode; advisory?: boolean; clamp?: boolean }) {
   return (
     <span className={`${styles.alertLine} ${advisory ? styles.advisoryLine : ""}`}>
-      <Icon name={advisory ? "info" : "warning"} size={20} color={advisory ? "var(--c-primary)" : "var(--c-alert-icon)"} />
+      <Icon name={advisory ? "info" : "warning"} size={20} color={advisory ? "var(--c-brand-navy)" : "var(--c-alert-icon)"} />
       <span className={clamp ? styles.clamp2 : undefined}>{children}</span>
     </span>
   );
@@ -140,16 +141,20 @@ function Clock({ iso }: { iso: string }) {
 /**
  * D11's itinerary card: today's mode strip, and on the right the arrival in bold (the list is
  * sorted by it) over the trip's minutes; then when to leave, one Board line and the alert kind.
- * `later` are the same buses from the same stops later on, said on one line instead of more cards.
+ * `later` are the same buses from the same stops later on, said on one line instead of more cards:
+ * "Also at 12:30 PM ›".
  */
 export function ItineraryCard({
   it,
   href,
   sharedAlerts = new Set(),
   later = [],
+  toPlace = false,
 }: {
   it: Itinerary;
   href: string;
+  /** The trip ends at a place (not a stop): the strip ends with the walk to it. */
+  toPlace?: boolean;
   sharedAlerts?: ReadonlySet<string>;
   later?: { it: Itinerary; href: string }[];
 }) {
@@ -175,7 +180,7 @@ export function ItineraryCard({
       {/* The whole card opens Details, as on v2.71: no second link in a footer. */}
       <Link to={href} className={styles.cardMain} >
         <span className={styles.cardTop}>
-          <ModeStrip it={it} />
+          <ModeStrip it={it} toPlace={toPlace} />
           <span className={styles.durationCol}>
             <span className="visually-hidden">{t("plan.arrive", { time: formatClock(it.endTime, lang), min: it.durationMin })}</span>
             <span className={styles.duration} aria-hidden="true">
@@ -193,7 +198,7 @@ export function ItineraryCard({
       </Link>
       {later.length > 0 && (
         <p className={styles.later}>
-          {t("plan.alsoAt")} 
+          <span>{t("plan.alsoAt")}</span>
           {later.map((l, i) => (
             <span key={l.href}>
               {i > 0 && ", "}
