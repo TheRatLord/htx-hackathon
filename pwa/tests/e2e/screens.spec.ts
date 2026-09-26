@@ -1,14 +1,14 @@
 // The review screenshot set: every screen and important state, at 412x800 (plus 360x640 for home,
 // stop, plan and itinerary). Set S data (OFFLINE fixtures, scheduled times at a weekday noon).
 //   npm run test:e2e -- screens.spec.ts
-// Files go to SHOTS_DIR (default ../ux-audit/redesign/round2), named NN-screen[-state][-360].png.
+// Files go to SHOTS_DIR (default ../ux-audit/redesign/round3), named NN-screen[-state][-360].png.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { GPS, launch, ONBOARDED, SAVED_2958, settle, type Gps } from "./helpers.ts";
 
-const OUT = process.env.SHOTS_DIR ?? resolve(import.meta.dirname, "../../../ux-audit/redesign/round2");
+const OUT = process.env.SHOTS_DIR ?? resolve(import.meta.dirname, "../../../ux-audit/redesign/round3");
 // The API server's clock file (playwright.config.ts): one per API port.
 const NOW_FILE = resolve(import.meta.dirname, `.results/now-${process.env.API_PORT ?? 8787}.txt`);
 mkdirSync(OUT, { recursive: true });
