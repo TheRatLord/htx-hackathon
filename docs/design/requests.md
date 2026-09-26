@@ -76,6 +76,9 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   button stay visible over the bottom of /fares, /recent, /more (the map is `visibility: hidden`,
   but the attribution control still paints above the Frame). Hide it with the map, or give the
   Frame a stacking context above the map layer.
+- Blocks F9: reached from Explore, the attribution covers "Seniors 70 and older · Free" at 412x800
+  and "Transfers" at 360x640 (re-checked on mod-D after the review fixes). F9 can't be scored as
+  delivered until this lands.
 - Status: open
 
 ## AlertBox: route badges and dates without the description (D14 list)
@@ -85,6 +88,10 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   description (METRO's are 10+ lines). Today D14 renders a badges + dates line above the
   `compact` box itself; an AlertBox `routes` slot, or a variant that keeps dates and drops only
   the description, would let the box own that layout.
+- Review (D fix round): the two-block item was flagged against the spec ("⚠ [82] Stop moved …" in
+  one box). Proposed API: `routes?: RouteRef[]` (badges before the effect word, "+N" past 6) and
+  `compact="list"` (drops only the description, keeps the dates). D14 will then render one
+  `<AlertBox routes={alertRouteRefs(a)} compact="list" …/>` and drop its `.meta` row.
 - Status: open
 
 ## Group /arrivals into SavedStopRow routes in src/lib
@@ -95,12 +102,16 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   needs the same grouping. Also: when the preferred route has no departure in the window, C.5b
   wants it shown with "No buses in the next 3 hours", which needs its direction and headsign
   (not in an empty /arrivals answer), so the helper could take the stop's serving patterns.
+- Update: D16 now groups one entry per route (canonical id, first direction) and keeps a
+  preferred route with no departure (its own `?route=` call, then routes.json for the direction
+  and headsign). The helper should do the same so Explore's saved row matches.
 - Status: open
 
 ## useAlerts(): expose when the alerts were fetched
 - From: D (D14 footer "Source: METRO · Updated 1 min ago")
 - Where: src/api/alertsStore.ts
-- Need: an `updatedAt` field. D14 reads `queryClient.getQueryState(keys.alerts()).dataUpdatedAt` today.
+- Need: an `updatedAt` field. D14 reads `queryClient.getQueryState(keys.alerts()).dataUpdatedAt` today
+  (Alerts.tsx); switch to the store field once it exists.
 - Status: open
 
 ## formatDateRange with a start time (D15)
@@ -115,6 +126,8 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Where: src/ui/SegmentedControl.tsx
 - Need: D1 draws the text-size glyphs at 16 / 18 / 21sp. Screens can't restyle components, so
   Welcome shows "A", "A+", "A++" at one size with "Standard / Large / Extra large" under them.
+- Proposed API: `SegmentedOption.labelSize?: "body" | "large" | "xlarge"` (16 / 18 / 21sp), or
+  `label: ReactNode`.
 - Status: open
 
 ## AlertStatusLine retry loop when a screen mounts it only on error
@@ -126,4 +139,43 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   refetch → loading → unmount) about once a second. D14/D15 now keep it mounted for loading and
   error alike; `retryOnMount: false` on the alerts query (the store already has `retry()`) would
   make the component safe to use either way.
+- Status: open
+
+## DemoTag component (D15, and AlertBox's own tag)
+- From: D (D15 Alert detail)
+- Where: src/ui (new `DemoTag`, used by AlertBox)
+- Need: D15 wants the "Demo" tag beside the effect word. Screens can't restyle, so D15 shows the
+  warn caption "Demo alerts only" instead. A shared `DemoTag` (AlertBox's `.demo` style) would let
+  D15 show the same tag as the list.
+- Status: open
+
+## Share the static stops/routes loaders (src/lib)
+- From: D (D14 My routes, D15 affected stops, D16 preferred route)
+- Where: src/lib (with src/map/MapView.tsx `stopsById` and src/lib/routes.ts `loadRoutes`)
+- Need: `useStops()` (stop id → ClientStop from /data/stops.json) and the route directions per
+  stop from /data/routes.json. D keeps a local copy in screens/alerts/staticData.ts; MapView and
+  routes.ts each fetch the same files privately. One loader per file would parse each once.
+- Status: open
+
+## routeRefOrFallback in src/lib/routes.ts
+- From: D (D14, D15, D16)
+- Where: src/lib/routes.ts
+- Need: a RouteRef for a route known only by id and name (saved/recent routes, GTFS-RT alert
+  routes with no text colour) before or without routes.json. D has `routeRefOr()` in
+  screens/alerts/routeRefs.ts; Explore and the planner may want the same.
+- Status: open
+
+## ListRow: `lang` and a greyed disabled radio (D19 Coming soon languages)
+- From: D (D19 Settings)
+- Where: src/ui/ListRow.tsx, ListRow.module.css
+- Need: the spec's disabled "Coming soon" radio rows need `lang`/`dir` on the label and a greyed
+  circle and sub-label when disabled (today the circle matches an enabled one and the sub is
+  darker than the label). Until then D19 lists them in one "Coming soon: …" note.
+- Status: open
+
+## Tab pages on the page background (TabLayout)
+- From: D (D16 Recent, D17 Fares, D22 not found)
+- Where: src/app/layouts/TabLayout.tsx
+- Need: TabLayout's Frame is `surface` (white), so its `padding-bottom` shows a white strip under
+  pages that now use `--c-background` like today's app. `background="background"` fixes it.
 - Status: open
