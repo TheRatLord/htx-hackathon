@@ -12,7 +12,14 @@ export const WALK_DETOUR_FACTOR = 1.3;
 /** m/s. OSRM assumes ~1.4; many riders (older, with kids, with bags) walk slower. */
 const RELAXED_SPEED = 0.9;
 
+export type WalkModifier = "left" | "right" | "slight left" | "slight right" | "sharp left" | "sharp right" | "straight" | "uturn";
+
 export interface WalkStep {
+  /** OSRM maneuver type ("depart", "turn", "new name", "continue", "arrive", "roundabout", ...). */
+  maneuver: "depart" | "turn" | "new name" | "continue" | "arrive" | "roundabout" | (string & {});
+  modifier?: WalkModifier;
+  street?: string;
+  /** English fallback; clients compose localised text from the structured fields. */
   instruction: string;
   distanceM: number;
   distanceText: string;
@@ -36,7 +43,7 @@ export interface WalkRoute {
 interface OsrmStep {
   distance: number;
   name: string;
-  maneuver: { type: string; modifier?: string; bearing_after: number; location: [number, number] };
+  maneuver: { type: string; modifier?: WalkModifier; bearing_after: number; location: [number, number] };
 }
 
 interface OsrmResponse {
@@ -46,10 +53,16 @@ interface OsrmResponse {
 
 const cache = new TtlCache<WalkRoute>(24 * 3600_000, 2000);
 
-export function walkRoute(from: LatLon, to: LatLon, destinationName?: string): Promise<WalkRoute> {
+/** `label` phrases the English instructions ("stop #342 (...)"); `name` is the place name for structured steps. */
+export interface WalkDestination {
+  label: string;
+  name: string;
+}
+
+export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestination): Promise<WalkRoute> {
   const r = (n: number) => n.toFixed(5);
   const coords = `${r(from.lon)},${r(from.lat)};${r(to.lon)},${r(to.lat)}`;
-  return cache.get(`${coords}|${destinationName ?? ""}`, async () => {
+  return cache.get(`${coords}|${destination?.label ?? ""}`, async () => {
     try {
       const { body } = await fetchUpstream<OsrmResponse>({
         service: "osrm",
@@ -62,10 +75,10 @@ export function walkRoute(from: LatLon, to: LatLon, destinationName?: string): P
         source: "osrm",
         ...durations(route.distance, route.duration),
         geometry: { type: "LineString", coordinates: route.geometry.coordinates },
-        steps: describeSteps(route.legs.flatMap((l) => l.steps), destinationName),
+        steps: describeSteps(route.legs.flatMap((l) => l.steps), destination?.label),
       };
     } catch (err) {
-      return straightLine(from, to, destinationName, (err as Error).message);
+      return straightLine(from, to, destination, (err as Error).message);
     }
   });
 }
@@ -80,7 +93,7 @@ function durations(distanceM: number, durationS: number) {
   };
 }
 
-function straightLine(from: LatLon, to: LatLon, destinationName: string | undefined, reason: string): WalkRoute {
+function straightLine(from: LatLon, to: LatLon, destination: WalkDestination | undefined, reason: string): WalkRoute {
   const d = haversineM(from.lat, from.lon, to.lat, to.lon) * WALK_DETOUR_FACTOR;
   return {
     source: "straight-line-estimate",
@@ -89,7 +102,9 @@ function straightLine(from: LatLon, to: LatLon, destinationName: string | undefi
     geometry: { type: "LineString", coordinates: [[from.lon, from.lat], [to.lon, to.lat]] },
     steps: [
       {
-        instruction: `Walk about ${formatDistance(d)} to ${destinationName ?? "your destination"}`,
+        maneuver: "arrive",
+        ...(destination && { street: destination.name }),
+        instruction: `Walk about ${formatDistance(d)} to ${destination?.label ?? "your destination"}`,
         distanceM: Math.round(d),
         distanceText: formatDistance(d),
         lat: from.lat,
@@ -131,7 +146,12 @@ export function describeSteps(steps: OsrmStep[], destinationName?: string): Walk
   return merged.map((s) => {
     const base = phrase(s, destinationName);
     const walk = s.maneuver.type === "arrive" ? "" : `, walk ${formatDistance(s.distance)}`;
+    const { type, modifier } = s.maneuver;
+    const street = s.name.trim();
     return {
+      maneuver: type,
+      ...(modifier && { modifier }),
+      ...(street && { street }),
       instruction: base + walk,
       distanceM: Math.round(s.distance),
       distanceText: formatDistance(s.distance),

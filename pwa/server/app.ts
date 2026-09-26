@@ -9,8 +9,10 @@ import { ApiError } from "./services/errors.ts";
 import { getNearby } from "./services/nearby.ts";
 import { plan } from "./services/plan.ts";
 import { getRouteDetail } from "./services/routeDetail.ts";
+import { getRouteNext } from "./services/routeNext.ts";
 import { search } from "./services/search.ts";
 import { getStopDetail, getTransitCenterDetail } from "./services/stopDetail.ts";
+import { getStopSchedule } from "./services/stopSchedule.ts";
 import { transitCenters } from "./services/transitCenters.ts";
 import { getTrip } from "./services/trips.ts";
 import { getVehicles } from "./services/vehicles.ts";
@@ -57,6 +59,12 @@ export function createApp() {
     return c.json(await getStopDetail(c.req.param("id")));
   });
 
+  app.get("/stops/:id/schedule", (c) => {
+    const route = requireParam(c.req.query("route"), "route");
+    cacheFor(c, 300);
+    return c.json(getStopSchedule(c.req.param("id"), route));
+  });
+
   app.get("/arrivals", async (c) => {
     const stop = requireParam(c.req.query("stop"), "stop");
     const limit = Math.min(optionalNumber(c.req.query("limit"), "limit") ?? 10, 50);
@@ -89,9 +97,12 @@ export function createApp() {
     if (toStopId && !toStop) throw new ApiError(404, "STOP_NOT_FOUND", `We couldn't find stop #${toStopId}.`);
     const to = c.req.query("to") ? parseLatLon(c.req.query("to"), "to") : toStop;
     if (!to) throw new ApiError(400, "MISSING_PARAMETER", 'Provide "to" (lat,lon) or "toStop"');
-    const name = toStop ? `stop #${toStop.id} (${toStop.name}${toStop.dir ? `, ${toStop.dir.toLowerCase()}` : ""})` : undefined;
+    const destination = toStop && {
+      label: `stop #${toStop.id} (${toStop.name}${toStop.dir ? `, ${toStop.dir.toLowerCase()}` : ""})`,
+      name: toStop.name,
+    };
     cacheFor(c, 3600, 86400);
-    return c.json(await walkRoute(from, to, name));
+    return c.json(await walkRoute(from, to, destination));
   });
 
   app.get("/plan", async (c) => {
@@ -119,6 +130,13 @@ export function createApp() {
   app.get("/routes/:id", async (c) => {
     cacheFor(c, 300);
     return c.json(await getRouteDetail(c.req.param("id")));
+  });
+
+  app.get("/routes/:id/next", async (c) => {
+    const dir = c.req.query("dir") ?? "0";
+    if (dir !== "0" && dir !== "1") throw new ApiError(400, "BAD_DIRECTION", '"dir" must be 0 or 1');
+    c.header("Cache-Control", "max-age=60");
+    return c.json(await getRouteNext(c.req.param("id"), Number(dir) as 0 | 1));
   });
 
   app.get("/trips/:id", (c) => {

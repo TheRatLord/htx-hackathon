@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { formatDistance } from "../server/lib/geo.ts";
-import { describeSteps } from "../server/services/walk.ts";
+import { describeSteps, type WalkModifier } from "../server/services/walk.ts";
 
-const step = (type: string, modifier: string | undefined, name: string, distance: number, bearing = 0) => ({
+const step = (type: string, modifier: WalkModifier | undefined, name: string, distance: number, bearing = 0) => ({
   distance,
   name,
   maneuver: { type, modifier, bearing_after: bearing, location: [-95.34, 29.72] as [number, number] },

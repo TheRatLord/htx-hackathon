@@ -4,15 +4,18 @@
 import type { Arrival, DataSource } from "../../shared/types.ts";
 import { gtfs } from "../gtfs/store.ts";
 import { stopsNear } from "../gtfs/spatial.ts";
-import { formatDistance } from "../lib/geo.ts";
+import { formatDistance, haversineM } from "../lib/geo.ts";
 import { getArrivals } from "./arrivals.ts";
 import { stopSummary, type StopSummary } from "./present.ts";
+import { transitCenters, type TransitCenter } from "./transitCenters.ts";
 import { WALK_DETOUR_FACTOR, walkRoute } from "./walk.ts";
 
 const WALK_SPEED = 1.25; // m/s
 /** Real-time lookups cost one upstream call per stop; only the closest stops get them. */
 const REALTIME_STOPS = 6;
 const PRECISE_WALK_STOPS = 3;
+/** Transit centers are worth a walk: listed within this distance whatever the stop radius. */
+const TRANSIT_CENTER_RADIUS_M = 1000;
 
 export interface NearbyRoute {
   routeId: string;
@@ -22,7 +25,7 @@ export interface NearbyRoute {
   directionLabel: string;
   headsign: string;
   bay?: string;
-  departures: Pick<Arrival, "departureTime" | "minutesAway" | "isRealtime" | "delaySeconds" | "canceled" | "tripId">[];
+  departures: Pick<Arrival, "departureTime" | "minutesAway" | "isRealtime" | "delaySeconds" | "canceled" | "tripId" | "source">[];
 }
 
 export interface NearbyStop {
@@ -36,7 +39,37 @@ export interface NearbyStop {
   realtimeSources: DataSource[];
 }
 
-export async function getNearby(lat: number, lon: number, opts: { radiusM?: number; limit?: number; precise?: boolean } = {}) {
+export interface NearbyTransitCenter {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  distanceM: number;
+  walkDistanceM: number;
+  walkDistanceText: string;
+  walkMin: number;
+  bayCount: number;
+  source: TransitCenter["source"];
+}
+
+function walkEstimate(straightM: number, walkDistanceM = straightM * WALK_DETOUR_FACTOR) {
+  return {
+    distanceM: Math.round(straightM),
+    walkDistanceM: Math.round(walkDistanceM),
+    walkDistanceText: formatDistance(walkDistanceM),
+    walkMin: Math.max(1, Math.round(walkDistanceM / WALK_SPEED / 60)),
+  };
+}
+
+function transitCentersNear(lat: number, lon: number): NearbyTransitCenter[] {
+  return transitCenters()
+    .map((tc) => ({ tc, d: haversineM(lat, lon, tc.lat, tc.lon) }))
+    .filter(({ d }) => d <= TRANSIT_CENTER_RADIUS_M)
+    .sort((a, b) => a.d - b.d)
+    .map(({ tc, d }) => ({ id: tc.id, name: tc.name, lat: tc.lat, lon: tc.lon, ...walkEstimate(d), bayCount: tc.bays.length, source: tc.source }));
+}
+
+export async function getNearby(lat: number, lon: number, opts: { radiusM?: number; limit?: number; precise?: boolean; now?: number } = {}) {
   const radiusM = Math.min(opts.radiusM ?? 500, 2000);
   const near = stopsNear(lat, lon, radiusM, opts.limit ?? 15).filter((n) => gtfs().stops[n.stopIdx].routeIds.length);
   const stops = await Promise.all(
@@ -51,13 +84,10 @@ export async function getNearby(lat: number, lon: number, opts: { radiusM?: numb
           walkSource = "osrm";
         }
       }
-      const arrivals = await getArrivals(s.id, { limit: 40, horizonMin: 120, realtime: i < REALTIME_STOPS });
+      const arrivals = await getArrivals(s.id, { limit: 40, horizonMin: 120, realtime: i < REALTIME_STOPS, now: opts.now });
       return {
         stop: stopSummary(s),
-        distanceM: Math.round(n.distanceM),
-        walkDistanceM: Math.round(walkDistanceM),
-        walkDistanceText: formatDistance(walkDistanceM),
-        walkMin: Math.max(1, Math.round(walkDistanceM / WALK_SPEED / 60)),
+        ...walkEstimate(n.distanceM, walkDistanceM),
         walkSource,
         routes: groupByRoute(arrivals.arrivals),
         realtimeSources: arrivals.realtimeSources,
@@ -71,6 +101,7 @@ export async function getNearby(lat: number, lon: number, opts: { radiusM?: numb
     generatedAt: new Date().toISOString(),
     ...(!stops.length && { message: `No bus or rail stops within ${formatDistance(radiusM)}. Try a larger radius or search for a place.` }),
     stops,
+    transitCenters: transitCentersNear(lat, lon),
   };
 }
 
@@ -93,8 +124,8 @@ function groupByRoute(arrivals: Arrival[]): NearbyRoute[] {
       groups.set(key, g);
     }
     if (g.departures.length < 2) {
-      const { departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId } = a;
-      g.departures.push({ departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId });
+      const { departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId, source } = a;
+      g.departures.push({ departureTime, minutesAway, isRealtime, delaySeconds, canceled, tripId, source });
     }
   }
   return [...groups.values()];
