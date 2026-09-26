@@ -1,22 +1,19 @@
 .bar {
-  padding: 0 var(--gutter) var(--sp-2);
-  background: var(--c-background);
-}
-
-.row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--sp-1);
   min-height: var(--appbar-h);
-  margin: 0 calc(-1 * var(--sp-3));
+  padding: var(--sp-1) var(--gutter) var(--sp-1) var(--sp-1);
+  background: var(--c-background);
 }
 
 .back {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 2px;
   min-height: var(--touch-min);
-  padding: 0 var(--sp-3);
+  padding: 0 var(--sp-3) 0 var(--sp-2);
   border: none;
   background: none;
   color: var(--c-link-text);
@@ -24,6 +21,8 @@
 }
 
 .title {
+  flex: 1;
+  min-width: 0;
   font-size: var(--fs-title);
   line-height: var(--lh-title);
   font-weight: var(--fw-regular);

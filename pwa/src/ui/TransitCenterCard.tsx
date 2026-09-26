@@ -28,7 +28,7 @@ export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCente
           </span>
           {tc.name}
         </h2>
-        <WalkButton stopId={tc.id} walkDistanceM={tc.walkDistanceM} onPress={onWalk} />
+        <WalkButton stopId={tc.id} tcName={tc.name} walkDistanceM={tc.walkDistanceM} onPress={onWalk} />
       </div>
       <p className={styles.meta}>{t("card.transitCenterLine", { bays: tc.bayCount, distance: formatDistance(tc.walkDistanceM, lang) })}</p>
       <ul className={styles.rows}>

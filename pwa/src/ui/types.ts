@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { ApiError } from "../api/client.ts";
 import type { Alert, Dep, NearbyRoute, NearbyTransitCenter, RouteRef, Status, StopSummary } from "../api/types.ts";
 import type { Lang, Vars } from "../i18n/index.ts";
+import type { NotifyContext } from "../state/notifyAsked.ts";
 import type { IconName } from "./Icon.tsx";
 
 export type Snap = "peek" | "half" | "full";
@@ -24,7 +25,6 @@ export interface TimeValueProps {
   dep: Dep;
   size: "minutes" | "strip" | "body";
   walkMin?: number;
-  offline?: boolean;
 }
 
 export interface StatusWordProps {
@@ -36,7 +36,6 @@ export interface LiveStripProps {
   deps: Dep[];
   loading?: boolean;
   emptyText?: string;
-  offline?: boolean;
 }
 
 /** C.5a */
@@ -54,6 +53,8 @@ export interface NearbyStopCardProps {
 
 export interface WalkButtonProps {
   stopId: string;
+  /** Set when the target is a transit center: the label names it instead of a stop id. */
+  tcName?: string;
   walkDistanceM: number;
   walkFrom?: { label: string; name?: string };
   onPress: () => void;
@@ -299,11 +300,10 @@ export interface UpdatedAgoProps {
   at: string;
   onRefresh: () => void;
   compact?: boolean;
-  offline?: boolean;
 }
 
 export interface NotifyPermissionCardProps {
-  context: "trip" | "stop-track";
+  context: NotifyContext;
   onDone: (result: "granted" | "declined") => void;
 }
 

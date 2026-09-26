@@ -180,7 +180,6 @@ export default function UiGallery() {
           <TimeValue dep={dep(8, { isRealtime: true, source: "simulated" })} size="minutes" />
           <TimeValue dep={dep(0.5)} size="minutes" walkMin={1} />
           <TimeValue dep={dep(70)} size="body" />
-          <TimeValue dep={live(16)} size="minutes" offline />
           <span className={styles.row}>
             <StatusWord status="live" /> <StatusWord status="simulated" /> <StatusWord status="canceled" /> (scheduled renders nothing:
             <StatusWord status="scheduled" />)
@@ -406,7 +405,6 @@ export default function UiGallery() {
         <div className={styles.col}>
           <UpdatedAgo at={at(-0.15)} onRefresh={() => {}} />
           <UpdatedAgo at={at(-3)} onRefresh={() => {}} />
-          <UpdatedAgo at={at(-20)} onRefresh={() => {}} offline />
         </div>
         <NotifyPermissionCard context="trip" onDone={() => {}} />
         <div className={styles.bleed}>

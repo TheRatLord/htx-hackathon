@@ -24,9 +24,13 @@ export function ChipRow({ children, label, ariaLabel }: ChipRowProps) {
     el.addEventListener("scroll", update, { passive: true });
     const ro = new ResizeObserver(update);
     ro.observe(el);
+    // Chips often arrive after mount (data loads) without changing the scroller's own size.
+    const mo = new MutationObserver(update);
+    mo.observe(el, { childList: true, subtree: true, characterData: true });
     return () => {
       el.removeEventListener("scroll", update);
       ro.disconnect();
+      mo.disconnect();
     };
   }, []);
 
