@@ -5,7 +5,7 @@ import { useAlerts } from "../../api/alertsStore.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
 import { useLang, useT } from "../../i18n/index.ts";
-import { alertText, effectWord } from "../../lib/alerts.ts";
+import { alertText, effectWord, isAdvisory } from "../../lib/alerts.ts";
 import { formatDateRange } from "../../lib/format.ts";
 import { useRoutesLoaded } from "../../lib/routes.ts";
 import { AlertStatusLine } from "../../ui/AlertStatusLine.tsx";
@@ -62,8 +62,9 @@ export default function AlertDetail() {
     content = (
       <>
         <div className={styles.detail}>
-          <p className={styles.effect}>
-            <Icon name="warning" color="var(--c-alert-icon)" />
+          {/* Same rule as the list card: red ⚠ for a service change, navy (i) for an advisory. */}
+          <p className={`${styles.effect} ${isAdvisory(alert.effect) ? styles.advisory : ""}`}>
+            {isAdvisory(alert.effect) ? <Icon name="info" color="var(--c-brand-navy)" /> : <Icon name="warning" color="var(--c-alert-icon)" />}
             {effectWord(alert.effect, lang)}
           </p>
           <h2 className={styles.header}>{header.text}</h2>

@@ -13,6 +13,7 @@ import { Button } from "../../ui/Button.tsx";
 import { SavedStopRow } from "../../ui/SavedStopRow.tsx";
 import { ScheduleCaption } from "../../ui/ScheduleCaption.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { Skeleton } from "../../ui/Skeleton.tsx";
 import { useToast } from "../../ui/Toast.tsx";
 import { UpdatedAgo } from "../../ui/UpdatedAgo.tsx";
 import styles from "./Recent.module.css";
@@ -26,6 +27,8 @@ function SavedRow({ stop, editing }: { stop: SavedStop; editing: boolean }) {
   const navigate = useNavigate();
   const { routes, preferredRouteId, arrivals } = useSavedStopRoutes(stop);
   const route = stop.preferredRouteId ? `?route=${encodeURIComponent(stop.preferredRouteId)}` : "";
+  // While the first answer loads, a skeleton, as on Explore (an empty row read as "no buses").
+  if (!routes && !arrivals.isError) return <Skeleton variant="row" />;
   return (
     <>
       {/* Inert while editing, so a tap that misses Move or Remove never opens the stop. */}
