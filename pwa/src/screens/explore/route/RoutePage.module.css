@@ -1,0 +1,224 @@
+/*
+ * Painted above the (hidden) map's attribution control, which otherwise shows through on
+ * pushed pages (requests.md: "Map attribution shows on pushed pages").
+ */
+.screen {
+  position: relative;
+  z-index: 3;
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+/* Back, the route name and Save stay on screen however far the stop list scrolls. */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-background);
+}
+
+/* "[82] Eastbound to DOWNTOWN · Change": shown under the bar once the page header scrolls away. */
+.compact {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--touch-min);
+  padding: var(--sp-1) var(--gutter);
+  border: none;
+  border-bottom: 1px solid var(--c-divider);
+  background: var(--c-background);
+  text-align: start;
+  visibility: hidden;
+}
+
+.compact[data-shown="true"] {
+  visibility: visible;
+}
+
+.compactText {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.compactAction {
+  flex: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--gutter) 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.routeName {
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.kind,
+.singleDirection {
+  color: var(--c-text-variant);
+}
+
+.listHead {
+  display: flex;
+  flex-direction: column;
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* Today's timetable look: a grey spine with ring nodes and zebra rows, full-bleed. */
+.timeline {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.stop {
+  position: relative;
+  padding: 0 var(--gutter);
+}
+
+.stop::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + 7px);
+  width: 2px;
+  background: var(--c-divider);
+}
+
+.stop:first-child::before {
+  top: 28px;
+}
+
+.stop:last-child::before {
+  bottom: auto;
+  height: 28px;
+}
+
+.stop:nth-child(odd) {
+  background: var(--c-surface);
+}
+
+.stopButton {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: var(--sp-3);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.stopButton:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.node {
+  position: relative;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--c-text-variant);
+  border-radius: 50%;
+  background: var(--c-surface);
+}
+
+.nodeFilled {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+}
+
+.stopText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stopName {
+  overflow-wrap: anywhere;
+}
+
+.stopId {
+  color: var(--c-text-variant);
+}
+
+.nearest {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.next {
+  text-align: end;
+  white-space: nowrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-left: 28px;
+  padding-bottom: var(--sp-3);
+}
+
+.panelNote {
+  color: var(--c-text-variant);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* A live bus: a 20dp navy glyph on the spine, between this stop and the one above. */
+.bus {
+  position: absolute;
+  top: 0;
+  left: calc(var(--gutter) + 8px);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--c-surface);
+  background: var(--c-brand-navy);
+  color: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.busStale {
+  background: var(--c-text-variant);
+}
+
+.noMatch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}

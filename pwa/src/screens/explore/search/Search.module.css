@@ -1,0 +1,195 @@
+.header {
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+/* Pick mode: which planner field the result fills ("Choose a destination"). */
+.pickTitle {
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+}
+
+/* Full-bleed so section dividers span the sheet; SectionHeader brings its own gutter. */
+.content {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--sp-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--c-divider);
+}
+
+.section:first-child {
+  border-top: none;
+}
+
+/* SavedStopRow cards: their own gutter and gap (pick mode lists plain rows instead). */
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+  padding: 0 var(--gutter);
+}
+
+.body {
+  display: flex;
+  flex: 1 1 200px;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  min-width: 0;
+  min-height: 64px;
+  padding: var(--sp-2) 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.body:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.icon {
+  flex: none;
+  padding-top: 1px;
+  color: var(--c-text-variant);
+}
+
+.tcTile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-chip);
+  background: var(--c-brand-navy);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.routeTitle {
+  align-self: center;
+}
+
+.title {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.line {
+  color: var(--c-text-variant);
+  overflow-wrap: anywhere;
+}
+
+/* Actions and the alert line span the row under the title, the same at every width (two pills fit at 360dp). */
+.pills,
+.alertLine {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+}
+
+.alertLine {
+  display: block;
+}
+
+.badge {
+  flex: none;
+}
+
+.more {
+  padding: 0 var(--gutter);
+}
+
+.stopRow {
+  flex-wrap: nowrap;
+}
+
+.walk {
+  flex: none;
+}
+
+.recent {
+  display: flex;
+  align-items: center;
+  padding-right: var(--sp-2);
+}
+
+.recentQuery {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  min-height: 56px;
+  padding: 0 var(--gutter);
+  border: none;
+  background: none;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.recentIcon {
+  display: flex;
+  flex: none;
+}
+
+.recentQuery:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.hint {
+  padding: var(--sp-4) var(--gutter);
+  color: var(--c-text-variant);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--gutter) 0;
+}
+
+.noResults {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--gutter);
+}
+
+.noResultsTitle {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.warning {
+  margin: var(--sp-2) var(--gutter) 0;
+  padding: var(--sp-3);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+}
