@@ -2,15 +2,12 @@
 
 import { useNavigate, useParams } from "react-router";
 import { useAlerts } from "../../api/alertsStore.ts";
-import { useStop } from "../../api/hooks.ts";
-import type { RouteRef } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
 import { useLang, useT } from "../../i18n/index.ts";
 import { alertText, effectWord } from "../../lib/alerts.ts";
 import { formatDateRange } from "../../lib/format.ts";
-import { routeRef, toRouteRef, useRoutesLoaded } from "../../lib/routes.ts";
-import { compareRouteNames } from "../../lib/sortRoutes.ts";
+import { useRoutesLoaded } from "../../lib/routes.ts";
 import { AlertStatusLine } from "../../ui/AlertStatusLine.tsx";
 import { AppBar } from "../../ui/AppBar.tsx";
 import { EmptyState } from "../../ui/EmptyState.tsx";
@@ -19,13 +16,8 @@ import { ListRow } from "../../ui/ListRow.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
 import styles from "./alerts.module.css";
-
-function AffectedStop({ id }: { id: string }) {
-  const t = useT();
-  const stop = useStop(id);
-  const label = stop.data ? t("stopLine.title", { name: stop.data.stop.name, id }) : t("card.stopNumber", { id });
-  return <ListRow kind="internal" label={label} href={`/explore/stop/${encodeURIComponent(id)}`} />;
-}
+import { alertRouteRefs } from "./routeRefs.ts";
+import { useStops } from "./staticData.ts";
 
 export default function AlertDetail() {
   const t = useT();
@@ -35,9 +27,18 @@ export default function AlertDetail() {
   const { alertId = "" } = useParams();
   const store = useAlerts();
   useRoutesLoaded();
-  usePageTitle(t("alerts.detailTitle"));
-
   const alert = store.alerts.find((a) => a.id === alertId);
+  const routes = alert ? alertRouteRefs(alert) : [];
+  const stops = useStops(Boolean(alert?.stopIds.length));
+  // "Detour: Route 40 · RideMETRO", so tabs and history tell alerts apart.
+  let title = t("alerts.detailTitle");
+  if (alert) {
+    const effect = effectWord(alert.effect, lang);
+    const names = routes.map((r) => r.name).join(", ");
+    title = routes.length ? t("alerts.detailPageTitle", { effect, routes: t("alerts.routes", { count: routes.length, names }) }) : effect;
+  }
+  usePageTitle(title);
+
   let content;
   // AlertStatusLine owns the loading and "can't be checked" states (and must stay mounted across them).
   if (store.status !== "ok" || store.source === "unavailable") {
@@ -49,7 +50,7 @@ export default function AlertDetail() {
   } else if (!alert) {
     content = (
       <EmptyState
-        icon="check_circle"
+        icon="error"
         title={t("alerts.goneTitle")}
         body={t("alerts.gone")}
         action={{ label: `${t("alerts.allAlerts")} ›`, onPress: () => navigate("/more/alerts") }}
@@ -58,9 +59,6 @@ export default function AlertDetail() {
   } else {
     const header = alertText(alert, "header", lang);
     const description = alertText(alert, "description", lang);
-    const routes: RouteRef[] = alert.routes
-      .map((r) => routeRef(r.routeId) ?? toRouteRef({ id: r.routeId, name: r.route, color: r.color, textColor: "#FFFFFF" }))
-      .sort((a, b) => compareRouteNames(a.name, b.name));
     content = (
       <>
         <div className={styles.detail}>
@@ -68,7 +66,7 @@ export default function AlertDetail() {
             <Icon name="warning" color="var(--c-alert-icon)" />
             {effectWord(alert.effect, lang)}
           </p>
-          {store.source === "demo" && <span className={styles.tag}>{t("alert.demoTag")}</span>}
+          {store.source === "demo" && <p className={styles.demo}>{t("alerts.demoCaption")}</p>}
           <h2 className={styles.header}>{header.text}</h2>
           <p>{formatDateRange(alert.activeFrom, alert.activeUntil, lang)}</p>
           {description.text && <p className={styles.description}>{description.text}</p>}
@@ -87,9 +85,11 @@ export default function AlertDetail() {
         {alert.stopIds.length > 0 && (
           <section>
             <SectionHeader label={t("alerts.affectedStops")} tone="variant" />
-            {alert.stopIds.map((id) => (
-              <AffectedStop key={id} id={id} />
-            ))}
+            {alert.stopIds.map((id) => {
+              const name = stops?.get(id)?.name;
+              const label = name ? t("stopLine.title", { name, id }) : t("card.stopNumber", { id });
+              return <ListRow key={id} kind="internal" label={label} href={`/explore/stop/${encodeURIComponent(id)}`} />;
+            })}
           </section>
         )}
         <p className={`${styles.caption} ${styles.footer}`}>{store.source === "demo" ? t("alerts.sourceDemo") : t("alerts.sourceMetro")}</p>

@@ -10,30 +10,29 @@ import { useBack } from "../../app/useBack.ts";
 import { useLang, useT } from "../../i18n/index.ts";
 import { alertsForRoute } from "../../lib/alerts.ts";
 import { formatDateRange } from "../../lib/format.ts";
-import { routeRef, toRouteRef, useRoutesLoaded } from "../../lib/routes.ts";
+import { routeRef, useRoutesLoaded } from "../../lib/routes.ts";
 import { compareRouteNames } from "../../lib/sortRoutes.ts";
 import { AlertBox } from "../../ui/AlertBox.tsx";
 import { AlertStatusLine } from "../../ui/AlertStatusLine.tsx";
 import { AppBar } from "../../ui/AppBar.tsx";
+import { Button } from "../../ui/Button.tsx";
 import { FilterChip } from "../../ui/FilterChip.tsx";
 import { Icon } from "../../ui/Icon.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { UpdatedAgo } from "../../ui/UpdatedAgo.tsx";
 import styles from "./alerts.module.css";
+import { alertRouteRefs } from "./routeRefs.ts";
 import { useMyRoutes } from "./useMyRoutes.ts";
 
 /** Badges beyond this many collapse to "+N" (some detours list a dozen routes). */
 const MAX_BADGES = 6;
-
-const alertRoutes = (a: Alert): RouteRef[] =>
-  a.routes.map((r) => routeRef(r.routeId) ?? toRouteRef({ id: r.routeId, name: r.route, color: r.color, textColor: "#FFFFFF" }));
 
 const firstRouteName = (a: Alert) => a.routes.map((r) => r.route).sort(compareRouteNames)[0] ?? "~";
 
 function AlertItem({ alert, demo }: { alert: Alert; demo: boolean }) {
   const lang = useLang();
   const navigate = useNavigate();
-  const routes = alertRoutes(alert).sort((a, b) => compareRouteNames(a.name, b.name));
+  const routes = alertRouteRefs(alert);
   return (
     <li className={styles.item}>
       <div className={styles.meta}>
@@ -62,6 +61,7 @@ const names = (routes: RouteRef[]) => routes.map((r) => r.name).join(", ");
 export default function Alerts() {
   const t = useT();
   const onBack = useBack();
+  const navigate = useNavigate();
   const store = useAlerts();
   const qc = useQueryClient();
   const myRoutes = useMyRoutes();
@@ -73,7 +73,8 @@ export default function Alerts() {
   const title = route ? t("alerts.titleRoute", { route }) : t("alerts.title");
   usePageTitle(title);
 
-  const filter = params.get("filter") === "all" || (!params.get("filter") && myRoutes.length === 0) ? "all" : "mine";
+  // With no ?filter=, riders without routes see all alerts; wait for My routes so the choice doesn't flip.
+  const filter = params.get("filter") === "all" || (!params.get("filter") && myRoutes?.length === 0) ? "all" : "mine";
   const setFilter = (f: "mine" | "all") =>
     setParams(
       (p) => {
@@ -84,11 +85,11 @@ export default function Alerts() {
     );
 
   const demo = store.source === "demo";
-  const isMine = (a: Alert) => myRoutes.some((r) => alertsForRoute([a], r.id).length > 0);
+  const isMine = (a: Alert) => (myRoutes ?? []).some((r) => alertsForRoute([a], r.id).length > 0);
   const shown = (routeParam ? alertsForRoute(store.alerts, routeParam) : filter === "mine" ? store.alerts.filter(isMine) : store.alerts)
     .slice()
     .sort((a, b) => compareRouteNames(firstRouteName(a), firstRouteName(b)));
-  const mineWithout = myRoutes.filter((r) => alertsForRoute(store.alerts, r.id).length === 0);
+  const mineWithout = (myRoutes ?? []).filter((r) => alertsForRoute(store.alerts, r.id).length === 0);
   const updatedAt = qc.getQueryState(keys.alerts())?.dataUpdatedAt;
 
   let body;
@@ -98,6 +99,8 @@ export default function Alerts() {
     body = <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />;
   } else if (routeParam && shown.length === 0) {
     body = <AlertStatusLine scope="route" name={t("alerts.routeName", { route: route ?? routeParam })} alerts={[]} />;
+  } else if (!routeParam && filter === "mine" && !myRoutes) {
+    body = null;
   } else {
     const live = store.source === "metro";
     body = (
@@ -111,10 +114,10 @@ export default function Alerts() {
           </ul>
         )}
         {live && !routeParam && filter === "all" && shown.length === 0 && <OkLine text={t("alerts.noneAll")} />}
-        {live && !routeParam && filter === "mine" && myRoutes.length === 0 && <p className={styles.note}>{t("alerts.noMyRoutes")}</p>}
-        {live && !routeParam && filter === "mine" && myRoutes.length > 0 && shown.length === 0 && (
+        {live && !routeParam && filter === "mine" && myRoutes?.length === 0 && <p className={styles.note}>{t("alerts.noMyRoutes")}</p>}
+        {live && !routeParam && filter === "mine" && myRoutes?.length && shown.length === 0 ? (
           <OkLine text={t("alerts.noneMine", { routes: names(myRoutes) })} />
-        )}
+        ) : null}
         {live && !routeParam && filter === "mine" && shown.length > 0 && mineWithout.length > 0 && (
           <OkLine text={t("alerts.noneOther", { routes: names(mineWithout) })} />
         )}
@@ -131,11 +134,23 @@ export default function Alerts() {
           <FilterChip label={t("alerts.all")} selected={filter === "all"} onPress={() => setFilter("all")} />
         </div>
       )}
-      <div className={styles.body}>{body}</div>
+      <div className={styles.body}>
+        {body}
+        {routeParam && (
+          <div className={styles.more}>
+            <Button variant="text" label={`${t("alerts.seeAll")} ›`} onPress={() => navigate("/more/alerts")} />
+          </div>
+        )}
+      </div>
       {store.status === "ok" && store.source !== "unavailable" && (
         <footer className={styles.footer}>
           <span>{demo ? t("alerts.sourceDemo") : t("alerts.sourceMetro")}</span>
-          {updatedAt ? <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={store.retry} /> : null}
+          {updatedAt ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={store.retry} />
+            </>
+          ) : null}
         </footer>
       )}
     </>

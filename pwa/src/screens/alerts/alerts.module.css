@@ -21,10 +21,11 @@
   list-style: none;
 }
 
+/* Badges and dates sit right on top of their box until AlertBox can hold them (requests.md). */
 .item {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
 }
 
 .meta {
@@ -41,6 +42,10 @@
 
 .dates {
   color: var(--c-text-variant);
+}
+
+.more {
+  display: flex;
 }
 
 .ok {
@@ -70,8 +75,9 @@
 
 .footer {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-1);
   padding: var(--sp-2) var(--gutter);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
@@ -125,12 +131,4 @@
   flex-wrap: wrap;
   gap: var(--sp-2);
   padding: 0 var(--gutter);
-}
-
-.tag {
-  align-self: flex-start;
-  padding: 2px var(--sp-2);
-  border-radius: var(--r-chip);
-  background: var(--c-nav-bg);
-  font-weight: var(--fw-bold);
 }
