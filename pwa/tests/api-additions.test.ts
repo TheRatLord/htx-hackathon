@@ -109,6 +109,15 @@ describe("5. stop schedule", () => {
     expect(Date.parse(s.nextServiceFirst!.departureTime) - at).toBeLessThan(6 * 3600_000);
   });
 
+  it("serves another day's schedule with date= (D7 day tabs)", () => {
+    const sat = getStopSchedule("342", "40", NOW, "20261003");
+    expect(sat.serviceDate).toBe("20261003");
+    expect(sat.departures.length).toBeGreaterThan(5);
+    expect(sat.nextServiceFirst).toBeNull();
+    expect(getStopSchedule("342", "40", NOW, "20260930").nextServiceFirst).not.toBeNull();
+    expect(() => getStopSchedule("342", "40", NOW, "2026-10-03")).toThrow();
+  });
+
   it("is served over HTTP", async () => {
     const res = await createApp().request("/api/stops/342/schedule?route=40");
     expect(res.status).toBe(200);

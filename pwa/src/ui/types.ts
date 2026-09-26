@@ -25,6 +25,8 @@ export interface TimeValueProps {
   dep: Dep;
   size: "minutes" | "strip" | "body";
   walkMin?: number;
+  /** Show a minutes value as its clock time, so a row keeps one format ("1:05 PM · 2:02 PM"). */
+  clock?: boolean;
 }
 
 export interface StatusWordProps {
@@ -209,6 +211,8 @@ export interface ChipRowProps {
   children: ReactNode;
   label?: string;
   ariaLabel: string;
+  /** Draw `label` as the scroller's first item, on the chips' row ("Your route: [6] [11] …"). */
+  inlineLabel?: boolean;
   /** Wrap onto more rows instead of scrolling behind "More ›" (a few chips that must all show: plan sort). */
   wrap?: boolean;
 }

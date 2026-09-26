@@ -52,6 +52,11 @@ describe("upcoming", () => {
     const deps = [at(-2), at(-0.9), at(3)].map((departureTime) => ({ departureTime }));
     expect(upcoming(deps, NOW).map((d) => d.departureTime)).toEqual([at(-0.9), at(3)]);
   });
+  it("drops a scheduled time once it has passed, but keeps a live one for a minute", () => {
+    const dep = (min: number, isRealtime = false) => ({ departureTime: at(min), isRealtime });
+    expect(upcoming([dep(-0.1), dep(0.5)], NOW).map((d) => d.departureTime)).toEqual([at(0.5)]);
+    expect(upcoming([dep(-0.5, true)], NOW)).toHaveLength(1);
+  });
 });
 
 describe("statusOf", () => {

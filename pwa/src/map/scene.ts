@@ -7,7 +7,7 @@ import type { LatLon } from "../api/types.ts";
 
 export interface MapScene {
   focus?: { kind: "user" | "point" | "bounds"; point?: LatLon; bounds?: [LatLon, LatLon]; zoom?: number };
-  /** Enlarged pin plus today's white callout "Stop: 342". */
+  /** Enlarged pin; on a scene with `legs` (walk, trip) also a white callout with the stop's name. */
   highlightStopId?: string;
   /** The selected route, [lon, lat] pairs. */
   routeLine?: { coords: [number, number][]; color: string };

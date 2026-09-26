@@ -31,7 +31,12 @@ function departuresOn(stopIdx: number, routeIdx: number, serviceDate: string): n
     .map((d) => d.epochMs);
 }
 
-export function getStopSchedule(stopId: string, routeId: string, now = Date.now()): StopSchedule {
+/**
+ * `date` (a GTFS service date, "20260926") asks for that day's schedule instead of today's (D7's
+ * Weekday / Saturday / Sunday tabs). `nextServiceFirst` is always relative to now, and is left
+ * out (null) for a date other than the current service day.
+ */
+export function getStopSchedule(stopId: string, routeId: string, now = Date.now(), date?: string): StopSchedule {
   const g = gtfs();
   const stop = findStop(stopId);
   if (!stop) throw new ApiError(404, "STOP_NOT_FOUND", `We couldn't find stop #${stopId}. Check the number on the stop sign.`);
@@ -46,7 +51,19 @@ export function getStopSchedule(stopId: string, routeId: string, now = Date.now(
   const today = localDate(now);
   const yesterday = addDays(today, -1);
   const late = departuresOn(stopIdx, routeIdx, yesterday);
-  const serviceDate = late.some((t) => t >= now) ? yesterday : today;
+  const current = late.some((t) => t >= now) ? yesterday : today;
+  if (date && date !== current) {
+    if (!/^\d{8}$/.test(date)) throw new ApiError(400, "BAD_DATE", '"date" must be a service date like 20260926');
+    const times = departuresOn(stopIdx, routeIdx, date);
+    return {
+      stopId: stop.id,
+      routeId: route.id,
+      serviceDate: date,
+      departures: times.slice(0, MAX_DEPARTURES).map((t) => ({ departureTime: new Date(t).toISOString() })),
+      nextServiceFirst: null,
+    };
+  }
+  const serviceDate = current;
   const times = serviceDate === yesterday ? late : departuresOn(stopIdx, routeIdx, today);
 
   const laterToday = times.find((t) => t >= now);

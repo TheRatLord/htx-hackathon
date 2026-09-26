@@ -7,8 +7,8 @@
       "effect": "DETOUR",
       "severity": "WARNING",
       "header": {
-        "en": "Route 5 Southmore detoured at Scott St & Griggs Rd due to construction",
-        "es": "La Ruta 5 Southmore tiene un desvío en Scott St y Griggs Rd por construcción"
+        "en": "Around Scott St & Griggs Rd for construction",
+        "es": "Por Scott St y Griggs Rd debido a construcción"
       },
       "description": {
         "en": "Stops #9976 and #9977 (Scott St @ Griggs Rd) are temporarily closed. Northbound: board at Scott St @ Southmore Blvd instead. Southbound: board at Scott St @ Holman St. Route 54 is not affected.",
@@ -25,8 +25,8 @@
       "effect": "REDUCED_SERVICE",
       "severity": "WARNING",
       "header": {
-        "en": "Red Line: trains every 18 minutes between Downtown TC and TMC TC this weekend",
-        "es": "Línea Roja: trenes cada 18 minutos entre Downtown TC y TMC TC este fin de semana"
+        "en": "Trains every 18 minutes between Downtown TC and TMC TC this weekend",
+        "es": "Trenes cada 18 minutos entre Downtown TC y TMC TC este fin de semana"
       },
       "description": {
         "en": "Track maintenance means trains share one track between Downtown Transit Center and Texas Medical Center Transit Center. Allow 15 extra minutes. Board on the platform shown on station screens.",
@@ -43,8 +43,8 @@
       "effect": "STOP_MOVED",
       "severity": "INFO",
       "header": {
-        "en": "Route 82 Westheimer: eastbound stop at Westheimer Rd @ Kirby Dr moved 150 ft east",
-        "es": "Ruta 82 Westheimer: la parada hacia el este en Westheimer Rd @ Kirby Dr se movió 150 pies al este"
+        "en": "Eastbound stop at Westheimer Rd @ Kirby Dr is now 150 ft east",
+        "es": "La parada hacia el este en Westheimer Rd @ Kirby Dr está ahora 150 pies al este"
       },
       "description": {
         "en": "Due to sidewalk work, the eastbound stop is temporarily in front of the pharmacy, 150 ft east of Kirby Dr.",

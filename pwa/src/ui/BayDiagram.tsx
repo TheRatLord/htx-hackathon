@@ -2,7 +2,10 @@ import { useT } from "../i18n/index.ts";
 import styles from "./BayDiagram.module.css";
 import type { BayDiagramProps } from "./types.ts";
 
-/** C.14: a schematic of bays per platform. Not a map: the data cannot place bays. */
+/**
+ * C.14: a schematic of bays per platform. Not a map: the data cannot place bays. Bays are round
+ * letters on a grey platform bar, so they never read as square route chips.
+ */
 export function BayDiagram({ platforms, highlight, onBayPress, handAuthored }: BayDiagramProps) {
   const t = useT();
   return (
@@ -26,7 +29,6 @@ export function BayDiagram({ platforms, highlight, onBayPress, handAuthored }: B
           </div>
         </section>
       ))}
-      <p className={styles.caption}>{t("bay.diagramCaption")}</p>
       {handAuthored && <p className={styles.caption}>{t("bay.handAuthored")}</p>}
     </div>
   );

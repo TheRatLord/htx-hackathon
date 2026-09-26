@@ -10,6 +10,16 @@
   font-weight: var(--fw-medium);
 }
 
+.inlineLabel {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding-right: var(--sp-1);
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
 .row {
   position: relative;
 }

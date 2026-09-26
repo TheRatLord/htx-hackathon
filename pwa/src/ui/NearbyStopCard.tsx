@@ -81,10 +81,10 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
             const ref = toRouteRef(row);
             return (
               <li key={`none-${row.id}`} ref={rowRef}>
-                <button type="button" className={styles.row} onClick={() => onOpenRoute(row.id)}>
+                <button type="button" className={styles.row} aria-label={rowText(row)} onClick={() => onOpenRoute(row.id)}>
                   <RouteBadge route={ref} size="sm" />
                   <span className={`${styles.rowText} ${styles.noService}`}>
-                    {t("routeName.a11y", { name: row.name })} · {t("card.noBuses2h")}
+                    {t("card.noBuses2h")}
                   </span>
                 </button>
               </li>

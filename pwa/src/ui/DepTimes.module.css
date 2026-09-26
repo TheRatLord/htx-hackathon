@@ -26,3 +26,10 @@
   font-weight: var(--fw-bold);
   text-align: center;
 }
+
+/* "First bus" over the morning's first time (late night). */
+.lead {
+  display: block;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+}

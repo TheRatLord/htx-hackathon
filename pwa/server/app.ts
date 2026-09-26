@@ -46,7 +46,7 @@ export function createApp() {
   app.get("/stops/:id/schedule", (c) => {
     const route = requireParam(c.req.query("route"), "route");
     cacheFor(c, 300);
-    return c.json(getStopSchedule(c.req.param("id"), route));
+    return c.json(getStopSchedule(c.req.param("id"), route, Date.now(), c.req.query("date") || undefined));
   });
 
   app.get("/arrivals", async (c) => {

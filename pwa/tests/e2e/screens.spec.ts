@@ -52,7 +52,7 @@ const SHOTS: Shot[] = [
   { file: "12-stop-342", path: "/explore/stop/342?route=040" },
   { file: "12-stop-342-360", path: "/explore/stop/342?route=040", size: "360" },
   { file: "13-stop-342-full", path: "/explore/stop/342?route=040", then: (p) => tap(p, "Show list") },
-  { file: "14-stop-342-tracking", path: "/explore/stop/342?route=040", then: (p) => tap(p, /Track Bus Stop/) },
+  { file: "14-stop-342-tracking", path: "/explore/stop/342?route=040", then: (p) => tap(p, /^Track bus/) },
   { file: "15-full-schedule", path: "/explore/stop/342/schedule?route=040" },
   { file: "16-walk-342", path: "/explore/stop/342?route=040", then: (p) => tap(p, /^Walk here/) },
   { file: "17-route-82", path: "/explore", gps: GPS.montrose, then: async (p) => (await search(p, "82"), tap(p, "82 Westheimer, Eastbound to DOWNTOWN")) },
