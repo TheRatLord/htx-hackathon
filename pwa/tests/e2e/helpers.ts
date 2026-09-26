@@ -261,27 +261,46 @@ export async function hookMap(page: Page) {
   await expect.poll(() => page.evaluate(() => Boolean((window as unknown as { __map?: unknown }).__map)), { timeout: 5000 }).toBe(true);
 }
 
+/** A pin or tag on the map. `fromData` marks an answer read from the data the app gave the map's
+ * sources because maplibre's feature index kept throwing: the app asked for it to be drawn there, but
+ * nothing confirmed it was drawn. Guards annotate such answers (see `mapAnnotate`). */
+export type MapPoint = { x: number; y: number; fromData?: true };
+
 /** Page coordinates of a rendered stop pin, or null when it is not drawn (or not in the map strip). */
-export async function pinPosition(page: Page, stopId: string): Promise<{ x: number; y: number } | null> {
+export async function pinPosition(page: Page, stopId: string): Promise<MapPoint | null> {
+  return mapPoint(page, stopId, "pin");
+}
+
+/** Page coordinates of a stop's ID tag ("342", or a stacked "688 · 2504" naming it), or null when none is drawn on screen. */
+export async function tagPosition(page: Page, stopId: string): Promise<MapPoint | null> {
+  return mapPoint(page, stopId, "tag");
+}
+
+/** Records on the test that a map answer came from source data, not from what was drawn. */
+export function mapAnnotate(info: { annotations: { type: string; description?: string }[] }, what: string, p: MapPoint | null) {
+  if (p?.fromData) info.annotations.push({ type: "map-from-data", description: `${what}: maplibre's feature index kept throwing; answered from the sources' data, not from the drawn map` });
+}
+
+async function mapPoint(page: Page, stopId: string, kind: "pin" | "tag"): Promise<MapPoint | null> {
   await hookMap(page);
   // queryRenderedFeatures throws maplibre's "Out of bounds" (FeatureIndex) while a tile is being
   // re-parsed, which can last a few seconds after a camera move or a label nudge. That is a moment,
-  // not an answer: wait for the map to go idle and ask again for up to 3 s, then read the pin from
-  // the map's sources (queryPin).
+  // not an answer: wait for the map to go idle and ask again for up to 3 s, then read the point from
+  // the map's sources (queryMap), flagged fromData.
   const deadline = Date.now() + 3000;
   for (;;) {
     const final = Date.now() > deadline;
-    const r = await queryPin(page, stopId, final);
+    const r = await queryMap(page, stopId, kind, final);
     if (r.ok) return r.pin;
-    if (final || !/Out of bounds|not hooked/.test(r.error)) throw new Error(`pinPosition(${stopId}): ${r.error}`);
+    if (final || !/Out of bounds|not hooked/.test(r.error)) throw new Error(`${kind}Position(${stopId}): ${r.error}`);
     await page.waitForTimeout(250);
   }
 }
 
-type PinQuery = { ok: true; pin: { x: number; y: number } | null } | { ok: false; error: string };
+type MapQuery = { ok: true; pin: MapPoint | null } | { ok: false; error: string };
 
-function queryPin(page: Page, stopId: string, final = false): Promise<PinQuery> {
-  return page.evaluate(async ({ id, final }): Promise<PinQuery> => {
+function queryMap(page: Page, stopId: string, kind: "pin" | "tag", final = false): Promise<MapQuery> {
+  return page.evaluate(async ({ id, kind, final }): Promise<MapQuery> => {
     type F = { properties: { id: string; ids?: string }; geometry: { type: string; coordinates: [number, number] } };
     type M = {
       queryRenderedFeatures: (o?: unknown) => F[];
@@ -295,16 +314,21 @@ function queryPin(page: Page, stopId: string, final = false): Promise<PinQuery> 
     if (!m) return { ok: false, error: "map not hooked yet" };
     // Mid-render (tiles loading, a camera ease): let the frame finish first, but never hang on it.
     if (!m.loaded()) await new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
-    // Only the pin layers, one at a time: a query that touches a GeoJSON tile whose index is being
-    // rebuilt throws maplibre's "Out of bounds" (DictionaryCoder). A layer that throws is skipped.
-    // A stacked pin ("567 · 259") stands for every stop in its `ids`.
+    // One layer at a time: a query that touches a GeoJSON tile whose index is being rebuilt throws
+    // maplibre's "Out of bounds" (DictionaryCoder). A layer that throws is skipped.
+    // A stacked pin or tag ("567 · 259") stands for every stop in its `ids`.
     const has = (x: F) => x.geometry.type === "Point" && (String(x.properties?.id) === id || String(x.properties?.ids ?? "").split(",").includes(id));
     const at = (c: [number, number]) => {
       const p = m.project(c);
       const r = m.getCanvas().getBoundingClientRect();
       return { x: r.left + p.x, y: r.top + p.y };
     };
-    const layers = ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"].filter((l) => m.getLayer(l));
+    const onCanvas = (p: { x: number; y: number }) => {
+      const c = m.getCanvas().getBoundingClientRect();
+      return p.x >= c.left && p.x <= c.right && p.y >= c.top && p.y <= c.bottom;
+    };
+    const wanted = kind === "pin" ? ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
+    const layers = wanted.filter((l) => m.getLayer(l));
     let error = "";
     for (const layer of layers) {
       try {
@@ -318,24 +342,37 @@ function queryPin(page: Page, stopId: string, final = false): Promise<PinQuery> 
     if (!final) return { ok: false, error };
     // Still throwing at the deadline: a GeoJSON tile whose feature index maplibre left empty after a
     // setData can stay that way until the next update, while its pins draw fine (seen at 412x800 and
-    // 360x640, 1 load in 3). Answer from the data the app gave the sources instead: from zoom 16
-    // every stop is drawn (stops-pin allows overlap) unless the covered list in its filter hides it,
-    // and then it is drawn as the stacked pin whose `ids` name it.
+    // 360x640, 1 load in 3). Answer from the data the app gave the sources instead, flagged fromData.
     type Src = { serialize?: () => { data?: unknown } };
     const q = m as unknown as { getSource: (s: string) => Src | undefined; getFilter: (l: string) => unknown; getZoom: () => number };
-    if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
     const features = (s: string) => {
       const d = q.getSource(s)?.serialize?.().data as { features?: F[] } | undefined;
       return d && typeof d === "object" && Array.isArray(d.features) ? d.features : [];
     };
-    const covered = JSON.stringify(q.getFilter("stops-pin") ?? []).match(/"literal",\[([^\]]*)\]/)?.[1].split(",").map((x) => x.replace(/"/g, "")) ?? [];
-    const own = covered.includes(id) ? undefined : features("stops").find(has);
-    const f = own ?? features("stops-clusters").find(has);
+    let f: F | undefined;
+    if (kind === "tag") {
+      // stops-label-near draws every feature it is given (allow-overlap, from zoom 16).
+      if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
+      f = features("stops-near-labels").find(has);
+    } else {
+      // From zoom 16 every stop is drawn (stops-pin allows overlap) unless the stops-pin filter hides
+      // it (under the map's buttons, or enlarged by the scene), and then as the stacked pin naming it.
+      if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
+      // The filter is ["!", ["in", ["get", "id"], ["literal", [ids…]]]]: collect every literal array of
+      // strings in the expression, whatever its nesting.
+      const hidden = new Set<string>();
+      const walk = (e: unknown): void => {
+        if (!Array.isArray(e)) return;
+        if (e[0] === "literal" && Array.isArray(e[1])) for (const v of e[1]) hidden.add(String(v));
+        else e.forEach(walk);
+      };
+      walk(q.getFilter("stops-pin"));
+      f = (hidden.has(id) ? undefined : features("stops").find(has)) ?? features("stops-clusters").find(has);
+    }
     if (!f) return { ok: true, pin: null };
-    const pin = at(f.geometry.coordinates);
-    const c = m.getCanvas().getBoundingClientRect();
-    return { ok: true, pin: pin.x >= c.left && pin.x <= c.right && pin.y >= c.top && pin.y <= c.bottom ? pin : null };
-  }, { id: stopId, final });
+    const p = at(f.geometry.coordinates);
+    return { ok: true, pin: onCanvas(p) ? { ...p, fromData: true } : null };
+  }, { id: stopId, kind, final });
 }
 
 // ---------- F-rubric probes ----------
