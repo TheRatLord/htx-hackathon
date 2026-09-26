@@ -1,5 +1,5 @@
 // D17 Fares: a compact ticket stub that hands off to METRO, plus the fare table from src/data/fares.json.
-// Every value there is unconfirmed, and the screen says so once, under the title, while
+// Every value there is unconfirmed, and the screen says so once, in the caption at the foot, while
 // `confirmedByMetro` is false. Reduced fares (seniors, riders with disabilities) come right after the
 // base fare, so the rows many older riders need are on the first screen.
 
@@ -52,10 +52,6 @@ export default function Fares() {
         {t("fares.title")}
       </h1>
 
-      {note && (
-        <p className={styles.note}>{note}</p>
-      )}
-
       <section className={styles.ticket} aria-labelledby="fares-ticket">
         <h2 id="fares-ticket" className={styles.ticketTitle}>
           <Icon name="tickets" color="var(--c-accent-icon)" />
@@ -64,7 +60,7 @@ export default function Fares() {
         <Button variant="primary" fullWidth label={t("fares.signIn")} onPress={() => setHandoff(true)} />
       </section>
 
-      <SectionHeader label={t("fares.fares")} tone="variant" />
+      {/* The page title already says "Fares": the base fare needs no header of its own. */}
       <FareTable items={base} lang={lang} />
 
       <SectionHeader id="reduced" label={t("fares.reduced")} tone="variant" />
@@ -79,6 +75,7 @@ export default function Fares() {
       </div>
       <p className={`${styles.caption} ${styles.asOf}`}>
         {t("fares.asOf", { date: asOf })}
+        {note && ` ${note}`}
       </p>
 
       <Dialog
