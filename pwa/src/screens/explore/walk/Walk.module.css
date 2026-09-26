@@ -5,6 +5,12 @@
   padding: 0 var(--gutter) var(--sp-4);
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .summary {
   font-weight: var(--fw-medium);
 }
