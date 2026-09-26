@@ -17,9 +17,7 @@ import { parsePlanQuery, planUrl, type PlanQuery, type PlanSort } from "../../..
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { isOff, useLocation as useRider } from "../../../state/location.tsx";
 import { Button } from "../../../ui/Button.tsx";
-import { ChipRow } from "../../../ui/ChipRow.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
-import { FilterChip } from "../../../ui/FilterChip.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SheetBanner } from "../../../ui/SheetBanner.tsx";
@@ -35,21 +33,20 @@ import { useStartTrip } from "./useStartTrip.ts";
 const SORTS: PlanSort[] = ["soonest", "transfers", "walk"];
 const LATER_MS = 30 * 60_000;
 
-/** "To the bus stop at Hobby Airport (#10567)." when the destination is a landmark with its own stop. */
-function LandmarkNote({ query }: { query: PlanQuery }) {
-  const t = useT();
+/** The landmark's own bus stop ("bus stop #10567"), when the destination is a landmark with one. */
+function useLandmarkStop(query: PlanQuery): string | undefined {
   const id = query.to?.startsWith("landmark:") ? query.to.slice("landmark:".length) : undefined;
   const search = useSearch(id ? (query.toName ?? "") : "");
   const landmark = search.data?.results.find((r) => r.type === "landmark" && r.id === id);
-  const stop = landmark?.nearbyStops?.[0];
-  if (!landmark || !stop) return null;
-  return <p className={styles.variant}>{t("plan.landmarkNote", { place: landmark.title, id: stop.id })}</p>;
+  return landmark?.nearbyStops?.[0]?.id;
 }
 
+/** "● My location → 📍 Hobby Airport (bus stop #10567)" / "Leave now   Edit ›": the whole row edits. */
 function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const t = useT();
   const lang = useLang();
   const when = useWhenText(query);
+  const stopId = useLandmarkStop(query);
   const from = fromIsRider(query) ? t("plan.myLocationShort") : fromLabel(query, lang);
   const to = query.toName ?? query.to ?? "";
   return (
@@ -64,11 +61,30 @@ function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
           {to}
         </span>
       </span>
+      {/* J2.3: the trip ends at the landmark's bus stop, not at its door. */}
+      {stopId && <span className={styles.variant}>{t("plan.landmarkStop", { id: stopId })}</span>}
       <span className={styles.summaryWhen}>
         <span>{when}</span>
         <span>{t("common.edit")} ›</span>
       </span>
     </button>
+  );
+}
+
+/** One control for the order, so no chip is ever cut off at 360dp (a native picker on phones). */
+function SortPicker({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort) => void }) {
+  const t = useT();
+  return (
+    <label className={styles.sort}>
+      <span>{t("plan.sort.by")}</span>
+      <select value={sort} onChange={(e) => onChange(e.target.value as PlanSort)} aria-label={t("plan.sort.label")}>
+        {SORTS.map((s) => (
+          <option key={s} value={s}>
+            {t(`plan.sort.${s}`)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -114,25 +130,14 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
     );
   else
     list = sortItineraries(response.itineraries, query.sort).map(({ it, index }) => (
-      <ItineraryCard key={it.id} it={it} sample={sample} href={planUrl(query, { index })} />
+      <ItineraryCard key={it.id} it={it} href={planUrl(query, { index })} />
     ));
   return (
     <>
       {sample && <SheetBanner kind="demo" text={t("plan.fixtureBanner")} />}
       {/* Nothing to sort while loading, empty or with one trip. */}
       {(response?.itineraries.length ?? 0) > 1 && (
-        <div className={styles.bleed}>
-          <ChipRow ariaLabel={t("plan.sort.label")}>
-            {SORTS.map((s) => (
-              <FilterChip
-                key={s}
-                label={t(`plan.sort.${s}`)}
-                selected={(query.sort ?? "soonest") === s}
-                onPress={() => onChange({ ...query, sort: s === "soonest" ? undefined : s })}
-              />
-            ))}
-          </ChipRow>
-        </div>
+        <SortPicker sort={query.sort ?? "soonest"} onChange={(s) => onChange({ ...query, sort: s === "soonest" ? undefined : s })} />
       )}
       {list}
       {response?.itineraries.length ? (
@@ -162,7 +167,7 @@ function Peek({ it, toName, onStart }: { it: Itinerary; toName: string; onStart:
           </>
         )}
       </p>
-      <Button variant="tonal" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={onStart} />
+      <Button variant="primary" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={onStart} />
     </div>
   );
 }
@@ -195,7 +200,8 @@ export default function Plan() {
   const results = ready && !edit;
   const title = t(results ? "plan.resultsTitle" : "plan.title");
   usePageTitle(title);
-  useExploreChrome({ fabs: ["locate"] });
+  // The planner has its own From / To fields: a second search field on the map would compete.
+  useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
 
   const change = (q: PlanQuery, toEdit = edit) => navigate(planUrl(q, { edit: toEdit }), { replace: true });
   const pick = (field: "from" | "to") => navigate(`/explore/search?pick=${field}&returnTo=${encodeURIComponent(planUrl(query))}`);
@@ -259,7 +265,7 @@ export default function Plan() {
         {results ? (
           <>
             <Summary query={query} onEdit={() => change(query, true)} />
-            <LandmarkNote query={query} />
+            {resultsList}
           </>
         ) : (
           <>
@@ -271,9 +277,10 @@ export default function Plan() {
                 <Button variant="primary" fullWidth disabled label={t("plan.planMyTrip")} disabledReason={t("plan.chooseStartFirst")} />
               </>
             )}
+            {/* Editing a planned trip: the list steps aside, and one button brings it back (chips re-plan as they are tapped). */}
+            {ready && <Button variant="primary" fullWidth label={t("plan.showTrips")} onPress={() => change(query, false)} />}
           </>
         )}
-        {resultsList}
       </div>
     </ExploreSheet>
   );

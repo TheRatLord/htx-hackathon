@@ -39,6 +39,8 @@ export function shortSide(stop: PlanStop, lang: Lang): string {
   return parsed ? t(`plan.sideShort.${parsed.dir}`, undefined, lang) : localiseSide(stop.side, lang);
 }
 
+const capitalise = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);
+
 /** "M L King Blvd @ UH University Dr (#11424), west side" */
 export function stopWithSide(stop: PlanStop, lang: Lang): string {
   const side = shortSide(stop, lang);
@@ -84,18 +86,22 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      const to = t("plan.toStop", { stop: stopWithSide(leg.to, lang) }, lang);
+      // The stop on its own line and the side under it, so the narrow timeline column doesn't
+      // break "…University Dr (#11424), west / side" over four lines.
+      const to = t("plan.toStop", { stop: stopTitle(leg.to) }, lang);
+      const side = capitalise(shortSide(leg.to, lang));
       const first = legIndex === 0;
+      const wait = t("plan.wait", { min: waitMin(leg.endTime, next) }, lang);
       rows.push({
         legIndex,
         role: "walk",
         href: walkHref(leg, first ? opts.fromName : leg.from.name, next.route.id),
         step: first
-          ? { kind: "walk", title: opts.fromName, time: formatClock(it.startTime, lang), lines: [walk, to] }
+          ? { kind: "walk", title: opts.fromName, time: formatClock(it.startTime, lang), lines: [walk, to, ...(side ? [side] : [])] }
           : {
               kind: "walk",
               title: walk,
-              lines: [`${to} · ${t("plan.wait", { min: waitMin(leg.endTime, next) }, lang)}`, ...transferLines(next, lang)],
+              lines: [to, side ? `${side} · ${wait}` : capitalise(wait), ...transferLines(next, lang)],
             },
       });
       return;

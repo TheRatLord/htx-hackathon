@@ -93,17 +93,15 @@ function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
       <div className={styles.bleed}>
         <LiveStrip deps={strip} />
       </div>
-      {!matched && (
-        <p className={styles.variant}>
-          {t(strip.length > 1 ? "trip.wait.plannedFirst" : "trip.wait.planned", {
-            route: ride.route.name,
-            // Keeps "10:40 PM" on one line.
-            time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0"),
-          })}
-        </p>
-      )}
-      <p className={styles.board}>
-        {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <strong>{ride.headsign.toUpperCase()}</strong>
+      {!matched &&
+        (strip.length > 1 ? (
+          <p className={styles.variant}>{t("trip.wait.plannedFirst", { route: ride.route.name, time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0") })}</p>
+        ) : (
+          // "Scheduled 12:15 PM": the strip's one time, said as a clock time once ("10:40 PM" on one line).
+          <p className={styles.variant}>{t("trip.wait.planned", { time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0") })}</p>
+        ))}
+      <p className={`${styles.board} ${styles.withChip}`}>
+        {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <RouteBadge route={route} size="sm" /> <strong>{ride.headsign.toUpperCase()}</strong>
       </p>
     </>
   );

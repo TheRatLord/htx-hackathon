@@ -1,8 +1,9 @@
 // An itinerary drawn on the shared map (spec D11–D13): dotted walks, rides in their route colour
 // (the map adds the white casing), a blue origin, a red destination and labelled stop pins.
 
-import type { Itinerary, LatLon, TransitLeg } from "../../api/types.ts";
+import type { Itinerary, TransitLeg } from "../../api/types.ts";
 import { t, type Lang } from "../../i18n/index.ts";
+import { boundsOf } from "../../lib/geo.ts";
 import { legCoords } from "../../lib/polyline.ts";
 import type { MapScene } from "../../map/scene.ts";
 
@@ -31,17 +32,6 @@ export function itineraryMarkers(it: Itinerary, lang: Lang, hide: (string | unde
     });
   if (last) markers.push({ id: "destination", point: last.type === "walk" ? last.to : last.alight, kind: "destination" });
   return markers;
-}
-
-/** The smallest box around every point, for `focus: { kind: "bounds" }`. */
-export function boundsOf(points: LatLon[]): [LatLon, LatLon] | undefined {
-  if (!points.length) return undefined;
-  const lats = points.map((p) => p.lat);
-  const lons = points.map((p) => p.lon);
-  return [
-    { lat: Math.min(...lats), lon: Math.min(...lons) },
-    { lat: Math.max(...lats), lon: Math.max(...lons) },
-  ];
 }
 
 export function itineraryScene(it: Itinerary, lang: Lang): MapScene {

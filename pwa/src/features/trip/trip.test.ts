@@ -96,11 +96,11 @@ describe("timeline", () => {
 
   it("has a row per walk, boarding, getting off and the arrival", () => {
     expect(rows.map((r) => r.role)).toEqual(["walk", "board", "alight", "walk", "board", "alight", "arrive"]);
-    expect(rows[0].step.lines[1]).toBe("to M L King Blvd @ UH University Dr (#11424), west side");
+    expect(rows[0].step.lines.slice(1)).toEqual(["to M L King Blvd @ UH University Dr (#11424)", "West side"]);
     expect(rows[1].step).toMatchObject({ titleLead: "BOARD", title: "to MLK & PARK VILLAGE" });
     expect(rows[1].step.lines).toEqual(["7:05 PM · 4 stops"]);
     expect(rows[2].step.title).toBe("Get off at M L King Blvd @ Bellfort (#3938)");
-    expect(rows[3].step.lines[0]).toBe("to Bellfort Av @ M L King Blvd (#4789), south side · wait 9 min");
+    expect(rows[3].step.lines.slice(0, 2)).toEqual(["to Bellfort Av @ M L King Blvd (#4789)", "South side · wait 9 min"]);
     expect(rows[0].href).toMatch(/^\/explore\/stop\/11424\/walk\?/);
   });
 
