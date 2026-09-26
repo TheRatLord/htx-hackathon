@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Arrival, ClientRoute } from "../../../api/types.ts";
 import { primeRoutes } from "../../../lib/routes.ts";
-import { departureRows, foldQuietBays, platformsOf, routesInListOrder, servesRoute, tcRoutes } from "./tcModel.ts";
+import { departureRows, foldQuietBays, orderRoutes, platformsOf, routeListOrder, routesInListOrder, servesRoute, tcRoutes } from "./tcModel.ts";
 
 const route = (id: string, displayName: string): ClientRoute => ({
   id,
@@ -73,6 +73,16 @@ describe("routesInListOrder", () => {
   });
   it("leads with a chosen route", () => {
     expect(routesInListOrder(withDeps, names, now, "66").map((r) => r.name)).toEqual(["66", "85", "58", "219"]);
+  });
+  it("keeps an order taken before routes.json loaded, and the chips fill in once it has", () => {
+    primeRoutes([]);
+    const order = routeListOrder(withDeps, names, now);
+    // Before the load: no chip for the unassigned "219" (its name can't be resolved yet).
+    expect(orderRoutes(tcRoutes(withDeps), order).map((r) => r.name)).toEqual(["85", "58", "66"]);
+    primeRoutes([route("058", "58"), route("066", "66"), route("085", "85"), route("219", "219")]);
+    const after = orderRoutes(tcRoutes(withDeps), order);
+    expect(after.map((r) => r.name)).toEqual(["85", "58", "219", "66"]);
+    expect(after.find((r) => r.name === "219")?.mode).toBe("bus");
   });
 });
 

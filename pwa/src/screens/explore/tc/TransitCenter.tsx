@@ -28,7 +28,7 @@ import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
-import { departureRows, foldQuietBays, platformsOf, routesInListOrder, servesRoute, type Bay, type DepartureRow } from "./tcModel.ts";
+import { departureRows, foldQuietBays, orderRoutes, platformsOf, routeListOrder, servesRoute, tcRoutes, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
 
 const bayId = (bay: string) => `bay-${bay}`;
@@ -84,8 +84,6 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   // The bay map is folded away until asked for, so departures come first. With a route chosen, the
   // banner already names its bay and platform, so the map stays folded there too.
   const [mapOpen, setMapOpen] = useState(false);
-  useRoutesLoaded();
-
   useLayoutEffect(() => {
     if (!pendingBay) return;
     const target = document.getElementById(bayId(pendingBay));
@@ -97,12 +95,16 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   const routeParam = params.get("route");
   const names = new Map(tc.platforms.flatMap((p) => (p.name ? [[p.stopId, p.name] as const] : [])));
   // Chips in the order the departures list below names their routes (a route opened from a link leads),
-  // so the first chip is the first route the rider reads. The order is set once per center: chips never
-  // move under the rider's finger.
-  const routes = useMemo(
-    () => routesInListOrder(tc, names, now, routeParam ?? undefined),
-    [tc.id],
+  // so the first chip is the first route the rider reads. Only the order is fixed per center (chips never
+  // move under the rider's finger); the chip set itself is rebuilt every render, so it fills in when
+  // routes.json arrives after the center and follows a refetch that adds a route.
+  const routesLoaded = useRoutesLoaded();
+  const order = useMemo(
+    () => routeListOrder(tc, names, now, routeParam ?? undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fixed per center, see above
+    [tc.id, routesLoaded],
   );
+  const routes = orderRoutes(tcRoutes(tc), order);
   const selected = routeParam ? routes.find((r) => r.id === canonicalRouteId(routeParam)) : undefined;
   const setRoute = (id?: string) =>
     setParams(
