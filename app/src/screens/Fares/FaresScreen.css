@@ -1,0 +1,218 @@
+/* Fares tab: boarding pass, Face ID note, free ride progress, wallet. */
+
+.fares {
+  display: grid;
+  gap: var(--s-3);
+}
+
+/* Title-row badge */
+.fares-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--s-2) 0 12px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+  font-size: var(--t-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/*
+ * Boarding pass: a ticket in two parts (code and stub) joined by a
+ * perforation, with round notches cut into both sides. The shadow sits on
+ * the wrapper as a drop-shadow so it follows the notches.
+ */
+.fares-pass {
+  --notch: 12px;
+  filter: drop-shadow(0 2px 4px rgba(15, 26, 46, 0.08)) drop-shadow(0 10px 24px rgba(15, 26, 46, 0.1));
+}
+:root[data-theme='dark'] .fares-pass {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .fares-pass {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 10px 24px rgba(0, 0, 0, 0.35));
+  }
+}
+
+.fares-pass__main,
+.fares-pass__stub {
+  background: var(--glass-strong);
+  text-align: center;
+}
+
+.fares-pass__main {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-2);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  -webkit-mask:
+    radial-gradient(circle at 0 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+  transition: padding var(--dur-3) var(--ease-out);
+}
+
+.fares-pass__stub {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-3) var(--s-3);
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
+  -webkit-mask:
+    radial-gradient(circle at 0 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) right / 51% 100% no-repeat;
+}
+/* Perforation between the code and the stub. */
+.fares-pass__stub::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--notch) + var(--s-1));
+  right: calc(var(--notch) + var(--s-1));
+  border-top: 2px dashed var(--hairline);
+}
+
+/* White quiet zone around the code, in both themes. */
+.fares-pass__tile {
+  width: 224px;
+  max-width: 100%;
+  padding: var(--s-1);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px var(--hairline),
+    var(--shadow-1);
+  transition: width var(--dur-3) var(--ease-out);
+}
+.fares-code {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.fares-pass__disclaimer,
+.fares-pass__bright {
+  text-wrap: balance;
+}
+
+.fares-pass__toggle {
+  padding: 0 20px 0 var(--s-2);
+  font-size: var(--t-small);
+  white-space: nowrap;
+}
+.fares-pass__sim {
+  color: var(--text-3);
+}
+
+/* Enlarged: the code fills the card; everything else steps back. */
+.fares--enlarged .fares-pass__main {
+  padding-top: var(--s-2);
+}
+.fares--enlarged .fares-pass__tile {
+  width: 100%;
+}
+
+.fares__extras {
+  display: grid;
+  gap: var(--s-2);
+  transition: opacity var(--dur-3) var(--ease);
+}
+.fares--enlarged .fares__extras {
+  opacity: 0.45;
+}
+
+/* Cards below the pass */
+.fares-card {
+  padding: var(--s-2) 20px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+.fares-card__title {
+  font-size: var(--t-body);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+
+.fares-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.fares-row__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.fares-progress__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-bottom: 12px;
+}
+.fares-progress__count {
+  font-size: var(--t-small);
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.fares-progress__bar {
+  display: flex;
+  gap: var(--s-half);
+}
+.fares-progress__pip {
+  flex: 1;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--fill-2);
+}
+.fares-progress__pip--on {
+  background: var(--accent-fill);
+}
+.fares-progress__note {
+  margin-top: 12px;
+}
+
+.fares-wallet__note {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: 12px;
+  padding: 12px var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--fill-1);
+  color: var(--text-2);
+  animation: fares-note-in var(--dur-2) var(--ease-out) both;
+}
+.fares-wallet__note svg {
+  flex: none;
+  color: var(--accent);
+}
+@keyframes fares-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
