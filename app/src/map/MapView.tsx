@@ -193,7 +193,11 @@ export function MapView() {
     }
     const b = new maplibregl.LngLatBounds(pts[0] as LngLat, pts[0] as LngLat);
     for (const p of pts) b.extend(p as LngLat);
-    map.fitBounds(b, { padding, maxZoom: 16.5, duration: reducedMotion ? 0 : 700 });
+    const opts = { padding, maxZoom: 16.5, duration: reducedMotion ? 0 : 700 };
+    // fitBounds silently does nothing when the padded view can't be satisfied
+    // inside maxBounds; fall back to centring on the points as wide as allowed.
+    if (map.cameraForBounds(b, opts)) map.fitBounds(b, opts);
+    else map.easeTo({ center: b.getCenter(), zoom: map.getMinZoom(), padding, duration: opts.duration });
     // bottomInset deliberately excluded: dragging the sheet shouldn't move the camera.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, ready, fitKey, reducedMotion]);

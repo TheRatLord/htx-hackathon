@@ -15,7 +15,8 @@ export function watchConsole(page: Page) {
 
 /** Wait until the map has drawn and simulated loading has finished. */
 export async function settle(page: Page, ms = 900) {
-  await page.waitForFunction(() => !!document.querySelector('.maplibregl-canvas'), undefined, { timeout: 15_000 });
+  // The user dot is added once the map has fully loaded.
+  await page.waitForSelector('.user-dot', { state: 'attached', timeout: 20_000 });
   await page.waitForTimeout(ms);
 }
 

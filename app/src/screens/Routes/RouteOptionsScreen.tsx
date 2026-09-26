@@ -37,7 +37,7 @@ import './RouteOptionsScreen.css';
  * just south of the zoo, so a taller sheet would push the routes under it.
  * The middle snap shows every card; the top one scrolls.
  */
-const SHEET_SNAPS = [252, 0.66, 0.92];
+const SHEET_SNAPS = [0.42, 0.66, 0.92];
 /** Height of the sticky Start trip footer, so the last card can scroll above it. */
 const FOOTER_SPACE = 56 + 16 * 2;
 /** Bottom edge of the from/to card, in px from the top of the screen. */

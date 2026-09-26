@@ -7,8 +7,8 @@ import type { LngLat } from './types';
  */
 
 export const MAP_BOUNDS: [LngLat, LngLat] = [
-  [-95.412, 29.698],
-  [-95.348, 29.77],
+  [-95.418, 29.678],
+  [-95.342, 29.772],
 ];
 
 /** Where the rider is standing in the sample. */
@@ -20,10 +20,10 @@ export const GRID = {
   /** Reference lines the grid is built from. */
   lngOrigin: -95.38,
   latOrigin: 29.7395,
-  minLng: -95.412,
-  maxLng: -95.348,
-  minLat: 29.698,
-  maxLat: 29.77,
+  minLng: -95.418,
+  maxLng: -95.342,
+  minLat: 29.678,
+  maxLat: 29.772,
 };
 
 export interface NamedStreet {
@@ -41,35 +41,35 @@ export const STREETS: NamedStreet[] = [
   { name: 'Almeda Rd', axis: 'ns', at: -95.3771, from: 29.705, to: 29.768 },
   { name: 'Montrose Blvd', axis: 'ns', at: -95.3945, from: 29.7235, to: 29.768 },
   { name: 'San Jacinto St', axis: 'ns', at: -95.37275, from: 29.705, to: 29.768 },
-  { name: 'Tuam St', axis: 'ew', at: 29.7447, from: -95.41, to: -95.35 },
-  { name: 'Alabama St', axis: 'ew', at: 29.7395, from: -95.41, to: -95.35 },
-  { name: 'Elgin St', axis: 'ew', at: 29.7343, from: -95.41, to: -95.35 },
-  { name: 'Binz St', axis: 'ew', at: 29.7291, from: -95.41, to: -95.35 },
-  { name: 'Southmore Blvd', axis: 'ew', at: 29.7239, from: -95.398, to: -95.35 },
-  { name: 'Gray St', axis: 'ew', at: 29.7525, from: -95.41, to: -95.35 },
+  { name: 'Tuam St', axis: 'ew', at: 29.7447, from: -95.418, to: -95.342 },
+  { name: 'Alabama St', axis: 'ew', at: 29.7395, from: -95.418, to: -95.342 },
+  { name: 'Elgin St', axis: 'ew', at: 29.7343, from: -95.418, to: -95.342 },
+  { name: 'Binz St', axis: 'ew', at: 29.7291, from: -95.418, to: -95.342 },
+  { name: 'Southmore Blvd', axis: 'ew', at: 29.7239, from: -95.398, to: -95.342 },
+  { name: 'Gray St', axis: 'ew', at: 29.7525, from: -95.418, to: -95.342 },
   { name: 'Hermann Park Dr', axis: 'ew', at: 29.7185, from: -95.3875, to: -95.3771 },
 ];
 
 export const HIGHWAY_69: LngLat[] = [
-  [-95.412, 29.7318],
+  [-95.418, 29.7309],
   [-95.4, 29.7336],
   [-95.39, 29.7362],
   [-95.382, 29.7384],
   [-95.374, 29.741],
   [-95.366, 29.7445],
   [-95.358, 29.7488],
-  [-95.348, 29.7545],
+  [-95.342, 29.7579],
 ];
 
 export const BUFFALO_BAYOU: LngLat[] = [
-  [-95.412, 29.7628],
+  [-95.418, 29.7634],
   [-95.402, 29.7612],
   [-95.394, 29.7631],
   [-95.386, 29.7618],
   [-95.378, 29.7642],
   [-95.37, 29.7629],
   [-95.36, 29.7652],
-  [-95.348, 29.7641],
+  [-95.342, 29.7636],
 ];
 
 export const HERMANN_PARK: LngLat[] = [

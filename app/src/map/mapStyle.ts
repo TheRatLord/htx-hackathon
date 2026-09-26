@@ -181,7 +181,7 @@ export function buildStyle(theme: MapTheme): StyleSpecification {
         id: 'labels',
         type: 'symbol',
         source: 'labels',
-        minzoom: 13.2,
+        minzoom: 12.6,
         layout: {
           'icon-image': ['get', 'image'],
           'icon-rotate': ['get', 'rotate'],
@@ -192,7 +192,7 @@ export function buildStyle(theme: MapTheme): StyleSpecification {
           'symbol-sort-key': ['get', 'rank'],
         },
         paint: {
-          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 13.2, 0, 13.8, 1],
+          'icon-opacity': ['interpolate', ['linear'], ['zoom'], 12.6, 0, 13.1, 1],
         },
       },
       // Scene layers: route options drawn by the current screen.
