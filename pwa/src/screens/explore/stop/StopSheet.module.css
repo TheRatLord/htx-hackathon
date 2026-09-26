@@ -8,8 +8,11 @@
 .pills {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--sp-2);
+}
+
+.pills > * {
+  flex: 1 1 auto;
 }
 
 .divider {
@@ -105,4 +108,27 @@
   color: var(--c-text-secondary);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
+}
+
+/* Full Schedule and Track Bus Stop share one row, as today; on a narrow screen their labels wrap
+   inside the pills rather than stacking the pills, which would push the strip below the fold. */
+.routePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.routePills > * {
+  flex: 1 1 140px;
+}
+
+.stripError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-2);
+  min-height: var(--strip-h);
+  padding: 0 var(--gutter);
+  background: var(--c-card);
 }

@@ -5,7 +5,10 @@ const strings: Strings = {
   en: {
     stop: {
       fallbackTitle: "Stop #{id}",
-      partOf: "Part of {tc}",
+      partOfTc: "Part of {tc} · Departures by bay ›",
+      notFoundTitle: "Stop not found",
+      crowdedOut: "No trip to {headsign} among the next buses. See the Full Schedule.",
+      stripError: "Times can't be loaded right now.",
       savedToast: "Saved. It will show at the top of Explore.",
       removedToast: "Removed from saved.",
       saveA11y: "Save stop {id}",
@@ -32,7 +35,10 @@ const strings: Strings = {
   es: {
     stop: {
       fallbackTitle: "Parada #{id}",
-      partOf: "Parte de {tc}",
+      partOfTc: "Parte de {tc} · Salidas por andén ›",
+      notFoundTitle: "No se encontró la parada",
+      crowdedOut: "Ningún viaje a {headsign} entre los próximos autobuses. Vea el horario completo.",
+      stripError: "No se pueden cargar las horas ahora.",
       savedToast: "Guardada. Aparecerá arriba en Explorar.",
       removedToast: "Se quitó de guardadas.",
       saveA11y: "Guardar la parada {id}",

@@ -5,6 +5,8 @@ import { useLayoutEffect, useRef } from "react";
 import { useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 
 const GAP = 8;
+/** The layout's BottomSheet root; replace with the sheet ref once the layout exposes one (requests.md). */
+const SHEET = "section[role=region]";
 
 /** Top of the sheet to the bottom of `el`, as if the sheet body were not scrolled. */
 function reach(el: HTMLElement, sheet: HTMLElement): number {
@@ -23,7 +25,7 @@ export function useHalfUpTo(target: () => HTMLElement | null | undefined, cap: (
   latest.current = { target, cap };
   useLayoutEffect(() => {
     const el = latest.current.target();
-    const sheet = el?.closest<HTMLElement>("section[role=region]");
+    const sheet = el?.closest<HTMLElement>(SHEET);
     if (!el || !sheet) return setMinHalf(undefined);
     const measure = () => setMinHalf(Math.min(Math.ceil(reach(el, sheet)), latest.current.cap(window.innerHeight)));
     measure();
