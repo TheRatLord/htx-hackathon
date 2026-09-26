@@ -35,6 +35,7 @@ export default defineConfig({
   preview: {
     port: webPort,
     strictPort: true,
+    allowedHosts: [".trycloudflare.com"],
     proxy: { "/api": `http://localhost:${apiPort}` },
   },
 });
