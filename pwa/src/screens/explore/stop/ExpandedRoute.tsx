@@ -91,7 +91,7 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopAction
         <Button
           variant="tonal"
           icon="calendar_month"
-          label={t("stop.fullSchedule")}
+          label={t(hideLongName ? "stop.scheduleShort" : "stop.fullSchedule")}
           href={`/explore/stop/${encodeURIComponent(stop.id)}/schedule?route=${encodeURIComponent(entry.routeId)}`}
         />
         {/* On, the button fills navy: a text change alone didn't show that tracking is running (14). */}

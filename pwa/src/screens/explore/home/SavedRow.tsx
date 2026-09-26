@@ -12,6 +12,9 @@ import { SavedStopRow } from "../../../ui/SavedStopRow.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { walkUrl } from "../walk/walkUrl.ts";
 
+/** Past this walk (about a mile) the saved stop is a short row: it isn't where the rider is (C.5b compact). */
+const FAR_SAVED_M = 1600;
+
 /**
  * D2 item 5: the first saved stop, preferred route first. It never waits on location; once the
  * rider's position is known it gains the nearby card's side line and walk pill.
@@ -40,6 +43,7 @@ export function SavedRow({ origin }: { origin?: LatLon }) {
       routes={routes}
       side={side || undefined}
       walkDistanceM={walkM}
+      compact={walkM !== undefined && walkM > FAR_SAVED_M}
       onWalk={walkM !== undefined ? () => navigate(walkUrl(first.id, { d: walkM, route: preferredRouteId })) : undefined}
       onOpen={() => navigate(`/explore/stop/${encodeURIComponent(first.id)}${preferredRouteId ? `?route=${encodeURIComponent(preferredRouteId)}` : ""}`)}
       moreSaved={more > 0 ? { count: more, onPress: () => navigate("/recent") } : undefined}

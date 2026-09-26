@@ -8,7 +8,7 @@ import type { WalkButtonProps } from "./types.ts";
 
 
 /**
- * C.5a: the compact "🚶 1 min / walk" button at the top right of every stop card (one layout on
+ * C.5a: the compact "🚶 Walk / 1 min" button (read top to bottom, "Walk 1 min") at the top right of every stop card (one layout on
  * every card, width and text size: it never takes a row of its own, and it always says "walk": a
  * bare "1 min" above the bus times read as a bus time, 46). Opens Walk (D8). From a place (D4) the
  * pill still reads "4 min / walk" (a three-line "walk from the museum" pill squeezed the stop name,
@@ -31,8 +31,8 @@ export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }:
     <button type="button" className={styles.walk} aria-label={label} onClick={onPress}>
       <Icon name="directions_walk" size={20} />
       <span className={styles.text}>
-        <span className={styles.value}>{value}</span>
         <span className={styles.sub}>{t("card.walkSub")}</span>
+        <span className={styles.value}>{value}</span>
       </span>
     </button>
   );

@@ -107,19 +107,19 @@ export function formatDeparture(departureTime: string, now: number, opts: { offl
   return s.kind === "now" ? t("time.now", undefined, opts.lang) : t("time.min", { n: s.m }, opts.lang);
 }
 
-/** Past this, a row's first bus is shown as a clock time, and so is every time after it. */
-const CLOCK_ROW_MIN = 30;
-
 /**
- * One format per row (06: "59 min · 2:00 PM" read as two kinds of number). The first bus under
- * half an hour away: minutes, and a later bus an hour or more away is left off the row ("6 min"
- * rather than "6 min · 1:10 PM"). Otherwise every time is a clock time ("12:59 PM · 2:00 PM").
+ * THE time rule, the same on every card, strip, sheet and step (no legend needed: the unit says
+ * which is which): a bus under an hour away is "N min", one an hour or more away is its clock
+ * time with a small "PM" ("1:02 PM"). Each time follows the rule on its own, so a row can read
+ * "2 min · 1:02 PM": the second bus is an hour off, and the small PM says it is a time of day.
+ * Offline every time is a clock time (the cache may be old). A row never switches a time under an
+ * hour to its clock time because a later bus is far off ("12:37 PM" for a bus 37 min away beside
+ * "52 min" on the strip was two rules for one thing).
+ *
+ * Kept as a function so every row goes through one place; `clock` is always false now.
  */
-export function clockRow<T extends Dep>(shown: T[], now: number, offline: boolean): { deps: T[]; clock: boolean } {
-  const first = shown.find((d) => !d.canceled);
-  if (offline || !first) return { deps: shown, clock: false };
-  if (Date.parse(first.departureTime) - now >= CLOCK_ROW_MIN * 60_000) return { deps: shown, clock: true };
-  return { deps: shown.filter((d) => d === first || !showsClock(d, now)), clock: false };
+export function clockRow<T extends Dep>(shown: T[], _now: number, _offline: boolean): { deps: T[]; clock: boolean } {
+  return { deps: shown, clock: false };
 }
 
 export interface DepartureView {
@@ -218,7 +218,7 @@ export function stopTitle(name: string, id: string, lang: Lang): string {
   return tail.length <= KEEP_CROSS_STREET ? `${title.slice(0, at + 3)}${tail.replace(/ /g, "\u00a0")}` : title;
 }
 
-/** "Eastbound" (es "Rumbo este") for a direction label; unknown labels stay as METRO wrote them. */
+/** "Eastbound" (es "Hacia el este") for a direction label; unknown labels stay as METRO wrote them. */
 export function directionWord(label: string, lang: Lang): string {
   const key = `dir.${label}`;
   return hasKey(key, lang) ? t(key, undefined, lang) : label;
@@ -229,11 +229,16 @@ export function displayHeadsign(headsign: string): string {
   return headsign.replace(/^METRORail\s*-\s*/i, "");
 }
 
-/** "NORTHBOUND to N SHEPHERD P&R" (bus) or "to FANNIN SOUTH" (rail, whose direction labels are unreliable). */
-export function headsignLine(route: Pick<RouteRef, "mode">, directionLabel: string, headsign: string, lang: Lang): string {
-  const to = `${t("headsign.to", undefined, lang)} ${displayHeadsign(headsign).toUpperCase()}`;
+/**
+ * "NORTHBOUND to N SHEPHERD P&R" (bus) or "to FANNIN SOUTH" (rail, whose direction labels are
+ * unreliable). `short` (Extra large text on a card) drops the "to" after a direction, as on the
+ * bus's own sign: "NORTHBOUND N SHEPHERD P&R", one line fewer per route at 360dp.
+ */
+export function headsignLine(route: Pick<RouteRef, "mode">, directionLabel: string, headsign: string, lang: Lang, opts: { short?: boolean } = {}): string {
+  const dest = displayHeadsign(headsign).toUpperCase();
+  const to = `${t("headsign.to", undefined, lang)} ${dest}`;
   if (route.mode === "rail" || !directionLabel) return to;
-  return `${directionWord(directionLabel, lang).toUpperCase()} ${to}`;
+  return `${directionWord(directionLabel, lang).toUpperCase()} ${opts.short ? dest : to}`;
 }
 
 /** A transit-center platform's short name: "Northwest Transit Center - Platform 2" → "Platform 2", else "Stop #79" (C.14). */

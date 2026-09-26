@@ -9,7 +9,7 @@ import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChro
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { formatDistance, platformLabel } from "../../../lib/format.ts";
+import { formatDistance, platformLabel, stopTitle } from "../../../lib/format.ts";
 import { parseLatLon } from "../../../lib/geo.ts";
 import { localiseSide, walkStepText } from "../../../lib/i18nServer.ts";
 import { estimateWalk, walkMinutes } from "../../../lib/walk.ts";
@@ -41,7 +41,8 @@ function seedParam(value: string | null): number | undefined {
 }
 
 function walkTitle(t: ReturnType<typeof useT>, lang: ReturnType<typeof useLang>, detail: StopDetail | undefined, stopId: string, fromName?: string) {
-  const stop = detail ? t("stopLine.title", { name: detail.stop.name, id: stopId }) : t("stop.fallbackTitle", { id: stopId });
+  // stopTitle keeps "(342)" on its street's line ("Main St (342)", never "(342)" alone).
+  const stop = detail ? stopTitle(detail.stop.name, stopId, lang) : t("stop.fallbackTitle", { id: stopId });
   if (fromName) return t("walk.titleFrom", { from: fromName, stop });
   if (detail?.transitCenter) return t("walk.titleTc", { tc: detail.transitCenter.name, platform: platformLabel(detail.stop, lang), id: stopId });
   return t("walk.title", { stop });

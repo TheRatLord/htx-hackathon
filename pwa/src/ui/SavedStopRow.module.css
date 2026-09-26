@@ -39,3 +39,47 @@
   font-weight: var(--fw-medium);
   white-space: nowrap;
 }
+
+/* A saved stop over a mile away: one short row with a chevron, not a full card (C.5b compact). */
+article.compact {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-block: var(--sp-2);
+}
+
+.compact > svg {
+  flex: none;
+}
+
+.compactMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compactName {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.compactLine {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.compactLine > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactLine > :first-child {
+  flex: none;
+}

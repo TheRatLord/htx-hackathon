@@ -178,3 +178,59 @@
 .overlineAction + .toggle {
   margin-left: 0;
 }
+
+/* "‹ Back  Title  ⌃" on one row: Back reaches into the gutter so its chevron lines up with the
+   content below, and the title's first line sits on Back's centre line. */
+.inSheet > .backMain {
+  align-items: flex-start;
+  gap: 0;
+  margin-inline-start: calc(-1 * var(--sp-3));
+  padding-top: 0;
+}
+
+.backMain > .back {
+  flex: none;
+  padding-inline: var(--sp-3) var(--sp-2);
+}
+
+.backText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: calc((var(--touch-min) - var(--lh-title)) / 2);
+}
+
+.backStop > .backText {
+  padding-top: calc((var(--touch-min) - var(--lh-stop-title)) / 2);
+}
+
+.inSheet .backText > .text {
+  min-height: 0;
+  padding-inline-end: 0;
+}
+
+.overlineInline {
+  display: flex;
+  align-items: center;
+}
+
+/* A centred stop title stays centred in the space between Back and the chevron. */
+.center .backText {
+  text-align: center;
+}
+
+/* "Updated just now / ↻ Refresh" never drops to a row of its own: the title wraps beside it
+   instead (es at 360: "Paradas / cercanas"). */
+.text:has(> .sub [data-compact-updated]) {
+  flex-wrap: nowrap;
+}
+
+.text:has(> .sub [data-compact-updated]) > .title {
+  min-width: 0;
+}
+
+/* Clear the grab bar drawn over the top of the sheet. */
+.inSheet > .backMain {
+  padding-top: var(--sp-3);
+}

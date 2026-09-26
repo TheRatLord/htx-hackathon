@@ -20,7 +20,8 @@
   color: var(--c-accent-icon);
 }
 
-/* "1 min" (18sp Bold) over "walk" (14sp), as the spec's card wireframe (C.5a). */
+/* "Walk" (14sp) over "1 min" (18sp Bold): it reads "Walk 1 min", never a bare "1 min" that could
+   pass for a bus time (C.5a). */
 .text {
   display: flex;
   flex-direction: column;
@@ -34,7 +35,7 @@
   white-space: nowrap;
 }
 
-/* "walk": the button stays narrow so the stop name keeps the card's width. */
+/* "Walk": the button stays narrow so the stop name keeps the card's width. */
 .sub {
   max-width: 7.5em;
   color: var(--c-text-variant);

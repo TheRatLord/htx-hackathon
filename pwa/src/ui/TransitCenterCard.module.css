@@ -16,27 +16,3 @@
   font-size: var(--fs-caption);
   font-weight: var(--fw-bold);
 }
-
-.dep {
-  display: flex;
-  gap: var(--sp-2);
-  align-items: flex-start;
-  padding: var(--sp-1) 0;
-}
-
-/* "9 min · 39 min      [Bay G]": the bay tag at the end of the times row, centred on the big numbers. */
-.timesRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-}
-
-.timesRow > :first-child {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.timesRow > :last-child {
-  align-self: center;
-}
