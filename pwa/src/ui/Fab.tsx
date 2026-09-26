@@ -24,8 +24,10 @@ export function Fab(props: FabProps) {
       );
     case "routeAlerts":
       return (
-        <button type="button" className={`${styles.fab} ${styles.extended} ${styles.alert}`} onClick={props.onPress}>
-          <Icon name="warning" color="var(--c-alert-icon)" />
+        // Red only for a service change; a route whose alerts are all advisories (an elevator out)
+        // gets the navy (i), as in the Alerts list (lib/alerts.ts isAdvisory).
+        <button type="button" className={`${styles.fab} ${styles.extended} ${props.advisory ? styles.advisory : styles.alert}`} onClick={props.onPress}>
+          {props.advisory ? <Icon name="info" color="var(--c-brand-navy)" /> : <Icon name="warning" color="var(--c-alert-icon)" />}
           {t("map.routeAlerts", { count: props.count })}
         </button>
       );

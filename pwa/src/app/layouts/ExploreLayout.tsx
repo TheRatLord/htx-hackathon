@@ -6,6 +6,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAlerts } from "../../api/alertsStore.ts";
 import { useLang, useT } from "../../i18n/index.ts";
+import { isAdvisory } from "../../lib/alerts.ts";
 import { formatClock } from "../../lib/format.ts";
 import { formatLatLon } from "../../lib/geo.ts";
 import { useMapCenter } from "../../map/scene.ts";
@@ -118,8 +119,9 @@ export function ExploreLayout() {
     if (f === "locate") return [{ kind: "locate", onPress: onLocate }];
     if (f === "planTrip")
       return [trip.active ? { kind: "myTrip", onPress: () => navigate("/explore/trip") } : { kind: "planTrip", onPress: () => navigate("/explore/plan") }];
-    const count = alerts.source === "unavailable" ? 0 : alerts.forRoute(f.routeId).length;
-    return count ? [{ kind: "routeAlerts", count, onPress: () => navigate(`/more/alerts?route=${encodeURIComponent(f.routeId)}`) }] : [];
+    const list = alerts.source === "unavailable" ? [] : alerts.forRoute(f.routeId);
+    const count = list.length;
+    return count ? [{ kind: "routeAlerts", count, advisory: list.every((a) => isAdvisory(a.effect)), onPress: () => navigate(`/more/alerts?route=${encodeURIComponent(f.routeId)}`) }] : [];
   });
   // The column sits between the sheet and the search bar, 8dp from each; when it doesn't fit (a
   // tall half sheet, extra-large text), the first-listed FABs give way.

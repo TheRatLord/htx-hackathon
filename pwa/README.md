@@ -61,10 +61,13 @@ npx tsx scripts/shoot.ts --url http://localhost:5173/explore --out /tmp/explore.
 | `--actions` | none | JSON list run in order: `{"click": target}`, `{"fill": [target, text]}`, `{"press": "Enter"}`, `{"wait": ms}`. A target is visible text, unless it starts with `css=`, `text=`, `xpath=` or `#` (then it is a selector, e.g. `css=button[aria-pressed]`) |
 | `--storage` | `{"ridemetro.prefs":{"welcomed":true}}` | localStorage seed (JSON values); `'{}'` shows first launch |
 | `--full` | off | Full-page shot (unrolls the app's scrolling `<main>`) |
+| `--now` | off | Freeze the page clock at an ISO instant (`--now 2026-09-25T12:00:00-05:00`), or at the API's clock (`--now api`) |
 
 Console errors, page errors and failed requests are printed. The Playwright version is pinned to
 match the Chromium build installed under `~/.cache/ms-playwright`; if it is missing, run
 `npx playwright install chromium`.
+
+**The judged set:** `npx tsx scripts/capture-set.ts ../ux-audit/redesign/<round>` shoots every screen (tests/e2e/screens.spec.ts, plus Extra-large and Spanish variants at 360x640) with the API and browser clocks frozen at Fri Sep 25 2026 12:00 CDT, copies the comparable RideMETRO v2.71 screenshots to `original/`, and writes `INDEX.md`. In `npm run dev`, `?now=<ISO>` freezes the app's clock for the tab (`?now=off` releases it; dev builds only).
 
 ## Layout
 

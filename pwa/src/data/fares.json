@@ -44,7 +44,7 @@
       },
       "value": {
         "en": "Free within 3 hours",
-        "es": "Gratis por 3 horas"
+        "es": "Gratis durante 3 horas"
       }
     }
   ],
@@ -53,7 +53,7 @@
       "key": "reduced",
       "label": {
         "en": "Seniors 65–69, students, riders with disabilities, Medicare",
-        "es": "Personas de 65 a 69 años, estudiantes, personas con discapacidad, Medicare"
+        "es": "De 65 a 69 años, estudiantes, personas con discapacidad o con Medicare"
       },
       "value": {
         "en": "$0.60",
@@ -64,7 +64,7 @@
       "key": "seniors70",
       "label": {
         "en": "Seniors 70 and older",
-        "es": "Personas de 70 años o más"
+        "es": "De 70 años o más"
       },
       "value": {
         "en": "Free",
