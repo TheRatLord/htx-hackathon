@@ -13,7 +13,7 @@ import { itineraryScene } from "../../../features/trip/scene.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { formatLatLon, parseLatLon } from "../../../lib/geo.ts";
-import { parsePlanQuery, planUrl, type PlanQuery, type PlanSort } from "../../../lib/planQuery.ts";
+import { parsePlanQuery, PLAN_SORTS, planUrl, type PlanQuery, type PlanSort } from "../../../lib/planQuery.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { isOff, useLocation as useRider } from "../../../state/location.tsx";
 import { Button } from "../../../ui/Button.tsx";
@@ -29,7 +29,6 @@ import { sortItineraries } from "./sortItineraries.ts";
 import { isReady, planKey, usePlanResponse } from "./usePlanResponse.ts";
 import { useStartTrip } from "./useStartTrip.ts";
 
-const SORTS: PlanSort[] = ["soonest", "transfers", "walk"];
 const LATER_MS = 30 * 60_000;
 
 /** The landmark's own bus stop ("bus stop #10567"), when the destination is a landmark with one. */
@@ -40,7 +39,7 @@ function useLandmarkStop(query: PlanQuery): string | undefined {
   return landmark?.nearbyStops?.[0]?.id;
 }
 
-/** "● My location → 📍 Hobby Airport (bus stop #10567)" / "Leave now   Edit ›": the whole row edits. */
+/** "● My location → 📍 Hobby Airport" / "Arrive at bus stop #10567" / "Leave now   Edit ›": the whole row edits. */
 function Summary({ query, onEdit }: { query: PlanQuery; onEdit: () => void }) {
   const t = useT();
   const lang = useLang();
@@ -77,7 +76,7 @@ function SortPicker({ sort, onChange }: { sort: PlanSort; onChange: (s: PlanSort
     <label className={styles.sort}>
       <span>{t("plan.sort.by")}</span>
       <select value={sort} onChange={(e) => onChange(e.target.value as PlanSort)} aria-label={t("plan.sort.label")}>
-        {SORTS.map((s) => (
+        {PLAN_SORTS.map((s) => (
           <option key={s} value={s}>
             {t(`plan.sort.${s}`)}
           </option>

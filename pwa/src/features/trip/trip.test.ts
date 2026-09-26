@@ -96,17 +96,18 @@ describe("timeline", () => {
 
   it("has a row per walk, boarding, getting off and the arrival", () => {
     expect(rows.map((r) => r.role)).toEqual(["walk", "board", "alight", "walk", "board", "alight", "arrive"]);
-    expect(rows[0].step.lines).toEqual(["Walk 5 min to stop #11424", "M L King Blvd @ UH University Dr · west side"]);
+    expect(rows[0].step).toMatchObject({ title: "M L King Blvd @ UH University Dr", lines: ["Walk 5 min · #11424 · west side"] });
     expect(rows[1].step).toMatchObject({ titleLead: "BOARD", title: "to MLK & PARK VILLAGE" });
     expect(rows[1].step.lines).toEqual(["7:05 PM · 4 stops"]);
-    expect(rows[2].step.title).toBe("Get off at M L King Blvd @ Bellfort (#3938)");
-    expect(rows[3].step.lines.slice(0, 2)).toEqual(["Bellfort Av @ M L King Blvd · south side · wait 9 min"]);
+    expect(rows[2].step.title).toBe("Get off at M L King Blvd @ Bellfort\u00a0(#3938)");
+    expect(rows[3].step.title).toBe("Bellfort Av @ M L King Blvd");
+    expect(rows[3].step.lines[0]).toMatch(/^Walk \d+ min · #\d+ · south side · wait 9 min$/);
     expect(rows[0].href).toMatch(/^\/explore\/stop\/11424\/walk\?/);
   });
 
   it("names the board stop on its row when no walk leads to it", () => {
     const fromStop = itineraryTimeline({ ...itinerary, legs: itinerary.legs.slice(1) }, { fromName: "", toName: "Hobby Airport", pace: "normal", lang: "en" });
-    expect(fromStop[0].step.lines[0]).toBe("M L King Blvd @ UH University Dr (#11424), west side");
+    expect(fromStop[0].step.lines[0]).toBe("M L King Blvd @ UH University Dr\u00a0(#11424), west side");
   });
 
   it("marks the ride's boarding row as You are here", () => {

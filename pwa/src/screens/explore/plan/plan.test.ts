@@ -48,6 +48,13 @@ describe("shiftFixture", () => {
     expect(at("2026-09-26T01:43:00Z")).toBe(at("2026-09-26T01:47:00Z"));
   });
 
+  it("never shows a sample bus between midnight and 6 AM (Houston): it moves to the morning", () => {
+    const now = Date.parse("2026-09-26T08:39:00Z"); // 3:39 AM CDT
+    const dep = Date.parse(ride(shiftFixture(recorded, now, "normal").itineraries[0]).departureTime);
+    expect(dep).toBeGreaterThanOrEqual(Date.parse("2026-09-26T11:00:00Z")); // 6:00 AM CDT
+    expect(dep).toBeLessThan(Date.parse("2026-09-26T11:05:00Z"));
+  });
+
   it("leaves live plans alone", () => {
     const live = { ...recorded, source: "transitous" as const, recordedAt: undefined };
     expect(shiftFixture(live, Date.now(), "normal")).toBe(live);
@@ -79,8 +86,8 @@ describe("sortItineraries", () => {
   const b = { ...itinerary, id: "b", transfers: 0, walkDistanceM: 900, endTime: "2026-09-26T01:10:00Z" };
   const c = { ...itinerary, id: "c", transfers: 0, walkDistanceM: 50, endTime: "2026-09-26T01:05:00Z" };
 
-  it("keeps the API order for Soonest and each card's API index", () => {
-    expect(sortItineraries([a, b, c]).map((x) => x.it.id)).toEqual(["a", "b", "c"]);
+  it("puts the first arrival first for Fastest, and keeps each card's API index", () => {
+    expect(sortItineraries([a, b, c]).map((x) => [x.it.id, x.index])).toEqual([["a", 0], ["c", 2], ["b", 1]]);
     expect(sortItineraries([a, b, c], "transfers").map((x) => [x.it.id, x.index])).toEqual([["c", 2], ["b", 1], ["a", 0]]);
     expect(sortItineraries([a, b, c], "walk").map((x) => x.it.id)).toEqual(["c", "a", "b"]);
   });

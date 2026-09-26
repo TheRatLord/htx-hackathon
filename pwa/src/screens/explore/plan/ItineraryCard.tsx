@@ -1,12 +1,11 @@
 import { Link } from "react-router";
 import type { Itinerary, TransitLeg } from "../../../api/types.ts";
 import { useAlerts } from "../../../api/hooks.ts";
-import { stopTitle } from "../../../features/trip/timeline.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { alertText, effectWord } from "../../../lib/alerts.ts";
+import { effectWord } from "../../../lib/alerts.ts";
 import fares from "../../../data/fares.json";
 import { fareLine } from "../../../lib/fares.ts";
-import { formatClock, sideLine } from "../../../lib/format.ts";
+import { formatClock } from "../../../lib/format.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
 import { BayTag } from "../../../ui/BayTag.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
@@ -16,46 +15,47 @@ import { ModeStrip } from "./ModeStrip.tsx";
 import styles from "./plan.module.css";
 
 /**
- * The first ride's boarding block, so the rider knows where to stand without opening the trip (F3):
- * "BOARD [80] to MLK & PARK VILLAGE", the stop, its side, and when it leaves, in four short lines.
+ * Where to get on, in one line (22): "Board [80] at #11424 · 12:15 PM", plus Live and the bay when
+ * there is one. The stop's name, side and headsign are on My Itinerary, one tap away.
  */
-function BoardingBlock({ ride }: { ride: TransitLeg }) {
+function BoardLine({ ride }: { ride: TransitLeg }) {
   const t = useT();
   const lang = useLang();
   const route = toRouteRef(ride.route);
-  const side = sideLine({ ...ride.board, kind: route.mode }, { withCompass: false, lang });
+  const MARK = "\u0000";
+  const time = formatClock(ride.departureTime, lang);
+  const text = ride.board.id ? t("plan.boardAt", { route: MARK, id: ride.board.id, time }) : `${t("plan.board")} ${MARK} · ${time}`;
+  const [before, after = ""] = text.split(MARK);
   return (
-    <>
-      <p className={styles.boardLine}>
-        {t("plan.board").toUpperCase()} <RouteBadge route={route} size="sm" /> {t("headsign.to")} {ride.headsign.toUpperCase()}
-      </p>
-      <p className={styles.boardStop}>{stopTitle(ride.board)}</p>
-      {side && <p className={styles.variant}>{side}</p>}
-      <p className={styles.leaves}>
-        <span>{t("plan.leaves", { time: formatClock(ride.departureTime, lang) })}</span>
-        {ride.isRealtime && <StatusWord status="live" />}
-        {ride.board.bay && <BayTag bay={ride.board.bay} />}
-      </p>
-    </>
+    <span className={styles.boardLine}>
+      <span>
+        {before}
+        <RouteBadge route={route} size="sm" />
+        {after}
+      </span>
+      {ride.isRealtime && <StatusWord status="live" />}
+      {ride.board.bay && <BayTag bay={ride.board.bay} />}
+    </span>
   );
 }
 
-/** "⚠ Stop moved: Hobby Airport stop…": what the alert is about, in one line (the app banner says it's a demo). */
+/**
+ * "⚠ Alert on this trip: Accessibility": what kind of alert, never cut off (22). Its full text is
+ * on My Itinerary, under the ride it touches.
+ */
 function AlertsLine({ it }: { it: Itinerary }) {
   const t = useT();
   const lang = useLang();
   const alerts = useAlerts();
   if (alerts.status === "loading") return null;
-  if (alerts.status === "error" || alerts.source === "unavailable") return <p className={styles.variant}>{t("alert.unknown")}</p>;
+  if (alerts.status === "error" || alerts.source === "unavailable") return <span className={styles.variant}>{t("alert.unknown")}</span>;
   const list = alerts.forItinerary(it);
   if (!list.length) return null;
   return (
-    <p className={styles.alertLine}>
+    <span className={styles.alertLine}>
       <Icon name="warning" size={20} color="var(--c-alert-icon)" />
-      <span className={styles.alertOne}>
-        {list.length === 1 ? `${effectWord(list[0].effect, lang)}: ${alertText(list[0], "header", lang).text}` : t("plan.alerts", { count: list.length })}
-      </span>
-    </p>
+      <span>{list.length === 1 ? t("plan.alertAbout", { what: effectWord(list[0].effect, lang) }) : t("plan.alerts", { count: list.length })}</span>
+    </span>
   );
 }
 
@@ -79,7 +79,7 @@ export function FareLine({ it, link = true }: { it: Itinerary; link?: boolean })
   );
 }
 
-/** D11's itinerary card: today's mode strip and duration, plus the boarding block and fare line. */
+/** D11's itinerary card: today's mode strip and duration, the times, one Board line and the alert kind. */
 export function ItineraryCard({ it, href }: { it: Itinerary; href: string }) {
   const t = useT();
   const lang = useLang();
@@ -109,13 +109,9 @@ export function ItineraryCard({ it, href }: { it: Itinerary; href: string }) {
         </span>
         <span className={styles.times}>{times}</span>
         {tight.length > 0 && <span className={styles.alertText}>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</span>}
-        {ride && (
-          <div className={styles.board}>
-            <BoardingBlock ride={ride} />
-          </div>
-        )}
+        {ride && <BoardLine ride={ride} />}
+        <AlertsLine it={it} />
       </Link>
-      <AlertsLine it={it} />
     </article>
   );
 }

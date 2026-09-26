@@ -68,7 +68,7 @@ function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate, actions }: Wa
   });
   return (
     <>
-      <p className={styles.headline}>{t("trip.walk.head", { min, stop: stopTitle(ride.board) })}</p>
+      <p className={styles.headline}>{t("trip.walk.head", { min, stop: stopTitle(ride.board, lang) })}</p>
       {side && <p className={styles.variant}>{side}</p>}
       <p>
         {t("trip.walk.next", { route: ride.route.name, time: formatClock(dep.departureTime, lang) })} ·{" "}
@@ -94,8 +94,12 @@ function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const route = toRouteRef(ride.route);
   const side = shortSide(ride.board, lang);
   const id = ride.board.id ?? "";
+  const now = useNow();
   const time = formatClock(ride.departureTime, lang).replace(" ", "\u00a0");
-  const planned = strip.length > 1 ? t("trip.wait.plannedFirst", { route: ride.route.name, time }) : t("trip.wait.planned", { time });
+  // "Your bus: 11 min (12:15 PM)": which of the strip's times is the rider's own (27).
+  const min = Math.floor((Date.parse(ride.departureTime) - now) / 60_000);
+  const yours = min >= 1 ? t("trip.wait.plannedFirst", { min, time }) : t("trip.wait.plannedNow", { time });
+  const planned = strip.length > 1 ? yours : t("trip.wait.planned", { time });
   return (
     <>
       <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
@@ -120,6 +124,7 @@ interface RideProps {
 
 function RideCard({ ride, stops, index, basis }: RideProps) {
   const t = useT();
+  const lang = useLang();
   const now = useNow();
   const route = toRouteRef(ride.route);
   const last = stops.length - 1;
@@ -131,8 +136,8 @@ function RideCard({ ride, stops, index, basis }: RideProps) {
       <p className={`${styles.headline} ${styles.rideHead}`}>
         {t("trip.ride.ride")} <RouteBadge route={route} size="sm" /> {t("headsign.to")} {ride.headsign.toUpperCase()}
       </p>
-      <p className={styles.getOff}>{t("trip.ride.getOff", { stop: stopTitle(ride.alight) })}</p>
-      <GetOffWarning left={left} alight={ride.alight.id ? stopTitle(ride.alight) : ride.alight.name} />
+      <p className={styles.getOff}>{t("trip.ride.getOff", { stop: stopTitle(ride.alight, lang) })}</p>
+      <GetOffWarning left={left} alight={ride.alight.id ? stopTitle(ride.alight, lang) : ride.alight.name} />
       <div className={styles.bleed}>
         <FactStrip
           facts={[
@@ -141,7 +146,7 @@ function RideCard({ ride, stops, index, basis }: RideProps) {
           ]}
         />
       </div>
-      {left > 0 && <p>{t("trip.ride.next", { stop: next.id ? `${next.name} (#${next.id})` : next.name })}</p>}
+      {left > 0 && <p>{t("trip.ride.next", { stop: stopTitle(next, lang) })}</p>}
       <div
         className={styles.progress}
         role="progressbar"

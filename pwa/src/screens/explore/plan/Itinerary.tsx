@@ -83,7 +83,7 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
 }
 
 /** The peek's second line: what to do first, "Walk 5 min · 80 leaves 12:15 PM" (the clock never breaks). */
-export function FirstAction({ it }: { it: Trip }) {
+function FirstAction({ it }: { it: Trip }) {
   const t = useT();
   const lang = useLang();
   const { walkPace } = usePrefs();

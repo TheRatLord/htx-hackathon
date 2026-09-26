@@ -4,7 +4,7 @@
 import type { Itinerary, Leg, PlanStop, TransitLeg, WalkLeg } from "../../api/types.ts";
 
 /** The planner ends a trip with a zero-length walk when it ends at a stop; there is nothing to walk. */
-export const NO_WALK_M = 5;
+const NO_WALK_M = 5;
 
 /** A walk leg with nothing to walk: no step, no timeline row, no 🚶 in the mode strip. */
 export const isEmptyWalk = (leg: Leg): boolean => leg.type === "walk" && leg.distanceM < NO_WALK_M;
