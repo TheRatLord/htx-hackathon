@@ -31,12 +31,12 @@ import {
   stopsCollection,
   transitAt,
 } from "./layers/transit.ts";
-import { around, chipRoom, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
+import { around, chipRoom, roomAround, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
 import type { MapScene } from "./scene.ts";
-
-type SceneMarker = NonNullable<MapScene["markers"]>[number];
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
+
+type SceneMarker = NonNullable<MapScene["markers"]>[number];
 
 /** Label ranking is recomputed only when the anchor moves this far (the rider or the scene's point). */
 const RESORT_M = 50;
@@ -137,27 +137,29 @@ function fitPad(scene: MapScene, pad: maplibregl.PaddingOptions): maplibregl.Pad
   return scene.highlightStopId ? { ...out, right: Math.max(pad.right ?? 0, CALLOUT_RIGHT) } : out;
 }
 
-/**
- * The bounds a trip scene was last fitted to. Live trip frames each step once, then redraws without
- * a focus: when the sheet settled at another height the target stop stayed half under it (26).
- */
-let tripBounds: [LatLon, LatLon] | undefined;
-
-/** Bumped by every applyScene call: a call that finishes after a newer one started does nothing. */
-let sceneSeq = 0;
+/** Per-map camera state, kept in a ref on the MapView that owns the map (never shared between maps). */
+interface SceneState {
+  /**
+   * The bounds a trip scene was last fitted to. Live trip frames each step once, then redraws without
+   * a focus: when the sheet settled at another height the target stop stayed half under it (26).
+   */
+  tripBounds?: [LatLon, LatLon];
+  /** Bumped by every applyScene call: a call that finishes after a newer one started does nothing. */
+  seq: number;
+}
 
 /** What a scene's camera move depends on: two scenes with the same key frame the same view. */
 function focusKey(scene: MapScene): string {
   return JSON.stringify([scene.focus ?? null, scene.focus?.kind === "point" && !scene.focus.point ? (scene.highlightStopId ?? null) : null]);
 }
 
-async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions, fit = true) {
-  const seq = ++sceneSeq;
+async function applyScene(state: SceneState, map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions, fit = true) {
+  const seq = ++state.seq;
   showUser(map, user);
   // Without stops.json the scene still draws, just without the enlarged pin.
   const stops = scene.highlightStopId ? await loadStops().catch(() => undefined) : undefined;
   // stops.json (1.6 MB) can take seconds on a cold start: the rider may have moved on to another screen.
-  if (seq !== sceneSeq) return;
+  if (seq !== state.seq) return;
   const highlight = scene.highlightStopId ? stops?.get(scene.highlightStopId) : undefined;
   setHighlightedStop(map, highlight?.id);
   // Walks and itineraries draw only their own stops: other pins, ID chips and TCs are noise there.
@@ -168,8 +170,8 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   drawScene(map, scene, highlight, callout);
 
   const f = fit ? scene.focus : undefined;
-  if (scene.focus) tripBounds = scene.focus.kind === "bounds" && scene.legs?.length ? scene.focus.bounds : undefined;
-  else if (!scene.legs?.length) tripBounds = undefined;
+  if (scene.focus) state.tripBounds = scene.focus.kind === "bounds" && scene.legs?.length ? scene.focus.bounds : undefined;
+  else if (!scene.legs?.length) state.tripBounds = undefined;
   if (f?.kind === "bounds" && f.bounds) {
     fitFocus(map, f.bounds, fitPad(scene, pad));
   } else if (f) {
@@ -240,6 +242,11 @@ const PIN_BOX = square(16);
  */
 const CHROME_GAP = 24;
 const CHROME_GAP_BOX = square(CHROME_GAP);
+/**
+ * What a nudge keeps between a pin and the chrome: a pixel more than the hiding rule, so a pin
+ * nudged to the very edge of the gap is not hidden again by the pan's rounding (567 in Spanish, 02).
+ */
+const NUDGE_GAP_BOX = square(CHROME_GAP + 2);
 /** A tall pin's head (place, destination), 40dp above its point. */
 const TALL_BOX: Rect = { l: -16, t: -40, r: 16, b: 0 };
 /** The highlighted 36dp pin with its "Stop 342" callout above it. */
@@ -251,13 +258,14 @@ const NUDGES = 3;
 /** A nudge never moves the map further than this (px): past it, the rider loses their bearings. */
 const MAX_NUDGE = 160;
 
+/** `guard`: what this one must clear, when not the listed stops' (a place pin needs less room than a tag). */
+type Blocked = { p: Pt; room: Rect; guard?: Rect[]; need?: "tag" | "pin" | "near" };
+
 /**
  * The smallest pan that brings every listed stop in `blocked` out from under the chrome (Plan Trip,
  * Locate, the search bar), keeping the rider's dot and the other listed stops on the map strip.
  * Home's "Planear viaje", wider than "Plan Trip", hid stop 567 (card 2) in Spanish (42).
  */
-/** `guard`: what this one must clear, when not the listed stops' (a place pin needs less room than a tag). */
-type Blocked = { p: Pt; room: Rect; guard?: Rect[]; need?: "tag" | "pin" | "near" };
 
 function nudgeFor(blocked: Blocked[], keep: Blocked[], guard: Rect[], covering: Rect[], w: number, mapBottom: number, strict = false): [number, number] | undefined {
   if (!blocked.length) return undefined;
@@ -284,11 +292,20 @@ function nudgeFor(blocked: Blocked[], keep: Blocked[], guard: Rect[], covering: 
   // With `strict`, what is clear of the margins now stays clear: two nudges for margins alone must
   // not undo each other (06).
   const keepClear = keep.map(({ p, room }) => strict && clear(p, room));
+  // The hiding rule (placeStopTags): a pin this close to the chrome is left out.
+  const shown = (q: Pt) => !covering.some((o) => overlaps(around(q, CHROME_GAP_BOX), o));
+  const keepShown = keep.map(({ p }) => shown(p));
   return options.find(
     ([dx, dy]) =>
       Math.hypot(dx, dy) <= MAX_NUDGE &&
-      blocked.every(({ p, room, guard: own }) => fits({ x: p.x - dx, y: p.y - dy }, own ? square(4) : CHROME_GAP_BOX) && clear({ x: p.x - dx, y: p.y - dy }, room, own)) &&
-      keep.every(({ p, room }, i) => fits({ x: p.x - dx, y: p.y - dy }, room) && (!keepClear[i] || clear({ x: p.x - dx, y: p.y - dy }, room))),
+      blocked.every(({ p, room, guard: own }) => fits({ x: p.x - dx, y: p.y - dy }, own ? square(4) : NUDGE_GAP_BOX) && clear({ x: p.x - dx, y: p.y - dy }, room, own)) &&
+      // A kept pin must stay clear of the chrome by the hiding rule's gap, not just keep its tag's
+      // room: bringing 567 out from under "Planear viaje" pushed card 1's 246 under the search bar,
+      // where it was hidden (02-es-360).
+      keep.every(({ p, room }, i) => {
+        const q = { x: p.x - dx, y: p.y - dy };
+        return fits(q, room) && (!keepShown[i] || shown(q)) && (!keepClear[i] || clear(q, room));
+      }),
   );
 }
 
@@ -317,6 +334,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const container = useRef<HTMLDivElement>(null);
   const safeTopProbe = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const sceneState = useRef<SceneState>({ seq: 0 });
   const ready = useRef(false);
   const anchorRef = useRef<LatLon | null>(null);
   const hadUser = useRef(Boolean(user));
@@ -457,7 +475,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         } else {
           sides[m.id] = spot.key;
           hard.push(spot.box);
-          if (kind === "stop") keepPts.push({ p, room: { l: Math.min(spot.box.l - p.x, -12), t: spot.box.t - p.y, r: Math.max(spot.box.r - p.x, 12), b: Math.max(spot.box.b - p.y, 12) } });
+          if (kind === "stop") keepPts.push({ p, room: roomAround(p, spot.box, 12) });
           if (kind === "stop" && guard.some((o) => overlaps(around(p, room), o))) blocked.push({ p, room, need: "near" });
         }
         // A searched place's pin clear of the sheet's edge and the FABs (HMNS under Plan Trip, 07).
@@ -516,19 +534,43 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         const tcAt = scene.legs?.length ? [] : (latest.current.tcData ?? []).map((tc) => proj(tc));
         const underTc = (x: { p: Pt }) => tcAt.some((t) => Math.abs(t.x - x.p.x) < 20 && Math.abs(t.y - x.p.y) < 20);
         const loose = inView.filter(underTc).map((x) => ({ members: [x], p: x.p }));
+        const isListed = (g: Group) => g.members.some((x) => taggedAt.has(x.id));
+        /**
+         * A listed stop whose pin sits under the chrome joins the nearest listed pin beside it (one
+         * stacked pin tagged "★ 2958 · 3340") when their shared pin is clear: at Extra large the map
+         * strip is too short to nudge the starred 2958 out from under the search bar and keep the
+         * rider's dot, and it went untagged (03-xlarge-360).
+         */
+        function mergeCovered(gs: Group[]): Group[] {
+          let out = gs;
+          for (const g of gs) {
+            if (!out.includes(g) || !isListed(g) || !isCovered(g.p) || g.members.some(underTc)) continue;
+            const near = out
+              .filter((h) => h !== g && isListed(h) && !isCovered(h.p) && h.members[0].s.kind === g.members[0].s.kind && !h.members.some(underTc))
+              .map((h) => ({ h, d: Math.hypot(h.p.x - g.p.x, h.p.y - g.p.y) }))
+              .filter(({ d }) => d < MERGE_PX)
+              .sort((a, c) => a.d - c.d)[0]?.h;
+            if (!near) continue;
+            const members = [...near.members, ...g.members].sort((a, c) => a.r - c.r);
+            const p = { x: members.reduce((a, m) => a + m.p.x, 0) / members.length, y: members.reduce((a, m) => a + m.p.y, 0) / members.length };
+            if (isCovered(p)) continue;
+            out = [...out.filter((x) => x !== g && x !== near), { members, p }];
+          }
+          return out.sort((a, c) => a.members[0].r - c.members[0].r);
+        }
         const free = inView.filter((x) => !underTc(x));
-        let groups: Group[] = (
-          z16
-            ? [...clusterPoints(free.filter((x) => x.s.kind !== "rail"), CLUSTER_PX), ...clusterPoints(free.filter((x) => x.s.kind === "rail"), CLUSTER_PX), ...loose]
-            : inView.map((x) => ({ members: [x], p: x.p }))
-        ).filter((g) => {
+        const isCovered = (p: Pt) => covering.some((o) => overlaps(around(p, CHROME_GAP_BOX), o));
+        let groups: Group[] = z16
+          ? [...clusterPoints(free.filter((x) => x.s.kind !== "rail"), CLUSTER_PX), ...clusterPoints(free.filter((x) => x.s.kind === "rail"), CLUSTER_PX), ...loose]
+          : inView.map((x) => ({ members: [x], p: x.p }));
+        if (z16) groups = mergeCovered(groups);
+        groups = groups.filter((g) => {
           // A pin under the search bar or a FAB is left out; a listed one is nudged into view.
-          if (!covering.some((o) => overlaps(around(g.p, CHROME_GAP_BOX), o))) return true;
+          if (!isCovered(g.p)) return true;
           covered.push(...g.members.map((x) => x.id));
           if (g.members.some((x) => taggedAt.has(x.id)) && g.p.y < mapBottom) blocked.push({ p: g.p, room: square(16), need: "pin" });
           return false;
         });
-        const isListed = (g: Group) => g.members.some((x) => taggedAt.has(x.id));
         const halfOf = (g: Group) => (g.members.length > 1 ? 16 : pinHalf);
         // The sheet's own stops only, when it lists some: an unlisted stop's tag ("3425" over
         // Westheimer Rd, 03) was one more number to match against the cards, and none of them.
@@ -589,14 +631,11 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         // chosen once the pin has room (a later nudge takes what is still missing).
         for (const g of result.failed) blocked.push({ p: g.p, room: TAG_MIN_ROOM, need: "tag" });
         // A tag set where it fits (to one side of its pin, say) needs only that room, not the centred one.
-        for (const { g, box } of result.placed) {
-          const room = { l: Math.min(box.l - g.p.x, -16), t: box.t - g.p.y, r: Math.max(box.r - g.p.x, 16), b: 16 };
-          if (isListed(g) && guard.some((o) => overlaps(around(g.p, room), o))) blocked.push({ p: g.p, room, need: "near" });
-        }
+        const tagRoom = new Map(result.placed.map(({ g, box }) => [g, roomAround(g.p, box, 16, 16)]));
+        for (const [g, room] of tagRoom) if (isListed(g) && guard.some((o) => overlaps(around(g.p, room), o))) blocked.push({ p: g.p, room, need: "near" });
         for (const g of visible) if (isListed(g)) hard.push(around(g.p, square(halfOf(g))));
         hard.push(...tagBoxes);
         // Listed stops stay on the map strip with their tags when the map is nudged for something else.
-        const tagRoom = new Map(result.placed.map(({ g, box }) => [g, { l: Math.min(box.l - g.p.x, -16), t: box.t - g.p.y, r: Math.max(box.r - g.p.x, 16), b: 16 }]));
         keepPts.push(...visible.filter(isListed).map((g) => ({ p: g.p, room: tagRoom.get(g) ?? PIN_BOX })));
         const clusters: StopCluster[] = [];
         for (const g of groups) {
@@ -676,7 +715,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         hadUser.current = Boolean(user);
         arm();
         lastFocus.current = focusKey(scene);
-        void applyScene(m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
+        void applyScene(sceneState.current, m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
       });
     });
     return () => {
@@ -702,7 +741,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       riderMoved.current = false;
       arm();
     }
-    void applyScene(map, scene, user, pad(bottomPadding), fit).then(() => placeLabels(map));
+    void applyScene(sceneState.current, map, scene, user, pad(bottomPadding), fit).then(() => placeLabels(map));
     rankLabels(map);
     // `lang`: marker labels built by the screen are re-drawn in the new language.
   }, [scene, lang]);
@@ -713,7 +752,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const map = mapRef.current;
     if (!map || !ready.current) return;
     const { scene } = latest.current;
-    const bounds = scene.focus?.kind === "bounds" ? scene.focus.bounds : !scene.focus && !riderMoved.current ? tripBounds : undefined;
+    const bounds = scene.focus?.kind === "bounds" ? scene.focus.bounds : !scene.focus && !riderMoved.current ? sceneState.current.tripBounds : undefined;
     const id = setTimeout(() => {
       arm();
       const { scene: now, user } = latest.current;
@@ -741,7 +780,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     hadUser.current = Boolean(user);
     const { scene, bottomPadding } = latest.current;
     if (first && scene.focus?.kind === "user") arm();
-    if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
+    if (first && scene.focus?.kind === "user") void applyScene(sceneState.current, map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
     else showUser(map, user);
     rankLabels(map);
   }, [user]);
@@ -755,7 +794,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   // hid is nudged into view unless the rider has moved the map (07: a passing banner hid 2504).
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const seen = new WeakSet<Element>();
+    let frame = 0;
+    const observed = new Set<Element>();
     const ro = new ResizeObserver(() => {
       clearTimeout(timer);
       timer = setTimeout(() => {
@@ -765,18 +805,30 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         placeLabels(map);
       }, CHROME_SETTLE_MS);
     });
+    // Obstacles that left the page are let go (the observer would otherwise keep every unmounted
+    // banner alive), and new ones observed: at most once a frame, however many mutations it had.
     const watch = () => {
+      frame = 0;
+      for (const el of observed)
+        if (!el.isConnected) {
+          ro.unobserve(el);
+          observed.delete(el);
+        }
       for (const el of document.querySelectorAll("[data-map-obstacle]"))
-        if (!seen.has(el)) {
-          seen.add(el);
+        if (!observed.has(el)) {
+          observed.add(el);
           ro.observe(el);
         }
     };
     watch();
-    const mo = new MutationObserver(watch);
+    const mo = new MutationObserver(() => {
+      if (!frame) frame = requestAnimationFrame(watch);
+    });
     mo.observe(document.body, { childList: true, subtree: true });
     return () => {
       clearTimeout(timer);
+      cancelAnimationFrame(frame);
+      observed.clear();
       ro.disconnect();
       mo.disconnect();
     };

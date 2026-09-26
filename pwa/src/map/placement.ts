@@ -289,3 +289,12 @@ export function stopsWithin(stops: Map<string, ClientStop>, w: number, s: number
       for (const stop of grid.get(cellKey(x, y)) ?? []) if (stop.lon >= w && stop.lon <= e && stop.lat >= s && stop.lat <= n) out.push(stop);
   return out;
 }
+
+/**
+ * The room a pin at `p` needs for a label placed at `box`: the label's own extent around the pin,
+ * at least `min` on each side. `bottom` fixes the room below the pin (a tag above it needs only
+ * its pointer's end, whatever the box says).
+ */
+export function roomAround(p: Pt, box: Rect, min: number, bottom?: number): Rect {
+  return { l: Math.min(box.l - p.x, -min), t: box.t - p.y, r: Math.max(box.r - p.x, min), b: bottom ?? Math.max(box.b - p.y, min) };
+}
