@@ -23,6 +23,18 @@
   font-weight: var(--fw-medium);
 }
 
+/* "↻ Just now": the age is the button's label, with the refresh icon before it. */
+.compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.stale .compact {
+  color: var(--c-alert-text);
+}
+
 /* "⚠ Offline — times from 12:04 PM · Try again": a tinted row the width of the sheet. */
 .offline {
   display: flex;

@@ -16,6 +16,8 @@ interface Entry {
 /** An OSRM answer replaces a shown estimate only when it differs by more than this. */
 const REFINE_THRESHOLD = 0.1;
 
+/** A long session with a moving fix adds a key per ~11 m cell: the oldest are dropped past this. */
+const MAX_ENTRIES = 500;
 const cache = new Map<string, Entry>();
 const signal = createSignal();
 const keyOf = (from: LatLon, stopId: string) => `${roundedKey(from)}|${stopId}`;
@@ -29,7 +31,10 @@ export function recordWalkDistance(from: LatLon, stopId: string, distanceM: numb
     (source === "osrm" && prev.source === "estimate" && Math.abs(distanceM - prev.distanceM) / prev.distanceM > REFINE_THRESHOLD);
   if (!replace) return prev;
   const entry = { distanceM, source };
+  // Most recently written last, so the oldest goes first when the cache is full.
+  cache.delete(key);
   cache.set(key, entry);
+  if (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value!);
   signal.notify();
   return entry;
 }

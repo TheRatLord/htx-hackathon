@@ -15,8 +15,8 @@ export function Fab(props: FabProps) {
       );
     case "planTrip":
       return (
-        // At Extra large on a narrow phone the label is visually hidden (still its name): the wide
-        // button covered 40% of the map strip there (46).
+        // At Extra large on a narrow phone the label goes under the icon in small type: the wide
+        // button covered 40% of the map strip there, and an icon alone lost the word (46).
         <button type="button" className={`${styles.fab} ${styles.extended} ${styles.planTrip}`} onClick={props.onPress}>
           <Icon name="route_plan" />
           <span className={styles.label}>{t("map.planTrip")}</span>

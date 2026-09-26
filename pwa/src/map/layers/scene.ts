@@ -11,7 +11,7 @@ import type { MapScene } from "../scene.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
 import { BOTTOM_TRANSIT_LAYER } from "./transit.ts";
 import { STALE_VEHICLE_S } from "../../lib/format.ts";
-import { anchorOffset, LABEL_PLACEMENTS, midpoint } from "../placement.ts";
+import { anchorOffset, LABEL_MAX_EM, LABEL_PLACEMENTS, LABEL_POINTER, pointAlong } from "../placement.ts";
 
 type Feature = GeoFeature<Geometry, Record<string, string | number>>;
 const collection = (features: Feature[]): FeatureCollection => ({ type: "FeatureCollection", features });
@@ -34,6 +34,7 @@ export const TALL_PINS = new Set(["place", "destination"]);
 export function addSceneLayers(map: maplibregl.Map) {
   hiddenLabels = [];
   labelSides = {};
+  labelPoints = {};
   lastPoints = [];
   for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const lines: maplibregl.LayerSpecification[] = [
@@ -84,9 +85,17 @@ export function addSceneLayers(map: maplibregl.Map) {
         ...Object.entries(LABEL_PLACEMENTS).flatMap(([key, p]) => [key, ["literal", anchorOffset(p)]]),
         ["literal", ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]]],
       ] as unknown as maplibregl.ExpressionSpecification,
-      "icon-image": "label-chip",
+      "text-max-width": LABEL_MAX_EM,
+      // A label beside its marker points at it, as a stop's ID chip does ("567" read as the
+      // rider's dot's label, 05); a leg's route chip sits on its line and has none.
+      "icon-image": ["match", ["get", "lk"], ...Object.entries(LABEL_POINTER).flatMap(([k, dir]) => [k, `label-chip-${dir}`]), "label-chip"] as unknown as maplibregl.ExpressionSpecification,
       "icon-text-fit": "both",
       "icon-text-fit-padding": [1, 5, 1, 5],
+      // placeLabels (MapView) already chose a side clear of the markers, lines and chrome, and left
+      // out any label with no room: MapLibre's own collision test dropped a label whose pointer
+      // reached its marker's box.
+      "text-allow-overlap": true,
+      "icon-allow-overlap": true,
     },
     paint: { "text-color": token("--c-text") },
   });
@@ -166,24 +175,28 @@ export function hideSceneLabels(map: maplibregl.Map, ids: string[]) {
 
 /** Marker id to the side its label goes (a LABEL_PLACEMENTS key), set by placeLabels. */
 let labelSides: Record<string, string> = {};
+/** A leg label's point along its leg, when placeLabels moved it off the midpoint. */
+let labelPoints: Record<string, [number, number]> = {};
 let lastPoints: Feature[] = [];
 
 const withSides = (features: Feature[]): Feature[] =>
   features.map((f) => {
-    const side = labelSides[String(f.properties.id ?? "")];
+    const id = String(f.properties.id ?? "");
+    const side = labelSides[id];
     if (!side || !f.properties.label) return f;
-    return { ...f, properties: { ...f.properties, lk: side } };
+    const at = labelPoints[id];
+    return { ...f, properties: { ...f.properties, lk: side }, ...(at && { geometry: { type: "Point" as const, coordinates: at } }) };
   });
 
 /**
  * Every scene label goes to the side placeLabels found clear (above first), rather than MapLibre's
  * own fallback, which put "Transfer · #4789" under the sheet's edge at 360 (24-360).
  */
-export function setLabelSides(map: maplibregl.Map, sides: Record<string, string>) {
-  const a = Object.entries(sides).sort().join();
-  const b = Object.entries(labelSides).sort().join();
-  if (a === b) return;
+export function setLabelSides(map: maplibregl.Map, sides: Record<string, string>, points: Record<string, [number, number]> = {}) {
+  const key = (o: Record<string, unknown>) => Object.entries(o).sort().join();
+  if (key(sides) === key(labelSides) && key(points) === key(labelPoints)) return;
   labelSides = sides;
+  labelPoints = points;
   src(map, "scene-points")?.setData(collection(withSides(lastPoints)));
 }
 
@@ -232,7 +245,7 @@ export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: Clien
   // A route label halfway along each labelled ride leg, so a transfer between two navy lines reads
   // as two buses ([80] then [73], 25).
   (scene.legs ?? []).forEach((l, i) => {
-    const mid = l.label ? midpoint(l.coords) : undefined;
+    const mid = l.label ? pointAlong(l.coords) : undefined;
     if (mid) points.push(point({ lon: mid[0], lat: mid[1] }, { id: legLabelId(i), kind: "leg", lk: "c", label: l.label! }));
   });
   if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, ...(highlightLabel && { label: highlightLabel }) }));

@@ -130,42 +130,62 @@ function dot(diameter: number, fill: string, ring: string, ringWidth: number): I
   });
 }
 
-/** A white box with a 1dp border, stretchable around its text (icon-text-fit). */
-function chip(border: string, withPointer: boolean): { data: ImageData; options: Partial<maplibregl.StyleImageMetadata> } {
-  const w = withPointer ? 40 : 24;
-  const box = 20;
-  const h = withPointer ? box + 6 : box;
+/** Which side of a chip its pointer is on: towards the pin it names. */
+export type Pointer = "down" | "up" | "left" | "right";
+/** How far a pointer reaches out of its chip (dp). */
+export const POINTER = 6;
+
+/**
+ * A white box with a 1dp border, stretchable around its text (icon-text-fit), with an optional
+ * pointer on one side. Only the flat parts stretch, never the corners or the pointer.
+ */
+function chip(border: string, pointer?: Pointer, radius = 4): { data: ImageData; options: Partial<maplibregl.StyleImageMetadata> } {
+  const vertical = pointer === "down" || pointer === "up";
+  const side = pointer === "left" || pointer === "right";
+  const bw = vertical ? 40 : 24;
+  const bh = side ? 22 : 20;
+  // Half the pointer's base: a side pointer is smaller, so the chip keeps its text's height.
+  const half = side ? 5 : 6;
+  const w = bw + (side ? POINTER : 0);
+  const h = bh + (vertical ? POINTER : 0);
+  // The box's own origin inside the image.
+  const ox = pointer === "left" ? POINTER : 0;
+  const oy = pointer === "up" ? POINTER : 0;
   const data = image(w, h, (ctx) => {
     ctx.beginPath();
-    ctx.roundRect(0.5, 0.5, w - 1, box - 1, withPointer ? 6 : 4);
+    ctx.roundRect(ox + 0.5, oy + 0.5, bw - 1, bh - 1, radius);
     ctx.fillStyle = "#fff";
     ctx.fill();
     ctx.lineWidth = 1;
     ctx.strokeStyle = border;
     ctx.stroke();
-    if (withPointer) {
-      ctx.beginPath();
-      ctx.moveTo(w / 2 - 6, box - 1);
-      ctx.lineTo(w / 2, h - 0.5);
-      ctx.lineTo(w / 2 + 6, box - 1);
-      ctx.fillStyle = "#fff";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(w / 2 - 6, box - 0.5);
-      ctx.lineTo(w / 2, h - 0.5);
-      ctx.lineTo(w / 2 + 6, box - 0.5);
-      ctx.stroke();
-    }
+    if (!pointer) return;
+    // The triangle: its base overlaps the box's border (covering it), its tip points at the pin.
+    const tri: [number, number][] =
+      pointer === "down"
+        ? [[bw / 2 - half, bh - 1], [bw / 2, h - 0.5], [bw / 2 + half, bh - 1]]
+        : pointer === "up"
+          ? [[bw / 2 - half, POINTER + 1], [bw / 2, 0.5], [bw / 2 + half, POINTER + 1]]
+          : pointer === "left"
+            ? [[POINTER + 1, bh / 2 - half], [0.5, bh / 2], [POINTER + 1, bh / 2 + half]]
+            : [[bw - 1, bh / 2 - half], [w - 0.5, bh / 2], [bw - 1, bh / 2 + half]];
+    ctx.beginPath();
+    tri.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.beginPath();
+    tri.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
   });
   const px = (n: number) => n * RATIO;
+  const [cx, cy] = [ox + bw / 2, oy + bh / 2];
   return {
     data,
     options: {
       pixelRatio: RATIO,
-      // Stretch only the flat middle, never the corners or the pointer.
-      stretchX: withPointer ? [[px(6), px(w / 2 - 7)], [px(w / 2 + 7), px(w - 6)]] : [[px(5), px(w - 5)]],
-      stretchY: [[px(5), px(box - 5)]],
-      content: [px(4), px(3), px(w - 4), px(box - 3)],
+      stretchX: vertical ? [[px(ox + 6), px(cx - half - 1)], [px(cx + half + 1), px(ox + bw - 6)]] : [[px(ox + 5), px(ox + bw - 5)]],
+      stretchY: side ? [[px(oy + 4), px(cy - half - 1)], [px(cy + half + 1), px(oy + bh - 4)]] : [[px(oy + 5), px(oy + bh - 5)]],
+      content: [px(ox + 4), px(oy + 3), px(ox + bw - 4), px(oy + bh - 3)],
     },
   };
 }
@@ -192,10 +212,16 @@ export function addMarkerImages(map: maplibregl.Map) {
   add("dot-user", dot(16, token("--c-user-dot"), "#fff", 2));
   add("dot-origin", dot(16, token("--c-origin-dot"), "#fff", 2));
   add("dot-stop", dot(14, "#fff", navy, 3));
-  const label = chip(token("--c-outline-strong"), false);
+  const label = chip(token("--c-outline-strong"));
   add("label-chip", label.data, label.options);
+  // A stop's ID chip points at its own pin, from whichever side it sits on ("567" over its pin, not
+  // floating between two, 02).
+  for (const dir of ["down", "up", "left", "right"] as const) {
+    const c = chip(token("--c-outline-strong"), dir);
+    add(`label-chip-${dir}`, c.data, c.options);
+  }
   // The star before a saved stop's ID chip ("★ 2958"): the map font has no ★ glyph.
   add("chip-star", image(14, 14, (ctx) => glyph(ctx, iconPath("star_filled"), -1, -1, 16, token("--c-accent-icon"))));
-  const callout = chip(token("--c-outline"), true);
+  const callout = chip(token("--c-outline"), "down", 6);
   add("callout", callout.data, callout.options);
 }

@@ -69,6 +69,12 @@ export async function getArrivals(
     [hasTripUpdates(), "gtfs-rt", () => applyTripUpdates(stopId, items)],
     [hasTransitApi(), "metro-arrivals-api", () => applyMetroArrivals(stopId, items, route?.id)],
   ];
+  // Both feeds are fetched at once (their caches share the in-flight load); the overlays still
+  // apply in order. In series, a slow feed's timeout added to the other's.
+  if (opts.realtime !== false) {
+    if (hasTripUpdates()) tripUpdates().catch(() => undefined);
+    if (hasTransitApi()) stopArrivals(stopId).catch(() => undefined);
+  }
   for (const [enabled, name, apply] of sources) {
     if (!enabled || opts.realtime === false) continue;
     try {

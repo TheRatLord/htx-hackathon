@@ -137,18 +137,19 @@
   text-align: start;
 }
 
-/* "Also here: [11] [85] ›": mini chips and the chevron on the text's line, centred on it. */
+/* "Also here: [11] [85]          ›": one full-width row, the chevron at its right edge like every
+   other row that opens something (02: a chevron a gap after the chip floated). */
 .alsoHere {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-1) var(--sp-2);
+  width: 100%;
   padding-top: 0;
 }
 
-/* The chevron right after the last chip, not floating a gap away from it (02). */
 .alsoHere svg {
   flex: none;
-  margin-inline-start: calc(-1 * var(--sp-2) - 2px);
+  margin-inline-start: auto;
 }
 
 .sep {

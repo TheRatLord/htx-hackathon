@@ -138,8 +138,8 @@ export function addTransitLayers(map: maplibregl.Map) {
     },
   });
   map.addLayer({ id: "stops-label", type: "symbol", source: STOPS_SOURCE, minzoom: LABEL_ALL_ZOOM, layout: chipLayout, paint: { "text-color": text } });
-  // The nearest few: each on the side MapView found clear of the sheet, chrome and other pins, and
-  // a saved stop's with a star before its number ("★ 2958", the stop the rider opened the app for).
+  // The listed (else nearest) few: each on the side MapView found clear of the sheet, chrome and
+  // other pins, pointing at its pin, and a saved stop's with a star before its number ("★ 2958", the stop the rider opened the app for).
   map.addLayer({
     id: "stops-label-near",
     type: "symbol",
@@ -158,7 +158,18 @@ export function addTransitLayers(map: maplibregl.Map) {
         "match",
         ["get", "side"],
         ...Object.entries(CHIP_PLACEMENTS).flatMap(([key, p]) => [key, ["literal", anchorOffset(p)]]),
-        ["literal", anchorOffset(CHIP_PLACEMENTS.below)],
+        ["literal", anchorOffset(CHIP_PLACEMENTS.above)],
+      ] as unknown as Expr,
+      // MapView placed each chip clear of the chrome, markers and the other chips: MapLibre's own
+      // collision test must not drop a listed stop's chip (3340 untagged at 412, 03).
+      "text-allow-overlap": true,
+      "icon-allow-overlap": true,
+      // The chip's pointer faces its pin.
+      "icon-image": [
+        "match",
+        ["get", "side"],
+        ...Object.entries(CHIP_PLACEMENTS).flatMap(([key, p]) => [key, `label-chip-${p.pointer}`]),
+        "label-chip-down",
       ] as unknown as Expr,
     },
     paint: { "text-color": text },

@@ -105,3 +105,21 @@ export async function fetchUpstream<T = unknown>(opts: {
 
 /** METRO's API Management key, sent as a header rather than a `subscription-key` query parameter. */
 export const metroKeyHeader = (key: string | undefined): Record<string, string> => (key ? { "Ocp-Apim-Subscription-Key": key } : {});
+
+/**
+ * A short failure backoff for a realtime feed: after a failed load, calls fail at once for `ms`
+ * instead of each waiting out the upstream timeout (during a METRO outage every /arrivals miss
+ * waited 10 s for TripUpdates, then 6 s for arrivals, and every stop sheet sat loading).
+ */
+export function failureBackoff(service: UpstreamService, ms: number) {
+  let failedAt = 0;
+  return <T>(load: () => Promise<T>): Promise<T> => {
+    if (Date.now() - failedAt < ms) return Promise.reject(new UpstreamError(service, `${service} skipped after a recent failure`));
+    return load().catch((err: unknown) => {
+      // Recorded fixtures (OFFLINE) never go stale: a missing one is not an outage.
+      if (!config.offline) failedAt = Date.now();
+      throw err;
+    });
+  };
+}
+

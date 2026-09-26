@@ -23,7 +23,10 @@ export function useUpdatedAgoShown(): boolean {
 /** Past this, the data is visibly old. */
 const STALE_S = 90;
 
-/** C.15: "Updated just now · Refresh", "Updated 2 min ago · Refresh". Not a live region. Offline, "Refresh" reads "Try again". */
+/**
+ * C.15: "Updated just now · Refresh", "Updated 2 min ago · Refresh"; `compact` (a sheet's title
+ * row), one "↻ Just now" button. Not a live region. Offline, "Refresh" reads "Try again".
+ */
 export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   const t = useT();
   const lang = useLang();
@@ -64,6 +67,19 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
         <strong className={styles.offlineText}>{text}</strong>
         <button type="button" className={styles.refresh} onClick={onRefresh}>
           {t("common.tryAgain")}
+        </button>
+      </span>
+    );
+  }
+  // In a sheet's title row, one button: "↻ Just now" (es "↻ Ahora"). "Ahora · Actualizar" took a
+  // row of its own at 360 (es-home-360), and "Just now · Refresh" beside the chevron was three
+  // controls on one row (02).
+  if (compact) {
+    return (
+      <span className={`${styles.updated} ${stale ? styles.stale : ""}`}>
+        <button type="button" className={`${styles.refresh} ${styles.compact}`} aria-label={`${t("common.refresh")}. ${text}`} onClick={onRefresh}>
+          <Icon name="refresh" size={20} />
+          {text}
         </button>
       </span>
     );

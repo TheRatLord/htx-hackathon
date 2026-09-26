@@ -50,6 +50,11 @@
   font-size: var(--fs-unit);
 }
 
+/* "12:07 PM" in a card: the day half at caption size beside body-size digits. */
+.body .unit {
+  font-size: var(--fs-caption);
+}
+
 .live,
 .simulated {
   color: var(--c-live-text);

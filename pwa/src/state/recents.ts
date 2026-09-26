@@ -22,12 +22,12 @@ export interface RecentRoute {
   at: number;
 }
 
-export interface RecentSearch {
+interface RecentSearch {
   q: string;
   at: number;
 }
 
-export interface RecentTrip {
+interface RecentTrip {
   query: PlanQuery;
   at: number;
 }

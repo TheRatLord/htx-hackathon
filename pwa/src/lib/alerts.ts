@@ -10,6 +10,14 @@ export function effectWord(effect: string, lang: Lang): string {
   return t(hasKey(key, lang) ? key : "alert.effect.other", undefined, lang);
 }
 
+/**
+ * Service changes (a detour, a moved or closed stop, no service, delays) are red. Advisories
+ * (less frequent service, an accessibility tip, extra service, a general notice) are navy with an
+ * (i): four red cards in a row taught riders to ignore red (28).
+ */
+const SERVICE_CHANGES = new Set(["DETOUR", "NO_SERVICE", "STOP_MOVED", "SIGNIFICANT_DELAYS", "MODIFIED_SERVICE"]);
+export const isAdvisory = (effect: string): boolean => !SERVICE_CHANGES.has(effect);
+
 /** The alert header in `lang`, or English flagged so the UI can say "Available in English only". */
 export function alertText(alert: Alert, field: "header" | "description", lang: Lang): { text: string; englishOnly: boolean } {
   const texts = alert[field];

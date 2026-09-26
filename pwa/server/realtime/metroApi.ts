@@ -2,7 +2,7 @@
 
 import { config } from "../config.ts";
 import { TtlCache } from "../lib/cache.ts";
-import { fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
+import { failureBackoff, fetchUpstream, metroKeyHeader } from "../lib/upstream.ts";
 
 const BASE = "https://api.ridemetro.org/data";
 /** METRO's agency/feed prefix on every OData id. */
@@ -38,15 +38,20 @@ const vehiclesCache = new TtlCache<ODataVehicle[]>(15_000, 1);
 /** Live-only: recorded arrivals would be stale, so OFFLINE mode uses the schedule instead. */
 export const hasTransitApi = () => Boolean(config.metroTransitApiKey) && !config.offline;
 
-async function get<T>(path: string, fixtureKey: string): Promise<T[]> {
-  const { body } = await fetchUpstream<{ value: T[] }>({
-    service: "metro-odata",
-    url: `${BASE}${path}`,
-    headers: metroKeyHeader(config.metroTransitApiKey),
-    fixtureKey,
-    timeoutMs: 6000,
+/** One outage stops every stop's call: after a failure, none is made for this long. */
+const guarded = failureBackoff("metro-odata", 45_000);
+
+function get<T>(path: string, fixtureKey: string): Promise<T[]> {
+  return guarded(async () => {
+    const { body } = await fetchUpstream<{ value: T[] }>({
+      service: "metro-odata",
+      url: `${BASE}${path}`,
+      headers: metroKeyHeader(config.metroTransitApiKey),
+      fixtureKey,
+      timeoutMs: 6000,
+    });
+    return body.value;
   });
-  return body.value;
 }
 
 export function stopArrivals(stopId: string): Promise<ODataArrival[]> {

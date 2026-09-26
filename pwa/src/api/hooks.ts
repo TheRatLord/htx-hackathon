@@ -41,13 +41,13 @@ const REANCHOR_M = 75;
 const PLACEHOLDER_SAME_PLACE_M = 300;
 
 /**
- * `p`, held still until it moves more than REANCHOR_M. With a high-accuracy watch, every ~11 m
+ * `p`, held still until it moves more than `radiusM`. With a high-accuracy watch, every ~11 m
  * step would otherwise be a new query key: a new /nearby request (three OSRM walks with
  * `precise`) and a reshuffled list.
  */
-function useStableAnchor(p: LatLon | undefined): LatLon | undefined {
+export function useStableAnchor(p: LatLon | undefined, radiusM = REANCHOR_M): LatLon | undefined {
   const [anchor, setAnchor] = useState(p);
-  const moved = p ? !anchor || haversineM(anchor.lat, anchor.lon, p.lat, p.lon) > REANCHOR_M : anchor !== undefined;
+  const moved = p ? !anchor || haversineM(anchor.lat, anchor.lon, p.lat, p.lon) > radiusM : anchor !== undefined;
   if (moved) setAnchor(p);
   return moved ? p : anchor;
 }
@@ -155,17 +155,29 @@ export function usePlan(query: PlanQuery | null) {
   });
 }
 
+/**
+ * A walk route is asked for again only once the rider has moved this far: at ~1 m keys, every GPS
+ * update while walking was a new /walk request and OSRM call (the /walk rate limit, and OSRM's
+ * public server allows 1 request a second).
+ */
+const WALK_REANCHOR_M = 40;
+
 /** To a stop id, or to a place (the last walk of a trip). */
 export function useWalk(from?: LatLon, to?: string | LatLon, opts: { enabled?: boolean } = {}) {
-  const at = from ? formatLatLon(from) : "";
+  const anchor = useStableAnchor(from, WALK_REANCHOR_M);
+  const at = anchor ? formatLatLon(anchor) : "";
   const toStop = typeof to === "string" ? to : undefined;
   const toPoint = typeof to === "object" ? formatLatLon(to) : undefined;
+  const dest = toStop ?? toPoint ?? "";
   return useQuery({
     // A "lat,lon" never clashes with a stop id.
-    queryKey: keys.walk(at, toStop ?? toPoint ?? ""),
+    queryKey: keys.walk(at, dest),
     queryFn: ({ signal }) => apiGet<WalkRoute>("/walk", { from: at, toStop, to: toPoint }, signal),
-    enabled: Boolean(from && to) && (opts.enabled ?? true),
+    enabled: Boolean(anchor && to) && (opts.enabled ?? true),
     staleTime: 60 * 60_000,
+    // The last route to the same stop stays on screen while the new one loads: without it the
+    // line and steps blinked out on every re-anchor.
+    placeholderData: (prev, prevQuery) => (prevQuery?.queryKey[2] === dest ? prev : undefined),
   });
 }
 

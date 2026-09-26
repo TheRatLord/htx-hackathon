@@ -38,45 +38,57 @@ function allowedOrigin(origin: string): boolean {
   }
 }
 
-/** A token bucket per client address: bursts of BURST requests, refilled at PER_MINUTE a minute. */
-const BURST = 30;
-const PER_MINUTE = 60;
+/**
+ * A token bucket per client address and endpoint: bursts of `burst` requests, refilled at
+ * `perMinute` a minute. The polled GETs (a screen of saved stops refreshes several at once, and a
+ * senior centre or carrier NAT shares one address) get the larger budget.
+ */
+const LIMITS = {
+  upstream: { burst: 30, perMinute: 60 },
+  polled: { burst: 90, perMinute: 240 },
+} as const;
 const buckets = new Map<string, { tokens: number; at: number }>();
 
 const LOOPBACK = /^(127\.|::1$|::ffff:127\.)/;
 
 /**
- * Behind a proxy, its X-Forwarded-For; otherwise the socket's address (@hono/node-server).
- * Undefined, not limited: a loopback caller with no proxy header (the Vite dev proxy, e2e runs) or
- * an in-process request (tests).
+ * Behind a trusted proxy (TRUST_PROXY), the address it appended last to X-Forwarded-For (earlier
+ * entries are whatever the client sent); otherwise the socket's address (@hono/node-server).
+ * Undefined, not limited: a loopback caller with no proxy (the Vite dev proxy, e2e runs) or an
+ * in-process request (tests).
  */
 function clientAddress(c: Context): string | undefined {
-  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
-  if (forwarded) return forwarded;
+  if (config.trustProxy) {
+    const forwarded = c.req.header("x-forwarded-for")?.split(",").at(-1)?.trim();
+    if (forwarded) return forwarded;
+  }
   const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket?.remoteAddress;
   return socket && !LOOPBACK.test(socket) ? socket : undefined;
 }
 
-const rateLimit: MiddlewareHandler = async (c, next) => {
-  const address = clientAddress(c);
-  if (!address) return next();
-  const key = `${c.req.path}|${address}`;
-  const now = Date.now();
-  const b = buckets.get(key) ?? { tokens: BURST, at: now };
-  b.tokens = Math.min(BURST, b.tokens + ((now - b.at) / 60_000) * PER_MINUTE);
-  b.at = now;
-  if (b.tokens < 1) {
+function rateLimit(name: string, { burst, perMinute }: { burst: number; perMinute: number }): MiddlewareHandler {
+  return async (c, next) => {
+    const address = clientAddress(c);
+    if (!address) return next();
+    // One bucket per endpoint, not per URL: /stops/342 and /stops/343 share it.
+    const key = `${name}|${address}`;
+    const now = Date.now();
+    const b = buckets.get(key) ?? { tokens: burst, at: now };
+    b.tokens = Math.min(burst, b.tokens + ((now - b.at) / 60_000) * perMinute);
+    b.at = now;
+    if (b.tokens < 1) {
+      buckets.set(key, b);
+      c.header("Retry-After", "5");
+      c.header("Cache-Control", "no-store");
+      return c.json({ error: { code: "RATE_LIMITED", message: "Too many requests. Please wait a few seconds and try again." } }, 429);
+    }
+    b.tokens -= 1;
     buckets.set(key, b);
-    c.header("Retry-After", "5");
-    c.header("Cache-Control", "no-store");
-    return c.json({ error: { code: "RATE_LIMITED", message: "Too many requests. Please wait a few seconds and try again." } }, 429);
-  }
-  b.tokens -= 1;
-  buckets.set(key, b);
-  // Forget idle clients now and then, so the map stays small.
-  if (buckets.size > 5000) for (const [k, v] of buckets) if (now - v.at > 120_000) buckets.delete(k);
-  await next();
-};
+    // Forget idle clients now and then, so the map stays small.
+    if (buckets.size > 5000) for (const [k, v] of buckets) if (now - v.at > 120_000) buckets.delete(k);
+    await next();
+  };
+}
 
 /** /nearby's radius, in metres: at least a block, at most what the list can show. */
 function clampRadius(r: number | undefined): number | undefined {
@@ -88,8 +100,10 @@ export function createApp() {
   // Only the app's own pages may read the API from a browser: it proxies METRO's keyed feeds and
   // rate-limited community services (Transitous, Photon, OSRM), and must not be an open proxy.
   app.use("*", cors({ origin: (origin) => (allowedOrigin(origin) ? origin : null) }));
-  // Per client: the endpoints that call an upstream on every cache miss.
-  for (const path of ["/plan", "/search", "/walk", "/arrivals"]) app.use(path, rateLimit);
+  // Per client: the endpoints that call an upstream on a cache miss (/nearby with precise=1 makes up
+  // to three OSRM walks plus arrivals).
+  for (const path of ["/plan", "/search", "/walk"]) app.use(path, rateLimit(path, LIMITS.upstream));
+  for (const path of ["/arrivals", "/nearby", "/stops/*"]) app.use(path, rateLimit(path, LIMITS.polled));
 
   app.onError((err, c) => {
     c.header("Cache-Control", "no-store");

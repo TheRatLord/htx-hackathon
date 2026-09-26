@@ -21,18 +21,37 @@ export function loadStops(): Promise<Map<string, ClientStop>> {
   return promise;
 }
 
+/** How long useStops waits before trying a failed stops.json load again. */
+const RETRY_MS = 15_000;
+
 /** Stop id → stop, once loaded (and only fetched while `enabled`). */
 export function useStops(enabled = true): Map<string, ClientStop> | undefined {
   const [stops, setStops] = useState<Map<string, ClientStop>>();
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    loadStops().then(
-      (m) => active && setStops(m),
-      () => undefined,
-    );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // A failed load is tried again when the phone comes back online, or after a pause: once the
+    // screen had no side lines or walk seeds until it was left and reopened.
+    const load = () => {
+      clearTimeout(timer);
+      loadStops().then(
+        (m) => {
+          if (!active) return;
+          setStops(m);
+          window.removeEventListener("online", load);
+        },
+        () => {
+          if (active) timer = setTimeout(load, RETRY_MS);
+        },
+      );
+    };
+    window.addEventListener("online", load);
+    load();
     return () => {
       active = false;
+      clearTimeout(timer);
+      window.removeEventListener("online", load);
     };
   }, [enabled]);
   return stops;

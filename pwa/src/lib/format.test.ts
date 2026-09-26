@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client.ts";
 import type { Dep } from "../api/types.ts";
-import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, stopTitle, upcoming } from "./format.ts";
+import { clockRow, departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, stopTitle, upcoming } from "./format.ts";
 import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
@@ -191,7 +191,30 @@ describe("errorText", () => {
 });
 
 describe("stopTitle", () => {
-  it("keeps the stop number on the last word's line", () => {
-    expect(stopTitle("Westheimer Rd @ Montrose Blvd", "2958", "en")).toBe("Westheimer Rd @ Montrose Blvd (2958)");
+  it("keeps a short cross street and the stop number on one line", () => {
+    expect(stopTitle("Westheimer Rd @ Montrose Blvd", "2958", "en")).toBe("Westheimer Rd @ Montrose\u00a0Blvd\u00a0(2958)");
+    expect(stopTitle("Fannin St @ McKinney St", "246", "en")).toBe("Fannin St @ McKinney\u00a0St\u00a0(246)");
+  });
+  it("lets a long cross street wrap, keeping the number with its last word", () => {
+    expect(stopTitle("Main St @ Martin Luther King Jr Blvd", "1", "en")).toBe("Main St @ Martin Luther King Jr Blvd\u00a0(1)");
+    expect(stopTitle("Northwest Transit Center", "2", "en")).toBe("Northwest Transit Center\u00a0(2)");
+  });
+});
+
+describe("clockRow", () => {
+  const now = Date.parse("2026-09-25T12:00:00-05:00");
+  const dep = (min: number) => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule" as const, tripId: `t${min}` });
+  it("keeps a row in minutes, leaving off a later bus an hour or more away", () => {
+    const [a, b] = [dep(2), dep(62)];
+    expect(clockRow([a, b], now, false)).toEqual({ deps: [a], clock: false });
+    expect(clockRow([dep(6), dep(23)], now, false).deps).toHaveLength(2);
+  });
+  it("shows the whole row as clock times when the first bus is half an hour or more away", () => {
+    const row = [dep(59), dep(120)];
+    expect(clockRow(row, now, false)).toEqual({ deps: row, clock: true });
+  });
+  it("leaves an offline row alone (every time is a clock time there)", () => {
+    const row = [dep(2), dep(62)];
+    expect(clockRow(row, now, true)).toEqual({ deps: row, clock: false });
   });
 });

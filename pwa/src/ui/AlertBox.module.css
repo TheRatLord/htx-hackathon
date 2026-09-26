@@ -13,6 +13,11 @@
   text-align: start;
 }
 
+/* Advisories (less frequent service, accessibility): navy, so red keeps meaning "your trip changes". */
+.advisory {
+  border-left-color: var(--c-brand-navy);
+}
+
 .box > svg {
   flex: none;
   color: var(--c-text-variant);

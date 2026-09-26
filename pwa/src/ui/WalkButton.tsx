@@ -9,7 +9,8 @@ import type { WalkButtonProps } from "./types.ts";
 
 /**
  * C.5a: the compact "🚶 1 min / walk" button at the top right of every stop card (one layout on
- * every card and width: it never takes a row of its own). Opens Walk (D8). From a place (D4) the
+ * every card, width and text size: it never takes a row of its own, and it always says "walk": a
+ * bare "1 min" above the bus times read as a bus time, 46). Opens Walk (D8). From a place (D4) the
  * pill still reads "4 min / walk" (a three-line "walk from the museum" pill squeezed the stop name,
  * round 4): the sheet's "Stops near <place>" overline says where from, and the accessible name
  * says it in full.

@@ -107,6 +107,21 @@ export function formatDeparture(departureTime: string, now: number, opts: { offl
   return s.kind === "now" ? t("time.now", undefined, opts.lang) : t("time.min", { n: s.m }, opts.lang);
 }
 
+/** Past this, a row's first bus is shown as a clock time, and so is every time after it. */
+const CLOCK_ROW_MIN = 30;
+
+/**
+ * One format per row (06: "59 min · 2:00 PM" read as two kinds of number). The first bus under
+ * half an hour away: minutes, and a later bus an hour or more away is left off the row ("6 min"
+ * rather than "6 min · 1:10 PM"). Otherwise every time is a clock time ("12:59 PM · 2:00 PM").
+ */
+export function clockRow<T extends Dep>(shown: T[], now: number, offline: boolean): { deps: T[]; clock: boolean } {
+  const first = shown.find((d) => !d.canceled);
+  if (offline || !first) return { deps: shown, clock: false };
+  if (Date.parse(first.departureTime) - now >= CLOCK_ROW_MIN * 60_000) return { deps: shown, clock: true };
+  return { deps: shown.filter((d) => d === first || !showsClock(d, now)), clock: false };
+}
+
 export interface DepartureView {
   /** Offline, every time is shown as scheduled. */
   status: Status;
@@ -192,8 +207,15 @@ export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang:
  * A stop card's title, "Westheimer Rd @ Montrose Blvd (2958)", with the stop number kept on the
  * last word's line: "(2958)" alone on a line read as a different stop.
  */
+/** A cross street this short wraps as one piece: "Fannin St @ / McKinney St (246)", never "McKinney / St (246)". */
+const KEEP_CROSS_STREET = 20;
+
 export function stopTitle(name: string, id: string, lang: Lang): string {
-  return t("stopLine.title", { name, id }, lang).replace(/ \(([^()]+)\)$/, "\u00a0($1)");
+  const title = t("stopLine.title", { name, id }, lang).replace(/ \(([^()]+)\)$/, "\u00a0($1)");
+  const at = title.lastIndexOf(" @ ");
+  if (at < 0) return title;
+  const tail = title.slice(at + 3);
+  return tail.length <= KEEP_CROSS_STREET ? `${title.slice(0, at + 3)}${tail.replace(/ /g, "\u00a0")}` : title;
 }
 
 /** "Eastbound" (es "Rumbo este") for a direction label; unknown labels stay as METRO wrote them. */
