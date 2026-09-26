@@ -9,7 +9,7 @@ import { walkUrl } from "../walk/walkUrl.ts";
 const toTcDeparture = (a: Arrival): TcDeparture => ({ ...a, route: refOfArrival(a) });
 
 /** The platform nearest to `origin`: where Walk should lead. */
-export function nearestPlatform(detail: TransitCenterDetail, origin: LatLon): string {
+function nearestPlatform(detail: TransitCenterDetail, origin: LatLon): string {
   const byDistance = [...detail.bays].sort((a, b) => haversineM(origin.lat, origin.lon, a.lat, a.lon) - haversineM(origin.lat, origin.lon, b.lat, b.lon));
   return byDistance[0]?.stopId ?? detail.stopIds[0];
 }

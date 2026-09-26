@@ -193,8 +193,10 @@ function Loaded({ detail }: { detail: StopDetail }) {
       />
       {!expanded && stopActions}
       {others.length > 0 && <hr className={styles.divider} />}
+      {/* Named, so the change from the blue strip to plain times reads as a second section, not a second style (13). */}
+      {others.length > 0 && expanded && <h2 className={styles.othersHead}>{t("stop.otherRoutes")}</h2>}
       {others.length > 0 && (
-        <ul className={styles.others} aria-label={t("stop.routes")}>
+        <ul className={styles.others} aria-label={expanded ? t("stop.otherRoutes") : t("stop.routes")}>
           {others.map((s) => (
             <li key={servingKey(s)}>
               <CollapsedRoute entry={s} deps={departuresOf(s, arrivals)} onExpand={() => expand(s.routeId)} />

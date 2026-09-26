@@ -5,7 +5,9 @@ import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/t
 import { useLang, useT } from "../../../i18n/index.ts";
 import { upcoming } from "../../../lib/format.ts";
 import { errorText } from "../../../lib/i18nServer.ts";
+import { walkMinutes } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
+import { usePrefs } from "../../../state/prefs.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
@@ -17,6 +19,8 @@ import { NearbyTcCard } from "./NearbyTcCard.tsx";
 const MAX_CARDS = 8;
 const FAR_RADIUS_M = 2000;
 const FAR_CARDS = 3;
+/** A transit center further than this walk is not "nearby" for most riders: it goes last, under "Farther away". */
+const NEAR_TC_MIN = 10;
 
 interface CardsProps {
   data: NearbyResponse;
@@ -30,14 +34,28 @@ interface CardsProps {
 }
 
 function Cards({ data, origin, place, tcDetail, max, firstRow, afterFirst }: CardsProps) {
+  const t = useT();
+  const { walkPace } = usePrefs();
   const tc = data.transitCenters[0];
-  return data.stops.slice(0, max).map((item, i) => (
-    <Fragment key={item.stop.id}>
-      <NearbyCard item={item} origin={origin} place={place} firstRowRef={i === 0 ? firstRow : undefined} />
-      {i === 0 && afterFirst}
-      {i === 0 && tc && <NearbyTcCard tc={tc} detail={tcDetail?.id === tc.id ? tcDetail : undefined} origin={origin} place={place} />}
-    </Fragment>
-  ));
+  const tcCard = tc && <NearbyTcCard tc={tc} detail={tcDetail?.id === tc.id ? tcDetail : undefined} origin={origin} place={place} />;
+  const tcFar = tc && walkMinutes(tc.walkDistanceM, walkPace) > NEAR_TC_MIN;
+  return (
+    <>
+      {data.stops.slice(0, max).map((item, i) => (
+        <Fragment key={item.stop.id}>
+          <NearbyCard item={item} origin={origin} place={place} firstRowRef={i === 0 ? firstRow : undefined} />
+          {i === 0 && afterFirst}
+          {i === 0 && !tcFar && tcCard}
+        </Fragment>
+      ))}
+      {tcFar && (
+        <>
+          <h2 className={styles.subhead}>{t("home.fartherAway")}</h2>
+          {tcCard}
+        </>
+      )}
+    </>
+  );
 }
 
 /** No stop within 500 m: the nearest 3 within 2 km, labelled with their walk times. */

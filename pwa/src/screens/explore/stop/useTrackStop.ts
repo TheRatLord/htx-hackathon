@@ -5,12 +5,11 @@ import { useEffect, useRef } from "react";
 import type { Dep } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
 import { upcoming } from "../../../lib/format.ts";
-import { notify, notifyPermission, vibrate } from "../../../lib/notify.ts";
+import { BUZZ, notify, notifyPermission, vibrate } from "../../../lib/notify.ts";
 import { useNow } from "../../../state/clock.ts";
 import { useToast } from "../../../ui/Toast.tsx";
 
 const ALERT_MS = 5 * 60_000;
-const BUZZ = [200, 100, 200];
 
 interface Tracked {
   on: boolean;
