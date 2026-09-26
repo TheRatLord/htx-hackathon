@@ -23,7 +23,7 @@ import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import type { SheetBannerProps } from "../../../ui/types.ts";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
-import { foldCap, TALL_VH } from "./fold.ts";
+import { foldCap } from "./fold.ts";
 import { placeQuery, useHomeAnchor, type HomeAnchor, type Place } from "./anchor.ts";
 import { homeChips } from "./chips.ts";
 import styles from "./Home.module.css";
@@ -39,12 +39,13 @@ const SEARCH_AREA_M = 300;
 const HOME_ZOOM = 16;
 
 /**
- * D3's FABs. Three don't fit between the search bar and the half sheet of a short screen, so there
- * Locate gives way to the route's alerts (the map is already fitted to the rider and the stops).
+ * D3's FABs. A third FAB would push the column under the search bar or the second card below the
+ * fold, so when the route has alerts Locate gives way to them (the map is already fitted to the
+ * rider and the route's stops).
  */
 function routeFabs(routeId: string, alerting: boolean): FabRequest[] {
   const alertsFab = { kind: "routeAlerts", routeId } as const;
-  return alerting && window.innerHeight < TALL_VH ? ["planTrip", alertsFab] : ["locate", "planTrip", alertsFab];
+  return alerting ? ["planTrip", alertsFab] : ["locate", "planTrip", alertsFab];
 }
 
 /** The transit center detail is fetched only when one is within 1,000 m. */

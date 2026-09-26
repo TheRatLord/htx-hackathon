@@ -17,7 +17,7 @@ import { refOfRoute } from "../stop/refs.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 import type { Place } from "./anchor.ts";
 import { DirectionCard, StreetCard } from "./DirectionCard.tsx";
-import { foldCap } from "./fold.ts";
+import { routeCap } from "./fold.ts";
 import styles from "./Home.module.css";
 import { LoadingCards } from "./NearbyList.tsx";
 import { baysFor, boundsOf, nearestPerDirection, type RouteStop } from "./routeNear.ts";
@@ -77,7 +77,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
       ? { focus: { kind: "point", point: origin } }
       : {};
   useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join()]);
-  useHalfUpTo(() => secondCard.current, foldCap, `${data?.id}|${bays.length}|${shownStreets.length}|${tooFar}|${lateNight}`);
+  useHalfUpTo(() => secondCard.current, routeCap, `${data?.id}|${bays.length}|${shownStreets.length}|${tooFar}|${lateNight}`);
 
   if (route.isError) return <ErrorState error={route.error} context={{ id: routeId }} onRetry={() => void route.refetch()} />;
   if (!data) return <LoadingCards />;
