@@ -83,7 +83,9 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
     persistOptions={persistOptions}` (from `@tanstack/react-query-persist-client` and
     `../sw/persister.ts`), and add `gcTime: PERSIST_MAX_AGE` to the query defaults (otherwise
     restored entries are garbage-collected after 5 min).
-- Status: open
+  - Until this lands, D22 (offline cache) is not met, and the manifest exists twice: the inline
+    one in `vite.config.ts` lacks `includeAssets`, `orientation` and `description`.
+- Status: open (blocks D22)
 
 ## Favicon and home-screen icon links
 - From: F0b
@@ -121,4 +123,24 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   (29.7220,-95.3897) say 688 is 345 m (5 min) and 2504 is 331 m (4 min), so with recorded walks
   2504 sorts first. The recordings are not committed, so the demo matches the spec; the spec
   owner should decide whether F11 names 688 at 4 min (estimate) or 2504 (street route).
+- Status: open
+
+## Map attribution sits top-left, not bottom-left (C.16)
+- From: F0b (review defect 6)
+- Where: `docs/design/spec.md` C.16 ("Attribution is compact bottom-left")
+- Need: bottom-left, the (i) button covered stop pins and ID chips in the map strip (at 360x640
+  it sat on chip 342, the F4 target). It now sits top-left, 8dp under the search bar, inside
+  the camera's top padding, where focused pins are never drawn. While an offline or trip banner
+  fills the overlay slot it covers the (i); the credit returns when the banner goes. Please
+  update C.16 to match.
+- Status: open
+
+## A shorter "walk from" sub-label for D4
+- From: F0b (review defect 20)
+- Where: `pwa/src/i18n/strings/common.ts` (`card.walkFrom`), D4's `walkFrom.label`
+- Need: "walk from the museum" is two lines in the WalkButton at any width; F0b caps its width
+  so the stop name beside it keeps two lines at 360dp. A one-line sub-label needs shorter copy,
+  e.g. `walkFrom.label` = "from museum" and `card.walkFrom` = "{from}" (the a11y label already
+  says "Walk from Houston Museum of Natural Science …"). Spec D4 names the current wording, so
+  this is a copy decision for the spec owner.
 - Status: open
