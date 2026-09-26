@@ -1,16 +1,15 @@
 // An itinerary drawn on the shared map (spec D11–D13): dotted walks, rides in their route colour
 // (the map adds the white casing), a blue origin, a red destination and labelled stop pins.
 
-import { useEffect, useState } from "react";
 import type { Itinerary, LatLon, TransitLeg } from "../../api/types.ts";
 import { t, type Lang } from "../../i18n/index.ts";
 import { legCoords } from "../../lib/polyline.ts";
-import { useMapPadding, type MapScene } from "../../map/scene.ts";
+import type { MapScene } from "../../map/scene.ts";
 
 type Markers = NonNullable<MapScene["markers"]>;
 
 export function itineraryLegs(it: Itinerary): NonNullable<MapScene["legs"]> {
-  return it.legs.map((l) => ({ coords: legCoords(l.geometry), kind: l.type === "walk" ? "walk" : "ride", color: l.type === "walk" ? "" : l.route.color }));
+  return it.legs.map((l) => ({ coords: legCoords(l.geometry), ...(l.type === "walk" ? { kind: "walk" } : { kind: "ride", color: l.route.color }) }));
 }
 
 /** `hide`: board stops left out, e.g. one the scene enlarges with its own callout. */
@@ -49,17 +48,4 @@ export function itineraryScene(it: Itinerary, lang: Lang): MapScene {
   const legs = itineraryLegs(it);
   const bounds = boundsOf(legs.flatMap((l) => l.coords.map(([lon, lat]) => ({ lat, lon }))));
   return { legs, markers: itineraryMarkers(it, lang), ...(bounds && { focus: { kind: "bounds", bounds } }) };
-}
-
-/** Sheet height after it stops moving, SETTLE_MS later: a scene that depends on it is re-fitted above the sheet. */
-const SETTLE_MS = 300;
-
-export function useSettledSheetHeight(): number {
-  const { bottom } = useMapPadding();
-  const [settled, setSettled] = useState(bottom);
-  useEffect(() => {
-    const id = setTimeout(() => setSettled(bottom), SETTLE_MS);
-    return () => clearTimeout(id);
-  }, [bottom]);
-  return settled;
 }

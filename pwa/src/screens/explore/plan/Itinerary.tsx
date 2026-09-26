@@ -4,19 +4,19 @@
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useAlerts } from "../../../api/hooks.ts";
-import type { Itinerary as Trip, LatLon } from "../../../api/types.ts";
+import type { Alert, Itinerary as Trip, LatLon } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome, useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { fromLabel } from "../../../features/trip/origin.ts";
-import { itineraryScene, useSettledSheetHeight } from "../../../features/trip/scene.ts";
+import { itineraryScene } from "../../../features/trip/scene.ts";
 import { itineraryTimeline, type TimelineRow } from "../../../features/trip/timeline.ts";
-import { useLang, useT } from "../../../i18n/index.ts";
+import { useLang, useT, type Lang } from "../../../i18n/index.ts";
+import { alertsForItinerary, alertText, effectWord } from "../../../lib/alerts.ts";
 import { formatClock } from "../../../lib/format.ts";
 import { parsePlanQuery, planUrl } from "../../../lib/planQuery.ts";
 import { useMapScene } from "../../../map/scene.ts";
 import { usePrefs } from "../../../state/prefs.ts";
-import { AlertBox } from "../../../ui/AlertBox.tsx";
 import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
@@ -26,6 +26,7 @@ import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { StepList } from "../../../ui/StepList.tsx";
+import type { TimelineStep } from "../../../ui/types.ts";
 import { FareLine } from "./ItineraryCard.tsx";
 import styles from "./plan.module.css";
 import { usePlanResponse } from "./usePlanResponse.ts";
@@ -34,6 +35,27 @@ import { useStartTrip } from "./useStartTrip.ts";
 /** Close enough to see the streets around the destination. */
 const PLACE_ZOOM = 16;
 
+/**
+ * C.13: the trip's alerts as timeline rows, each under the boarding row of the first ride it
+ * touches (its route, or its board or get-off stop).
+ */
+function withAlertRows(it: Trip, rows: TimelineRow[], alerts: Alert[], demo: boolean, lang: Lang): { step: TimelineStep; href?: string }[] {
+  const placed = new Set<string>();
+  return rows.flatMap((row) => {
+    const leg = it.legs[row.legIndex];
+    if (row.role !== "board" || leg?.type !== "transit") return [row];
+    const own = alertsForItinerary(alerts, { ...it, legs: [leg] }).filter((a) => !placed.has(a.id));
+    own.forEach((a) => placed.add(a.id));
+    return [
+      row,
+      ...own.map((a) => ({
+        step: { kind: "ride" as const, title: `${effectWord(a.effect, lang)}: ${alertText(a, "header", lang).text}`, lines: [], alert: a, demo, legColor: leg.route.color },
+        href: `/more/alerts/${encodeURIComponent(a.id)}`,
+      })),
+    ];
+  });
+}
+
 function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; onShowPlace: (p: LatLon) => void }) {
   const t = useT();
   const lang = useLang();
@@ -41,26 +63,21 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
   const { setSnap } = useSheet();
   const alerts = useAlerts();
   const tripAlerts = alerts.source === "unavailable" ? [] : alerts.forItinerary(it);
+  const items = withAlertRows(it, rows, tripAlerts, alerts.source === "demo", lang);
   const last = it.legs.at(-1);
   return (
     <>
       <StepList
-        steps={rows.map((r) => r.step)}
+        steps={items.map((r) => r.step)}
         onStepPress={(_, i) => {
-          const href = rows[i].href;
+          const href = items[i].href;
           if (href) return navigate(href);
           // The final walk and the arrival have no screen of their own: show the place on the map.
           if (last) onShowPlace(last.type === "walk" ? last.to : last.alight);
           setSnap("peek");
         }}
       />
-      {tripAlerts.length ? (
-        tripAlerts.map((a) => (
-          <AlertBox key={a.id} alert={a} lang={lang} compact demo={alerts.source === "demo"} onOpen={() => navigate(`/more/alerts/${encodeURIComponent(a.id)}`)} />
-        ))
-      ) : (
-        <AlertStatusLine scope="trip" name={t("plan.thisTrip")} alerts={[]} />
-      )}
+      {!tripAlerts.length && <AlertStatusLine scope="trip" name={t("plan.thisTrip")} alerts={[]} />}
     </>
   );
 }
@@ -81,9 +98,8 @@ export default function Itinerary() {
 
   const plan = usePlanResponse(query, { reuse: true });
   const it = plan.response?.itineraries[Number(index)];
-  const sheetH = useSettledSheetHeight();
   const scene = it ? itineraryScene(it, lang) : {};
-  useMapScene(place ? { ...scene, focus: { kind: "point", point: place, zoom: PLACE_ZOOM } } : scene, [it, lang, sheetH, place]);
+  useMapScene(place ? { ...scene, focus: { kind: "point", point: place, zoom: PLACE_ZOOM } } : scene, [it, lang, place]);
 
   const startTrip = useStartTrip(plan.response);
   const start = () => it && startTrip(it);

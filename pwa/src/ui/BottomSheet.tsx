@@ -96,10 +96,19 @@ export function BottomSheet({
           <span />
         )}
         <span className={styles.handle} aria-hidden="true" />
-        <button type="button" className={styles.textButton} aria-expanded={expanded} onClick={() => onSnapChange(expanded ? "half" : "full")}>
-          {expanded ? t("common.showMap") : t("common.showList")}
-          <Icon name={expanded ? "expand_more" : "expand_less"} />
-        </button>
+        <span className={styles.snapButtons}>
+          {/* A sheet with its own peek summary (D11) can reach it without dragging too. */}
+          {snap === "half" && peek && allowPeek && (
+            <button type="button" className={styles.textButton} onClick={() => onSnapChange("peek")}>
+              {t("common.showMap")}
+              <Icon name="expand_more" />
+            </button>
+          )}
+          <button type="button" className={styles.textButton} aria-expanded={expanded} onClick={() => onSnapChange(expanded ? "half" : "full")}>
+            {expanded ? t("common.showMap") : t("common.showList")}
+            <Icon name={expanded ? "expand_more" : "expand_less"} />
+          </button>
+        </span>
       </div>
       {showPeek ? peek : header}
       <div className={styles.body} hidden={Boolean(showPeek)}>

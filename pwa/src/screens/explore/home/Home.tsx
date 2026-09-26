@@ -3,9 +3,9 @@
 
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useAlerts, useNearby, useTransitCenter } from "../../../api/hooks.ts";
+import { useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
-import { ExploreSheet, useExploreChrome, type FabRequest } from "../../../app/layouts/ExploreChrome.tsx";
+import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
@@ -37,17 +37,6 @@ import { useHalfUpTo } from "./useHalfUpTo.ts";
 const SEARCH_AREA_M = 300;
 const HOME_ZOOM = 16;
 
-/**
- * D3's FABs. A third FAB would push the column under the search bar or the second card below the
- * fold, so when the route has alerts Locate gives way to them (the map is already fitted to the
- * rider and the route's stops).
- */
-function routeFabs(routeId: string, alerting: boolean): FabRequest[] {
-  const alertsFab = { kind: "routeAlerts", routeId } as const;
-  return alerting ? ["planTrip", alertsFab] : ["locate", "planTrip", alertsFab];
-}
-
-/** The transit center detail is fetched only when one is within 1,000 m. */
 /** C.12 sheet banner row: trip planned > location off > demo data. */
 function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBannerProps | undefined {
   const t = useT();
@@ -79,7 +68,7 @@ function HomeScene({ anchor }: { anchor: HomeAnchor }) {
       : at
         ? {
             focus: { kind: "point", point: at, zoom: HOME_ZOOM },
-            markers: [{ id: "place", point: at, kind: "board", label: anchor.kind === "place" ? anchor.label : undefined }],
+            markers: [{ id: "place", point: at, kind: "place", label: anchor.kind === "place" ? anchor.label : undefined }],
           }
         : { focus: { kind: "point", point: DOWNTOWN, zoom: HOME_ZOOM - 1 } },
     [anchor.kind, at?.lat, at?.lon],
@@ -99,16 +88,16 @@ interface NearbyBodyProps {
 /** D2 / D4 below the chips: the saved row (D2), the stop cards and the footer. */
 function NearbyBody({ anchor, origin, place, nearby, data, tc }: NearbyBodyProps) {
   const t = useT();
-  const firstCard = useRef<HTMLDivElement>(null);
+  const firstRow = useRef<HTMLLIElement>(null);
   const ids = data?.stops.map((s) => s.stop.id).join() ?? "";
-  // M2/M3: grow to card #1's first route row (the shared card has no ref for it: requests.md).
-  useHalfUpTo(() => firstCard.current?.querySelector("li") ?? firstCard.current, foldCap, `${anchor.kind}|${ids}`);
+  // M2/M3: grow to card #1's first route row.
+  useHalfUpTo(() => firstRow.current, foldCap, `${anchor.kind}|${ids}`);
   return (
     <>
       <HomeScene anchor={anchor} />
       {!place && <SavedRow />}
       {origin ? (
-        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstCard={firstCard} />
+        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} />
       ) : (
         anchor.kind === "finding" && <LoadingCards />
       )}
@@ -130,7 +119,6 @@ export default function Home() {
   const anchor = useHomeAnchor();
   const { walkPace } = usePrefs();
   const center = useMapCenter();
-  const alerts = useAlerts();
   useRoutesLoaded();
 
   const routeParam = params.get("route");
@@ -144,8 +132,8 @@ export default function Home() {
   const tc = useTransitCenter(tcId ?? "", { enabled: Boolean(tcId) }).data;
 
   const panned = Boolean(!routeId && origin && center && haversineM(origin.lat, origin.lon, center.lat, center.lon) > SEARCH_AREA_M);
-  const alerting = routeId !== undefined && alerts.source !== "unavailable" && alerts.forRoute(routeId).length > 0;
-  useExploreChrome(routeId ? { fabs: routeFabs(routeId, alerting) } : { banner: panned ? "search-this-area" : null });
+  // D3 adds the route's alerts FAB (shown only when it has alerts); the layout drops Locate first when three don't fit.
+  useExploreChrome(routeId ? { fabs: ["locate", "planTrip", { kind: "routeAlerts", routeId }] } : { banner: panned ? "search-this-area" : null });
 
   let title: string;
   if (routeId) title = t("home.route.title", { name: routeRef(routeId)?.name ?? routeParam! });

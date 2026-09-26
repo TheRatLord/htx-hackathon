@@ -21,7 +21,7 @@
   text-align: center;
 }
 
-.center .title {
+.stopTitle {
   font-size: var(--fs-stop-title);
   line-height: var(--lh-stop-title);
   font-weight: var(--fw-bold);

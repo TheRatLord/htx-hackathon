@@ -158,11 +158,11 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
         platforms={platforms.map((p) => ({
           stopId: p.stopId,
           label: t("tc.platformLabel", { platform: platformName(p.stopId), id: p.stopId }),
+          spokenName: platformName(p.stopId),
           bays: p.bays.map((b) => b.bay),
           routesByBay: Object.fromEntries(p.bays.map((b) => [b.bay, [...new Set(b.routes.map((r) => r.route))]])),
         }))}
-        // TODO(requests.md): highlight every bay of the route (BayDiagram takes one).
-        highlight={routeBays[0]?.bay}
+        highlight={routeBays.map((b) => ({ stopId: b.stopId, bay: b.bay }))}
         onBayPress={onBayPress}
       />
       {tc.source === "hand-authored-demo" && <p className={styles.note}>{tc.sourceNote ?? t("bay.handAuthored")}</p>}

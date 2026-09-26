@@ -16,8 +16,8 @@ export function BayDiagram({ platforms, highlight, onBayPress, handAuthored }: B
                 key={bay}
                 type="button"
                 className={styles.bay}
-                aria-pressed={bay === highlight}
-                aria-label={t("bay.tileA11y", { bay, platform: p.label, routes: (p.routesByBay?.[bay] ?? []).join(", ") })}
+                aria-pressed={highlight?.some((h) => h.stopId === p.stopId && h.bay === bay) ?? false}
+                aria-label={t("bay.tileA11y", { bay, platform: p.spokenName ?? p.label, routes: (p.routesByBay?.[bay] ?? []).join(", ") })}
                 onClick={() => onBayPress(bay)}
               >
                 {bay}

@@ -15,7 +15,7 @@ export function SegmentedControl<V extends string>({ options, value, onChange, a
           className={styles.option}
           onClick={() => onChange(o.value)}
         >
-          <span className={styles.label}>
+          <span className={`${styles.label} ${o.labelSize ? styles[o.labelSize] : ""}`}>
             {o.value === value && <Icon name="check" size={18} />}
             {o.label}
           </span>

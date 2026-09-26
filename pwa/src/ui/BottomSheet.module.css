@@ -49,6 +49,10 @@
   background: var(--c-handle);
 }
 
+.snapButtons {
+  display: flex;
+}
+
 .textButton {
   display: inline-flex;
   align-items: center;

@@ -77,8 +77,8 @@ export default function Welcome() {
         onChange={(textSize) => setPrefs({ textSize })}
         options={[
           { value: "standard", label: "A", sub: t("welcome.sizeStandard") },
-          { value: "large", label: "A+", sub: t("welcome.sizeLarge") },
-          { value: "xlarge", label: "A++", sub: t("welcome.sizeXlarge") },
+          { value: "large", label: "A+", sub: t("welcome.sizeLarge"), labelSize: "large" },
+          { value: "xlarge", label: "A++", sub: t("welcome.sizeXlarge"), labelSize: "xlarge" },
         ]}
       />
 

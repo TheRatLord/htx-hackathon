@@ -42,7 +42,7 @@ function orderRows(props: NearbyStopCardProps, now: number): Row[] {
 
 /** C.5a: a nearby stop with its walk time and next buses per route. */
 export function NearbyStopCard(props: NearbyStopCardProps) {
-  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk } = props;
+  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef } = props;
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -75,11 +75,12 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
       {side && <p className={styles.meta}>{side}</p>}
       <hr className={styles.divider} />
       <ul className={styles.rows}>
-        {shown.map((row) => {
+        {shown.map((row, i) => {
+          const rowRef = i === 0 ? firstRowRef : undefined;
           if (row.kind === "none") {
             const ref = toRouteRef(row);
             return (
-              <li key={`none-${row.id}`}>
+              <li key={`none-${row.id}`} ref={rowRef}>
                 <button type="button" className={styles.row} onClick={() => onOpenRoute(row.id)}>
                   <RouteBadge route={ref} size="sm" />
                   <span className={`${styles.rowText} ${styles.noService}`}>
@@ -92,7 +93,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
           const r = row.route;
           const ref = toRouteRef({ id: r.routeId, name: r.name, color: r.color, textColor: r.textColor });
           return (
-            <li key={`${r.routeId}|${r.directionLabel}`}>
+            <li key={`${r.routeId}|${r.directionLabel}`} ref={rowRef}>
               <button type="button" className={styles.row} aria-label={rowText(row)} onClick={() => onOpenRoute(r.routeId)}>
                 <RouteBadge route={ref} size="sm" />
                 <span className={styles.rowText}>

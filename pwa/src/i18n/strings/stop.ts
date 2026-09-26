@@ -35,7 +35,7 @@ const strings: Strings = {
   es: {
     stop: {
       fallbackTitle: "Parada #{id}",
-      partOfTc: "Parte de {tc} · Salidas por andén ›",
+      partOfTc: "Parte de {tc} · Salidas por bahía ›",
       notFoundTitle: "No se encontró la parada",
       crowdedOut: "Ningún viaje a {headsign} entre los próximos autobuses. Vea el horario completo.",
       stripError: "No se pueden cargar las horas ahora.",

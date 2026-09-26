@@ -5,10 +5,10 @@ import { Icon } from "./Icon.tsx";
 import type { ButtonProps } from "./types.ts";
 
 /** C.10. One `primary` per screen state; everything else is tonal, outline or text. */
-export function Button({ variant, label, icon, onPress, disabled, disabledReason, fullWidth, href, external, pressed, ariaLabel }: ButtonProps) {
+export function Button({ variant, label, icon, onPress, disabled, disabledReason, fullWidth, href, external, externalLabel, pressed, ariaLabel }: ButtonProps) {
   const t = useT();
   const className = [styles.button, styles[variant], fullWidth && styles.full].filter(Boolean).join(" ");
-  const name = external ? `${ariaLabel ?? label} ${t("common.opensRideMetro")}` : ariaLabel;
+  const name = external ? `${ariaLabel ?? label} ${externalLabel ?? t("common.opensRideMetro")}` : ariaLabel;
   const content = (
     <>
       {icon && <Icon name={icon} />}

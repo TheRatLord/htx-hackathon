@@ -36,7 +36,6 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
   const offline = useOffline();
   const health = useHealth();
   const [tracking, setTracking] = useState(false);
-  const [notifyGranted, setNotifyGranted] = useState(false);
   const route = refOfServing(entry);
   // A shared route's 4 soonest trips can all belong to its other pattern: ask for more.
   const strip = useArrivals(stop.id, { route: entry.routeId, limit: shared ? 8 : 4 });
@@ -90,7 +89,7 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
       {tracking && (
         <>
           <p className={styles.note}>{t("stop.trackNote")}</p>
-          {!notifyGranted && <NotifyPermissionCard context="stop-track" onDone={(r) => setNotifyGranted(r === "granted")} />}
+          <NotifyPermissionCard context="stop-track" />
         </>
       )}
       {liveMissing && <p className={styles.note}>{t("stop.liveUnavailable")}</p>}

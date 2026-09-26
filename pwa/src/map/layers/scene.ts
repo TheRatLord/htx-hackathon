@@ -18,6 +18,9 @@ const line = (coords: [number, number][], props: Record<string, string>): Featur
 
 const round = { "line-cap": "round", "line-join": "round" } as const;
 
+/** C.16 / D22: a live bus older than this is drawn grey. */
+const STALE_VEHICLE_S = 120;
+
 /**
  * Lines go under every transit layer. Markers, the callout and the user dot always show and
  * reserve their space; the scene's labels are placed next (moving off them), and before the stop
@@ -71,13 +74,17 @@ export function addSceneLayers(map: maplibregl.Map) {
         "dot-origin",
         "destination",
         "pin-dest",
+        "place",
+        "pin-place",
         "vehicle",
         "vehicle",
+        "vehicle-stale",
+        "vehicle-stale",
         "highlight",
         ["case", ["==", ["get", "rail"], 1], "pin-rail-lg", "pin-bus-lg"],
         "dot-stop",
       ],
-      "icon-anchor": ["match", ["get", "kind"], "destination", "bottom", "center"],
+      "icon-anchor": ["match", ["get", "kind"], ["destination", "place"], "bottom", "center"],
       "icon-allow-overlap": true,
     },
   });
@@ -131,10 +138,10 @@ export function showUser(map: maplibregl.Map, user: Fix | undefined) {
 
 export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
   src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
-  src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color }))));
+  src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color ?? "" }))));
   const points: Feature[] = [
     ...(scene.markers ?? []).map((m) => point(m.point, { kind: m.kind, ...(m.label && { label: m.label }) })),
-    ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: "vehicle", label: v.label })),
+    ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: (v.ageSeconds ?? 0) > STALE_VEHICLE_S ? "vehicle-stale" : "vehicle", label: v.label })),
   ];
   if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, label: highlightLabel }));
   src(map, "scene-points")?.setData(collection(points));

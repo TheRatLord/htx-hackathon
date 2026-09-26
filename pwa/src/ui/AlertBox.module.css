@@ -37,10 +37,14 @@
   font-size: var(--fs-caption);
 }
 
-.demo {
-  flex: none;
-  padding: 2px var(--sp-2);
-  border-radius: var(--r-chip);
-  background: var(--c-nav-bg);
-  font-weight: var(--fw-bold);
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.moreBadges {
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
 }
