@@ -5,7 +5,7 @@
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 import { DOWNTOWN } from "../lib/geo.ts";
 
-export const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 const GLYPHS_URL = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 /** Stop-ID chips and the TC tile read better in bold at 14px. */
 export const LABEL_FONT_BOLD = ["Noto Sans Bold"];

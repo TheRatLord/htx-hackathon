@@ -54,8 +54,8 @@ export function useNearby(near?: LatLon, opts: { radius?: number; precise?: bool
   const at = anchor ? roundedKey(anchor) : "";
   return useQuery({
     queryKey: keys.nearby(at, opts.radius, opts.precise),
-    queryFn: () =>
-      apiGet<NearbyResponse>("/nearby", { lat: anchor!.lat, lon: anchor!.lon, radius: opts.radius, precise: opts.precise ? 1 : undefined }),
+    queryFn: ({ signal }) =>
+      apiGet<NearbyResponse>("/nearby", { lat: anchor!.lat, lon: anchor!.lon, radius: opts.radius, precise: opts.precise ? 1 : undefined }, signal),
     enabled: Boolean(anchor),
     refetchInterval: LIVE_POLL_MS,
     placeholderData: (prev) => prev,
@@ -75,7 +75,7 @@ export function useStop(id: string, opts: { enabled?: boolean; refetchInterval?:
 export function useArrivals(stopId: string, opts: { route?: string; limit?: number; enabled?: boolean } = {}) {
   return useQuery({
     queryKey: keys.arrivals(stopId, opts.route, opts.limit),
-    queryFn: () => apiGet<ArrivalsResult>("/arrivals", { stop: stopId, route: opts.route, limit: opts.limit }),
+    queryFn: ({ signal }) => apiGet<ArrivalsResult>("/arrivals", { stop: stopId, route: opts.route, limit: opts.limit }, signal),
     enabled: opts.enabled ?? true,
     refetchInterval: LIVE_POLL_MS,
   });
@@ -85,7 +85,7 @@ export function useSearch(q: string, near?: LatLon) {
   const query = q.trim();
   return useQuery({
     queryKey: keys.search(query, near && roundedKey(near)),
-    queryFn: () => apiGet<SearchResponse>("/search", { q: query, lat: near?.lat, lon: near?.lon }),
+    queryFn: ({ signal }) => apiGet<SearchResponse>("/search", { q: query, lat: near?.lat, lon: near?.lon }, signal),
     enabled: query.length > 0,
     staleTime: 5 * 60_000,
     placeholderData: (prev) => prev,
@@ -140,8 +140,8 @@ export function useTransitCenter(id: string, opts: { enabled?: boolean } = {}) {
 export function usePlan(query: PlanQuery | null) {
   return useQuery({
     queryKey: keys.plan(query ?? {}),
-    queryFn: () =>
-      apiGet<PlanResponse>("/plan", { from: query!.from, to: query!.to, time: query!.time, arriveBy: query!.arriveBy ? 1 : undefined }),
+    queryFn: ({ signal }) =>
+      apiGet<PlanResponse>("/plan", { from: query!.from, to: query!.to, time: query!.time, arriveBy: query!.arriveBy ? 1 : undefined }, signal),
     enabled: Boolean(query?.from && query?.to),
     staleTime: 60_000,
   });
@@ -155,7 +155,7 @@ export function useWalk(from?: LatLon, to?: string | LatLon, opts: { enabled?: b
   return useQuery({
     // A "lat,lon" never clashes with a stop id.
     queryKey: keys.walk(at, toStop ?? toPoint ?? ""),
-    queryFn: () => apiGet<WalkRoute>("/walk", { from: at, toStop, to: toPoint }),
+    queryFn: ({ signal }) => apiGet<WalkRoute>("/walk", { from: at, toStop, to: toPoint }, signal),
     enabled: Boolean(from && to) && (opts.enabled ?? true),
     staleTime: 60 * 60_000,
   });

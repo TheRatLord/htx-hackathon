@@ -24,8 +24,8 @@ export interface ODataVehicle {
   VehicleId: string;
   RouteName: string;
   TripId: string;
-  DirectionName: string;
-  DestinationName: string;
+  DirectionName: string | null;
+  DestinationName: string | null;
   Delayseconds: number;
   VehicleReportTime: string;
   Latitude: number;

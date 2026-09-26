@@ -5,7 +5,8 @@ import type { LatLon } from "../../shared/types.ts";
 import { implausibleWalk, WALK_DETOUR_FACTOR, WALK_SPEED_MPS } from "../../shared/walk.ts";
 import { TtlCache } from "../lib/cache.ts";
 import { compass8, formatDistance, haversineM, type Compass8 } from "../lib/geo.ts";
-import { fetchUpstream } from "../lib/upstream.ts";
+import { fetchUpstream, UpstreamError } from "../lib/upstream.ts";
+import { config } from "../config.ts";
 
 const OSRM = "https://routing.openstreetmap.de/routed-foot/route/v1/foot";
 export type WalkModifier = "left" | "right" | "slight left" | "slight right" | "sharp left" | "sharp right" | "straight" | "uturn";
@@ -57,17 +58,34 @@ export interface WalkDestination {
   name: string;
 }
 
-export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestination): Promise<WalkRoute> {
+/** After OSRM times out or fails, callers that can do without it (`fast`) skip it this long. */
+const OSRM_BACKOFF_MS = 60_000;
+/** `fast` callers (/nearby, polled every 30 s) wait at most this long for a street route. */
+const FAST_TIMEOUT_MS = 2000;
+let osrmFailedAt = 0;
+
+/**
+ * `fast`: for lists that only need a better distance (/nearby). A short timeout, and while OSRM
+ * has failed in the last minute it isn't asked at all: the estimate stands in (walk.ts never
+ * caches failures, so without this every poll waited the full timeout while OSRM was down).
+ */
+export function walkRoute(from: LatLon, to: LatLon, destination?: WalkDestination, opts: { fast?: boolean } = {}): Promise<WalkRoute> {
   const r = (n: number) => n.toFixed(5);
   const coords = `${r(from.lon)},${r(from.lat)};${r(to.lon)},${r(to.lat)}`;
   // Only real answers are cached: a street route, or OSRM's deliberate "no route" / an
   // implausible detour (both fall back to a straight line). A timeout or 5xx is not cached, so
   // the next request asks OSRM again instead of serving a straight line for 24 h.
   const load = async (): Promise<WalkRoute> => {
+    if (opts.fast && Date.now() - osrmFailedAt < OSRM_BACKOFF_MS) throw new UpstreamError("osrm", "osrm skipped after a recent failure");
     const { body } = await fetchUpstream<OsrmResponse>({
       service: "osrm",
       url: `${OSRM}/${coords}?overview=full&geometries=geojson&steps=true`,
       fixtureKey: `foot/${coords}`,
+      ...(opts.fast && { timeoutMs: FAST_TIMEOUT_MS }),
+    }).catch((err: unknown) => {
+      // A missing offline fixture is not OSRM being down.
+      if (!config.offline) osrmFailedAt = Date.now();
+      throw err;
     });
     const route = body.routes?.[0];
     if (body.code !== "Ok" || !route) return straightLine(from, to, destination, `no walking route (${body.code})`);

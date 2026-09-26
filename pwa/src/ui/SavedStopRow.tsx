@@ -1,6 +1,8 @@
 import { useLang, useT } from "../i18n/index.ts";
-import { headsignLine, upcoming } from "../lib/format.ts";
+import { headsignLine, stopTitle, upcoming } from "../lib/format.ts";
+import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
+import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
 import { DepTimes } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
@@ -22,9 +24,12 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
   const t = useT();
   const lang = useLang();
   const now = useNow();
+  const { walkPace } = usePrefs();
+  // As on every card: a bus that leaves before the rider can walk there isn't the answer.
+  const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
   const shown = pickRoute(routes, preferredRouteId, now);
   const extra = routes.length - 1;
-  const title = t("stopLine.title", { name, id: stopId });
+  const title = stopTitle(name, stopId, lang);
   return (
     <article className={`${styles.card} ${rowStyles.row}`}>
       <button type="button" className={styles.hit} aria-label={title} onClick={onOpen} />
@@ -55,7 +60,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
               {extra > 0 && <span className={rowStyles.extra}> {t("card.plusRoutes", { count: extra })}</span>}
             </span>
             {upcoming(shown.deps, now).length ? (
-              <DepTimes deps={shown.deps} />
+              <DepTimes deps={shown.deps} walkMin={walkMin} />
             ) : (
               <span className={styles.noService}>{t("strip.noBuses3h")}</span>
             )}

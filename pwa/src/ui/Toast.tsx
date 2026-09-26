@@ -13,7 +13,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<(ToastOptions & { id: number }) | null>(null);
   const [paused, setPaused] = useState(false);
   const nextId = useRef(0);
-  const show = useCallback((t: ToastOptions) => setToast({ ...t, id: ++nextId.current }), []);
+  // Each toast starts unpaused: a focused toast removed from the DOM (its Undo pressed) may never
+  // fire blur, which left every later toast paused for good.
+  const show = useCallback((t: ToastOptions) => {
+    setPaused(false);
+    setToast({ ...t, id: ++nextId.current });
+  }, []);
 
   useEffect(() => {
     if (!toast || paused) return;
@@ -35,6 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 className={styles.action}
                 onClick={() => {
                   toast.action!.onPress();
+                  setPaused(false);
                   setToast(null);
                 }}
               >

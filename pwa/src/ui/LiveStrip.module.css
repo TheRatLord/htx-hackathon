@@ -2,7 +2,7 @@
   display: flex;
   /* Wraps rather than scrolling when two clock times don't fit (large text). */
   flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-8);
+  gap: var(--sp-2) var(--sp-6);
   /* Numbers line up across items; a status word hangs under its own number. */
   align-items: flex-start;
   min-height: var(--strip-h);
@@ -54,7 +54,8 @@
   gap: 0 var(--sp-3);
 }
 
+/* White, not Live green: "First bus · in 3 hr" is a scheduled time. */
 .nextCaption {
-  color: var(--c-live-on-strip);
+  color: rgb(255 255 255 / 88%);
   font-weight: var(--fw-medium);
 }

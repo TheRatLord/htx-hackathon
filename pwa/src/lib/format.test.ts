@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client.ts";
 import type { Dep } from "../api/types.ts";
-import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
+import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, stopTitle, upcoming } from "./format.ts";
 import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
@@ -187,5 +187,11 @@ describe("errorText", () => {
     expect(errorText(err, undefined, "en")).toBe("We couldn't find stop #99.");
     expect(errorText(err, undefined, "es")).toBe("Algo salió mal. Intente de nuevo.");
     expect(errorText(new ApiError("brand_new_code", 500, "Server text"), undefined, "en")).toBe("Server text");
+  });
+});
+
+describe("stopTitle", () => {
+  it("keeps the stop number on the last word's line", () => {
+    expect(stopTitle("Westheimer Rd @ Montrose Blvd", "2958", "en")).toBe("Westheimer Rd @ Montrose Blvd (2958)");
   });
 });

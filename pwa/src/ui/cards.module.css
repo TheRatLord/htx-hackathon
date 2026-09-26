@@ -53,15 +53,11 @@
   margin: calc(-1 * var(--sp-1)) 0;
 }
 
-/* With large text the side line wraps to two lines beside the pill (shorter than a line plus a
-   pill row under it); only when it would get narrower than 7em does the pill drop under it. */
+/* The side line never wraps beside the pill ("On the south side of McKinney / St"): when both
+   don't fit on one line, the pill moves under it (start-aligned), as at 360dp with large text. */
 .metaRow .meta {
-  flex: 1 1 7em;
-  min-width: 0;
-}
-
-.metaRow > button {
-  margin-left: auto;
+  flex: 1 0 auto;
+  max-width: 100%;
 }
 
 .divider {

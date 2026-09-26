@@ -1,13 +1,16 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useLang, useT } from "../i18n/index.ts";
-import { formatClock } from "../lib/format.ts";
+import { ageMinutes, formatClock } from "../lib/format.ts";
 import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
+import { Icon } from "./Icon.tsx";
 import styles from "./UpdatedAgo.module.css";
 import type { UpdatedAgoProps } from "./types.ts";
 
-// How many UpdatedAgo lines are on screen. While one is, it says "Offline · last update 12:07 PM"
-// in the sheet, and the Explore layout drops its own offline banner over the map (one message, once).
+// How many sheet-header UpdatedAgo lines (`compact`) are on screen. While one is, it says "Offline —
+// times from 12:07 PM" at the top of the sheet, and the Explore layout drops its own offline banner
+// over the map (one message, once). A line at the foot of a sheet (the stop sheet) is below the
+// fold, so the map banner stays.
 let mounted = 0;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
@@ -31,32 +34,46 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   const now = useNow();
   const offline = useOffline();
   useEffect(() => {
+    if (!compact) return;
     mounted++;
     notify();
     return () => {
       mounted--;
       notify();
     };
-  }, []);
+  }, [compact]);
   const ageS = Math.max(0, Math.round((now - Date.parse(at)) / 1000));
   const stale = !offline && ageS > STALE_S;
   let text: string;
-  if (offline) text = t("updated.offline", { time: formatClock(at, lang) });
-  else if (stale) text = t("updated.stale", { n: Math.floor(ageS / 60) });
+  // The clock time never breaks across lines ("12:11 / PM").
+  if (offline) text = t("updated.offline", { time: formatClock(at, lang).replace(/\s/g, "\u00a0") });
+  else if (stale) text = t("updated.stale", { n: ageMinutes(Date.parse(at), now) });
   else {
     // Under a minute old it is simply "just now": seconds read as machine output.
     if (ageS < 60) text = t(compact ? "updated.justNowShort" : "updated.justNow");
     else {
-      const ago = t("updated.min", { n: Math.floor(ageS / 60) });
+      const ago = t("updated.min", { n: ageMinutes(Date.parse(at), now) });
       text = compact ? ago : t("updated.ago", { ago });
     }
+  }
+  if (offline) {
+    // Times may be stale: an amber row with an icon, not grey small print a rider would miss.
+    return (
+      <span className={`${styles.updated} ${styles.offline}`} data-offline="">
+        <Icon name="warning" size={20} color="var(--c-warn-border)" />
+        <strong className={styles.offlineText}>{text}</strong>
+        <button type="button" className={styles.refresh} onClick={onRefresh}>
+          {t("common.tryAgain")}
+        </button>
+      </span>
+    );
   }
   return (
     <span className={`${styles.updated} ${stale ? styles.stale : ""}`}>
       {text}
       <span aria-hidden="true">·</span>
       <button type="button" className={styles.refresh} onClick={onRefresh}>
-        {offline ? t("common.tryAgain") : t("common.refresh")}
+        {t("common.refresh")}
       </button>
     </span>
   );

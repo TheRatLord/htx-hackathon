@@ -1,6 +1,6 @@
-import type { NearbyRoute } from "../api/types.ts";
+import type { Dep, NearbyRoute } from "../api/types.ts";
 import { useLang, useT } from "../i18n/index.ts";
-import { departureA11y, headsignLine, sideLine, upcoming } from "../lib/format.ts";
+import { departureA11y, headsignLine, isFirstBus, sideLine, stopTitle, upcoming } from "../lib/format.ts";
 import { toRouteRef } from "../lib/routes.ts";
 import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
@@ -42,7 +42,7 @@ function orderRows(props: NearbyStopCardProps, now: number): Row[] {
 
 /** C.5a: a nearby stop with its walk time and next buses per route. */
 export function NearbyStopCard(props: NearbyStopCardProps) {
-  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef } = props;
+  const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef, laterFirst } = props;
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -53,10 +53,19 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   const shown = rows.slice(0, maxRoutes);
   const hidden = rows.slice(maxRoutes);
   const side = sideLine(stop, { withCompass: false, lang });
-  const title = t("stopLine.title", { name: stop.name, id: stop.id });
+  const title = stopTitle(stop.name, stop.id, lang);
 
+  /** The next bus of a route with nothing in the window, as a scheduled departure (late night). */
+  const laterDep = (routeId: string): Dep | undefined => {
+    const at = laterFirst?.[routeId];
+    return at && Date.parse(at) > now ? { departureTime: at, isRealtime: false, canceled: false, source: "schedule", tripId: `later-${routeId}` } : undefined;
+  };
   const rowText = (row: Row) => {
-    if (row.kind === "none") return `${t("routeName.a11y", { name: row.name })}, ${t("card.noBuses2h")}`;
+    if (row.kind === "none") {
+      const later = laterDep(row.id);
+      const when = later ? `${t(isFirstBus(later.departureTime, now) ? "time.firstBus" : "time.nextBus")} ${departureA11y(later, now, { offline, lang })}` : t("card.noBuses2h");
+      return `${t("routeName.a11y", { name: row.name })}, ${when}`;
+    }
     const ref = toRouteRef({ id: row.route.routeId, name: row.route.name, color: row.route.color, textColor: row.route.textColor });
     const times = shownDeps(row.deps, now, walkMin).slice(0, 2).map((d) => departureA11y(d, now, { walkMin, offline, lang }));
     return `${t("routeName.a11y", { name: row.route.name })} ${headsignLine(ref, row.route.directionLabel, row.route.headsign, lang)}, ${times.join(`; ${t("card.then")} `)}`;
@@ -79,12 +88,13 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
           const rowRef = i === 0 ? firstRowRef : undefined;
           if (row.kind === "none") {
             const ref = toRouteRef(row);
+            const later = laterDep(row.id);
             return (
               <li key={`none-${row.id}`} ref={rowRef}>
                 <button type="button" className={styles.row} aria-label={rowText(row)} onClick={() => onOpenRoute(row.id)}>
                   <RouteBadge route={ref} size="sm" />
-                  <span className={`${styles.rowText} ${styles.noService}`}>
-                    {t("card.noBuses2h")}
+                  <span className={`${styles.rowText} ${later ? "" : styles.noService}`}>
+                    {later ? <DepTimes deps={[later]} max={1} firstBus /> : t("card.noBuses2h")}
                   </span>
                 </button>
               </li>

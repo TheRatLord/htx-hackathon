@@ -10,9 +10,10 @@ import type { AlertStatusLineProps } from "./types.ts";
 
 /**
  * C.11: the only way a screen says whether there is an alert. "No alerts" appears only when the
- * live METRO feed answered; demo data and a failed feed each say so instead.
+ * live METRO feed answered; a failed feed says so; demo data with no alert here says nothing
+ * (unless `demoNote`), since the demo is announced where alerts are listed.
  */
-export function AlertStatusLine({ scope, name, alerts }: AlertStatusLineProps) {
+export function AlertStatusLine({ scope, name, alerts, demoNote }: AlertStatusLineProps) {
   const t = useT();
   const lang = useLang();
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ export function AlertStatusLine({ scope, name, alerts }: AlertStatusLineProps) {
       </div>
     );
   }
-  if (store.source === "demo") return <p className={`${styles.line} ${styles.demo}`}>{t("alert.demoOnly")}</p>;
+  // With demo alerts and none here there is nothing to qualify: the note would be the loudest
+  // thing on a stop sheet. Only the Alerts screens ask for it.
+  if (store.source === "demo") return demoNote ? <p className={`${styles.line} ${styles.demo}`}>{t("alert.demoOnly")}</p> : null;
   return (
     <p className={`${styles.line} ${styles.ok}`}>
       <Icon name="check_circle" />

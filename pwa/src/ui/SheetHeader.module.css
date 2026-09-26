@@ -102,3 +102,31 @@
 .back:active {
   background: rgb(0 0 0 / 6%);
 }
+
+/* The offline row (UpdatedAgo) takes a line of its own under the title. */
+.sub:has([data-offline]) {
+  flex: 1 1 100%;
+}
+
+/* "‹" before a start-aligned title: a 48dp target reaching into the gutter, the chevron lined up
+   with the content edge. */
+.backIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin-left: calc(-1 * var(--sp-3) - 2px);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-link-text);
+}
+
+.backIcon:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+.withBack {
+  align-items: center;
+}

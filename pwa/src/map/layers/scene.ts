@@ -18,6 +18,12 @@ const line = (coords: [number, number][], props: Record<string, string>): Featur
 
 const round = { "line-cap": "round", "line-join": "round" } as const;
 
+const SCENE_LABEL_FILTER: maplibregl.ExpressionSpecification = ["all", ["has", "label"], ["!=", ["get", "kind"], "highlight"]];
+let hiddenLabels: string[] = [];
+
+/** Markers drawn as a pin standing on their point (their label goes above the pin's head). */
+export const TALL_PINS = new Set(["place", "destination"]);
+
 /** C.16 / D22: a live bus older than this is drawn grey. */
 const STALE_VEHICLE_S = 120;
 
@@ -27,6 +33,7 @@ const STALE_VEHICLE_S = 120;
  * pins and ID chips, so dense stop pins never push a scene label off the map.
  */
 export function addSceneLayers(map: maplibregl.Map) {
+  hiddenLabels = [];
   for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const lines: maplibregl.LayerSpecification[] = [
     { id: "scene-route-casing", type: "line", source: "scene-route", paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
@@ -47,7 +54,7 @@ export function addSceneLayers(map: maplibregl.Map) {
     id: "scene-labels",
     type: "symbol",
     source: "scene-points",
-    filter: ["all", ["has", "label"], ["!=", ["get", "kind"], "highlight"]],
+    filter: SCENE_LABEL_FILTER,
     layout: {
       "text-field": ["get", "label"],
       "text-font": LABEL_FONT_BOLD,
@@ -57,13 +64,21 @@ export function addSceneLayers(map: maplibregl.Map) {
       // out to clear the 36dp highlighted pin a board marker may share a point with. A marker on
       // the scene's west or east edge puts its label on the inward side first, so a wide label
       // ("Transfer · #4789") never runs off the screen edge (see labelEdge).
+      // A place or destination pin rises 40dp above its point: its label goes above the pin head
+      // ("t" keys), not beside it where it ran into the FABs.
       "text-variable-anchor-offset": [
         "match",
-        ["get", "edge"],
+        ["get", "lk"],
         "w",
         ["literal", ["bottom-left", [0.8, -1.4], "left", [2.6, 0], "bottom", [0, -2], "top-left", [0.8, 1.4], "top", [0, 2], "right", [-2.6, 0]]],
         "e",
         ["literal", ["bottom-right", [-0.8, -1.4], "right", [-2.6, 0], "bottom", [0, -2], "top-right", [-0.8, 1.4], "top", [0, 2], "left", [2.6, 0]]],
+        "wt",
+        ["literal", ["bottom-left", [0.8, -4], "bottom", [0, -4], "left", [1.8, -1.4], "right", [-1.8, -1.4]]],
+        "et",
+        ["literal", ["bottom-right", [-0.8, -4], "bottom", [0, -4], "right", [-1.8, -1.4], "left", [1.8, -1.4]]],
+        "t",
+        ["literal", ["bottom", [0, -4], "left", [1.8, -1.4], "right", [-1.8, -1.4]]],
         ["literal", ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]]],
       ] as unknown as maplibregl.ExpressionSpecification,
       "icon-image": "label-chip",
@@ -132,6 +147,18 @@ export function addSceneLayers(map: maplibregl.Map) {
   });
 }
 
+
+/**
+ * Marker labels (by marker id) that would fall under the sheet or the map chrome are left out:
+ * "Transfer · #4789" cut in half by the sheet's edge read as a glitch, and the sheet lists it.
+ */
+export function hideSceneLabels(map: maplibregl.Map, ids: string[]) {
+  if (ids.length === hiddenLabels.length && ids.every((id, i) => id === hiddenLabels[i])) return;
+  hiddenLabels = ids;
+  if (!map.getLayer("scene-labels")) return;
+  map.setFilter("scene-labels", ids.length ? ["all", SCENE_LABEL_FILTER, ["!", ["in", ["get", "id"], ["literal", ids]]]] : SCENE_LABEL_FILTER);
+}
+
 const src = (map: maplibregl.Map, id: string) => map.getSource(id) as GeoJSONSource | undefined;
 
 /** The accuracy halo in metres, as a pixel radius that follows the zoom. */
@@ -166,7 +193,9 @@ export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: Clien
   src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color ?? "" }))));
   const edge = labelEdge(scene);
   const points: Feature[] = [
-    ...(scene.markers ?? []).map((m) => point(m.point, { kind: m.kind, edge: edge(m.point.lon), ...(m.label && { label: m.label }) })),
+    ...(scene.markers ?? []).map((m) =>
+      point(m.point, { id: m.id, kind: m.kind, lk: `${edge(m.point.lon)}${TALL_PINS.has(m.kind) ? "t" : ""}`, ...(m.label && { label: m.label }) }),
+    ),
     ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: (v.ageSeconds ?? 0) > STALE_VEHICLE_S ? "vehicle-stale" : "vehicle", label: v.label })),
   ];
   if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, ...(highlightLabel && { label: highlightLabel }) }));

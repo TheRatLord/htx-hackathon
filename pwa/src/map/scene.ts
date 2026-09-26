@@ -45,10 +45,6 @@ export function useMapScene(scene: MapScene, deps: unknown[]): void {
   }, [setScene, ...deps]);
 }
 
-export function useMapPadding(): { bottom: number } {
-  return useMapContext().padding;
-}
-
 export function useMapCenter(): LatLon | undefined {
   return useMapContext().center;
 }

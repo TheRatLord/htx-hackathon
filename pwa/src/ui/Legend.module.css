@@ -26,3 +26,15 @@
 .canceled {
   text-decoration: line-through;
 }
+
+.live {
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.liveWord {
+  display: inline-flex;
+  align-items: flex-start;
+  color: var(--c-live-on-strip);
+  font-weight: var(--fw-bold);
+}
