@@ -1,0 +1,134 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.pills > * {
+  flex: 1 1 auto;
+}
+
+.divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+}
+
+.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.routeHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.routeText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.longName {
+  color: var(--c-text);
+}
+
+.headline {
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+/* The strip runs edge to edge, as today. */
+.bleed {
+  margin-inline: calc(-1 * var(--gutter));
+}
+
+.note {
+  color: var(--c-text-variant);
+  text-align: center;
+}
+
+.others {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.others > li + li {
+  border-top: 1px solid var(--c-divider);
+}
+
+.collapsed {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-2) 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.noService {
+  color: var(--c-text-variant);
+}
+
+.updated {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* Full Schedule and Track Bus Stop share one row, as today; on a narrow screen their labels wrap
+   inside the pills rather than stacking the pills, which would push the strip below the fold. */
+.routePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.routePills > * {
+  flex: 1 1 140px;
+}
+
+.stripError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-2);
+  min-height: var(--strip-h);
+  padding: 0 var(--gutter);
+  background: var(--c-card);
+}
