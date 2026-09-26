@@ -1,29 +1,70 @@
-import { describe, expect, it } from "vitest";
-import type { PlanResponse, TransitLeg, WalkLeg } from "../../../api/types.ts";
+import { describe, expect, it, vi } from "vitest";
+import type { Itinerary, PlanResponse, TransitLeg, WalkLeg } from "../../../api/types.ts";
 import { HOBBY, itinerary, UH } from "../../../features/trip/testItinerary.ts";
-import { shiftFixture } from "./shiftFixture.ts";
+import { canMakeIt, walkMinutes } from "../../../lib/walk.ts";
+import { shiftFixture, startableFixture } from "./shiftFixture.ts";
 import { sortItineraries } from "./sortItineraries.ts";
+import { relativeTime } from "./timeChoice.ts";
+import { recentTrip } from "./recentTrip.ts";
 
 const recorded: PlanResponse = { from: UH, to: HOBBY, itineraries: [itinerary], source: "offline-fixture", recordedAt: "2026-09-25T23:58:22.719Z" };
 
 describe("shiftFixture", () => {
-  it("moves every timestamp by whole minutes from recordedAt to now", () => {
+  const plus = (iso: string, min: number) => new Date(Date.parse(iso) + min * 60_000).toISOString();
+  const ride = (it: Itinerary) => it.legs[1] as TransitLeg;
+
+  it("moves every timestamp by the same whole minutes, at least from recordedAt to now", () => {
+    const now = Date.parse("2026-09-26T01:49:00Z"); // 1:50:38 after recordedAt: 111 min
+    const it = shiftFixture(recorded, now, "normal").itineraries[0];
+    const min = (Date.parse(it.startTime) - Date.parse(itinerary.startTime)) / 60_000;
+    expect(Number.isInteger(min)).toBe(true);
+    expect(min).toBeGreaterThanOrEqual(111);
+    expect(it.endTime).toBe(plus(itinerary.endTime, min));
+    expect((it.legs[0] as WalkLeg).endTime).toBe(plus((itinerary.legs[0] as WalkLeg).endTime, min));
+    expect(ride(it).departureTime).toBe(plus(ride(itinerary).departureTime, min));
+    expect(ride(it).arrivalTime).toBe(plus(ride(itinerary).arrivalTime, min));
+  });
+
+  it("moves later still so card 1's first bus leaves 3 min after the walk (F8 ends on You have time)", () => {
+    // 2:11:37 rounds to 132 min, which would leave the 80 only 7 min away; walk 5 + 3 needs 8.
     const now = Date.parse("2026-09-26T02:10:00Z");
-    const shifted = shiftFixture(recorded, now);
-    const ms = 132 * 60_000; // 2:11:37 rounds to 132 minutes
-    const plus = (iso: string) => new Date(Date.parse(iso) + ms).toISOString();
-    const it = shifted.itineraries[0];
-    expect(it.startTime).toBe(plus(itinerary.startTime));
-    expect(it.endTime).toBe(plus(itinerary.endTime));
-    expect((it.legs[0] as WalkLeg).endTime).toBe(plus((itinerary.legs[0] as WalkLeg).endTime));
-    const ride = it.legs[1] as TransitLeg;
-    expect(ride.departureTime).toBe(plus((itinerary.legs[1] as TransitLeg).departureTime));
-    expect(ride.arrivalTime).toBe(plus((itinerary.legs[1] as TransitLeg).arrivalTime));
+    const it = shiftFixture(recorded, now, "normal").itineraries[0];
+    expect(ride(it).departureTime).toBe(plus(ride(itinerary).departureTime, 133));
+    expect(canMakeIt(walkMinutes(407, "normal"), ride(it), now)).toBe("yes");
+    const slower = shiftFixture(recorded, now, "slower").itineraries[0];
+    expect(canMakeIt(walkMinutes(407, "slower"), ride(slower), now)).toBe("yes");
+  });
+
+  it("moves a sample trip forward again when it is started later", () => {
+    const shifted = shiftFixture(recorded, Date.parse("2026-09-26T01:49:00Z"), "normal").itineraries[0];
+    const later = Date.parse("2026-09-26T02:30:00Z");
+    expect(canMakeIt(5, ride(startableFixture(shifted, later, "normal")), later)).toBe("yes");
+    expect(startableFixture(shifted, Date.parse("2026-09-26T01:49:00Z"), "normal")).toBe(shifted);
   });
 
   it("leaves live plans alone", () => {
     const live = { ...recorded, source: "transitous" as const, recordedAt: undefined };
-    expect(shiftFixture(live, Date.now())).toBe(live);
+    expect(shiftFixture(live, Date.now(), "normal")).toBe(live);
+  });
+});
+
+describe("recentTrip", () => {
+  const to = { to: "landmark:hobby-airport", toName: "Hobby Airport" };
+
+  it("replays from wherever the rider is then", () => {
+    expect(recentTrip({ from: "29.71990,-95.34220", ...to })).toEqual({ from: undefined, fromName: undefined, ...to });
+    expect(recentTrip({ from: "29.71990,-95.34220", fromName: "Mi ubicación actual", ...to }).from).toBeUndefined();
+    expect(recentTrip({ from: "11424", fromName: "M L King Blvd @ UH University Dr", ...to }).from).toBe("11424");
+  });
+
+  it("keeps only an exact time, never one from a relative chip", () => {
+    const session = new Map<string, string>();
+    vi.stubGlobal("sessionStorage", { getItem: (k: string) => session.get(k) ?? null, setItem: (k: string, v: string) => session.set(k, v), removeItem: (k: string) => session.delete(k) });
+    const soon = relativeTime(to, "in15", 15, Date.parse("2026-09-26T02:00:00Z"));
+    expect(recentTrip(soon).time).toBeUndefined();
+    const exact = { ...to, time: "2026-09-27T13:30:00.000Z", arriveBy: true };
+    expect(recentTrip(exact)).toMatchObject({ time: exact.time, arriveBy: true });
+    vi.unstubAllGlobals();
   });
 });
 
