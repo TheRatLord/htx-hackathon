@@ -23,15 +23,16 @@ import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
-import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { StepList } from "../../../ui/StepList.tsx";
 import type { TimelineStep } from "../../../ui/types.ts";
 import { FareLine } from "./ItineraryCard.tsx";
+import { PlanHeader } from "./PlanHeader.tsx";
 import styles from "./plan.module.css";
 import { foldCap } from "../home/fold.ts";
 import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { usePlanResponse } from "./usePlanResponse.ts";
+import { useFooterOnRowEdge } from "./useFooterOnRowEdge.ts";
 import { useStartTrip } from "./useStartTrip.ts";
 
 /** Close enough to see the streets around the destination. */
@@ -150,6 +151,9 @@ export default function Itinerary() {
   useMapScene(place ? { ...scene, focus: { kind: "point", point: place, zoom: PLACE_ZOOM } } : scene, [it, lang, place]);
 
   const startTrip = useStartTrip(plan.response);
+  const sheet = useSheetElement();
+  const { snap } = useSheet();
+  useFooterOnRowEdge(sheet, `${index}|${snap}|${Boolean(it)}`);
   const start = () => it && startTrip(it);
 
   let body;
@@ -183,7 +187,7 @@ export default function Itinerary() {
     <ExploreSheet
       ariaLabel={title}
       onBack={onBack}
-      header={<SheetHeader title={title} />}
+      header={<PlanHeader title={title} />}
       peek={
         it && (
           <div className={styles.peek}>

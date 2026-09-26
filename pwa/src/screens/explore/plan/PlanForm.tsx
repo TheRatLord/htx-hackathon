@@ -171,27 +171,34 @@ const POPULAR: PlacePick[] = [
   { to: "landmark:downtown-tc", toName: "Downtown Transit Center", icon: "place" },
 ];
 
-/** Up to three places to tap instead of type: recent trip destinations first, then saved stops, else popular places. */
+/** How many places the empty form offers: 3 fit above the nav at 412x800, 2 at 360x640 (21). */
+const MAX_PICKS = 4;
+
+/**
+ * Places to tap instead of type: the rider's saved stops first, then recent trip destinations, then
+ * popular places to fill the list, so the empty form always offers a few (21).
+ */
 export function usePlacePicks(query: PlanQuery): PlacePick[] {
   const { trips } = useRecents();
   const { stops } = useSaved();
   const picks: PlacePick[] = [];
   const seen = new Set([query.to, query.from]);
   const add = (p: PlacePick) => {
-    if (picks.length >= 3 || seen.has(p.to)) return;
+    if (picks.length >= MAX_PICKS || seen.has(p.to)) return;
     seen.add(p.to);
     picks.push(p);
   };
-  for (const r of trips) if (r.query.to && r.query.toName) add({ to: r.query.to, toName: r.query.toName, icon: "schedule" });
   for (const s of stops) add({ to: s.id, toName: `${s.name} (${s.id})`, icon: "star" });
-  if (!picks.length) POPULAR.forEach(add);
+  for (const r of trips) if (r.query.to && r.query.toName) add({ to: r.query.to, toName: r.query.toName, icon: "schedule" });
+  POPULAR.forEach(add);
   return picks;
 }
 
 export function PlacePicks({ picks, onPick }: { picks: PlacePick[]; onPick: (p: PlacePick) => void }) {
   const t = useT();
   if (!picks.length) return null;
-  const title = t(picks.every((p) => p.icon === "place") ? "plan.popularPlaces" : "plan.recentPlaces");
+  const popular = picks.filter((p) => p.icon === "place").length;
+  const title = t(popular === picks.length ? "plan.popularPlaces" : popular ? "plan.suggestedPlaces" : "plan.recentPlaces");
   return (
     <section className={styles.picks} aria-label={title}>
       <h2 className={styles.picksTitle}>{title}</h2>

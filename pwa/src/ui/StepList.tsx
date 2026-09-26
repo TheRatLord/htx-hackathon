@@ -1,4 +1,5 @@
 import { useT } from "../i18n/index.ts";
+import { isAdvisory } from "../lib/alerts.ts";
 import { DemoTag } from "./DemoTag.tsx";
 import { Icon } from "./Icon.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
@@ -40,7 +41,12 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
               {i === currentIndex && <span className={styles.here}>{t("timeline.youAreHere")}</span>}
               <span className={styles.title}>
                 {s.kind === "walk" && <Icon name="directions_walk" size={20} />}
-                {s.alert && <Icon name="warning" size={20} color="var(--c-alert-icon)" />}
+                {s.alert &&
+                  (isAdvisory(s.alert.effect) ? (
+                    <Icon name="info" size={20} color="var(--c-brand-navy)" />
+                  ) : (
+                    <Icon name="warning" size={20} color="var(--c-alert-icon)" />
+                  ))}
                 {s.titleLead && <span className={styles.lead}>{s.titleLead}</span>}
                 {s.route && <RouteBadge route={s.route} size="sm" />}
                 <span className={styles.titleText}>{s.title}</span>

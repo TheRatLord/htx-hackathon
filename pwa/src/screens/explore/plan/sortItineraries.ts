@@ -2,7 +2,7 @@ import type { Itinerary, TransitLeg } from "../../../api/types.ts";
 import type { PlanSort } from "../../../lib/planQuery.ts";
 
 /**
- * "Fastest" (v2.71's word) is the trip that gets there first; the others sort by their own measure,
+ * "Arrives first" (v2.71's "Fastest") is the trip that gets there first; the others sort by their own measure,
  * then by arrival (spec D11). Sorting is client-side, and each entry keeps its
  * index in the API order, which is what My Itinerary's URL uses, so a sort never changes a link.
  */

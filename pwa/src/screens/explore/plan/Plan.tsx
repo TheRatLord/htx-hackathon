@@ -21,10 +21,10 @@ import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { FilterChip } from "../../../ui/FilterChip.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
-import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { ItineraryCard, SharedAlerts, useSharedAlerts } from "./ItineraryCard.tsx";
 import { FromToBox, PlacePicks, usePlacePicks, useWhenText, WhenRow, type FromView } from "./PlanForm.tsx";
+import { PlanHeader } from "./PlanHeader.tsx";
 import styles from "./plan.module.css";
 import { foldRepeats, sortItineraries } from "./sortItineraries.ts";
 import { isReady, planKey, usePlanResponse } from "./usePlanResponse.ts";
@@ -32,8 +32,12 @@ import { useStartTrip } from "./useStartTrip.ts";
 
 const LATER_MS = 30 * 60_000;
 
+/** "landmark:…" or "lat,lon": the trip ends at a place, and the rider walks from the last bus to it. */
+const toPlace = (q: PlanQuery) => Boolean(q.to && (q.to.startsWith("landmark:") || q.to.includes(",")));
+
 /**
- * v2.71's three sort chips, in its words (22). Fastest, the default, comes first, so the chosen one
+ * v2.71's three sort chips (22). The default, "Arrives first" (v2.71 said "Fastest"), comes first: the
+ * cards show the arrival in bold and are sorted by it, so the label says what the order is. The chosen one
  * is never behind "More ›" at 360dp.
  */
 const CHIP_ORDER: PlanSort[] = ["soonest", "transfers", "walk"];
@@ -143,6 +147,7 @@ function Results({ query, plan, onChange, onPickFrom }: ResultsProps) {
             it={it}
             href={planUrl(query, { index })}
             sharedAlerts={shared.ids}
+            toPlace={toPlace(query)}
             later={later.map((l) => ({ it: l.it, href: planUrl(query, { index: l.index }) }))}
           />
         ))}
@@ -276,7 +281,7 @@ export default function Plan() {
     <ExploreSheet
       ariaLabel={title}
       onBack={onBack}
-      header={<SheetHeader title={title} />}
+      header={<PlanHeader title={title} />}
       peek={first && <Peek it={first} toName={query.toName ?? ""} onStart={() => start(first)} />}
     >
       <div className={styles.body}>

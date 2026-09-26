@@ -64,6 +64,12 @@ function walkHref(leg: WalkLeg, fromName: string, routeId: string): string | und
  */
 const joinParts = (parts: string[]) => parts.filter(Boolean).map((p) => p.replace(/ /g, "\u00a0")).join(" · ");
 
+/**
+ * "M L King Blvd @ UH University Dr · west side": the name may wrap between its words; the side
+ * never breaks and never starts a line with its "·" ("west / side", "· west side").
+ */
+const joinName = (name: string, side: string) => (side ? `${name}\u00a0· ${side.replace(/ /g, "\u00a0")}` : name);
+
 /** Minutes between getting to a stop and the bus leaving it. */
 const waitMin = (arrive: string, ride: TransitLeg) => Math.max(0, Math.round((Date.parse(ride.departureTime) - Date.parse(arrive)) / 60_000));
 
@@ -90,9 +96,9 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      // "Walk 5 min to #11424" says what to do, not where the rider is (24); the stop's name is the
-      // grey line under it, then when and which side ("Leave 12:09 PM · west side"), never an
-      // orphaned word (24, 44).
+      // "Walk 5 min to #11424" says what to do, not where the rider is (24); the stop's name and
+      // side are the grey line under it ("M L King Blvd @ UH University Dr · west side"), then when
+      // ("Leave 12:09 PM"). The side stays with the name it belongs to, never an orphaned word (24, 44).
       const first = legIndex === 0;
       const side = shortSide(leg.to, lang);
       const when = first ? t("plan.leaveAt", { time: formatClock(it.startTime, lang) }, lang) : t("plan.waitCap", { min: waitMin(leg.endTime, next) }, lang);
@@ -103,7 +109,7 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         step: {
           kind: "walk",
           title: leg.to.id ? t("plan.walkToStop", { min, id: leg.to.id }, lang) : t("plan.walkTo", { min, place: leg.to.name }, lang),
-          lines: [leg.to.id ? leg.to.name : "", joinParts([when, side]), ...(first ? [] : transferLines(next, lang))].filter(Boolean),
+          lines: [leg.to.id ? joinName(leg.to.name, side) : side, when, ...(first ? [] : transferLines(next, lang))].filter(Boolean),
         },
       });
       return;

@@ -122,3 +122,25 @@
   gap: var(--sp-1) var(--sp-2);
   align-items: center;
 }
+
+/* The Wait step's one big line, "Your bus: 11 min · 12:15 PM", on the strip's blue (27). */
+.yourBus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--gutter);
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+}
+
+.yourBusBig {
+  font-size: var(--fs-minutes);
+  line-height: var(--lh-minutes);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.yourBusSmall {
+  color: rgb(255 255 255 / 88%);
+  font-weight: var(--fw-medium);
+}

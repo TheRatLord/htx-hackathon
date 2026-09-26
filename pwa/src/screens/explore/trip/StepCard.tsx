@@ -19,7 +19,7 @@ import { usePrefs } from "../../../state/prefs.ts";
 import { useWalkDistance } from "../../../state/walkDistance.ts";
 import { BayTag } from "../../../ui/BayTag.tsx";
 import { Button } from "../../../ui/Button.tsx";
-import { FactStrip, LiveStrip } from "../../../ui/LiveStrip.tsx";
+import { FactStrip } from "../../../ui/LiveStrip.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import styles from "./trip.module.css";
 
@@ -95,17 +95,22 @@ function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const side = shortSide(ride.board, lang);
   const id = ride.board.id ?? "";
   const now = useNow();
-  // One big number, the rider's own bus; the bus after it only in the small line (27).
+  // One big line, the rider's own bus: "Your bus: 11 min · 12:15 PM". Whether it is a scheduled time
+  // and when the bus after it comes are small, under it (27).
+  const mins = Math.max(0, Math.round((Date.parse(dep.departureTime) - now) / 60_000));
+  const inMin = mins ? t("time.min", { n: mins }) : t("time.now");
   const time = formatClock(dep.departureTime, lang).replace(" ", "\u00a0");
   const after = strip[1] && Math.max(0, Math.round((Date.parse(strip[1].departureTime) - now) / 60_000));
-  const yours = t(matched ? "trip.wait.yours" : "trip.wait.yoursScheduled", { time });
-  const caption = after !== undefined && after !== 0 ? `${yours} · ${t("trip.wait.nextAfter", { min: after })}` : yours;
+  const small = [matched ? "" : t("trip.wait.scheduled"), after ? t("trip.wait.nextAfter", { min: after }) : ""].filter(Boolean).join(" · ");
   return (
     <>
       <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
       {ride.board.bay && <BayTag bay={ride.board.bay} />}
-      <div className={styles.bleed}>
-        <LiveStrip deps={[dep]} caption={caption} />
+      <div className={`${styles.bleed} ${styles.yourBus}`}>
+        <p className={styles.yourBusBig}>
+          {t("trip.wait.yours", { min: inMin.replace(" ", "\u00a0"), time })}
+        </p>
+        {small && <p className={styles.yourBusSmall}>{small}</p>}
       </div>
       <p className={`${styles.board} ${styles.withChip}`}>
         {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <RouteBadge route={route} size="sm" /> <strong>{ride.headsign.toUpperCase()}</strong>
