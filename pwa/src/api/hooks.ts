@@ -1,6 +1,8 @@
 // Data hooks (spec G.4). Polling runs only while the page is visible (TanStack's default)
 // and everything refetches when the page becomes visible again.
 
+export { useAlerts } from "./alertsStore.ts";
+
 import { useQuery } from "@tanstack/react-query";
 import { formatLatLon, roundedKey } from "../lib/geo.ts";
 import type { PlanQuery } from "../lib/planQuery.ts";

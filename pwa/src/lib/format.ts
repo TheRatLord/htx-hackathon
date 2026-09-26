@@ -4,6 +4,7 @@ import { formatDistance as formatDistanceEn } from "../../server/lib/geo.ts";
 import type { Dep, RouteRef, Status } from "../api/types.ts";
 import { hasKey, t, type Lang } from "../i18n/index.ts";
 import { localiseSide, sideDirection } from "./i18nServer.ts";
+import { canMakeIt } from "./walk.ts";
 
 const TIME_ZONE = "America/Chicago";
 /** Departures more than this far in the past are dropped from every list. */
@@ -25,17 +26,56 @@ export function statusOf(dep: Pick<Dep, "canceled" | "isRealtime" | "source">): 
   return dep.isRealtime ? "live" : "scheduled";
 }
 
+type Shown = { kind: "now" } | { kind: "min"; m: number } | { kind: "clock" };
+
 /**
  * The one rule for showing a departure: "Now" (live only), "16 min" under an hour,
  * otherwise the clock time. Offline, always the clock time (the cache may be old).
  * A scheduled time never says "Now": the bus may already have gone.
  */
-export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; status: Status; lang: Lang }): string {
+function shown(departureTime: string, now: number, opts: { offline?: boolean; status: Status }): Shown {
   const m = Math.floor((Date.parse(departureTime) - now) / 60_000);
   const realtime = opts.status === "live" || opts.status === "simulated";
-  if (opts.offline || m >= 60 || (m <= 0 && !realtime)) return formatClock(departureTime, opts.lang);
-  if (m <= 0) return t("time.now", undefined, opts.lang);
-  return t("time.min", { n: m }, opts.lang);
+  if (opts.offline || m >= 60 || (m <= 0 && !realtime)) return { kind: "clock" };
+  return m <= 0 ? { kind: "now" } : { kind: "min", m };
+}
+
+export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; status: Status; lang: Lang }): string {
+  const s = shown(departureTime, now, opts);
+  if (s.kind === "clock") return formatClock(departureTime, opts.lang);
+  return s.kind === "now" ? t("time.now", undefined, opts.lang) : t("time.min", { n: s.m }, opts.lang);
+}
+
+export interface DepartureView {
+  /** Offline, every time is shown as scheduled. */
+  status: Status;
+  text: string;
+  /** The rider can't walk there in time ("Leaves before you get there"); canceled wins. */
+  tooSoon: boolean;
+}
+
+/** How one departure displays, for TimeValue and every accessible label (C.2). */
+export function departureView(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; lang: Lang }): DepartureView {
+  const status = opts.offline ? "scheduled" : statusOf(dep);
+  const tooSoon = opts.walkMin !== undefined && status !== "canceled" && canMakeIt(opts.walkMin, dep, now) === "no";
+  return { status, text: formatDeparture(dep.departureTime, now, { offline: opts.offline, status, lang: opts.lang }), tooSoon };
+}
+
+/**
+ * The spoken form of a departure: "16 minutes, Live", "7:02 PM, Leaves before you get there".
+ * Scheduled is the unmarked default; `markScheduled` says it anyway (the LiveStrip's "16 minutes, scheduled").
+ */
+export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; markScheduled?: boolean; lang: Lang }): string {
+  const { lang } = opts;
+  const view = departureView(dep, now, opts);
+  const s = shown(dep.departureTime, now, { offline: opts.offline, status: view.status });
+  const value = s.kind === "min" ? t("time.minutesA11y", { count: s.m }, lang) : view.text;
+  const word = view.tooSoon
+    ? t("status.tooSoon", undefined, lang)
+    : view.status !== "scheduled" || opts.markScheduled
+      ? t(`status.${view.status}`, undefined, lang)
+      : "";
+  return word ? `${value}, ${word}` : value;
 }
 
 /** Drops departures more than 60s past, keeping the input order. */
@@ -95,4 +135,9 @@ export function headsignLine(route: Pick<RouteRef, "mode">, directionLabel: stri
   const dirKey = `dir.${directionLabel}`;
   const dir = hasKey(dirKey, lang) ? t(dirKey, undefined, lang) : directionLabel;
   return `${dir.toUpperCase()} ${to}`;
+}
+
+/** A transit-center platform's short name: "Northwest Transit Center - Platform 2" → "Platform 2", else "Stop #79" (C.14). */
+export function platformLabel(stop: { id: string; name: string }, lang: Lang): string {
+  return stop.name.split(" - ")[1] ?? t("card.stopNumber", { id: stop.id }, lang);
 }
