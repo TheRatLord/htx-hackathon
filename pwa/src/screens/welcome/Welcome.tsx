@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useT, type Lang } from "../../i18n/index.ts";
-import { useLocation } from "../../state/location.tsx";
+import { useLocation, type LocationStatus } from "../../state/location.tsx";
 import { setPrefs, usePrefs, type TextSize } from "../../state/prefs.ts";
 import { Button } from "../../ui/Button.tsx";
 import { Icon } from "../../ui/Icon.tsx";
@@ -12,20 +12,10 @@ import { MetroMark } from "../../ui/MetroMark.tsx";
 import { SegmentedControl } from "../../ui/SegmentedControl.tsx";
 import styles from "./Welcome.module.css";
 
-/** Resolves once the rider has answered the browser's location question (or it can't be asked). */
-function whenPermissionAnswered(): Promise<void> {
-  if (!navigator.permissions) return Promise.resolve();
-  return navigator.permissions
-    .query({ name: "geolocation" })
-    .then(
-      (p) =>
-        new Promise<void>((resolve) => {
-          if (p.state !== "prompt") return resolve();
-          p.addEventListener("change", () => p.state !== "prompt" && resolve());
-        }),
-    )
-    .catch(() => undefined);
-}
+/** Past this, "Show stops near me" goes on to Explore even if the browser never answers (a dismissed prompt stays "prompt"). */
+const ANSWER_TIMEOUT_MS = 10_000;
+
+const answered = (s: LocationStatus) => s === "granted-waiting" || s === "fix" || s === "denied" || s === "unavailable";
 
 export default function Welcome() {
   const t = useT();
@@ -42,12 +32,13 @@ export default function Welcome() {
 
   // "Show stops near me": go on as soon as the rider allows or denies, fix or not (Explore says "Finding…").
   useEffect(() => {
+    if (asking && answered(location.status)) finish();
+  }, [asking, location.status, finish]);
+
+  useEffect(() => {
     if (!asking) return;
-    let active = true;
-    void whenPermissionAnswered().then(() => active && finish());
-    return () => {
-      active = false;
-    };
+    const timer = setTimeout(finish, ANSWER_TIMEOUT_MS);
+    return () => clearTimeout(timer);
   }, [asking, finish]);
 
   const showStops = () => {
@@ -72,7 +63,7 @@ export default function Welcome() {
       <SegmentedControl<Lang>
         ariaLabel={t("welcome.language")}
         value={prefs.lang}
-        onChange={(lang) => prefs.set({ lang })}
+        onChange={(lang) => setPrefs({ lang })}
         options={[
           { value: "en", label: "English" },
           { value: "es", label: "Español" },
@@ -83,7 +74,7 @@ export default function Welcome() {
       <SegmentedControl<TextSize>
         ariaLabel={t("welcome.textSize")}
         value={prefs.textSize}
-        onChange={(textSize) => prefs.set({ textSize })}
+        onChange={(textSize) => setPrefs({ textSize })}
         options={[
           { value: "standard", label: "A", sub: t("welcome.sizeStandard") },
           { value: "large", label: "A+", sub: t("welcome.sizeLarge") },
@@ -92,7 +83,15 @@ export default function Welcome() {
       />
 
       <div className={styles.actions}>
-        <Button variant="primary" fullWidth icon="my_location" label={t("welcome.showStops")} onPress={showStops} />
+        <Button
+          variant="primary"
+          fullWidth
+          icon="my_location"
+          label={t("welcome.showStops")}
+          onPress={showStops}
+          disabled={asking}
+          disabledReason={t("welcome.asking")}
+        />
         <Button variant="text" label={t("welcome.notNow")} onPress={finish} />
       </div>
     </main>
