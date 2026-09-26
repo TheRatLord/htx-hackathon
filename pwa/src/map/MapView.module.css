@@ -11,13 +11,24 @@
   transition: bottom var(--dur-sheet) var(--ease);
 }
 
+/* Small and grey, tucked into the corner against the sheet's edge: it never sits on a stop, a tag
+   or a leg (placeLabels keeps them clear of it), and it reads as fine print, not a control. */
 .map :global(.maplibregl-ctrl-attrib.maplibregl-compact) {
-  margin: 0 0 6px 8px;
-  background: rgb(255 255 255 / 70%);
+  margin: 0 0 2px 2px;
+  min-height: 20px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .map :global(.maplibregl-ctrl-attrib-button) {
-  opacity: 0.55;
+  width: 20px;
+  height: 20px;
+  background-size: 16px;
+  opacity: 0.4;
+}
+
+.map :global(.maplibregl-ctrl-attrib.maplibregl-compact-show) {
+  background: rgb(255 255 255 / 90%);
 }
 
 /* A strip of map a few stops tall (extra-large text at 360): the (i) would sit on one of them. */

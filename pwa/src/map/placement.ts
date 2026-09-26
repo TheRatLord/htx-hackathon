@@ -1,9 +1,11 @@
-// Where the map's labels go, decided in screen px before MapLibre draws them: each stop-ID chip and
-// each scene label (a marker's "Transfer · #4789", a ride leg's route number) takes the first side
-// of its point that is clear of the sheet, the map chrome (search bar, FABs, attribution), the
-// markers and the labels already placed, and preferably of other pins and the trip's lines. A
-// label with no clear side is left out: a label cut by the sheet's edge read as an empty white box
-// (24-360), and a chip laid over the next stop's pin fused two stops into one (02).
+// Where the map's labels go, decided in screen px before MapLibre draws them. A stop's tag stands
+// directly above its own pin with a pointer down to it, like the "Stop 342" callout; pins closer
+// than a fingertip are one cluster pin tagged with every ID ("567 · 259"). A scene label (a
+// marker's "Transfer · #4789", a ride leg's route number) takes the first side of its point that is
+// clear of the sheet, the map chrome (search bar, FABs, attribution), the markers and the labels
+// already placed, and preferably of other pins and the trip's lines. A label with no clear side is
+// left out (MapView then nudges the map): a label cut by the sheet's edge read as an empty white
+// box (24-360), and a chip beside or between pins read as the next stop's (02, 06).
 
 import type { ClientStop } from "../api/types.ts";
 
@@ -29,9 +31,18 @@ const LINE_H = 17;
  */
 const CHIP_PAD_X = 18;
 const CHIP_PAD_Y = 8;
+/** A side-set tag's pointer is this far (px) in from the end of its box, over its pin. */
+export const CHIP_INSET = 12;
+/** How much higher a raised stop tag sits (one chip and a gap): its pointer is this much longer. */
+export const RAISE = 34;
+
+/** Narrow glyphs in Noto Sans Bold 14px: a stop ID's digits, spaces and the "·" between IDs. */
+const NARROW: Record<string, number> = { " ": 3.6, "·": 4.5, ".": 4, ",": 4, "#": 9.5 };
+const DIGIT_W = 8.2;
+const textWidth = (text: string) => [...text].reduce((w, c) => w + (NARROW[c] ?? (c >= "0" && c <= "9" ? DIGIT_W : CHAR_W)), 0);
 
 function labelSize(text: string, extra = 0): { w: number; h: number } {
-  const textW = text.length * CHAR_W + extra;
+  const textW = textWidth(text) + extra;
   const lines = Math.max(1, Math.ceil(textW / MAX_TEXT_W));
   return { w: Math.min(textW, MAX_TEXT_W) + CHIP_PAD_X, h: lines * LINE_H + CHIP_PAD_Y };
 }
@@ -55,6 +66,9 @@ function boxFor({ anchor, dx, dy }: Placement, { w, h }: { w: number; h: number 
  */
 export const LABEL_PLACEMENTS: Record<string, Placement> = {
   a: { anchor: "bottom", dx: 0, dy: -24 },
+  a2: { anchor: "bottom", dx: 0, dy: -24 - RAISE },
+  "a-r": { anchor: "bottom-left", dx: CHIP_PAD_X / 2 - CHIP_INSET, dy: -24 },
+  "a-l": { anchor: "bottom-right", dx: CHIP_INSET - CHIP_PAD_X / 2, dy: -24 },
   ar: { anchor: "bottom-left", dx: 14, dy: -20 },
   al: { anchor: "bottom-right", dx: -14, dy: -20 },
   r: { anchor: "left", dx: 30, dy: 0 },
@@ -71,22 +85,42 @@ export const LABEL_PLACEMENTS: Record<string, Placement> = {
 /** Sides with a pointer at the marker first (a, b, r, l), the corners only when those are taken. */
 const DOT_ORDER = ["a", "b", "r", "l", "ar", "al", "br", "bl"];
 /** The chip image for a scene label's side: its pointer faces the marker (layers/scene.ts). */
-export const LABEL_POINTER: Record<string, "down" | "up" | "left" | "right"> = { a: "down", ta: "down", b: "up", tb: "up", r: "left", tr: "left", l: "right", tl: "right" };
+export const LABEL_POINTER: Record<string, string> = { a: "down", a2: "down-long", "a-r": "down-start", "a-l": "down-end", ta: "down", b: "up", tb: "up", r: "left", tr: "left", l: "right", tl: "right" };
 const TALL_ORDER = ["ta", "tr", "tl", "tb"];
+/**
+ * A stop marker's tag (route near you): above its pin, centred or set to one side, else raised; only
+ * when none of those is clear (the rider's dot right above the TC's bay, 06) below it, pointing up.
+ */
+const STOP_ORDER = ["a", "a-r", "a-l", "a2", "b"];
 
 /**
- * Stop-ID chip sides. Each chip has a pointer at its pin (label-chip-<pointer>), and goes above its
- * pin first, like the "Stop 342" callout, so every tag reads the same way; else below, left or
- * right. The text sits 25/30px out: the chip's body clears the 28dp pin and its pointer tip just
- * touches it (the 2958 chip beside its pin covered half of it, 03).
+ * Stop-ID chip sides. A stop's tag always sits directly above its own pin, with a pointer down to
+ * it, like the "Stop 342" callout: never beside or below it, where it read as the next pin's tag
+ * (02, 03, 06). When two tags above neighbouring pins would touch, the second is raised one chip
+ * higher on a longer pointer ("above2"), so both still point straight down at their own pin.
  */
-export const CHIP_PLACEMENTS: Record<string, Placement & { pointer: "down" | "up" | "left" | "right" }> = {
+export const CHIP_PLACEMENTS: Record<string, Placement & { pointer: string }> = {
   above: { anchor: "bottom", dx: 0, dy: -25, pointer: "down" },
-  below: { anchor: "top", dx: 0, dy: 25, pointer: "up" },
+  // Still above the pin, the box set to one side with its pointer near that end: a neighbour's
+  // pin or tag is in the way of the centred box (3340 beside the ★ 2958 pair, 03).
+  "above-r": { anchor: "bottom-left", dx: CHIP_PAD_X / 2 - CHIP_INSET, dy: -25, pointer: "down-start" },
+  "above-l": { anchor: "bottom-right", dx: CHIP_INSET - CHIP_PAD_X / 2, dy: -25, pointer: "down-end" },
+  above2: { anchor: "bottom", dx: 0, dy: -25 - RAISE, pointer: "down-long" },
+  "above2-r": { anchor: "bottom-left", dx: CHIP_PAD_X / 2 - CHIP_INSET, dy: -25 - RAISE, pointer: "down-long-start" },
+  "above2-l": { anchor: "bottom-right", dx: CHIP_INSET - CHIP_PAD_X / 2, dy: -25 - RAISE, pointer: "down-long-end" },
+  // Last resort, only when no nudge of the map can make room above (the rider's dot would go
+  // under the sheet, 8895 at Northwest TC): beside its pin, still pointing at it.
   left: { anchor: "right", dx: -30, dy: 0, pointer: "right" },
   right: { anchor: "left", dx: 30, dy: 0, pointer: "left" },
 };
-const CHIP_ORDER = ["above", "below", "left", "right"];
+const CHIP_ORDER = ["above", "above-r", "above-l", "above2", "above2-r", "above2-l"];
+const CHIP_LAST_RESORT = ["left", "right"];
+
+/** The room a stop's pin and its tag above it take, around the pin's point (for nudging the map to show both). */
+export function chipRoom(text: string, extra = 0): Rect {
+  const box = boxFor(CHIP_PLACEMENTS.above, labelSize(text, extra));
+  return { l: Math.min(box.l, -16), t: box.t, r: Math.max(box.r, 16), b: 16 };
+}
 
 /** MapLibre's text-variable-anchor-offset value for one placement (offsets in ems of the text). */
 export const anchorOffset = ({ anchor, dx, dy }: Placement): [Anchor, [number, number]] => [anchor, [dx / TEXT_PX, dy / TEXT_PX]];
@@ -117,17 +151,57 @@ function pick(p: Pt, size: { w: number; h: number }, keys: string[], table: Reco
   return fallback && { key: fallback.key, box: fallback.box };
 }
 
-export type LabelKind = "dot" | "tall" | "leg";
+/** "stop": a stop's ID tag (route near you), always above its pin like every stop tag. */
+export type LabelKind = "dot" | "tall" | "leg" | "stop";
+
+/**
+ * A marker label's side is chosen for a label at least this many characters wide, so "Transfer ·
+ * #4789" and "Transbordo · #4789" take the same side in every language (44: the wider Spanish
+ * label fell on the 80 line where the English one had room).
+ */
+const SIDE_MIN_CHARS = 20;
 
 /** The side for a scene label, or undefined to leave it out. */
 export function placeSceneLabel(p: Pt, text: string, kind: LabelKind, s: Surroundings) {
-  const keys = kind === "leg" ? ["c"] : kind === "tall" ? TALL_ORDER : DOT_ORDER;
-  return pick(p, labelSize(text), keys, LABEL_PLACEMENTS, s);
+  const keys = kind === "leg" ? ["c"] : kind === "tall" ? TALL_ORDER : kind === "stop" ? STOP_ORDER : DOT_ORDER;
+  const sized = kind === "leg" || kind === "stop" ? text : text.padEnd(SIDE_MIN_CHARS, "x");
+  return pick(p, labelSize(sized), keys, LABEL_PLACEMENTS, s);
 }
 
-/** The side for a stop's ID chip (`extra`: px for the saved star), or undefined to leave it out. */
-export function placeChip(p: Pt, text: string, s: Surroundings, extra = 0) {
-  return pick(p, labelSize(text, extra), CHIP_ORDER, CHIP_PLACEMENTS, s);
+/**
+ * The side for a stop's ID chip (`extra`: px for the saved star), or undefined to leave it out.
+ * `beside`: the map can't be nudged to make room above, so a listed stop's tag may go beside its pin.
+ */
+export function placeChip(p: Pt, text: string, s: Surroundings, extra = 0, beside = false) {
+  const size = labelSize(text, extra);
+  return pick(p, size, CHIP_ORDER, CHIP_PLACEMENTS, s) ?? (beside ? pick(p, size, CHIP_LAST_RESORT, CHIP_PLACEMENTS, s) : undefined);
+}
+
+export interface ClusterItem {
+  id: string;
+  p: Pt;
+}
+
+/**
+ * Pins closer than `radius` px merge into one cluster pin, in priority order: each item joins the
+ * first cluster whose first member is within reach, else starts its own. Two pins 25px apart
+ * (567 and 259, 42) read as one stop with a tag floating between them.
+ */
+export function clusterPoints<T extends ClusterItem>(items: T[], radius = 40): { members: T[]; p: Pt }[] {
+  const out: { members: T[]; p: Pt }[] = [];
+  for (const it of items) {
+    const near = out.find((c) => Math.hypot(c.members[0].p.x - it.p.x, c.members[0].p.y - it.p.y) < radius);
+    if (near) near.members.push(it);
+    else out.push({ members: [it], p: it.p });
+  }
+  for (const c of out)
+    if (c.members.length > 1) c.p = { x: c.members.reduce((a, m) => a + m.p.x, 0) / c.members.length, y: c.members.reduce((a, m) => a + m.p.y, 0) / c.members.length };
+  return out;
+}
+
+/** A cluster's tag: its IDs in priority order ("567 · 259"), at most three, then "+n". */
+export function clusterLabel(ids: string[]): string {
+  return ids.length > 3 ? `${ids.slice(0, 3).join(" · ")} +${ids.length - 3}` : ids.join(" · ");
 }
 
 /** A line drawn on the map as small boxes every few px, for labels to keep off it. */
@@ -142,6 +216,30 @@ export function lineRects(points: Pt[], half = 4, step = 8): Rect[] {
     for (let k = 1; k < n; k++) out.push(around({ x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n }, square(half)));
   }
   return out;
+}
+
+const metres = (a: [number, number], b: [number, number]) => Math.hypot((a[0] - b[0]) * 111320 * Math.cos((a[1] * Math.PI) / 180), (a[1] - b[1]) * 110540);
+
+/** The last point of `coords` is reached straight from where the line first comes within `nearM` of it and then wanders. */
+function trimEnd(coords: [number, number][], nearM: number): [number, number][] {
+  const end = coords[coords.length - 1];
+  const rest: number[] = new Array(coords.length).fill(0);
+  for (let i = coords.length - 2; i >= 0; i--) rest[i] = rest[i + 1] + metres(coords[i], coords[i + 1]);
+  for (let i = 0; i < coords.length - 2; i++) {
+    const d = metres(coords[i], end);
+    if (d < nearM && rest[i] > 2 * d + 150) return [...coords.slice(0, i + 1), end];
+  }
+  return coords;
+}
+
+/**
+ * A ride leg as drawn: a bus that loops around a terminal before its last stop (the 73 into Hobby,
+ * 25) drew a knot of line at the destination pin. The line goes straight to the stop instead from
+ * where the bus first comes near it, and likewise from its first stop.
+ */
+export function trimLoops(coords: [number, number][], nearM = 600): [number, number][] {
+  if (coords.length < 4) return coords;
+  return trimEnd(trimEnd(coords, nearM).reverse(), nearM).reverse();
 }
 
 /** The point a fraction `f` of the way along a line (by length): 0.5 is where a ride leg's route label goes first. */
