@@ -1,0 +1,9 @@
+# Round 1, fixer B: shared-layer requests
+
+These came up on Search (D5), Route page (D9), Transit Center (D10) and Route Schedules (D20). The fixes need files B doesn't own.
+
+1. **BayDiagram (`src/ui/BayDiagram.tsx` + CSS), judges 19/20.** Drop the "Diagram, not to scale" caption (`bay.diagramCaption`). Give bay tiles a style of their own so they don't read as route chips: for example round tiles, or bold letters on a grey platform bar. Also drop the upper-case transform on `.label`, since the TC list headers are now sentence case ("Bay C · Platform 1"). The TC screen already passes "Platform 2 · Bays K–T" as the label, not the stop #.
+2. **LiveStrip, scheduled time just passed.** A scheduled departure 0–60 s in the past still shows as a clock time ("12:00 PM" at 12:00:05), next to minutes. D10's banner now filters these out, and the D9 row does too. The same thing can happen on the stop sheet strip. Suggest `LiveStrip` drop scheduled deps whose time has passed.
+3. **e2e F11 goal text (`tests/e2e/flows.spec.ts:351`).** Fixer A renamed D4's title "Stops near {place}" to "Near {place}", so F11 @412 fails on "Stops near Houston Museum of Natural Science". Update the goal to "Near Houston Museum of Natural Science". The D5 part of F11 still passes.
+4. **AlertStatusLine in search results (judge 09, simplicity).** The judges asked for a one-line alert in search ("Stop moved at Westheimer @ Kirby ›"). F6's goal needs the full text on screen, so B left it as it is. If a compact variant is wanted, it needs a prop on the shared component and a new F6 goal.
+5. **Not done, needs a map scene:** the judges asked for a map strip on D9 (route line) and D10 (TC location). D9 now links to "Show on map" (`/explore?route=…`, D3 with the route line). D10 has no map. A real map strip needs the Explore chrome or a new scene type.

@@ -1,0 +1,103 @@
+{
+  "_comment": "TO BE CONFIRMED BY METRO: every value in this file is a placeholder from public fare pages and has not been confirmed by METRO. The UI says so while confirmedByMetro is false. parkAndRideRoutes is derived from public/data/routes.json (long name contains P&R or Park & Ride, or route number 200-299).",
+  "confirmedByMetro": false,
+  "asOf": "2026-09-25",
+  "items": [
+    {
+      "key": "local",
+      "label": {
+        "en": "Local bus and METRORail",
+        "es": "Autobús local y METRORail"
+      },
+      "value": {
+        "en": "$1.25",
+        "es": "$1.25"
+      }
+    },
+    {
+      "key": "dayPass",
+      "label": {
+        "en": "Day pass",
+        "es": "Pase de un día"
+      },
+      "value": {
+        "en": "$3.00",
+        "es": "$3.00"
+      }
+    },
+    {
+      "key": "parkAndRide",
+      "label": {
+        "en": "Park & Ride (by zone)",
+        "es": "Park & Ride (según la zona)"
+      },
+      "value": {
+        "en": "$2.00–$4.50",
+        "es": "$2.00–$4.50"
+      }
+    },
+    {
+      "key": "transfers",
+      "label": {
+        "en": "Transfers",
+        "es": "Transbordos"
+      },
+      "value": {
+        "en": "Free within 3 hours",
+        "es": "Gratis durante 3 horas"
+      }
+    }
+  ],
+  "reduced": [
+    {
+      "key": "reduced",
+      "label": {
+        "en": "Seniors 65–69, students, riders with disabilities, Medicare",
+        "es": "De 65 a 69 años, estudiantes, personas con discapacidad o con Medicare"
+      },
+      "value": {
+        "en": "$0.60",
+        "es": "$0.60"
+      }
+    },
+    {
+      "key": "seniors70",
+      "label": {
+        "en": "Seniors 70 and older",
+        "es": "De 70 años o más"
+      },
+      "value": {
+        "en": "Free",
+        "es": "Gratis"
+      }
+    }
+  ],
+  "parkAndRideRoutes": [
+    "202",
+    "204",
+    "209",
+    "212",
+    "216",
+    "217",
+    "219",
+    "221",
+    "222",
+    "228",
+    "229",
+    "236",
+    "237",
+    "244",
+    "247",
+    "249",
+    "255",
+    "256",
+    "257",
+    "259",
+    "265",
+    "269",
+    "270",
+    "292",
+    "297",
+    "298"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "note": "Hubs that neither GTFS nor METRO's Transit Data API describe at bay level. Merged into transit-centers.json by `npm run data:transit-centers`. Routes and directions come from GTFS; the curb areas are ILLUSTRATIVE demo data, not verified on site.",
+  "transitCenters": [
+    {
+      "id": "hobby-airport",
+      "name": "Hobby Airport",
+      "stopIds": ["10567"],
+      "lat": 29.655337,
+      "lon": -95.275771,
+      "source": "hand-authored-demo",
+      "sourceNote": "GTFS and the Transit Data API list Hobby Airport as one stop (#10567) with no bays. Curb labels below are a plausible layout for the demo and are NOT verified.",
+      "bays": [
+        {
+          "bay": "Curb 1",
+          "stopId": "10567",
+          "lat": 29.655337,
+          "lon": -95.275771,
+          "routes": [
+            { "routeId": "040", "route": "40", "directionId": 0, "directionLabel": "Northbound", "headsign": "N SHEPHERD P&R", "source": "hand-authored-demo" },
+            { "routeId": "050", "route": "50", "directionId": 0, "directionLabel": "Northbound", "headsign": "EASTWOOD TC", "source": "hand-authored-demo" },
+            { "routeId": "500", "route": "500", "directionId": 0, "directionLabel": "Northbound", "headsign": "DOWNTOWN DIRECT/TERMINAL E", "source": "hand-authored-demo" }
+          ]
+        },
+        {
+          "bay": "Curb 2",
+          "stopId": "10567",
+          "lat": 29.655337,
+          "lon": -95.275771,
+          "routes": [
+            { "routeId": "040", "route": "40", "directionId": 1, "directionLabel": "Southbound", "headsign": "MONROE P&R", "source": "hand-authored-demo" },
+            { "routeId": "073", "route": "73", "directionId": 1, "directionLabel": "Westbound", "headsign": "FANNIN SOUTH TC", "source": "hand-authored-demo" },
+            { "routeId": "088", "route": "88", "directionId": 1, "directionLabel": "Southbound", "headsign": "SAN JAC COLLEGE", "source": "hand-authored-demo" }
+          ]
+        }
+      ],
+      "unassignedRoutes": []
+    }
+  ]
+}

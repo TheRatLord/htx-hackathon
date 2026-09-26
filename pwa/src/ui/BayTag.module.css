@@ -1,0 +1,19 @@
+.tag {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  /* Same width for every one-letter bay, so the route chips after it line up. */
+  min-width: 4em;
+  min-height: 28px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-chip);
+  background: var(--c-nav-bg);
+  color: var(--c-text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-bold);
+  /* Inline in a TC name ("Northwest Transit Center · Bay M", C.5c), centred on the text. */
+  vertical-align: middle;
+  white-space: nowrap;
+}

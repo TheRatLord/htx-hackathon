@@ -1,0 +1,39 @@
+import { useLang, useT } from "../i18n/index.ts";
+import { formatDistance } from "../lib/format.ts";
+import { MAX_WALK_MINUTES, walkMinutes } from "../lib/walk.ts";
+import { usePrefs } from "../state/prefs.ts";
+import { Icon } from "./Icon.tsx";
+import styles from "./WalkButton.module.css";
+import type { WalkButtonProps } from "./types.ts";
+
+
+/**
+ * C.5a: the compact "🚶 Walk / 1 min" button (read top to bottom, "Walk 1 min") at the top right of every stop card (one layout on
+ * every card, width and text size: it never takes a row of its own, and it always says "walk": a
+ * bare "1 min" above the bus times read as a bus time, 46). Opens Walk (D8). From a place (D4) the
+ * pill still reads "4 min / walk" (a three-line "walk from the museum" pill squeezed the stop name,
+ * round 4): the sheet's "Stops near <place>" overline says where from, and the accessible name
+ * says it in full.
+ */
+export function WalkButton({ stopId, tcName, walkDistanceM, walkFrom, onPress }: WalkButtonProps) {
+  const t = useT();
+  const lang = useLang();
+  const { walkPace } = usePrefs();
+  const min = walkMinutes(walkDistanceM, walkPace);
+  const far = min > MAX_WALK_MINUTES;
+  const value = far ? formatDistance(walkDistanceM, lang) : t("time.min", { n: min });
+  let label: string;
+  if (tcName) label = far ? t("card.walkToTcDistanceA11y", { name: tcName, distance: value }) : t("card.walkToTcA11y", { name: tcName, count: min });
+  else if (far) label = t("card.walkDistanceA11y", { id: stopId, distance: value });
+  else if (walkFrom) label = t("card.walkFromA11y", { from: walkFrom.name ?? walkFrom.label, id: stopId, count: min });
+  else label = t("card.walkA11y", { id: stopId, count: min });
+  return (
+    <button type="button" className={styles.walk} aria-label={label} onClick={onPress}>
+      <Icon name="directions_walk" size={20} />
+      <span className={styles.text}>
+        <span className={styles.sub}>{t("card.walkSub")}</span>
+        <span className={styles.value}>{value}</span>
+      </span>
+    </button>
+  );
+}

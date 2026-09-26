@@ -1,0 +1,124 @@
+// D10's view of a transit center: its route chips, where a route leaves from, and its departures
+// grouped by bay. Pure functions over the /api/transit-centers/:id answer.
+
+import type { Arrival, RouteRef, TransitCenterDetail } from "../../../api/types.ts";
+import { upcoming } from "../../../lib/format.ts";
+import { canonicalRouteId, routeRefByName, routeRefOrFallback } from "../../../lib/routes.ts";
+import { compareRouteNames } from "../../../lib/sortRoutes.ts";
+
+export type Bay = TransitCenterDetail["bays"][number];
+
+export interface DepartureRow {
+  route: RouteRef;
+  directionLabel: string;
+  headsign: string;
+  deps: Arrival[];
+}
+
+/** Every route at the center: bay routes plus the ones METRO publishes without a bay, in route-number order. */
+export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoutes">): RouteRef[] {
+  const refs = new Map<string, RouteRef>();
+  for (const b of tc.bays) for (const r of b.routes) refs.set(canonicalRouteId(r.routeId), routeRefOrFallback(r.routeId, r.route));
+  for (const name of tc.unassignedRoutes) {
+    const ref = routeRefByName(name);
+    if (ref) refs.set(ref.id, ref);
+  }
+  return [...refs.values()].sort((a, b) => compareRouteNames(a.name, b.name));
+}
+
+/**
+ * Where each route is first named in the departures list below (platform, then bay, then the soonest
+ * departure in each bay, then routes without a bay). `first` (a chosen route) leads at -1.
+ */
+export function routeListOrder(
+  tc: Pick<TransitCenterDetail, "bays" | "stopIds" | "unassignedDepartures">,
+  names: Map<string, string>,
+  now: number,
+  first?: string,
+): Map<string, number> {
+  const order = new Map<string, number>();
+  if (first) order.set(canonicalRouteId(first), -1);
+  const note = (id: string) => {
+    if (!order.has(id)) order.set(id, order.size);
+  };
+  for (const p of platformsOf(tc, names)) for (const b of p.bays) for (const r of departureRows(b.departures, now)) note(r.route.id);
+  for (const r of departureRows(tc.unassignedDepartures, now)) note(r.route.id);
+  return order;
+}
+
+/** The center's routes (tcRoutes) sorted by `order`; routes it doesn't name follow in number order. */
+export function orderRoutes(routes: RouteRef[], order: Map<string, number>): RouteRef[] {
+  const at = (r: RouteRef) => order.get(r.id) ?? order.get(canonicalRouteId(r.id)) ?? Infinity;
+  // Array.sort is stable: routes with nothing listed keep tcRoutes' number order.
+  return [...routes].sort((a, b) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1));
+}
+
+/**
+ * The center's routes in the order the departures list below names them, so the first chip is the
+ * first route the rider reads in the list. Routes with nothing listed follow in number order.
+ */
+export function routesInListOrder(
+  tc: Pick<TransitCenterDetail, "bays" | "stopIds" | "unassignedRoutes" | "unassignedDepartures">,
+  names: Map<string, string>,
+  now: number,
+  first?: string,
+): RouteRef[] {
+  return orderRoutes(tcRoutes(tc), routeListOrder(tc, names, now, first));
+}
+
+export const servesRoute = (bay: Pick<Bay, "routes">, routeId: string) =>
+  bay.routes.some((r) => canonicalRouteId(r.routeId) === canonicalRouteId(routeId));
+
+/**
+ * Upcoming departures (C.2: more than a minute past is dropped) as rows of one route, direction
+ * and headsign, in the order they leave.
+ */
+export function departureRows(deps: Arrival[], now: number, routeId?: string): DepartureRow[] {
+  const rows = new Map<string, DepartureRow>();
+  for (const d of upcoming(deps, now)) {
+    if (routeId && canonicalRouteId(d.routeId) !== canonicalRouteId(routeId)) continue;
+    const key = `${d.routeId}|${d.directionLabel}|${d.headsign}`;
+    let row = rows.get(key);
+    if (!row) {
+      row = { route: routeRefOrFallback(d.routeId, d.routeShortName, d.routeColor), directionLabel: d.directionLabel, headsign: d.headsign, deps: [] };
+      rows.set(key, row);
+    }
+    row.deps.push(d);
+  }
+  return [...rows.values()];
+}
+
+export type BayListItem<B> = { kind: "bay"; bay: B; rows: DepartureRow[] } | { kind: "quiet"; bays: B[] };
+
+/** Bays in list order, with each run of 2+ bays that have no departures folded into one "quiet" line. */
+export function foldQuietBays<B>(bays: { bay: B; rows: DepartureRow[] }[]): BayListItem<B>[] {
+  const out: BayListItem<B>[] = [];
+  const flush = (run: B[]) => {
+    if (run.length === 1) out.push({ kind: "bay", bay: run[0], rows: [] });
+    else if (run.length > 1) out.push({ kind: "quiet", bays: run });
+  };
+  let run: B[] = [];
+  for (const b of bays) {
+    if (b.rows.length) {
+      flush(run);
+      run = [];
+      out.push({ kind: "bay", ...b });
+    } else {
+      run.push(b.bay);
+    }
+  }
+  flush(run);
+  return out;
+}
+
+/** One diagram block per platform stop, bays in letter order; platforms in name order ("Platform 1" first). */
+export function platformsOf(tc: Pick<TransitCenterDetail, "bays" | "stopIds">, names: Map<string, string>): { stopId: string; name?: string; bays: Bay[] }[] {
+  return tc.stopIds
+    .map((stopId) => ({
+      stopId,
+      name: names.get(stopId),
+      bays: tc.bays.filter((b) => b.stopId === stopId).sort((a, b) => a.bay.localeCompare(b.bay)),
+    }))
+    .filter((p) => p.bays.length > 0)
+    .sort((a, b) => (a.name ?? a.stopId).localeCompare(b.name ?? b.stopId, "en", { numeric: true }));
+}

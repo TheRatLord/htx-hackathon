@@ -1,0 +1,42 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: flex-start;
+  padding: 2px 6px;
+  border-radius: var(--r-chip);
+  /* Samples on the strip's own blue, so they look like the times they explain (C.3). */
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.canceled {
+  text-decoration: line-through;
+}
+
+.live {
+  gap: var(--sp-1);
+  align-items: center;
+}
+
+.liveWord {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #fff;
+  font-weight: var(--fw-bold);
+}

@@ -1,0 +1,77 @@
+{
+  "note": "DEMO fixtures, used only when METRO's live alerts feed is unavailable (no METRO_API_KEY, OFFLINE=1, or upstream failure). Content is illustrative, modelled on real METRO alert wording.",
+  "alerts": [
+    {
+      "id": "demo-route5-scott-griggs",
+      "cause": "CONSTRUCTION",
+      "effect": "DETOUR",
+      "severity": "WARNING",
+      "header": {
+        "en": "Around Scott St & Griggs Rd for construction",
+        "es": "Por Scott St y Griggs Rd debido a construcción"
+      },
+      "description": {
+        "en": "Stops #9976 and #9977 (Scott St @ Griggs Rd) are temporarily closed. Northbound: board at Scott St @ Southmore Blvd instead. Southbound: board at Scott St @ Holman St. Route 54 is not affected.",
+        "es": "Las paradas #9976 y #9977 (Scott St @ Griggs Rd) están cerradas temporalmente. Hacia el norte: suba en Scott St @ Southmore Blvd. Hacia el sur: suba en Scott St @ Holman St. La Ruta 54 no está afectada."
+      },
+      "routeIds": ["005"],
+      "stopIds": ["9976", "9977"],
+      "activeFrom": "2026-09-01T05:00:00Z",
+      "activeUntil": null
+    },
+    {
+      "id": "demo-redline-single-track",
+      "cause": "MAINTENANCE",
+      "effect": "REDUCED_SERVICE",
+      "severity": "WARNING",
+      "header": {
+        "en": "Trains every 18 minutes between Downtown TC and TMC TC this weekend",
+        "es": "Trenes cada 18 minutos entre Downtown TC y TMC TC este fin de semana"
+      },
+      "description": {
+        "en": "Track maintenance means trains share one track between Downtown Transit Center and Texas Medical Center Transit Center. Allow 15 extra minutes. Board on the platform shown on station screens.",
+        "es": "Por mantenimiento de vías, los trenes comparten una sola vía entre Downtown Transit Center y Texas Medical Center Transit Center. Planee 15 minutos adicionales. Aborde en el andén indicado en las pantallas."
+      },
+      "routeIds": ["700"],
+      "stopIds": [],
+      "activeFrom": "2026-09-01T05:00:00Z",
+      "activeUntil": null
+    },
+    {
+      "id": "demo-route82-stop-closure",
+      "cause": "OTHER_CAUSE",
+      "effect": "STOP_MOVED",
+      "severity": "INFO",
+      "header": {
+        "en": "Eastbound stop at Westheimer Rd @ Kirby Dr is now 150 ft east",
+        "es": "La parada hacia el este en Westheimer Rd @ Kirby Dr está ahora 150 pies al este"
+      },
+      "description": {
+        "en": "Due to sidewalk work, the eastbound stop is temporarily in front of the pharmacy, 150 ft east of Kirby Dr.",
+        "es": "Por obras en la acera, la parada hacia el este está temporalmente frente a la farmacia, 150 pies al este de Kirby Dr."
+      },
+      "routeIds": ["082"],
+      "stopIds": [],
+      "activeFrom": "2026-09-01T05:00:00Z",
+      "activeUntil": null
+    },
+    {
+      "id": "demo-hobby-elevator",
+      "cause": "TECHNICAL_PROBLEM",
+      "effect": "ACCESSIBILITY_ISSUE",
+      "severity": "INFO",
+      "header": {
+        "en": "Hobby Airport: use the ground-floor exit near baggage claim to reach the bus curb",
+        "es": "Aeropuerto Hobby: use la salida de la planta baja cerca del reclamo de equipaje para llegar a la parada"
+      },
+      "description": {
+        "en": "An elevator between the terminal and the ground transportation level is out of service. Step-free access is available through the baggage claim exit.",
+        "es": "Un elevador entre la terminal y el nivel de transporte terrestre está fuera de servicio. Hay acceso sin escalones por la salida del reclamo de equipaje."
+      },
+      "routeIds": ["040", "050", "073", "088", "500"],
+      "stopIds": ["10567"],
+      "activeFrom": "2026-09-01T05:00:00Z",
+      "activeUntil": null
+    }
+  ]
+}

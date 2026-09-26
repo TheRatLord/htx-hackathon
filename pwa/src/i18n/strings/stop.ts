@@ -1,0 +1,81 @@
+// Stop sheet (D6) and Full Schedule (D7).
+import type { Strings } from "../index.ts";
+
+const strings: Strings = {
+  en: {
+    stop: {
+      fallbackTitle: "Stop #{id}",
+      partOfTc: "Part of {tc} · Departures by bay ›",
+      notFoundTitle: "Stop not found",
+      crowdedOut: "No trip to {headsign} among the next buses. See the Full Schedule.",
+      stripError: "Times can't be loaded right now.",
+      savedToast: "Saved. It will show at the top of Explore.",
+      removedToast: "Removed from saved.",
+      saveA11y: "Save stop {id}",
+      fullSchedule: "Full Schedule",
+      /** 360dp or Extra large: "Full Schedule" wrapped to two lines and pushed Track bus under the nav. */
+      scheduleShort: "Schedule",
+      track: "Track bus",
+      tracking: "Stop tracking",
+      trackingA11y: "Stop tracking Route {name}",
+      trackNote: "We'll buzz 5 min before your bus. Keep screen on.",
+      trackToast: "Route {name} is 5 min away",
+      trackBody: "{headsign} · {stop}",
+      openRoute: "Open Route {name}",
+      liveUnavailable: "Live times unavailable. Showing scheduled times.",
+      searchInstead: "Search",
+      routes: "Routes at this stop",
+      otherRoutes: "Other routes at this stop",
+      laterToday: "Route {name} later today",
+      schedule: {
+        title: "Full Schedule",
+        at: "at {stop}",
+        today: "Today, {date}",
+        now: "Now",
+        empty: "No Route {name} trips from this stop today.",
+        emptyDay: "No Route {name} trips from this stop on this day.",
+        next: "Next trip: {when}.",
+        hint: "Numbers are minutes past the hour.",
+      },
+    },
+  },
+  es: {
+    stop: {
+      fallbackTitle: "Parada #{id}",
+      partOfTc: "Parte de {tc} · Salidas por bahía ›",
+      notFoundTitle: "No se encontró la parada",
+      crowdedOut: "Ningún viaje a {headsign} entre los próximos autobuses. Vea el horario completo.",
+      stripError: "No se pueden cargar las horas ahora.",
+      savedToast: "Guardada. Aparecerá arriba en Explorar.",
+      removedToast: "Se quitó de guardadas.",
+      saveA11y: "Guardar la parada {id}",
+      // "Horario completo" wrapped to two lines in the half-width button even at 412dp.
+      fullSchedule: "Horario",
+      scheduleShort: "Horario",
+      track: "Avisarme",
+      tracking: "Dejar de avisar",
+      trackingA11y: "Dejar de avisar de la ruta {name}",
+      trackNote: "Le avisaremos 5 min antes. Deje la pantalla encendida.",
+      trackToast: "La ruta {name} llega en 5 min",
+      trackBody: "{headsign} · {stop}",
+      openRoute: "Abrir la ruta {name}",
+      liveUnavailable: "Las horas en vivo no están disponibles. Se muestran las horas programadas.",
+      searchInstead: "Buscar",
+      routes: "Rutas en esta parada",
+      otherRoutes: "Otras rutas en esta parada",
+      laterToday: "Ruta {name} más tarde hoy",
+      schedule: {
+        title: "Horario completo",
+        at: "en {stop}",
+        today: "Hoy, {date}",
+        now: "Ahora",
+        empty: "No hay viajes de la ruta {name} desde esta parada hoy.",
+        emptyDay: "No hay viajes de la ruta {name} desde esta parada ese día.",
+        next: "Próximo viaje: {when}.",
+        hint: "Los números son los minutos después de la hora.",
+      },
+    },
+  },
+};
+
+export default strings;

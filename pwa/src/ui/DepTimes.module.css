@@ -1,0 +1,44 @@
+/* Every time carries a leading "·"; the line is shifted left by one separator and clipped, so a
+   time that starts a line (the first, or one that wrapped) never starts with a dot. */
+.times {
+  --sep-w: 24px;
+  display: block;
+  overflow: hidden;
+}
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-left: calc(-1 * var(--sep-w));
+}
+
+.item {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.sep {
+  flex: none;
+  width: var(--sep-w);
+  color: var(--c-text-variant);
+  font-size: var(--fs-minutes);
+  font-weight: var(--fw-bold);
+  text-align: center;
+}
+
+/* "4:20 AM" (the usual big time) over "First bus · in 1 hr 50 min" (grey, body size). */
+.firstBus {
+  display: flex;
+  flex-direction: column;
+}
+
+.lead {
+  color: var(--c-text-variant);
+}
+
+/* "The 1 min bus leaves before you get there": once, under a row that starts with that bus greyed. */
+.tooSoonLine {
+  display: block;
+  color: var(--c-text-variant);
+}

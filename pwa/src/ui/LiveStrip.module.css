@@ -1,0 +1,80 @@
+.strip {
+  display: flex;
+  /* Wraps rather than scrolling when two clock times don't fit (large text). */
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  /* Numbers line up across items; a status word hangs under its own number. */
+  align-items: flex-start;
+  min-height: var(--strip-h);
+  padding: var(--sp-3) var(--gutter);
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+}
+
+/* The times row inside a strip that also has a caption line. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  align-items: flex-start;
+}
+
+.withCaption {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: var(--sp-1);
+}
+
+.withCaption .empty {
+  align-self: flex-start;
+}
+
+.facts {
+  gap: 0 var(--sp-6);
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;
+}
+
+.digits {
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+.item {
+  flex: none;
+}
+
+.placeholder,
+.empty {
+  align-self: center;
+}
+
+.placeholder {
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+.empty {
+  font-size: var(--fs-body);
+}
+
+/* One row: items that wrap are hidden by useOneRow (LiveStrip.tsx). */
+.oneRow {
+  overflow: hidden;
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-3);
+}
+
+/* White, not Live green: "First bus · in 3 hr" is a scheduled time. */
+.nextCaption,
+.caption {
+  color: rgb(255 255 255 / 88%);
+  font-weight: var(--fw-medium);
+}

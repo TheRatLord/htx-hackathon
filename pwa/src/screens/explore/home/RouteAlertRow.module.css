@@ -1,0 +1,40 @@
+/* One 48dp line with the alert box's edge colour: "⚠ Detour: Main St closed betwe… ›". */
+.row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 1px solid var(--c-outline);
+  border-left: 4px solid var(--c-alert-text);
+  border-radius: var(--r-alert);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: start;
+}
+
+.advisory {
+  border-left-color: var(--c-brand-navy);
+}
+
+.row > svg {
+  flex: none;
+}
+
+.row > svg:last-child {
+  color: var(--c-text-variant);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  flex: none;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+}

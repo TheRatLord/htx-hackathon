@@ -1,0 +1,45 @@
+.map {
+  position: absolute;
+  inset: 0;
+  background: var(--c-map-land);
+}
+
+/* The compact attribution sits bottom-left, just above the sheet: not over the stops and labels
+   under the search bar, and clear of the FAB column on the right (C.16). A small grey (i). */
+.map :global(.maplibregl-ctrl-bottom-left) {
+  bottom: var(--map-bottom, 0px);
+  transition: bottom var(--dur-sheet) var(--ease);
+}
+
+/* Small and grey, tucked into the corner against the sheet's edge: it never sits on a stop, a tag
+   or a leg (placeLabels keeps them clear of it), and it reads as fine print, not a control. */
+.map :global(.maplibregl-ctrl-attrib.maplibregl-compact) {
+  margin: 0 0 2px 2px;
+  min-height: 20px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map :global(.maplibregl-ctrl-attrib-button) {
+  width: 20px;
+  height: 20px;
+  background-size: 16px;
+  opacity: 0.4;
+}
+
+.map :global(.maplibregl-ctrl-attrib.maplibregl-compact-show) {
+  background: rgb(255 255 255 / 90%);
+}
+
+/* A strip of map a few stops tall (extra-large text at 360): the (i) would sit on one of them. */
+.noAttrib :global(.maplibregl-ctrl-bottom-left) {
+  display: none;
+}
+
+/* Measures env(safe-area-inset-top) for the camera padding. */
+.safeTop {
+  position: absolute;
+  width: 0;
+  height: env(safe-area-inset-top);
+  visibility: hidden;
+}

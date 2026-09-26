@@ -1,0 +1,68 @@
+.form {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* Under the sheet's grab bar, which is drawn over the top of the header. */
+.inSheet {
+  padding-top: var(--sp-4);
+}
+
+.back {
+  margin-left: calc(-1 * var(--sp-3));
+}
+
+.field {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--sp-4);
+  align-items: center;
+  min-height: var(--searchbar-h);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-search-field);
+}
+
+.text {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch-min);
+  border: none;
+  background: none;
+  font-size: var(--fs-body);
+}
+
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.input::placeholder {
+  color: var(--c-text-secondary);
+}
+
+/* One ring round the pill (not the rectangular input inside it): the pill's own border turns
+   into a 2px primary outline, drawn flush, so there is never a double box. */
+.field:has(.input:focus-visible) {
+  border-color: var(--c-primary);
+  outline: 1px solid var(--c-primary);
+  outline-offset: 0;
+}
+
+.input:focus-visible {
+  outline: none;
+}

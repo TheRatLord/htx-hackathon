@@ -1,0 +1,152 @@
+// D19 Settings: one page of groups; the More rows deep-link to each group by #anchor. Language,
+// text size and walking pace use Welcome's segmented control, and the text-size preview sits right
+// under its control.
+
+import type { ReactNode } from "react";
+import type { Dep, NearbyRoute, StopSummary } from "../../api/types.ts";
+import { usePageTitle } from "../../app/usePageTitle.ts";
+import { useBack } from "../../app/useBack.ts";
+import { useT } from "../../i18n/index.ts";
+import { notifyPermission } from "../../lib/notify.ts";
+import { useNow } from "../../state/clock.ts";
+import { useLocation } from "../../state/location.tsx";
+import { usePrefs, type Prefs } from "../../state/prefs.ts";
+import { AppBar } from "../../ui/AppBar.tsx";
+import { Button } from "../../ui/Button.tsx";
+import { ListRow } from "../../ui/ListRow.tsx";
+import { NearbyStopCard } from "../../ui/NearbyStopCard.tsx";
+import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { SegmentedControl } from "../../ui/SegmentedControl.tsx";
+import type { SegmentedOption } from "../../ui/types.ts";
+import styles from "./more.module.css";
+import { locationStatusText, notifyStatusText, useScrollToHash, useShowWelcome } from "./shared.ts";
+
+function Group({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  return (
+    <section className={styles.group}>
+      <SectionHeader id={id} label={label} tone="blue" />
+      {children}
+    </section>
+  );
+}
+
+/**
+ * The same segmented control as Welcome (D1), so riders recognise the language and text-size
+ * choice they made on the first screen. It applies as soon as it is tapped.
+ */
+function Choice<K extends "lang" | "textSize" | "walkPace">({ label, pref, options }: { label: string; pref: K; options: SegmentedOption<Prefs[K]>[] }) {
+  const prefs = usePrefs();
+  return (
+    <div className={styles.segmented}>
+      <SegmentedControl<Prefs[K]> ariaLabel={label} value={prefs[pref]} onChange={(v) => prefs.set({ [pref]: v } as Partial<Prefs>)} options={options} />
+    </div>
+  );
+}
+
+const noop = () => {};
+
+/** Stop 342 as a static sample, so the rider sees the chosen text size and pace on a real card. */
+function PreviewCard() {
+  const now = useNow();
+  const dep = (min: number): Dep => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule", tripId: `preview-${min}` });
+  // Raw METRO data, as the API sends it: the card localises the side and direction words
+  // (sideLine, headsignLine), so Spanish reads "Lado norte de Lamar St" and "RUMBO NORTE".
+  // Stop 342 is served northbound, so the stop and its route agree.
+  const stop: StopSummary = {
+    id: "342",
+    name: "Lamar St @ Main St",
+    lat: 29.75651,
+    lon: -95.36412,
+    kind: "stop",
+    directionLabel: "Northbound",
+    side: "North side of Lamar St",
+    routes: [{ id: "040", name: "40", color: "#004080", textColor: "#FFFFFF" }],
+    subtitle: "",
+  };
+  const route: NearbyRoute = {
+    routeId: "040",
+    name: "40",
+    color: "#004080",
+    textColor: "#FFFFFF",
+    directionLabel: "Northbound",
+    headsign: "N Shepherd P&R",
+    departures: [16, 46].map((m) => ({ ...dep(m), minutesAway: m, delaySeconds: 0 })),
+  };
+  return <NearbyStopCard stop={stop} walkDistanceM={170} routes={[route]} onOpen={noop} onOpenRoute={noop} onWalk={noop} />;
+}
+
+export default function Settings() {
+  const t = useT();
+  const location = useLocation();
+  const showWelcome = useShowWelcome();
+  usePageTitle(t("settings.title"));
+  useScrollToHash();
+  // Offer to ask when nobody has asked yet, or when the last attempt found no fix.
+  const canAsk = location.status === "unavailable" || (!location.requested && location.status !== "fix" && location.status !== "denied");
+
+  return (
+    <div className={styles.page}>
+      <AppBar title={t("settings.title")} onBack={useBack()} />
+
+      <Group id="language" label={t("more.language")}>
+        <Choice
+          label={t("more.language")}
+          pref="lang"
+          options={[
+            { value: "en", label: t("more.lang.en") },
+            { value: "es", label: t("more.lang.es") },
+          ]}
+        />
+      </Group>
+
+      <Group id="text-size" label={t("more.textSize")}>
+        <Choice
+          label={t("more.textSize")}
+          pref="textSize"
+          options={[
+            { value: "standard", label: "A", sub: t("more.size.standard") },
+            { value: "large", label: "A+", sub: t("more.size.large"), labelSize: "large" },
+            { value: "xlarge", label: "A++", sub: t("more.size.xlarge"), labelSize: "xlarge" },
+          ]}
+        />
+        <p className={styles.note}>{t("settings.preview")}</p>
+        {/* A sample only: nothing on it can be tapped, so testing a size never leaves Settings. */}
+        <div className={styles.preview} inert>
+          <PreviewCard />
+        </div>
+      </Group>
+
+      <Group id="walking-pace" label={t("more.walkingPace")}>
+        <Choice
+          label={t("more.walkingPace")}
+          pref="walkPace"
+          options={[
+            { value: "normal", label: t("more.pace.normal"), sub: t("more.paceSub.normal") },
+            { value: "slower", label: t("more.pace.slower"), sub: t("more.paceSub.slower") },
+          ]}
+        />
+        <p className={styles.note}>{t("settings.paceNote", { tooSoon: t("status.tooSoon") })}</p>
+      </Group>
+
+      <Group id="location" label={t("more.location")}>
+        <p className={styles.text}>{locationStatusText(location, t)}</p>
+        {location.status === "denied" && <p className={styles.note}>{t("banner.chromeSteps")}</p>}
+        {canAsk && (
+          <div className={styles.action}>
+            <Button variant="primary" fullWidth icon="my_location" label={t("banner.turnOnLocation")} onPress={location.request} />
+          </div>
+        )}
+      </Group>
+
+      <Group id="notifications" label={t("more.notifications")}>
+        <p className={styles.text}>{notifyStatusText(t)}</p>
+        {notifyPermission() === "denied" && <p className={styles.note}>{t("settings.notifyChromeSteps")}</p>}
+        <p className={styles.note}>{t("settings.notifyNote")}</p>
+      </Group>
+
+      <section className={styles.group}>
+        <ListRow kind="internal" label={t("more.showWelcome")} onPress={showWelcome} />
+      </section>
+    </div>
+  );
+}

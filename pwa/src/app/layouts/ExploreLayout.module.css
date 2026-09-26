@@ -1,0 +1,46 @@
+/* Over AppShell's map: empty areas let touches through to it; the chrome and the sheet take them. */
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.layer > * {
+  pointer-events: auto;
+}
+
+.top {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: var(--gutter);
+  right: var(--gutter);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* The search bar and, at its right, the ticket button. */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.searchRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Under the search row at the top right, as in today's app. */
+.fabs {
+  position: absolute;
+  right: var(--gutter);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  transition: top var(--dur-sheet) var(--ease);
+}

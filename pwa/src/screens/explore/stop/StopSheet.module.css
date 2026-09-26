@@ -1,0 +1,186 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.pills > * {
+  flex: 1 1 auto;
+}
+
+/* "🚶 2 min" and "☆ Save" share one row. */
+.pillsCompact {
+  flex-wrap: nowrap;
+}
+
+.pillsCompact > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* "🚶 Walk 2 min" keeps one line: it gets the wider share, Save the rest (47). */
+.pillsCompact > :first-child {
+  flex-grow: 1.6;
+  white-space: nowrap;
+}
+
+/* The offline row under the stop name: centred like the name it qualifies. */
+.offline {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+}
+
+.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.routeHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 56px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.routeText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.longName {
+  color: var(--c-text);
+}
+
+.headline {
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+/* The strip runs edge to edge, as today. */
+.bleed {
+  margin-inline: calc(-1 * var(--gutter));
+}
+
+.note {
+  color: var(--c-text-variant);
+  text-align: start;
+}
+
+.others {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.others > li + li {
+  border-top: 1px solid var(--c-divider);
+}
+
+.collapsed {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-2) 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.noService {
+  color: var(--c-text-variant);
+}
+
+.updated {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* Full Schedule and Track Bus Stop share one row, as today; on a narrow screen their labels wrap
+   inside the pills rather than stacking the pills, which would push the strip below the fold. */
+.routePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.routePills > * {
+  flex: 1 1 140px;
+}
+
+.stripError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-2);
+  min-height: var(--strip-h);
+  padding: 0 var(--gutter);
+  background: var(--c-card);
+}
+
+/* "Other routes at this stop": a small grey overline above the collapsed routes. */
+.othersHead {
+  margin: 0;
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+}
+
+/* "Route 40 later today": the next clock times after the strip, in rows of three. */
+.later {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.laterTimes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5em, 1fr));
+  gap: var(--sp-2) var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+}

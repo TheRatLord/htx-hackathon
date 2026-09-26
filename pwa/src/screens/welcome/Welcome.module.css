@@ -1,0 +1,47 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-height: 100%;
+  padding: var(--sp-4) var(--gutter) var(--sp-6);
+  background: var(--c-background);
+}
+
+.mark {
+  align-self: flex-start;
+}
+
+.hero {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sp-6);
+}
+
+.title {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: var(--fw-regular);
+}
+
+.body {
+  margin: 0 0 var(--sp-3);
+  color: var(--c-text-variant);
+}
+
+.label {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+}
+
+/* Pinned to the bottom when the content is short, as today's onboarding "Continue". */
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: auto;
+  padding-top: var(--sp-6);
+}

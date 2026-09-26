@@ -1,0 +1,202 @@
+.screen {
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter);
+}
+
+/* The Walk here button, on its own line under the title. */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+/* "Show bay map ⌄": one row that opens the diagram. */
+.mapToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+  border-bottom: 1px solid var(--c-divider);
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* "Route 58 leaves from Bay M" on the bay-tag blue, as in C.5. */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-nav-bg);
+}
+
+.bannerTitle {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.bannerBay {
+  display: flex;
+  flex-direction: column;
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--sp-2);
+}
+
+.nextLabel {
+  font-weight: var(--fw-medium);
+}
+
+.note {
+  padding: var(--sp-3);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+}
+
+/* ChipRow and SectionHeader bring their own gutter. */
+.bleed {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.bay {
+  padding: 0 var(--gutter);
+  scroll-margin-top: var(--sp-2);
+}
+
+.anchor {
+  display: block;
+  scroll-margin-top: var(--sp-2);
+}
+
+/* "Bay C · Platform 1": the one heading level of the list, in sentence case. */
+.bayTitle {
+  margin-bottom: var(--sp-1);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-bold);
+}
+
+/* The "Show bay map" row above already draws the line. */
+.list > .bay:first-child .bayTitle {
+  padding-top: 0;
+  border-top: none;
+}
+
+.row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) 0;
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: var(--c-text-variant);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
+}
+
+/* "Scheduled times · Updated just now · Refresh" on one line. */
+.footerLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-1);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* "WESTBOUND to WEST BELT" over the chosen route's strip, as on every departure row. */
+.bannerHeadsign {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+}
+
+/* One platform's bays under its name, said once ("Platform 1"), not on every bay header. */
+.platform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.platformTitle {
+  padding: var(--sp-3) var(--gutter) 0;
+  border-top: 2px solid var(--c-divider);
+  color: var(--c-brand-navy);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.list > .platform:first-child .platformTitle {
+  padding-top: 0;
+  border-top: none;
+}
+
+.platformTitle + .bay .bayTitle,
+.platform:first-child > .bay:first-child .bayTitle {
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Bay headers under a platform are h4s, which the base reset doesn't cover. */
+.platform .bayTitle {
+  margin-top: 0;
+}

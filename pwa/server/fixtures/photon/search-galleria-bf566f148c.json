@@ -1,0 +1,265 @@
+{
+ "key": "search/galleria",
+ "recordedAt": "2026-09-25T23:58:41.703Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1018162159,
+     "osm_key": "landuse",
+     "osm_value": "residential",
+     "type": "locality",
+     "housenumber": "3363",
+     "name": "Galleria Parc Apartments",
+     "street": "McCue Road",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.4640983,
+      29.7292791,
+      -95.4620757,
+      29.7279624
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4634044,
+      29.7287541
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1002150896,
+     "osm_key": "landuse",
+     "osm_value": "residential",
+     "type": "locality",
+     "housenumber": "5151",
+     "name": "Galleria Oaks",
+     "street": "Richmond Avenue",
+     "district": "Gulfton",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.4654572,
+      29.7315767,
+      -95.4642919,
+      29.7302884
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4648693,
+      29.7307779
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1411015543,
+     "osm_key": "landuse",
+     "osm_value": "residential",
+     "type": "locality",
+     "housenumber": "3001",
+     "name": "Galleria Flats",
+     "street": "Hillcroft Avenue",
+     "district": "Gulfton",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77057",
+     "countrycode": "US",
+     "extent": [
+      -95.5010898,
+      29.7340521,
+      -95.4993815,
+      29.7328724
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.5002342,
+      29.7332494
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1512256259,
+     "osm_key": "building",
+     "osm_value": "office",
+     "type": "house",
+     "name": "Galleria Office Tower II",
+     "street": "Westheimer Road",
+     "district": "Uptown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.463503,
+      29.7398745,
+      -95.4629331,
+      29.7395985
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.463217,
+      29.7396794
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1510671263,
+     "osm_key": "building",
+     "osm_value": "commercial",
+     "type": "house",
+     "housenumber": "5065-5075",
+     "name": "Galleria Office Center",
+     "street": "Westheimer Road",
+     "district": "Uptown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.4648613,
+      29.7395189,
+      -95.463988,
+      29.7390019
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4644252,
+      29.7392635
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 48486719,
+     "osm_key": "building",
+     "osm_value": "office",
+     "type": "house",
+     "housenumber": "5051",
+     "name": "Galleria Office Tower 1",
+     "street": "Westheimer Road",
+     "district": "Uptown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.4616074,
+      29.7386462,
+      -95.4612713,
+      29.7380823
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4614421,
+      29.7384146
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 49018233,
+     "osm_key": "building",
+     "osm_value": "yes",
+     "type": "house",
+     "housenumber": "5333",
+     "name": "Galleria Park II",
+     "street": "Westheimer Road",
+     "district": "Uptown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US",
+     "extent": [
+      -95.4684837,
+      29.7397352,
+      -95.4681855,
+      29.7392275
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4683346,
+      29.7394814
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 4529576009,
+     "osm_key": "shop",
+     "osm_value": "beauty",
+     "type": "house",
+     "housenumber": "5373",
+     "name": "Galleria Aesthetics",
+     "street": "West Alabama Street",
+     "district": "Uptown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77056",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4695813,
+      29.7374563
+     ]
+    }
+   }
+  ]
+ }
+}
