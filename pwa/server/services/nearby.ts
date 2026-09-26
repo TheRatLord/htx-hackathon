@@ -8,9 +8,9 @@ import { formatDistance, haversineM } from "../lib/geo.ts";
 import { getArrivals } from "./arrivals.ts";
 import { stopSummary, type StopSummary } from "./present.ts";
 import { transitCenters, type TransitCenter } from "./transitCenters.ts";
-import { WALK_DETOUR_FACTOR, walkRoute } from "./walk.ts";
+import { WALK_DETOUR_FACTOR, WALK_SPEED_MPS } from "../../shared/walk.ts";
+import { walkRoute } from "./walk.ts";
 
-const WALK_SPEED = 1.25; // m/s
 /** Real-time lookups cost one upstream call per stop; only the closest stops get them. */
 const REALTIME_STOPS = 6;
 const PRECISE_WALK_STOPS = 3;
@@ -57,7 +57,7 @@ function walkEstimate(straightM: number, walkDistanceM = straightM * WALK_DETOUR
     distanceM: Math.round(straightM),
     walkDistanceM: Math.round(walkDistanceM),
     walkDistanceText: formatDistance(walkDistanceM),
-    walkMin: Math.max(1, Math.round(walkDistanceM / WALK_SPEED / 60)),
+    walkMin: Math.max(1, Math.round(walkDistanceM / WALK_SPEED_MPS.normal / 60)),
   };
 }
 

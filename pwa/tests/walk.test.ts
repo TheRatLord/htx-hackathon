@@ -18,7 +18,7 @@ describe("walking steps", () => {
         step("turn", "right", "", 700),
         step("arrive", "right", "", 0),
       ],
-      "stop #11424",
+      { label: "stop #11424", name: "M L King Blvd @ UH University Dr" },
     );
     expect(steps.map((s) => s.instruction)).toEqual([
       "Head southeast on Calhoun Road, walk 850 ft",
@@ -26,6 +26,8 @@ describe("walking steps", () => {
       "Turn right, walk 0.4 mi",
       "Arrive at stop #11424 on your right",
     ]);
+    expect(steps[0]).toMatchObject({ maneuver: "depart", compass: "southeast", street: "Calhoun Road" });
+    expect(steps.at(-1)).toMatchObject({ maneuver: "arrive", street: "M L King Blvd @ UH University Dr" });
   });
 
   it("formats distances for US riders", () => {

@@ -20,8 +20,10 @@ export function cardinalOf(bearing: number): Cardinal {
 }
 
 /** Compass word for a heading, e.g. for "Head northeast on Main St". */
-export function compass8(bearing: number): string {
-  const names = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+export type Compass8 = "north" | "northeast" | "east" | "southeast" | "south" | "southwest" | "west" | "northwest";
+
+export function compass8(bearing: number): Compass8 {
+  const names: Compass8[] = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
   return names[Math.round((((bearing % 360) + 360) % 360) / 45) % 8];
 }
 

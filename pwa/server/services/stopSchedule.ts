@@ -32,6 +32,8 @@ export function getStopSchedule(stopId: string, routeId: string, now = Date.now(
   if (!stop) throw new ApiError(404, "STOP_NOT_FOUND", `We couldn't find stop #${stopId}. Check the number on the stop sign.`);
   const route = findRoute(routeId);
   if (!route) throw new ApiError(404, "ROUTE_NOT_FOUND", `Route ${routeId} doesn't exist.`);
+  if (!stop.routeIds.includes(route.id))
+    throw new ApiError(404, "STOP_NOT_ON_ROUTE", `Route ${route.displayName} doesn't stop at stop #${stop.id}.`);
   const stopIdx = g.stopIndex.get(stop.id)!;
   const routeIdx = g.routeIndex.get(route.id)!;
 
