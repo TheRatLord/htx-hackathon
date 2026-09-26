@@ -11,22 +11,52 @@
   background: var(--c-background);
 }
 
-/* "[82] Eastbound to DOWNTOWN · Change": shown under the bar once the page header scrolls away. */
+/* "[82] EASTBOUND to DOWNTOWN · Change" and the column header: shown under the bar once the page header scrolls away. */
 .compact {
   position: absolute;
   top: 100%;
   right: 0;
   left: 0;
+  border-bottom: 1px solid var(--c-divider);
+  background: var(--c-background);
+  visibility: hidden;
+}
+
+.compactButton {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  width: 100%;
   min-height: var(--touch-min);
   padding: var(--sp-1) var(--gutter);
   border: none;
-  border-bottom: 1px solid var(--c-divider);
-  background: var(--c-background);
+  background: none;
   text-align: start;
-  visibility: hidden;
+}
+
+/* "Stop … Next bus (scheduled)": labels the right-hand time column. */
+.columnHead,
+.columnHeadStatic {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+}
+
+.columnHead {
+  padding: 0 var(--gutter) var(--sp-1);
+}
+
+.columnHead span:last-child,
+.columnHeadStatic span:last-child {
+  text-align: end;
+}
+
+.mapLink {
+  margin: calc(-1 * var(--sp-2)) 0 0 calc(-1 * var(--sp-3));
 }
 
 .compact[data-shown="true"] {
@@ -37,6 +67,7 @@
   flex: 1;
   min-width: 0;
   font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
   overflow-wrap: anywhere;
 }
 
@@ -82,7 +113,7 @@
   line-height: var(--lh-caption);
 }
 
-/* Today's timetable look: a grey spine with ring nodes and zebra rows, full-bleed. */
+/* Today's timetable look: a grey spine with ring nodes and hairline dividers, full-bleed. */
 .timeline {
   margin: 0 calc(-1 * var(--gutter));
 }
@@ -111,8 +142,13 @@
   height: 28px;
 }
 
-.stop:nth-child(odd) {
-  background: var(--c-surface);
+.stop + .stop {
+  border-top: 1px solid var(--c-divider);
+}
+
+/* The tapped row: a tinted background, so it never looks like the "Nearest to you" marker. */
+.stop[data-expanded="true"] {
+  background: var(--c-nav-bg);
 }
 
 .stopButton {
@@ -145,6 +181,20 @@
 .nodeFilled {
   border-color: var(--c-primary);
   background: var(--c-primary);
+}
+
+/* "Nearest to you": a you-are-here glyph on the spine instead of a ring. */
+.nodeNearest {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--c-background);
+  background: var(--c-background);
+  color: var(--c-primary);
 }
 
 .stopText {

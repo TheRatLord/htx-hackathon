@@ -20,7 +20,7 @@ import { SectionHeader } from "../../../ui/SectionHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import type { RouteStop } from "../route/routeGeo.ts";
 import { EmptyQuery } from "./EmptyQuery.tsx";
-import { groupResults, parseRouteStopQuery, type SearchSection } from "./groupResults.ts";
+import { groupResults, isRouteQuery, parseRouteStopQuery, type SearchSection } from "./groupResults.ts";
 import { PlaceRow, RouteRow, SimpleRow, StopRow, TransitCenterRow } from "./ResultRows.tsx";
 import { RouteStopShortcut } from "./RouteStopShortcut.tsx";
 import styles from "./Search.module.css";
@@ -100,13 +100,18 @@ export default function Search() {
   const stopResult = (id: string, title: string): SearchResult => ({ type: "stop", id, title, subtitle: "" });
   const openSaved = (s: SavedStop) =>
     pick ? choose(stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}${s.preferredRouteId ? `?route=${encodeURIComponent(s.preferredRouteId)}` : ""}`);
+  const openRecentStop = (s: { id: string; name: string }) =>
+    pick ? choose(stopResult(s.id, s.name)) : navigate(`/explore/stop/${encodeURIComponent(s.id)}`);
   const openRouteStop = (routeId: string, dir: 0 | 1, s: RouteStop) =>
     pick ? choose(stopResult(s.id, s.name)) : go(`/explore/route/${encodeURIComponent(routeId)}?dir=${dir}&stop=${encodeURIComponent(s.id)}`);
 
   const shortcut = query ? parseRouteStopQuery(query) : undefined;
+  const routeQuery = isRouteQuery(query);
   const sections = search.data && query ? groupResults(search.data.results, tcs.data?.transitCenters ?? [], query) : [];
   const shownSections = pick ? sections.filter((s) => s.kind !== "routes") : sections;
-  const warnings = (search.data && query ? search.data.warnings : []).flatMap((w) => {
+  // "Address search is unavailable" only matters when no place was found; above a found place it reads as a contradiction.
+  const hasPlaces = shownSections.some((s) => s.kind === "places");
+  const warnings = (search.data && query && !hasPlaces ? search.data.warnings : []).flatMap((w) => {
     const known = KNOWN_WARNINGS.find(([pattern]) => pattern.test(w));
     return known ? [t(known[1])] : lang === "en" ? [w] : [];
   });
@@ -125,6 +130,9 @@ export default function Search() {
               key={r.id}
               result={r}
               actions={r.type === "landmark" || i === 0}
+              attached={section.attached.get(r.id)}
+              onOpenTc={(tc) => go(`/explore/tc/${encodeURIComponent(tc.id)}`)}
+              onOpenStop={(stop) => go(`/explore/stop/${encodeURIComponent(stop.id)}`)}
               onNear={() => go(atUrl(r))}
               onDirections={() =>
                 go(planUrl({ to: r.type === "landmark" ? `landmark:${r.id}` : formatLatLon({ lat: r.lat!, lon: r.lon! }), toName: r.title }))
@@ -156,6 +164,7 @@ export default function Search() {
           <StopRow
             key={r.id}
             result={r}
+            idMatch={routeQuery && r.id === query}
             walkable={!pick}
             onOpen={() => (pick ? choose(r) : go(`/explore/stop/${encodeURIComponent(r.id)}`))}
             onWalk={(d) => go(`/explore/stop/${encodeURIComponent(r.id)}/walk?d=${Math.round(d)}`)}
@@ -170,7 +179,7 @@ export default function Search() {
 
   let body;
   if (!query) {
-    body = <EmptyQuery pick={Boolean(pick)} onOpenStop={openSaved} onRecent={setText} />;
+    body = <EmptyQuery pick={Boolean(pick)} onOpenStop={openSaved} onOpenRecentStop={openRecentStop} onRecent={setText} />;
   } else if (search.isError && !search.data) {
     body = <ErrorState error={search.error} onRetry={() => void search.refetch()} />;
   } else if (!search.data) {
@@ -184,6 +193,11 @@ export default function Search() {
   } else {
     body = (
       <>
+        {warnings.map((w) => (
+          <p key={w} className={styles.warning}>
+            {w}
+          </p>
+        ))}
         {shortcut && <RouteStopShortcut route={shortcut.route} stop={shortcut.stop} onPick={openRouteStop} />}
         {shownSections.map((section) => (
           <section key={section.kind} className={styles.section}>
@@ -197,11 +211,6 @@ export default function Search() {
             <p>{t("search.noMatchesBody")}</p>
           </div>
         )}
-        {warnings.map((w) => (
-          <p key={w} className={styles.warning}>
-            {w}
-          </p>
-        ))}
       </>
     );
   }

@@ -9,7 +9,7 @@ import type { RouteDetail } from "../../../api/types.ts";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { directionWord, displayHeadsign } from "../../../lib/format.ts";
+import { directionWord, displayHeadsign, headsignLine } from "../../../lib/format.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
 import { useLocation } from "../../../state/location.tsx";
 import { recentsActions } from "../../../state/recents.ts";
@@ -77,8 +77,16 @@ function SaveRoute({ route }: { route: RouteDetail }) {
     saved.removeRoute(route.id);
     toast({ message: t("route.removedToast"), action: { label: t("common.undo"), onPress: () => saved.addRoute(entry) } });
   };
+  // "Save route": elsewhere the app saves stops, so the button says what it saves.
   return (
-    <Button variant="tonal" icon={on ? "star_filled" : "star"} label={on ? t("common.saved") : t("common.save")} pressed={on} onPress={toggle} />
+    <Button
+      variant="tonal"
+      icon={on ? "star_filled" : "star"}
+      label={on ? t("common.saved") : t("route.saveRoute")}
+      ariaLabel={t("route.saveRouteA11y", { name: routeTitle(route) })}
+      pressed={on}
+      onPress={toggle}
+    />
   );
 }
 
@@ -108,7 +116,7 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
   // The auto-expanded nearest stop stays closed once the rider closes it.
   const [nearestClosed, setNearestClosed] = useState(false);
   const bar = useRef<HTMLDivElement>(null);
-  const compact = useRef<HTMLButtonElement>(null);
+  const compact = useRef<HTMLDivElement>(null);
   const marker = useRef<HTMLDivElement>(null);
   const scrolledPast = useScrolledPast(marker, bar);
   const ref = toRouteRef({ id: route.id, name: route.displayName, color: route.color, textColor: route.textColor });
@@ -173,6 +181,9 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
 
   const toHeadsign = (headsigns: string[]) => t("route.to", { headsign: displayHeadsign(headsigns[0] ?? "") });
   const directionText = direction && (rail ? toHeadsign(direction.headsigns) : `${directionWord(direction.label, lang)} ${toHeadsign(direction.headsigns)}`);
+  // "EASTBOUND to DOWNTOWN", the way every card and the stop sheet write it.
+  const directionCaps = direction && headsignLine(ref, direction.label, direction.headsigns[0] ?? "", lang);
+  const nextLabel = t(rail ? "route.nextTrain" : "route.nextBus");
   const other = route.directions.find((d) => d.directionId !== direction?.directionId);
   const shown = direction ? direction.stops.filter((s) => stopMatches(s, query)) : [];
   const topInset = useCallback(() => (bar.current?.offsetHeight ?? 0) + (compact.current?.offsetHeight ?? 0), []);
@@ -182,20 +193,24 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
       <div ref={bar} className={styles.sticky}>
         <AppBar title={routeName} onBack={onBack} right={<SaveRoute route={route} />} />
         {direction && (
-          // Once the header scrolls away this keeps the route and direction in view; a tap goes back up to change it.
-          <button
-            ref={compact}
-            type="button"
-            className={styles.compact}
-            data-shown={scrolledPast}
-            aria-hidden={!scrolledPast}
-            tabIndex={scrolledPast ? 0 : -1}
-            onClick={() => marker.current?.closest("main")?.scrollTo({ top: 0 })}
-          >
-            <RouteBadge route={ref} size="sm" />
-            <span className={styles.compactText}>{directionText}</span>
-            {other && <span className={styles.compactAction}>{t("route.change")}</span>}
-          </button>
+          // Once the header scrolls away this keeps the route and direction in view (a tap goes back up to
+          // change it), and labels the time column so "5 min" always reads as the next bus at that stop.
+          <div ref={compact} className={styles.compact} data-shown={scrolledPast} aria-hidden={!scrolledPast}>
+            <button
+              type="button"
+              className={styles.compactButton}
+              tabIndex={scrolledPast ? 0 : -1}
+              onClick={() => marker.current?.closest("main")?.scrollTo({ top: 0 })}
+            >
+              <RouteBadge route={ref} size="sm" />
+              <span className={styles.compactText}>{directionCaps}</span>
+              {other && <span className={styles.compactAction}>{t("route.change")}</span>}
+            </button>
+            <p className={styles.columnHead}>
+              <span>{t("route.stopColumn")}</span>
+              <span>{nextLabel}</span>
+            </p>
+          </div>
         )}
       </div>
       <div className={styles.page}>
@@ -205,6 +220,10 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
             <h2 className={styles.routeName}>{route.longName}</h2>
             <p className={styles.kind}>{rail ? t("route.railLine") : t("route.busRoute")}</p>
           </div>
+        </div>
+        {/* The route's line on the map, from the rider's position (D3). */}
+        <div className={styles.mapLink}>
+          <Button variant="text" icon="map_pin" label={t("route.showOnMap")} href={`/explore?route=${encodeURIComponent(route.id)}`} />
         </div>
         <AlertStatusLine scope="route" name={routeName} alerts={alerts.forRoute(route.id)} />
         {direction && route.directions.length > 1 ? (
@@ -226,12 +245,14 @@ function RouteBody({ route, onBack }: { route: RouteDetail; onBack: () => void }
           <>
             <FindInput value={query} onChange={setQuery} label={t("route.find")} />
             <div className={styles.listHead}>
-              <p className={styles.caption}>
-                {query
-                  ? t("route.matchCount", { count: shown.length, total: direction.stops.length })
-                  : t("route.stopCount", { count: direction.stops.length })}
-                {" · "}
-                {t(rail ? "route.nextTrain" : "route.nextBus")}
+              {/* A column header: stop count on the left, what the right-hand times mean on the right. */}
+              <p className={styles.columnHeadStatic}>
+                <span>
+                  {query
+                    ? t("route.matchCount", { count: shown.length, total: direction.stops.length })
+                    : t("route.stopCount", { count: direction.stops.length })}
+                </span>
+                <span>{nextLabel}</span>
               </p>
               {vehicles.isError && <p className={styles.caption}>{t("route.vehiclesUnavailable")}</p>}
             </div>

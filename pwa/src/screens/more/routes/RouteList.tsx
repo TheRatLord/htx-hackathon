@@ -52,7 +52,8 @@ export default function RouteList() {
             <li key={r.id}>
               <ListRow
                 kind="internal"
-                label={routeTitle(r)}
+                // The badge already shows the number: "[2] Bellaire", not "[2] 2 Bellaire".
+                label={ref && r.longName ? r.longName : routeTitle(r)}
                 href={`/explore/route/${encodeURIComponent(r.id)}`}
                 leading={<span className={styles.badge}>{ref && <RouteBadge route={ref} size="sm" />}</span>}
               />

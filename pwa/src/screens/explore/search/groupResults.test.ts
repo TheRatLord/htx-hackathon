@@ -35,6 +35,17 @@ describe("groupResults", () => {
     expect(kinds(groupResults([hobby, place], [hobbyTc], "hobby"))).toEqual(["places", "transitCenters"]);
   });
 
+  it("lists a landmark's own transit center and stop under it, not as separate results", () => {
+    const lm = { ...hobby, lat: 29.6553, lon: -95.2758 };
+    const hobbyTc = { ...nwtc, id: "hobby", name: "Hobby Airport", stopIds: ["10567"], lat: 29.6555, lon: -95.2760 };
+    const s = { ...stop("10567", "Hobby Airport"), stop: { ...stop("10567", "Hobby Airport").stop!, lat: 29.6553, lon: -95.2758 } };
+    const sections = groupResults([lm, s], [hobbyTc], "hobby");
+    expect(kinds(sections)).toEqual(["places"]);
+    const places = sections[0] as Extract<(typeof sections)[number], { kind: "places" }>;
+    expect(places.attached.get("hobby-airport")?.tcs.map((tc) => tc.id)).toEqual(["hobby"]);
+    expect(places.attached.get("hobby-airport")?.stops.map((r) => r.id)).toEqual(["10567"]);
+  });
+
   it("orders places (landmarks first), stops, routes otherwise", () => {
     const sections = groupResults([place, stop("10567", "Hobby Airport"), route82, hobby], [], "hobby");
     expect(kinds(sections)).toEqual(["places", "stops", "routes"]);
