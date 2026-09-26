@@ -1,7 +1,7 @@
 // D6 Stop sheet (`/explore/stop/:stopId?route=`): the centred "Name (ID)", the expanded route with
 // today's blue strip first, its alerts, Save and Walk here, the other routes, and the legend.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { useArrivals, useRoute, useStop } from "../../../api/hooks.ts";
 import { useAlerts } from "../../../api/alertsStore.ts";
@@ -18,6 +18,7 @@ import { useClientStop } from "../../../lib/stops.ts";
 import { estimateWalk, walkMinutes } from "../../../lib/walk.ts";
 import { useMapScene } from "../../../map/scene.ts";
 import { useNow } from "../../../state/clock.ts";
+import { useOffline } from "../../../state/offline.ts";
 import { useLocation } from "../../../state/location.tsx";
 import { usePrefs } from "../../../state/prefs.ts";
 import { recentsActions } from "../../../state/recents.ts";
@@ -28,7 +29,6 @@ import { Button } from "../../../ui/Button.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { Legend } from "../../../ui/Legend.tsx";
-import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { useToast } from "../../../ui/Toast.tsx";
@@ -42,6 +42,19 @@ import { departuresOf, pickExpanded, servingKey } from "./serving.ts";
 import styles from "./StopSheet.module.css";
 
 const STOP_ZOOM = 17;
+/** Below this width, Large text already crowds "Walk here · 2 min" and Save onto two rows. */
+const NARROW = 380;
+
+/** A narrow screen, or Extra large text: the sheet's lines are at a premium. */
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(() => window.innerWidth < NARROW);
+  useEffect(() => {
+    const on = () => setNarrow(window.innerWidth < NARROW);
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return narrow;
+}
 
 /** ☆ Save / ★ Saved, with Undo on remove (A.1.8). Saving remembers the expanded route (C.5b). */
 function SaveButton({ stop, routeId }: { stop: StopDetail["stop"]; routeId?: string }) {
@@ -72,15 +85,26 @@ function SaveButton({ stop, routeId }: { stop: StopDetail["stop"]; routeId?: str
 }
 
 /** "🚶 Walk here · 2 min": the one place the Stop sheet shows the walk time. */
-function WalkHere({ stop, routeId }: { stop: StopDetail["stop"]; routeId?: string }) {
+function WalkHere({ stop, routeId, compact }: { stop: StopDetail["stop"]; routeId?: string; compact: boolean }) {
   const t = useT();
   const navigate = useNavigate();
   const { fix } = useLocation();
   const { walkPace } = usePrefs();
   const seed = fix ? estimateWalk(fix, stop, walkPace).distanceM : undefined;
   const { distanceM } = useWalkDistance(fix, stop.id, seed);
-  const label = distanceM !== undefined ? t("common.walkHereMin", { min: t("time.min", { n: walkMinutes(distanceM, walkPace) }) }) : t("common.walkHere");
-  return <Button variant="tonal" icon="directions_walk" label={label} onPress={() => navigate(walkUrl(stop.id, { d: distanceM, route: routeId }))} />;
+  const min = distanceM !== undefined ? t("time.min", { n: walkMinutes(distanceM, walkPace) }) : undefined;
+  const full = min ? t("common.walkHereMin", { min }) : t("common.walkHere");
+  // Narrow screen or Extra large text: "🚶 2 min" so Save shares the row and stays above the fold (47).
+  const label = compact && min ? min : full;
+  return (
+    <Button
+      variant="tonal"
+      icon="directions_walk"
+      label={label}
+      ariaLabel={label === full ? undefined : full}
+      onPress={() => navigate(walkUrl(stop.id, { d: distanceM, route: routeId }))}
+    />
+  );
 }
 
 /** Until the stop loads: the pin only (Loaded sets the scene with its route line). */
@@ -92,6 +116,11 @@ function LoadingScene({ stopId }: { stopId: string }) {
 function Loaded({ detail }: { detail: StopDetail }) {
   const t = useT();
   const now = useNow();
+  const offline = useOffline();
+  const { textSize } = usePrefs();
+  const narrow = useNarrow();
+  // Walk and Save on one row with short labels: Extra large text, or Large text on a narrow screen.
+  const compact = textSize === "xlarge" || (narrow && textSize === "large");
   const [params, setParams] = useSearchParams();
   const alerts = useAlerts();
   const { stop, serving } = detail;
@@ -121,14 +150,20 @@ function Loaded({ detail }: { detail: StopDetail }) {
 
   // After the answer, so the strip is on the first screen even at 360 or Extra large (A.1.2).
   const stopActions = (
-    <div className={styles.pills}>
-      <WalkHere stop={stop} routeId={expanded?.routeId} />
+    <div className={`${styles.pills} ${compact ? styles.pillsCompact : ""}`}>
+      <WalkHere stop={stop} routeId={expanded?.routeId} compact={compact} />
       <SaveButton stop={stop} routeId={expanded?.routeId} />
     </div>
   );
 
   return (
     <div className={styles.body}>
+      {/* Offline: said right under the stop name, so clock times don't pass for live ones (39). */}
+      {offline && (
+        <div className={styles.offline}>
+          <UpdatedAgo compact at={updatedAt} onRefresh={() => void mixed.refetch()} />
+        </div>
+      )}
       {detail.transitCenter && (
         <Button
           variant="text"
@@ -145,6 +180,7 @@ function Loaded({ detail }: { detail: StopDetail }) {
           mixed={departuresOf(expanded, arrivals)}
           stripRef={strip}
           stopActions={stopActions}
+          hideLongName={narrow || textSize === "xlarge"}
         />
       )}
       <AlertStatusLine
@@ -167,10 +203,11 @@ function Loaded({ detail }: { detail: StopDetail }) {
         </ul>
       )}
       <Legend />
-      <div className={styles.updated}>
-        <UpdatedAgo at={updatedAt} onRefresh={() => void mixed.refetch()} />
-        <ScheduleCaption />
-      </div>
+      {!offline && (
+        <div className={styles.updated}>
+          <UpdatedAgo at={updatedAt} onRefresh={() => void mixed.refetch()} />
+        </div>
+      )}
     </div>
   );
 }

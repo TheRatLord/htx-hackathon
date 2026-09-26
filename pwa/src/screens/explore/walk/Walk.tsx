@@ -180,6 +180,7 @@ export default function Walk() {
     const side = target?.side ? localiseSide(target.side, lang) : "";
     const summary = [
       walkMin !== undefined && t("time.min", { n: walkMin }),
+      // A straight-line estimate no longer gets a paragraph of its own (16): Google Maps is offered in full instead.
       distanceM !== undefined && formatDistance(distanceM, lang),
       side && side.charAt(0).toLowerCase() + side.slice(1),
     ].filter(Boolean);
@@ -195,7 +196,6 @@ export default function Walk() {
           <NextBus stopId={stopId} routeId={routeId} walkMin={walkMin} />
         </div>
         {noConnection && <p className={styles.warnBox}>{t("walk.offline")}</p>}
-        {estimate && <p className={styles.warnBox}>{t("walk.estimate")}</p>}
         {walk ? (
           // A lone "Arrive" step only repeats the summary line: list steps only when there are street directions.
           !(walk.steps.length === 1 && walk.steps[0].maneuver === "arrive") && <Steps walk={walk} onStep={setStepFocus} />

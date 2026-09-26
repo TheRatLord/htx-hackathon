@@ -7,14 +7,16 @@ interface RouteChipsProps {
   routes: RouteRef[];
   selectedId?: string;
   onPress: (route: RouteRef) => void;
+  /** D4: the chips are the routes near a place, not the rider's own. */
+  place?: boolean;
 }
 
 /** D2 item 4: "Your route:" and one chip per route near the anchor. Once one is chosen (D3) the chips speak for themselves. */
-export function RouteChips({ routes, selectedId, onPress }: RouteChipsProps) {
+export function RouteChips({ routes, selectedId, onPress, place }: RouteChipsProps) {
   const t = useT();
   if (!routes.length) return null;
   return (
-    <ChipRow label={selectedId ? undefined : t("home.chipLabel")} ariaLabel={t("home.chipGroup")} inlineLabel>
+    <ChipRow label={selectedId ? undefined : t(place ? "home.chipLabelPlace" : "home.chipLabel")} ariaLabel={t("home.chipGroup")} inlineLabel>
       {routes.map((r) => (
         <RouteBadge
           key={r.id}

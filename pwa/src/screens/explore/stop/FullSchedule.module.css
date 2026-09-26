@@ -50,8 +50,8 @@
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  min-height: 56px;
-  padding: var(--sp-2) var(--sp-2);
+  min-height: 48px;
+  padding: var(--sp-1) var(--sp-2);
   border-bottom: 1px solid var(--c-divider);
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);
@@ -59,15 +59,14 @@
 }
 
 .label {
-  display: flex;
   flex: none;
-  flex-direction: column;
-  width: 5.5em;
+  width: 4.5em;
   font-weight: var(--fw-medium);
 }
 
 .minutes {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   gap: var(--sp-1) var(--sp-5);
 }
@@ -78,7 +77,8 @@
 }
 
 .tag {
-  align-self: flex-start;
+  flex: none;
+  align-self: center;
   padding: 0 var(--sp-2);
   border-radius: var(--r-chip);
   background: var(--c-primary);
@@ -91,13 +91,25 @@
   color: var(--c-text-secondary);
 }
 
+/* Today's next departure. */
+.next {
+  color: var(--c-link-text);
+  font-weight: var(--fw-bold);
+}
+
+.days {
+  padding-block: var(--sp-2) var(--sp-1);
+}
+
 /* A departure earlier in the current hour. */
 .gone {
   color: var(--c-text-secondary);
 }
 
-/* "Times are minutes past the hour", under the date. */
+/* "Numbers are minutes past the hour", after the date. */
 .hint {
+  color: var(--c-text-variant);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
+  font-weight: var(--fw-regular);
 }

@@ -16,6 +16,7 @@ import { canonicalRouteId, routeRef, useRoutesLoaded } from "../../../lib/routes
 import { useMapCenter, useMapScene } from "../../../map/scene.ts";
 import { useNow } from "../../../state/clock.ts";
 import { usePrefs } from "../../../state/prefs.ts";
+import { useSaved } from "../../../state/saved.ts";
 import { useTrip } from "../../../state/trip.ts";
 import { Button } from "../../../ui/Button.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
@@ -87,10 +88,12 @@ interface NearbyBodyProps {
   tc?: TransitCenterDetail;
   /** The chips, when they go after card #1 instead of above it. */
   chipsAfterFirst?: ReactNode;
+  /** Location off: the prompt goes after the saved stop, which is what the rider opened the app for. */
+  afterSaved?: ReactNode;
 }
 
 /** D2 / D4 below the chips: the saved row (D2), the stop cards and the footer. */
-function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst }: NearbyBodyProps) {
+function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst, afterSaved }: NearbyBodyProps) {
   const t = useT();
   const firstRow = useRef<HTMLLIElement>(null);
   const ids = data?.stops.map((s) => s.stop.id).join() ?? "";
@@ -100,6 +103,7 @@ function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst }
     <>
       <HomeScene anchor={anchor} />
       {!place && <SavedRow origin={anchor.kind === "user" ? anchor.point : undefined} />}
+      {afterSaved}
       {origin ? (
         <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} afterFirst={chipsAfterFirst} />
       ) : (
@@ -123,6 +127,7 @@ export default function Home() {
   const anchor = useHomeAnchor();
   const { walkPace, textSize } = usePrefs();
   const center = useMapCenter();
+  const saved = useSaved();
   useRoutesLoaded();
 
   const routeParam = params.get("route");
@@ -142,6 +147,7 @@ export default function Home() {
   let title: string;
   if (routeId) title = t("home.route.title", { name: routeRef(routeId)?.name ?? routeParam! });
   else if (place) title = t("home.nearPlace", { place: place.name });
+  else if (anchor.kind === "off") title = t("home.titleOff");
   else title = anchor.kind === "finding" ? t("home.finding") : t("home.title");
   usePageTitle(title);
 
@@ -152,16 +158,19 @@ export default function Home() {
   };
   const chips = data && (
     <div className={styles.bleed}>
-      <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
+      <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} place={Boolean(place)} onPress={(r) => onChip(r.id)} />
     </div>
   );
   // Extra large text on a short screen: above card #1 the chips would push every bus time below the
   // fold, so D2's chips follow the first card there (the first departure is the one job of Home).
   const chipsLater = !routeId && textSize === "xlarge" && window.innerHeight < SHORT_SCREEN && Boolean(data?.stops.length);
+  // Location off with a saved stop: the saved stop first, then the prompt (37).
+  const offFirst = !routeId && banner?.kind === "location-off" && saved.stops.length > 0;
   const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
 
   return (
-    // D4 has one way back, "Back to my location" (its UpdatedAgo shares that row); D3 keeps the sheet's "‹ Back".
+    // D4 has one way back, "Back to my location" (its UpdatedAgo shares that row, as a place name
+    // fills the title row); D3 keeps the sheet's "‹ Back".
     <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId ? back : undefined}>
       <div className={styles.body}>
         {place && !routeId && (
@@ -170,12 +179,21 @@ export default function Home() {
             {updated}
           </div>
         )}
-        {banner && !place && <SheetBanner {...banner} />}
+        {banner && !place && !offFirst && <SheetBanner {...banner} />}
         {data && !chipsLater && chips}
         {routeId ? (
           <RouteNearYou routeId={routeId} origin={origin} finding={anchor.kind === "finding"} place={place} nearby={data} tc={tc} />
         ) : (
-          <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} chipsAfterFirst={data && chipsLater ? chips : undefined} />
+          <NearbyBody
+            anchor={anchor}
+            origin={origin}
+            place={place}
+            nearby={nearby}
+            data={data}
+            tc={tc}
+            chipsAfterFirst={data && chipsLater ? chips : undefined}
+            afterSaved={banner && offFirst ? <SheetBanner {...banner} /> : undefined}
+          />
         )}
       </div>
     </ExploreSheet>

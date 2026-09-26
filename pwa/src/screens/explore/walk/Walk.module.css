@@ -35,6 +35,11 @@
   gap: var(--sp-2);
 }
 
+span.ok {
+  display: inline;
+  font-weight: var(--fw-bold);
+}
+
 .ok,
 .warn {
   display: flex;

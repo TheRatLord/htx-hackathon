@@ -15,6 +15,23 @@
   flex: 1 1 auto;
 }
 
+/* "🚶 2 min" and "☆ Save" share one row. */
+.pillsCompact {
+  flex-wrap: nowrap;
+}
+
+.pillsCompact > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* The offline row under the stop name: centred like the name it qualifies. */
+.offline {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
 .divider {
   margin: 0;
   border: none;
