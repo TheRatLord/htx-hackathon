@@ -24,7 +24,7 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
   Owns: `src/screens/Trip/**`
 - [ ] **T5 Stop screen.** Original schedule format restyled: route/direction tabs, departures strip with Live/Scheduled labels, legend, hourly timetable. Tracking lost banner with Report -> "Reported. Thank you."
   Owns: `src/screens/Stop/**`
-- [ ] **T6 Fares.** Sample boarding code (QR), "Trouble scanning? Enlarge code" / "Shrink code", works offline badge, stay-signed-in note, free ride progress.
+- [x] **T6 Fares.** Sample boarding code (QR), "Trouble scanning? Enlarge code" / "Shrink code", works offline badge, stay-signed-in note, free ride progress.
   Owns: `src/screens/Fares/**`
 - [ ] **T7 Recent + More.** Recent destinations and saved trips (Recent); saved places, saved trips, appearance (System/Light/Dark), about/concept note (More). Empty states.
   Owns: `src/screens/Recent/**`, `src/screens/More/**`
@@ -57,6 +57,7 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
 - Iteration 1: created `ridemetro-app` from `origin/main` (push refused, see Blocked). Built foundation F0 and Home T1; typecheck, 50 unit tests and build pass; Home and Nearby checked at 390x844 in light and dark with no console errors or warnings.
 
 - Iteration 1 (cont.): fixed sheet drag for fast flicks (window listeners); drafted README (T9) and Playwright smoke + screenshot specs (T8). Pan, button/scroll/pinch zoom, dark mode and reduced motion e2e checks pass. Launched workers for T3, T5, T6 in worktrees.
+- Merged T6 Fares (worker commit 3f6eec4 applied as 8d8af8a; the worker's worktree started from main, so only its Fares files were taken). Typecheck, 58 tests and build pass; Fares checked in light and dark, no console errors. Push still refused (403).
 
 ## Next
 
