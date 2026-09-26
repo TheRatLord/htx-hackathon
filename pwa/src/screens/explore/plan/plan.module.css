@@ -301,25 +301,21 @@
 
 /* ---------- Results ---------- */
 
+/* "Arrives first ▾": a compact picker at the right of the summary's last row, 48dp tall. */
 .sort {
-  display: flex;
-  gap: var(--sp-2);
-  align-items: center;
-  font-weight: var(--fw-medium);
-}
-
-.sort select {
   min-height: var(--touch-min);
-  padding: 0 44px 0 var(--sp-4);
+  max-width: 100%;
+  padding: 0 36px 0 var(--sp-3);
   border: 1px solid var(--c-outline-strong);
   border-radius: var(--r-pill);
   background: var(--c-surface)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%23444'/%3E%3C/svg%3E")
-    no-repeat right 12px center;
+    no-repeat right 8px center;
   color: var(--c-text);
   font: inherit;
   font-weight: var(--fw-medium);
   appearance: none;
+  cursor: pointer;
 }
 
 .summary {
@@ -329,14 +325,14 @@
   width: 100%;
   min-height: 64px;
   padding: var(--sp-2) var(--card-pad);
-  border: none;
   border-radius: var(--r-box);
   background: var(--c-card);
   color: var(--c-text);
   text-align: start;
+  cursor: pointer;
 }
 
-.summary:active {
+.summary:active:not(:has(select:active)) {
   background: var(--c-chip-inactive);
 }
 
@@ -357,13 +353,38 @@
 
 .summaryWhen {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
   align-items: center;
+  justify-content: space-between;
 }
 
-.summaryWhen > span:last-child {
+/* "Leave now · Edit ›": when, then the link word, 48dp tall. */
+.summaryEdit {
+  display: inline-flex;
+  gap: var(--sp-3);
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: start;
+}
+
+.editLink {
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+/* Alerts every trip shares, once above the cards (22). */
+.sharedAlert {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  text-decoration: none;
 }
 
 .smallDot {

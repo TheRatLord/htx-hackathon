@@ -9,8 +9,13 @@ import type { MapScene } from "../../map/scene.ts";
 
 type Markers = NonNullable<MapScene["markers"]>;
 
+/** With two or more rides, each ride is labelled with its route ("80", "73") so the transfer shows (25). */
 export function itineraryLegs(it: Itinerary): NonNullable<MapScene["legs"]> {
-  return it.legs.map((l) => ({ coords: legCoords(l.geometry), ...(l.type === "walk" ? { kind: "walk" } : { kind: "ride", color: l.route.color }) }));
+  const rides = it.legs.filter((l) => l.type === "transit").length;
+  return it.legs.map((l) => ({
+    coords: legCoords(l.geometry),
+    ...(l.type === "walk" ? { kind: "walk" } : { kind: "ride", color: l.route.color, ...(rides > 1 && { label: l.route.name }) }),
+  }));
 }
 
 /** `hide`: board stops left out, e.g. one the scene enlarges with its own callout. */
