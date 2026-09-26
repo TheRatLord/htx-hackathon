@@ -348,3 +348,87 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Where: scripts/build-gtfs.ts → `routes.json` / `RouteDetail`
 - Need: a `scheduleUrl` per route. RideMETRO's per-route pages exist (e.g. `/riding-metro/transit-services/local-bus/route-details/82-westheimer`, which links the PDF), but the slugs are hand-made: the obvious `<number>-<long name>` slug works for 77 of 117 bus routes and 404s for Park & Ride, Curb2Curb, Community Connector, 500, 23 ("23-clay-west-43rd") and 99. D9 now links the service page (local bus / Park & Ride / METRORail, all verified) as "Schedules on RideMETRO.org ↗" instead of the old `/schedules` URL, which redirected to the home page.
 - Status: open (review B #6)
+
+## MapView: fit a scene only once the sheet has settled
+- From: C (D12, D13)
+- Where: src/map/MapView.tsx (scene application)
+- Need: at the full snap the bottom padding leaves no room, so `fitBounds` throws "Map cannot fit within canvas" and the map keeps the old view; when the sheet then moves to half, the scene is not fitted again. Clamp the padding to the canvas and re-fit the current scene when the sheet height settles. C works around it with `useSettledSheetHeight()` (src/features/trip/scene.ts) in its scene deps; drop that once this lands.
+- Status: open
+
+## Scene labels clipped at the top edge
+- From: C (D12, D13)
+- Where: src/map/MapView.tsx (fit padding)
+- Need: marker labels such as "Board 80 · #11424" sit above their pin and are cut off when the pin is on the top edge of the fitted bounds. Add the label height to the top fit padding.
+- Status: open
+
+## StepList: badge and title on one line; leg colour without a badge; alert rows
+- From: C (D12, D13 All steps)
+- Where: src/ui/StepList.tsx, `TimelineStep` in src/ui/types.ts
+- Need: on board rows the title wraps under the route badge at 360 px; keep the title inline and let it wrap beside the badge. The spec's wording is "BOARD [80] to MLK & PARK VILLAGE" (as on D11's card), so the badge sits after the verb: add an optional `titleLead` ("BOARD") rendered before the badge, and C will pass `titleLead` + title "to MLK & PARK VILLAGE" (today C's title is "Board to MLK & PARK VILLAGE" after the badge). Alight rows need the leg's colour on the rail without rendering a second badge (an optional `legColor` separate from `route`). C.13 also wants alerts as timeline rows: render a step with `alert` as an AlertBox-style row (warning icon, alert colours) that opens D15; C shows them as AlertBoxes under the list until then.
+- Status: open
+
+## Map: tell board and transfer pins from the rider (review C item 7)
+- From: C (D11, D12, D13)
+- Where: src/map (MapView / layers images)
+- Need: `board` and `transfer` markers are drawn as the same blue dot as `origin` and the user dot, so "Board 80 · #11424" reads like "you are here". Draw `board`/`transfer`/`alight` as the navy stop pin with a white ring (like the highlighted pin, smaller), keep `origin` a dot. The top fit padding must also clear the search bar and a label above a pin at the top edge (F0b's `safeTop + 108` does; mod-C still has the F0a `top: 80`, so D11/D12 labels sit under the search bar there).
+- Status: open
+
+## Trip bar: a completed state on the Arrived step (review C item 18)
+- From: C (D13)
+- Where: src/app/layouts/ExploreLayout.tsx (trip bar), ExploreChrome options
+- Need: on D13's Arrived step the layout still shows "● Trip in progress · arrive 11:00 PM" above "TRIP COMPLETE". Let D13 say so, e.g. `useExploreChrome({ tripBar: "complete" })` rendering "✓ Trip complete · arrived 11:00 PM" (or hiding the bar). C will pass it on the Arrived step.
+- Status: open
+
+## LiveStrip: wrap instead of scrolling (review C item 5)
+- From: C (D13 Wait step)
+- Where: src/ui/LiveStrip.module.css
+- Need: 4 departures with a clock time ("11:22 PM") overflow the strip at 360 and 412 (the 4th is cut), and in headless Chromium the overflowing `overflow-x: auto` strip paints a grey rectangle over the map canvas at a fixed screen position (bisected on D13 Wait: it goes away with 2 departures or no strip; the map scene is not involved). D6 can hit it too. Wrap the items (or cap them at what fits). C now passes at most 3 departures, clock times only when first, so D13 no longer overflows.
+- Status: open
+
+## "Other time ▾" as a small sheet (review C item 25)
+- From: C (D11)
+- Where: src/ui (a small modal sheet, or a BottomSheet variant)
+- Need: the spec opens "Other time ▾" in a small sheet (datetime input + Leave at / Arrive by). There is no such component, so C shows an inline panel under the chips and scrolls it into view (it no longer forces the sheet to full).
+- Status: open
+
+## Sheet: peek from half without dragging (review C item 26)
+- From: C (D11 peek entry)
+- Where: src/ui/BottomSheet.tsx
+- Need: D11's peek ("( ▶ Start )" on the map) is reached by "Show map ▼ twice" in the spec, but at half the button reads "Show list ▲", so peek needs a swipe (WCAG 2.5.7 asks for a non-drag way). E.g. a "Show map ▼" at half that goes to peek when `allowPeek`.
+- Status: open
+
+## Pick mode: "My location" can omit `fromName` (review C item 23)
+- From: C (D11)
+- Where: src/lib/planQuery.ts `encodePick` (my-location)
+- Need: D11 now writes the rider's location as `from=<lat,lon>` with no `fromName` and shows it as "My current location" in the current language, so switching to Spanish no longer leaves the English name. `encodePick` still writes `t("common.myLocation")`; C recognises that name in both languages, but dropping it would keep URLs language-free. Recent trips from the rider's location are now stored without `from` (they replay from wherever the rider is), which D16's `placeName` already shows as "My current location".
+- Status: open
+
+## useWalk: accept a place as the destination
+- From: C (D13 final walk)
+- Where: src/api/hooks (useWalk)
+- Need: `useWalk` only walks to a stop id; the last step walks from the alighting stop to a place (Hobby Airport). Accept a `LatLon` destination. C calls `/walk?from&to` itself in src/features/trip/useFinalWalk.ts until then.
+- Status: open
+
+## LiveStrip: a text variant
+- From: C (D13 ride step)
+- Where: src/ui/LiveStrip.tsx
+- Need: the ride step shows "9 stops left · about 18 min" in the blue live strip (D13), which is text rather than departure times. Add a `children`/text variant so the strip's colours and padding come from one place; C uses a local `.rideStrip` style for now.
+- Status: open
+
+## useLocation: a simulated moving fix for demos
+- From: C (D13)
+- Where: src/state/location.ts
+- Need: the live trip demo moves the rider along the itinerary. A `setSimulatedFix(fix | null)` in the location store would move the shared "you" dot and every consumer; C passes its own simulated fix into useLiveTrip and draws a separate "You (simulated)" marker.
+- Status: open
+
+## Pick mode should replace history; Directions can omit `from`
+- From: C (D11, F3)
+- Where: src/screens/explore/search (B's pick mode) and B's Directions button
+- Need: after a pick, `navigate(encodePick(...), { replace: true })` so Back from the plan does not return to the search. The Directions URL can leave `from` out: D11 fills it from the fix and shows "Finding your location" or the location-off state itself.
+- Status: open
+
+## Landmarks: expose their nearest stop ids
+- From: C (D11 landmark note)
+- Where: src/api (landmark data)
+- Need: D11's "Hobby Airport: buses stop at …" note finds the stops through a search lookup's `nearbyStops`; the landmark record itself should carry them so the planner does not need a second request.
+- Status: open
