@@ -28,10 +28,6 @@ function apply({ lang, textSize }: Prefs) {
 apply(store.get());
 store.subscribe(() => apply(store.get()));
 
-export function getPrefs(): Prefs {
-  return store.get();
-}
-
 export function setPrefs(patch: Partial<Prefs>) {
   store.set((prev) => ({ ...prev, ...patch }));
 }

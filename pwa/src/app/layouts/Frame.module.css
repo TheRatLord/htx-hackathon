@@ -1,0 +1,20 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--sp-6);
+}
+
+.surface {
+  background: var(--c-surface);
+}
+
+.background {
+  background: var(--c-background);
+}
