@@ -11,7 +11,11 @@ import { GPS, launch, ONBOARDED, SAVED_2958, settle, type Gps } from "./helpers.
 const OUT = process.env.SHOTS_DIR ?? resolve(import.meta.dirname, "../../../ux-audit/redesign/round5");
 // The API server's clock file (playwright.config.ts): one per API port.
 const NOW_FILE = resolve(import.meta.dirname, `.results/now-${process.env.API_PORT ?? 8787}.txt`);
+// Every shot starts at the same API instant (fake-now.mjs re-applies a time when its tag changes),
+// so two shots of one screen don't differ by the minutes the run took (17 and 18).
+const NOON = process.env.E2E_NOW ?? "2026-09-25T12:00:00-05:00"; // playwright.config.ts's default
 mkdirSync(OUT, { recursive: true });
+mkdirSync(resolve(NOW_FILE, ".."), { recursive: true });
 
 const ES = { "ridemetro.prefs": { welcomed: true, lang: "es", textSize: "standard", walkPace: "normal" } };
 const PLAN_Q = "from=29.71990%2C-95.34220&to=landmark%3Ahobby-airport&toName=Hobby+Airport";
@@ -123,7 +127,9 @@ const LATE: Shot[] = [
   { file: "41-late-night-stop", path: "/explore/stop/342?route=040" },
 ];
 
-async function shoot(page: Page, s: Shot) {
+async function shoot(page: Page, s: Shot, at = NOON) {
+  writeFileSync(NOW_FILE, `${at} ${s.file}`);
+  await new Promise((r) => setTimeout(r, 700)); // fake-now checks the file every 300 ms
   if (s.size === "360") await page.setViewportSize({ width: 360, height: 640 });
   await launch(page, s.path, { gps: s.gps === undefined ? GPS.downtown : s.gps, storage: s.storage });
   await page.waitForTimeout(1200); // map tiles
@@ -136,6 +142,7 @@ async function shoot(page: Page, s: Shot) {
 }
 
 test.describe("screenshots", () => {
+  test.afterAll(() => rmSync(NOW_FILE, { force: true }));
   for (const s of SHOTS) {
     test(s.file, async ({ page }) => {
       await shoot(page, s);
@@ -144,14 +151,10 @@ test.describe("screenshots", () => {
   }
 
   test.describe("late night", () => {
-    test.beforeAll(async () => {
-      writeFileSync(NOW_FILE, "2026-09-26T02:30:00-05:00");
-      await new Promise((r) => setTimeout(r, 1200));
-    });
     test.afterAll(async () => {
       rmSync(NOW_FILE, { force: true });
       await new Promise((r) => setTimeout(r, 1200));
     });
-    for (const s of LATE) test(s.file, ({ page }) => shoot(page, s));
+    for (const s of LATE) test(s.file, ({ page }) => shoot(page, s, "2026-09-26T02:30:00-05:00"));
   });
 });
