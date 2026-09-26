@@ -9,8 +9,16 @@ import { setPrefs } from "../../state/prefs.ts";
 
 type T = ReturnType<typeof useT>;
 
-/** "On", "Finding your location…", "Blocked in browser settings", "Can't find your location" or "Not asked yet". */
-export function locationStatusText(loc: Pick<LocationState, "status" | "requested">, t: T): string {
+/**
+ * "On", "Finding your location…", "Blocked in browser settings", "Can't find your location" or "Not asked yet".
+ * `short` (the More list value) says just "On", "Finding…" or "Off"; Settings gives the reason.
+ */
+export function locationStatusText(loc: Pick<LocationState, "status" | "requested">, t: T, short = false): string {
+  if (short) {
+    if (loc.status === "fix") return t("more.locationStatus.on");
+    if (loc.status === "denied" || loc.status === "unavailable" || (loc.status === "prompt" && !loc.requested)) return t("more.off");
+    return t("more.findingShort");
+  }
   switch (loc.status) {
     case "fix":
       return t("more.locationStatus.on");
@@ -25,8 +33,11 @@ export function locationStatusText(loc: Pick<LocationState, "status" | "requeste
   }
 }
 
-export function notifyStatusText(t: T): string {
-  return t(`more.notifyStatus.${notifyPermission()}`);
+/** `short`: "On" or "Off" for the More list ("Blocked in browser settings" is explained in Settings). */
+export function notifyStatusText(t: T, short = false): string {
+  const p = notifyPermission();
+  if (short) return t(`more.notifyStatus.${p === "granted" ? "granted" : "default"}`);
+  return t(`more.notifyStatus.${p}`);
 }
 
 /** "Show welcome again": Welcome shows until the rider leaves it again. */

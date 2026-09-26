@@ -82,3 +82,8 @@
   line-height: var(--lh-title);
   font-weight: var(--fw-regular);
 }
+
+/* Settings' segmented controls (the Welcome control, D1). */
+.segmented {
+  padding: var(--sp-1) var(--gutter) var(--sp-2);
+}

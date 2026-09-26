@@ -1,4 +1,6 @@
 // D18 More: today's list (logo, blue caps headers, › in-app vs ↗ external), plus Settings and About.
+// Fares is not listed: it has its own tab in the bottom nav. Row values are one word ("On", "Off");
+// Settings explains the details.
 
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useT } from "../../i18n/index.ts";
@@ -30,7 +32,6 @@ export default function More() {
         <SectionHeader label={t("more.riderResources")} tone="blue" />
         <ListRow kind="internal" label={t("more.routeSchedules")} href="/more/routes" />
         <ListRow kind="internal" label={t("more.serviceAlerts")} href="/more/alerts" />
-        <ListRow kind="internal" label={t("more.fares")} href="/fares" />
         <ListRow kind="external" label={t("more.howToRide")} href={links.howToRide} />
         <ListRow kind="external" label={t("more.rideMetroOrg")} href={links.rideMetro} />
       </section>
@@ -40,8 +41,8 @@ export default function More() {
         <ListRow kind="internal" label={t("more.language")} value={t(`more.lang.${prefs.lang}`)} href="/more/settings#language" />
         <ListRow kind="internal" label={t("more.textSize")} value={t(`more.size.${prefs.textSize}`)} href="/more/settings#text-size" />
         <ListRow kind="internal" label={t("more.walkingPace")} value={t(`more.pace.${prefs.walkPace}`)} href="/more/settings#walking-pace" />
-        <ListRow kind="internal" label={t("more.location")} value={locationStatusText(location, t)} href="/more/settings#location" />
-        <ListRow kind="internal" label={t("more.notifications")} value={notifyStatusText(t)} href="/more/settings#notifications" />
+        <ListRow kind="internal" label={t("more.location")} value={locationStatusText(location, t, true)} href="/more/settings#location" />
+        <ListRow kind="internal" label={t("more.notifications")} value={notifyStatusText(t, true)} href="/more/settings#notifications" />
         <ListRow kind="internal" label={t("more.showWelcome")} onPress={showWelcome} />
       </section>
 
