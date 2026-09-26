@@ -1,0 +1,27 @@
+name: PWA checks
+
+on:
+  push:
+    branches: [main, pwa-redesign]
+    paths: ["pwa/**", ".github/workflows/pwa-ci.yml"]
+  pull_request:
+    paths: ["pwa/**", ".github/workflows/pwa-ci.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+      - run: npm ci
+      - run: npm run data:build
+      - run: npm run typecheck
+      - run: npm run typecheck:web
+      - run: npm test
