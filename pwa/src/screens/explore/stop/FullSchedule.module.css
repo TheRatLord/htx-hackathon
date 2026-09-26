@@ -90,3 +90,14 @@
 .passed {
   color: var(--c-text-secondary);
 }
+
+/* A departure earlier in the current hour. */
+.gone {
+  color: var(--c-text-secondary);
+}
+
+/* "Times are minutes past the hour", under the date. */
+.hint {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}

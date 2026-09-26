@@ -5,6 +5,7 @@ import { useAlerts } from "../../../api/alertsStore.ts";
 import type { LatLon, NearbyResponse, StopSummary, TransitCenterDetail } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
 import { upcoming } from "../../../lib/format.ts";
+import { boundsOf } from "../../../lib/geo.ts";
 import { walkMinutes } from "../../../lib/walk.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
 import { useNow } from "../../../state/clock.ts";
@@ -21,7 +22,7 @@ import { StreetCard } from "./DirectionCard.tsx";
 import { routeCap } from "./fold.ts";
 import styles from "./Home.module.css";
 import { LoadingCards } from "./NearbyList.tsx";
-import { baysFor, boundsOf, nearestPerDirection, type RouteStop } from "./routeNear.ts";
+import { baysFor, nearestPerDirection, type RouteStop } from "./routeNear.ts";
 import { useHalfUpTo } from "./useHalfUpTo.ts";
 
 /** Beyond this the route is "not near you" (D3 Empty). */
@@ -63,21 +64,27 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
   const a0 = useArrivals(s0?.stop.id ?? "", { route: routeId, limit: 2, enabled: Boolean(s0) });
   const a1 = useArrivals(s1?.stop.id ?? "", { route: routeId, limit: 2, enabled: Boolean(s1) });
   const streetArrivals = [a0.data?.arrivals, a1.data?.arrivals];
-  const bayDeps = bays.map((b) => tc!.bays.find((x) => x.bay === b.bay && x.stopId === b.stopId)!.departures.filter((d) => d.routeId === routeId));
+  const bayDeps = bays.map((b) => tc?.bays.find((x) => x.bay === b.bay && x.stopId === b.stopId)?.departures.filter((d) => d.routeId === routeId) ?? []);
   const cardDeps = [...bayDeps, ...streetArrivals.slice(0, shownStreets.length)];
   const lateNight = !tooFar && cardDeps.length > 0 && cardDeps.every((d) => d && !upcoming(d, now).length);
 
   const shape = data?.directions.flatMap((d) => d.shapePoints.map(([lat, lon]) => ({ lat, lon }))) ?? [];
+  // The rider and every card's stop (bays included), so the stop on screen is never cropped.
+  const bayStops = bays.flatMap((b) => {
+    const s = data?.directions.flatMap((d) => d.stops).find((x) => x.id === b.stopId);
+    return s ? [s] : [];
+  });
+  const bounds = boundsOf(origin ? [origin, ...bayStops, ...shownStreets.map((s) => s.stop)] : shape);
   const scene: MapScene = data
     ? {
         legs: data.directions.map((d) => ({ coords: d.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), kind: "ride", color: data.color })),
         markers: streets.map((s) => ({ id: s.stop.id, point: s.stop, kind: "board", label: s.stop.id })),
-        focus: { kind: "bounds", bounds: boundsOf(origin ? [origin, ...streets.map((s) => s.stop)] : shape) },
+        ...(bounds && { focus: { kind: "bounds", bounds } }),
       }
     : origin
       ? { focus: { kind: "point", point: origin } }
       : {};
-  useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join()]);
+  useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join(), bayStops.map((s) => s.id).join()]);
   useHalfUpTo(() => secondCard.current, routeCap, `${data?.id}|${bays.length}|${shownStreets.length}|${tooFar}|${lateNight}`);
 
   if (route.isError) return <ErrorState error={route.error} context={{ id: routeId }} onRetry={() => void route.refetch()} />;
@@ -86,6 +93,12 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
   const name = data.displayName;
   const ref = refOfRoute(data);
   const tcWalkM = tc && nearby?.transitCenters.find((c) => c.id === tc.id)?.walkDistanceM;
+  const tcName = tc?.name ?? "";
+  const routeAlerts = alerts.forRoute(data.id);
+  // Only route-wide alerts, or ones at these cards' stops, go first; one about a stop elsewhere on the route stays in the line at the end.
+  const cardStops = new Set([...bays.map((b) => b.stopId), ...shownStreets.map((s) => s.stop.id)]);
+  const nearAlerts = routeAlerts.filter((a) => !a.stopIds.length || a.stopIds.some((id) => cardStops.has(id)));
+  const alertName = t("routeName.a11y", { name });
   const cards = [
     ...bays.map((b, i) => {
       const platform = data.directions.flatMap((d) => d.stops).find((s) => s.id === b.stopId);
@@ -95,13 +108,13 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
           route={ref}
           directionLabel={b.directionLabel}
           headsign={b.headsign}
-          stop={platform ? asSummary(platform) : { id: b.stopId, name: tc!.name, lat: tc!.lat, lon: tc!.lon, kind: "transit-center", routes: [], subtitle: "" }}
+          stop={platform ? asSummary(platform) : { id: b.stopId, name: tcName, lat: tc?.lat ?? 0, lon: tc?.lon ?? 0, kind: "transit-center", routes: [], subtitle: "" }}
           walkDistanceM={tcWalkM}
           deps={bayDeps[i]}
           noServiceText={t("card.noBuses90m")}
           bay={b.bay}
-          tcName={tc!.name}
-          onOpen={() => navigate(`/explore/tc/${encodeURIComponent(tc!.id)}?route=${encodeURIComponent(data.id)}`)}
+          tcName={tcName}
+          onOpen={() => navigate(`/explore/tc/${encodeURIComponent(tc?.id ?? "")}?route=${encodeURIComponent(data.id)}`)}
           onWalk={() => navigate(walkUrl(b.stopId, { d: tcWalkM, route: data.id, from: place?.param, fromName: place?.name }))}
         />
       );
@@ -114,7 +127,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
         headsign={s.dir.headsigns[0] ?? ""}
         stopId={s.stop.id}
         summary={s.fromNearby?.stop}
-        origin={origin!}
+        origin={origin ?? s.stop}
         place={place}
         seed={{ distanceM: s.distanceM, source: s.fromNearby?.walkSource ?? "estimate" }}
         arrivals={streetArrivals[i]}
@@ -124,6 +137,8 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
 
   return (
     <>
+      {/* An alert goes right under the title, where the rider reads first (it used to be a FAB on the map). */}
+      {nearAlerts.length > 0 && <AlertStatusLine scope="route" name={alertName} alerts={nearAlerts} />}
       {lateNight && <p className={styles.info}>{t("home.lateNight")}</p>}
       {tooFar ? (
         <p className={styles.notice}>
@@ -142,7 +157,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
       )}
       {finding && <LoadingCards />}
       <Button variant="text" label={t("home.route.seeAll", { name })} onPress={() => navigate(`/explore/route/${encodeURIComponent(data.id)}`)} />
-      <AlertStatusLine scope="route" name={t("routeName.a11y", { name })} alerts={alerts.forRoute(data.id)} />
+      {nearAlerts.length === 0 && <AlertStatusLine scope="route" name={alertName} alerts={routeAlerts} />}
       <div className={styles.footer}>
         <ScheduleCaption />
       </div>

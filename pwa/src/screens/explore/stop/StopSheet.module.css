@@ -62,7 +62,7 @@
 
 .note {
   color: var(--c-text-variant);
-  text-align: center;
+  text-align: start;
 }
 
 .others {

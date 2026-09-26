@@ -6,9 +6,9 @@ const strings: Strings = {
     home: {
       title: "Nearby stops",
       finding: "Finding stops near you…",
-      nearPlace: "Stops near {place}",
+      nearPlace: "Near {place}",
       backToMe: "Back to my location",
-      chipLabel: "Your route? Tap it:",
+      chipLabel: "Your route:",
       chipGroup: "Routes near you",
       footerPace: "Walk times are estimates at a normal pace. Change the pace in More › Settings.",
       lateNight: "Late night: few or no buses in the next 2 hours. Tap a stop for its next bus.",
@@ -29,9 +29,9 @@ const strings: Strings = {
     home: {
       title: "Paradas cercanas",
       finding: "Buscando paradas cerca de usted…",
-      nearPlace: "Paradas cerca de {place}",
+      nearPlace: "Cerca de {place}",
       backToMe: "Volver a mi ubicación",
-      chipLabel: "¿Su ruta? Tóquela:",
+      chipLabel: "Su ruta:",
       chipGroup: "Rutas cerca de usted",
       footerPace: "Los tiempos a pie son aproximados, a paso normal. Cambie el paso en Más › Configuración.",
       lateNight: "Es tarde: hay pocos o ningún autobús en las próximas 2 horas. Toque una parada para ver su próximo autobús.",

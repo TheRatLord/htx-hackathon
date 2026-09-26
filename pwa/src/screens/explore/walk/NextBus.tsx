@@ -1,6 +1,6 @@
 import { useArrivals } from "../../../api/hooks.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { departureView, upcoming } from "../../../lib/format.ts";
+import { departureView, showsClock, upcoming } from "../../../lib/format.ts";
 import { canonicalRouteId, routeRef, useRoutesLoaded } from "../../../lib/routes.ts";
 import { canMakeIt } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
@@ -13,7 +13,7 @@ import styles from "./Walk.module.css";
 
 const ARRIVALS = 6;
 
-/** "[40] next bus: 16 min. You have time." with the one "can I make it" rule (C.17). */
+/** "[40] Next bus in 16 min" / "You have time." with the one "can I make it" rule (C.17). */
 export function NextBus({ stopId, routeId, walkMin }: { stopId: string; routeId?: string; walkMin?: number }) {
   const t = useT();
   const lang = useLang();
@@ -33,6 +33,10 @@ export function NextBus({ stopId, routeId, walkMin }: { stopId: string; routeId?
   // Without ?route=, the soonest route; then only that route's buses count as "the next one".
   const same = deps.filter((d) => d.routeId === first.routeId);
   const shown = (d: typeof first) => departureView(d, now, { offline, lang }).text;
+  const nextBusText = (d: typeof first) => {
+    if (showsClock(d, now, offline)) return t("walk.nextBusAt", { time: shown(d) });
+    return Date.parse(d.departureTime) - now < 60_000 && d.isRealtime ? t("walk.nextBusNow") : t("walk.nextBusIn", { time: shown(d) });
+  };
   const verdict = walkMin === undefined ? undefined : canMakeIt(walkMin, first, now);
   const later = verdict === "no" ? same.find((d) => canMakeIt(walkMin!, d, now) !== "no") : undefined;
 
@@ -40,7 +44,7 @@ export function NextBus({ stopId, routeId, walkMin }: { stopId: string; routeId?
     <div className={styles.box}>
       <p className={styles.nextBus}>
         <RouteBadge route={refOfArrival(first)} size="sm" />
-        {t("walk.nextBus", { time: shown(first) })}
+        <span>{nextBusText(first)}</span>
       </p>
       {verdict && (
         <p className={verdict === "yes" ? styles.ok : styles.warn}>

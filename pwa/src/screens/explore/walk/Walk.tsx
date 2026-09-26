@@ -133,10 +133,11 @@ export default function Walk() {
 
   const walkMin = distanceM !== undefined ? walkMinutes(distanceM, walkPace) : undefined;
   const maps = target && (() => openGoogleMaps(target, from));
+  // Full width when it is the fallback for missing street directions; outlined, never primary, since it leaves the app.
   const mapsButton = (primary: boolean) =>
     target && (
       <Button
-        variant={primary ? "primary" : "text"}
+        variant={primary ? "outline" : "text"}
         fullWidth={primary}
         label={t("walk.googleMapsLink")}
         href={googleMapsUrl(target, from)}
@@ -196,23 +197,15 @@ export default function Walk() {
         {noConnection && <p className={styles.warnBox}>{t("walk.offline")}</p>}
         {estimate && <p className={styles.warnBox}>{t("walk.estimate")}</p>}
         {walk ? (
-          <Steps walk={walk} onStep={setStepFocus} />
+          // A lone "Arrive" step only repeats the summary line: list steps only when there are street directions.
+          !(walk.steps.length === 1 && walk.steps[0].maneuver === "arrive") && <Steps walk={walk} onStep={setStepFocus} />
         ) : osrm.isError && !noConnection ? (
           <ErrorState error={osrm.error} onRetry={() => void osrm.refetch()} />
         ) : (
           !noConnection && <Skeleton variant="row" />
         )}
-        {noConnection || estimate ? (
-          <>
-            {mapsButton(true)}
-            <Button variant="tonal" label={t("walk.atStop")} onPress={() => navigate(stopUrl(stopId, routeId), { replace: true })} />
-          </>
-        ) : (
-          <>
-            <Button variant="primary" fullWidth label={t("walk.atStop")} onPress={() => navigate(stopUrl(stopId, routeId), { replace: true })} />
-            {mapsButton(false)}
-          </>
-        )}
+        <Button variant="primary" fullWidth label={t("walk.atStop")} onPress={() => navigate(stopUrl(stopId, routeId), { replace: true })} />
+        {mapsButton(Boolean(noConnection || estimate))}
       </>
     );
   }

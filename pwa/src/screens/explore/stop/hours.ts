@@ -8,6 +8,8 @@ export interface HourRow {
   key: string;
   label: string;
   minutes: string[];
+  /** Each departure's time, parallel to `minutes` (to grey the ones already gone). */
+  times: number[];
   startMs: number;
 }
 
@@ -34,10 +36,11 @@ export function hourRows(departures: { departureTime: string }[], lang: Lang): H
     const { key, minute } = hourKey(ms);
     let row = rows.at(-1);
     if (row?.key !== key) {
-      row = { key, label: formatHour(ms, lang), minutes: [], startMs: ms };
+      row = { key, label: formatHour(ms, lang), minutes: [], times: [], startMs: ms };
       rows.push(row);
     }
     row.minutes.push(minute);
+    row.times.push(ms);
   }
   return rows;
 }

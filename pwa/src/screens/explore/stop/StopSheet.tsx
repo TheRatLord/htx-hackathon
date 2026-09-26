@@ -1,9 +1,9 @@
-// D6 Stop sheet (`/explore/stop/:stopId?route=`): the centred "Name (ID)", Save and Walk here,
-// alerts, the expanded route with today's blue strip, the other routes, and the legend.
+// D6 Stop sheet (`/explore/stop/:stopId?route=`): the centred "Name (ID)", the expanded route with
+// today's blue strip first, its alerts, Save and Walk here, the other routes, and the legend.
 
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { useArrivals, useStop } from "../../../api/hooks.ts";
+import { useArrivals, useRoute, useStop } from "../../../api/hooks.ts";
 import { useAlerts } from "../../../api/alertsStore.ts";
 import { ApiError } from "../../../api/client.ts";
 import type { StopDetail } from "../../../api/types.ts";
@@ -83,6 +83,12 @@ function WalkHere({ stop, routeId }: { stop: StopDetail["stop"]; routeId?: strin
   return <Button variant="tonal" icon="directions_walk" label={label} onPress={() => navigate(walkUrl(stop.id, { d: distanceM, route: routeId }))} />;
 }
 
+/** Until the stop loads: the pin only (Loaded sets the scene with its route line). */
+function LoadingScene({ stopId }: { stopId: string }) {
+  useMapScene({ highlightStopId: stopId }, [stopId]);
+  return null;
+}
+
 function Loaded({ detail }: { detail: StopDetail }) {
   const t = useT();
   const now = useNow();
@@ -106,7 +112,20 @@ function Loaded({ detail }: { detail: StopDetail }) {
     );
 
   const strip = useRef<HTMLDivElement>(null);
+  const route = useRoute(expanded?.routeId ?? "", { enabled: Boolean(expanded) });
+  const dir = route.data?.directions.find((d) => d.stopIds.includes(stop.id));
+  const routeLine = dir && route.data ? { coords: dir.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), color: route.data.color } : undefined;
+  // The expanded route's line through the stop, as today: riders use it to confirm the direction.
+  useMapScene({ focus: { kind: "point", point: stop, zoom: STOP_ZOOM }, highlightStopId: stop.id, routeLine }, [stop.id, dir]);
   useHalfUpTo(() => strip.current, foldCap, expanded ? servingKey(expanded) : "");
+
+  // After the answer, so the strip is on the first screen even at 360 or Extra large (A.1.2).
+  const stopActions = (
+    <div className={styles.pills}>
+      <WalkHere stop={stop} routeId={expanded?.routeId} />
+      <SaveButton stop={stop} routeId={expanded?.routeId} />
+    </div>
+  );
 
   return (
     <div className={styles.body}>
@@ -117,11 +136,6 @@ function Loaded({ detail }: { detail: StopDetail }) {
           href={`/explore/tc/${encodeURIComponent(detail.transitCenter.id)}`}
         />
       )}
-      <div className={styles.pills}>
-        <SaveButton stop={stop} routeId={expanded?.routeId} />
-        <WalkHere stop={stop} routeId={expanded?.routeId} />
-      </div>
-      <hr className={styles.divider} />
       {expanded && (
         <ExpandedRoute
           key={servingKey(expanded)}
@@ -130,9 +144,9 @@ function Loaded({ detail }: { detail: StopDetail }) {
           shared={serving.filter((s) => s.routeId === expanded.routeId).length > 1}
           mixed={departuresOf(expanded, arrivals)}
           stripRef={strip}
+          stopActions={stopActions}
         />
       )}
-      {/* After the strip, so the answer to "when does it come?" is on the first screen (A.1.2). */}
       <AlertStatusLine
         scope="stop"
         name={stop.name}
@@ -141,6 +155,8 @@ function Loaded({ detail }: { detail: StopDetail }) {
           stop.routes.map((r) => r.id),
         )}
       />
+      {!expanded && stopActions}
+      {others.length > 0 && <hr className={styles.divider} />}
       {others.length > 0 && (
         <ul className={styles.others} aria-label={t("stop.routes")}>
           {others.map((s) => (
@@ -171,7 +187,6 @@ export default function StopSheet() {
   const known = stop.data?.stop.name ?? cached?.name;
   const title = known ? t("stopLine.title", { name: known, id: stopId }) : t("stop.fallbackTitle", { id: stopId });
   usePageTitle(title);
-  useMapScene({ focus: { kind: "point", point: stop.data?.stop, zoom: STOP_ZOOM }, highlightStopId: stopId }, [stopId, Boolean(stop.data)]);
 
   const summary = stop.data?.stop;
   useEffect(() => {
@@ -190,6 +205,7 @@ export default function StopSheet() {
   const notFound = stop.error instanceof ApiError && stop.error.code === "stop_not_found" ? stop.error : undefined;
   return (
     <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} titleAlign="center" sub={side || undefined} />} onBack={back}>
+      {!stop.data && <LoadingScene stopId={stopId} />}
       {stop.data ? (
         <Loaded detail={stop.data} />
       ) : notFound ? (

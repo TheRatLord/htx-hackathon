@@ -44,12 +44,3 @@ export function baysFor(tc: TransitCenterDetail, routeId: string): TcBay[] {
     b.routes.filter((r) => r.routeId === routeId).map((r) => ({ bay: b.bay, stopId: b.stopId, directionLabel: r.directionLabel, headsign: r.headsign })),
   );
 }
-
-export function boundsOf(points: LatLon[]): [LatLon, LatLon] {
-  const lats = points.map((p) => p.lat);
-  const lons = points.map((p) => p.lon);
-  return [
-    { lat: Math.min(...lats), lon: Math.min(...lons) },
-    { lat: Math.max(...lats), lon: Math.max(...lons) },
-  ];
-}
