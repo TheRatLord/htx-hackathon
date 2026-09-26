@@ -2,6 +2,14 @@
   padding: 0 var(--gutter) var(--sp-2);
 }
 
+/* Pick mode: which planner field the result fills ("Choose a destination"). */
+.pickTitle {
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+}
+
 /* Full-bleed so section dividers span the sheet; SectionHeader brings its own gutter. */
 .content {
   display: flex;
@@ -20,9 +28,12 @@
   border-top: none;
 }
 
+/* SavedStopRow cards: their own gutter and gap (pick mode lists plain rows instead). */
 .saved {
+  display: flex;
+  flex-direction: column;
   gap: var(--card-gap);
-  padding: var(--sp-2) var(--gutter);
+  padding: 0 var(--gutter) var(--sp-2);
 }
 
 .row {
@@ -91,25 +102,26 @@
   overflow-wrap: anywhere;
 }
 
-/* Actions line up under the title, past the 24dp icon and its gap. */
+/* Actions and the alert line span the row under the title, the same at every width (two pills fit at 360dp). */
 .pills,
 .alertLine {
   display: flex;
   flex: 1 0 100%;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  padding: 0 0 var(--sp-2) 36px;
+  padding-bottom: var(--sp-2);
 }
 
 .alertLine {
   display: block;
 }
 
-/* At 360dp two pills only fit side by side (S8) without the indent. */
-@media (max-width: 400px) {
-  .pills {
-    padding-left: 0;
-  }
+.badge {
+  flex: none;
+}
+
+.more {
+  padding: 0 var(--gutter);
 }
 
 .stopRow {
@@ -138,6 +150,11 @@
   background: none;
   text-align: start;
   overflow-wrap: anywhere;
+}
+
+.recentIcon {
+  display: flex;
+  flex: none;
 }
 
 .recentQuery:active {

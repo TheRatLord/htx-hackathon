@@ -22,12 +22,19 @@ export function parseRouteStopQuery(q: string): { route: string; stop: string } 
   return m ? { route: m[1], stop: m[2] } : undefined;
 }
 
+/** "westheimer and kirby", "Main & Lamar", "Main @ Gray": the rider wants the stops at a corner. */
+export function isCornerQuery(q: string): boolean {
+  return /\s(and|&|@)\s|[&@]/i.test(q.trim());
+}
+
 const ORDER: SearchSection["kind"][] = ["transitCenters", "places", "stops", "routes"];
+const CORNER_ORDER: SearchSection["kind"][] = ["stops", "transitCenters", "places", "routes"];
 const LANDMARK_ORDER: SearchSection["kind"][] = ["places", "transitCenters", "stops", "routes"];
 const ROUTE_ORDER: SearchSection["kind"][] = ["routes", "stops", "transitCenters", "places"];
 
 /**
- * Places (landmarks first), transit centers, stops, routes; routes first for a route query.
+ * Places (landmarks first), transit centers, stops, routes; routes first for a route query and
+ * stops first for a corner.
  * Without a curated landmark, a matching transit center goes before places: it is METRO's own
  * answer, while OpenStreetMap places often share its name ("northwest" finds four). Its platform
  * stops collapse into its one row, and transit centers whose name matches are added from the cache.
@@ -50,6 +57,6 @@ export function groupResults(results: SearchResult[], tcs: TransitCenterSummary[
     { kind: "routes", items: results.filter((r) => r.type === "route") },
   ];
   const hasLandmark = places.some((p) => p.type === "landmark");
-  const order = isRouteQuery(q) ? ROUTE_ORDER : hasLandmark ? LANDMARK_ORDER : ORDER;
+  const order = isRouteQuery(q) ? ROUTE_ORDER : isCornerQuery(q) ? CORNER_ORDER : hasLandmark ? LANDMARK_ORDER : ORDER;
   return sections.filter((s) => s.items.length > 0).sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
 }

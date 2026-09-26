@@ -41,6 +41,14 @@ describe("groupResults", () => {
     expect(sections[0].items.map((r) => ("title" in r ? r.title : ""))).toEqual(["Hobby Airport", "Hobby Center"]);
   });
 
+  it("puts stops first for a corner", () => {
+    const tops = stop("2963", "Westheimer Rd @ Kirby Dr");
+    const vacuum: SearchResult = { ...place, title: "Tops Vacuum and Sewing" };
+    expect(kinds(groupResults([vacuum, tops], [], "westheimer and kirby"))).toEqual(["stops", "places"]);
+    expect(kinds(groupResults([vacuum, tops], [], "main & lamar"))).toEqual(["stops", "places"]);
+    expect(kinds(groupResults([vacuum, tops], [], "sewing"))).toEqual(["places", "stops"]);
+  });
+
   it("collapses a transit center's platform stops into one row", () => {
     const sections = groupResults(
       [stop("79", "Northwest Transit Center - Platform 2", "transit-center"), stop("13170", "Northwest Transit Center - Platform 1", "transit-center"), stop("8413", "W 18th St @ Northwest Freeway")],
