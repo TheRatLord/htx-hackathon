@@ -49,13 +49,16 @@ const noop = () => {};
 function PreviewCard() {
   const now = useNow();
   const dep = (min: number): Dep => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule", tripId: `preview-${min}` });
+  // Raw METRO data, as the API sends it: the card localises the side and direction words
+  // (sideLine, headsignLine), so Spanish reads "Lado norte de Lamar St" and "RUMBO NORTE".
+  // Stop 342 is served northbound, so the stop and its route agree.
   const stop: StopSummary = {
     id: "342",
     name: "Lamar St @ Main St",
     lat: 29.75651,
     lon: -95.36412,
     kind: "stop",
-    directionLabel: "Westbound",
+    directionLabel: "Northbound",
     side: "North side of Lamar St",
     routes: [{ id: "040", name: "40", color: "#004080", textColor: "#FFFFFF" }],
     subtitle: "",

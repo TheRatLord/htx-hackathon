@@ -86,9 +86,9 @@ export default function Alerts() {
   let body;
   // AlertStatusLine owns the loading and "can't be checked" states.
   if (store.status !== "ok" || store.source === "unavailable") {
-    body = <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />;
+    body = <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} demoNote />;
   } else if (routeParam && shown.length === 0) {
-    body = <AlertStatusLine scope="route" name={t("alerts.routeName", { route: route ?? routeParam })} alerts={[]} />;
+    body = <AlertStatusLine scope="route" name={t("alerts.routeName", { route: route ?? routeParam })} alerts={[]} demoNote />;
   } else if (!routeParam && filter === "mine" && !myRoutes) {
     body = null;
   } else {
