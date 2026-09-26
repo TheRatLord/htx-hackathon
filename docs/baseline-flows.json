@@ -1,0 +1,891 @@
+[
+ {
+  "id": "F10",
+  "name": "First launch to usable home map",
+  "scenario": "App data cleared (pm clear), launched, GPS at 29.7563,-95.3639 (downtown). Grant every permission. Count until the map is unobstructed and usable.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Continue on the 'Location Access' explainer (1 of 3)",
+    "resultingScreen": "System location permission dialog",
+    "screenshot": "ux-audit/baseline/F10/01-perm-location.png"
+   },
+   {
+    "n": 2,
+    "type": "system-dialog",
+    "target": "'While using the app' in the system location dialog",
+    "resultingScreen": "'Notifications' explainer (2 of 3)",
+    "screenshot": "ux-audit/baseline/F10/02-sysdlg-location.png"
+   },
+   {
+    "n": 3,
+    "type": "tap",
+    "target": "Continue on the Notifications explainer",
+    "resultingScreen": "System notification permission dialog",
+    "screenshot": "ux-audit/baseline/F10/03-perm-notif.png"
+   },
+   {
+    "n": 4,
+    "type": "system-dialog",
+    "target": "Allow in the notifications dialog",
+    "resultingScreen": "'Nearby Devices Access' (Bluetooth beacons) explainer (3 of 3)",
+    "screenshot": "ux-audit/baseline/F10/04-sysdlg-notif.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "Continue on the Nearby Devices explainer",
+    "resultingScreen": "System nearby-devices permission dialog",
+    "screenshot": "ux-audit/baseline/F10/05-perm-nearby.png"
+   },
+   {
+    "n": 6,
+    "type": "system-dialog",
+    "target": "Allow in the nearby devices dialog",
+    "resultingScreen": "Explore map with a full-height 'Explore' intro card in the bottom sheet (Next button)",
+    "screenshot": "ux-audit/baseline/F10/06-sysdlg-nearby.png"
+   },
+   {
+    "n": 7,
+    "type": "overlay-dismiss",
+    "target": "Next on the 'Explore' intro card (BACK works too)",
+    "resultingScreen": "Spotlight coach mark 1: 'Place the blue circle on the map...'",
+    "screenshot": "ux-audit/baseline/F10/07-post-perms.png"
+   },
+   {
+    "n": 8,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 1 (blue circle)",
+    "resultingScreen": "Coach mark 2 ('These routes service the area within the blue circle...')",
+    "screenshot": "ux-audit/baseline/F10/08-coach-1.png"
+   },
+   {
+    "n": 9,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 2",
+    "resultingScreen": "Coach mark 3",
+    "screenshot": "ux-audit/baseline/F10/08-coach-2.png"
+   },
+   {
+    "n": 10,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 3",
+    "resultingScreen": "Coach mark 4",
+    "screenshot": "ux-audit/baseline/F10/08-coach-3.png"
+   },
+   {
+    "n": 11,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 4",
+    "resultingScreen": "Coach mark 5",
+    "screenshot": "ux-audit/baseline/F10/08-coach-4.png"
+   },
+   {
+    "n": 12,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 5",
+    "resultingScreen": "Coach mark 6",
+    "screenshot": "ux-audit/baseline/F10/08-coach-5.png"
+   },
+   {
+    "n": 13,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 6",
+    "resultingScreen": "Coach mark 7 ('Also available: Route schedules, Service alerts, ...' on More)",
+    "screenshot": "ux-audit/baseline/F10/08-coach-6.png"
+   },
+   {
+    "n": 14,
+    "type": "overlay-dismiss",
+    "target": "Coach mark 7 (More menu)",
+    "resultingScreen": "Unobstructed Explore map with 'N Nearby Arrivals' and a column of route chips",
+    "screenshot": "ux-audit/baseline/F10/09-map-usable.png"
+   }
+  ],
+  "counts": {
+   "taps": 3,
+   "typing": 0,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 3,
+   "overlays": 8,
+   "totalActions": 14,
+   "distinctScreens": 15
+  },
+  "firstTimerTotalActions": 14,
+  "alternativesTried": [
+   "Run 1 (ux-audit/baseline/F10/glitch-run): the emulator GPS was stuck, so the map fell back to the hard-coded Museum District point. Same 14 actions.",
+   "Run 2 (ux-audit/baseline/F10/stale-gps-run): a single stale fix. Same 14 actions, and the map again fell back to Museum District.",
+   "Run 3 (reported above): test providers re-pushed the location every 2 s, so the map centered on the user after 14 actions.",
+   "VERIFIER run (ux-audit/baseline/F10/verify-01..11): pm clear, then relaunch. The same 3 explainers, 3 OS dialogs, the intro card and 7 coach marks = 14 actions. Hardware BACK dismisses the intro card and each coach mark one at a time (verify-08, verify-09), so it can replace the taps but does not skip anything. The map again opened on Montrose/Museum District ('6 Nearby Arrivals', routes 25/56/298). After 3 more GPS pushes and a tap on my-location, it still showed Museum District ('12 Nearby Arrivals', routes 5/56/65/292; verify-11)."
+  ],
+  "frictionNotes": [
+   "14 mandatory actions before the map is usable: 3 permission explainers, 3 OS dialogs, 1 intro card and 7 full-screen spotlight coach marks.",
+   "The OS permission dialogs appear 3-6 s after Continue, and taps during the delay do nothing.",
+   "The Bluetooth 'Nearby Devices' permission is requested up front, with alarming OS wording ('find, connect to, and determine the relative position of nearby devices').",
+   "Coach marks cover the whole screen, and there is no 'Skip tour'. Tapping or BACK advances only one card at a time.",
+   "If there is no fresh fix, the app silently falls back to Museum District and shows arrivals for the wrong area, with no 'location unavailable' message.",
+   "Coach marks come back later (for example 'Plan a trip.' after a relaunch), and there are separate first-use tips in search, stop detail and the planner.",
+   "At city zoom the map shows about 40 unlabeled 16dp stop dots and a column of route chips.",
+   "VERIFIER: confirmed. I reproduced 14 actions exactly (3 taps + 3 system dialogs + 8 overlays). BACK can dismiss overlays one by one but finds no shorter path. I also reproduced the silent Museum District fallback on this fresh install: even after an extra my-location tap the map never reached downtown, so 'usable' here means unobstructed, not correctly located."
+  ]
+ },
+ {
+  "id": "F1",
+  "name": "Nearest stop + next bus (Route 40 northbound)",
+  "scenario": "GPS 29.7563,-95.3639 (downtown, Main St @ Lamar). Goal: know which stop to catch Route 40 northbound (name + ID) nearest to me and its next arrival in minutes. Start: Explore after restart.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Route chip '40' in the left column of the Explore map (a11y label 'Nearby route 40')",
+    "resultingScreen": "'Choose Direction' bottom sheet: 40 NORTHBOUND to N SHEPHERD P&R / 40 SOUTHBOUND to MONROE P&R",
+    "screenshot": "ux-audit/baseline/F1/verify-05-chip40-again.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "'NORTHBOUND to N SHEPHERD P&R' row",
+    "resultingScreen": "Route 40 drawn on the map with a 'Stop: 342' callout. The stop sheet reads 'Lamar St @ Main St (342)', 40 Telephone/Heights NORTHBOUND, arrivals 7 min, 26 min, 51 min, 1:17 h... The goal information is on screen.",
+    "screenshot": "ux-audit/baseline/F1/verify-06-nb.png"
+   }
+  ],
+  "counts": {
+   "taps": 2,
+   "typing": 0,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 2,
+   "distinctScreens": 3
+  },
+  "firstTimerTotalActions": 4,
+  "alternativesTried": [
+   "A (shortest, reported): route chip 40, then Northbound = 2 taps, 3 screens. On first use a coach mark covers the stop sheet (+1). The first tap after launch is swallowed (+1).",
+   "B: swipe up Nearby Arrivals, then tap the Route 40 NB card = 2 actions, but the swipe is unreliable and the list never names the stop.",
+   "C: search '40', route result, SHOW ON MAP, direction = 5 actions, and it ends partial with no stop and no arrival shown.",
+   "VERIFIER D: tapping the stop-342 pin on the map (one of about 60 unlabeled dots in the blue circle) opens 'Choose Direction' (40 NB / 41 WB), then 40 NB = also 2 taps (verify-02-tap-pin342). It is not shorter, and it needs the rider to already know which dot is 342.",
+   "VERIFIER E: the Recent tab could not be reached while the stop sheet was open. Two taps on 'Recent' did nothing because the stop sheet overlays the bottom navigation (verify-07, verify-08). On a fresh session Recent is empty anyway.",
+   "VERIFIER F: the app registers a 'houstonmetrotrip:' deep-link scheme, but a rider has no way to use it, so it is not a rider path."
+  ],
+  "frictionNotes": [
+   "The fastest path depends on noticing that the unlabeled number tiles are tappable 'Nearby route' chips.",
+   "The chosen stop is never shown with a distance or walk time, so 'nearest' cannot be checked on screen.",
+   "The Nearby Arrivals list never names the stop.",
+   "Arrival chips mix formats ('7 min', '1:17 h') and rely on a small legend for realtime vs scheduled.",
+   "The first tap right after launch or restart is often ignored. It happened again in verification: the first chip tap after restart did nothing (verify-03), and the second worked.",
+   "A first-use coach mark covers the arrivals row.",
+   "The bottom-sheet swipe gesture is unreliable.",
+   "VERIFIER: confirmed. Chip 40 then Northbound = 2 taps, and the screen truly shows 'Lamar St @ Main St (342)', the NORTHBOUND direction and '7 min' next arrival (verify-06-nb, and the ui dump text 'Arrives in 7m'). Tapping the stop pin is equal length, not shorter. New friction: while a stop sheet is open it covers the bottom nav, so tapping Recent/Fares/More silently does nothing."
+  ]
+ },
+ {
+  "id": "F4",
+  "name": "Walking directions to a stop (Lamar St @ Main St, stop 342)",
+  "scenario": "Same GPS 29.7563,-95.3639. Goal: walking directions (a route on the map or a turn list) from my location to stop 342, Lamar St @ Main St, about 1 block away. Start: Explore after restart.",
+  "achieved": "no",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "long-press",
+    "target": "Long-press (about 1.5 s) on the map at the stop-342 location (Lamar St @ Main St)",
+    "resultingScreen": "Modal 'Use location \"1004 Lamar St, Houston, Texas 77002, United States\" as:' USE AS START / USE AS DESTINATION / Cancel",
+    "screenshot": "ux-audit/baseline/F4/verify-04-longpress-342.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "USE AS DESTINATION",
+    "resultingScreen": "Plan Your Trip sheet (My current location to 1004 Lamar St, Leave at now). A blue destination pin appears, but no user dot or path is drawn.",
+    "screenshot": "ux-audit/baseline/F4/verify-05-dest-set.png"
+   },
+   {
+    "n": 3,
+    "type": "tap",
+    "target": "Plan My Trip",
+    "resultingScreen": "DEAD END: 'Information: Cannot find any trips for this criteria' [OK]. No walking route, no path and no turn list.",
+    "screenshot": "ux-audit/baseline/F4/verify-06-plan-result.png"
+   }
+  ],
+  "counts": {
+   "taps": 3,
+   "typing": 0,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 3,
+   "distinctScreens": 4
+  },
+  "firstTimerTotalActions": 8,
+  "missingInfo": "There are no walking directions anywhere for a stop-level destination. The trip planner returns 'Cannot find any trips for this criteria' for a walk-only trip of about 1 block, whether the destination is set from a stop search, a place search or a map long-press. The stop sheet has no Walk/Directions button and no hand-off to Google Maps. The screen shows only a destination pin, with no path, distance or walking time.",
+  "alternativesTried": [
+   "A (original report): search '342', USE AS 'TO' POINT, planner coach mark, Plan My Trip = 6 actions to the dead end (5 once the coach mark has been seen; 7-8 with the swallowed first tap and the OK).",
+   "B: from the F1 stop sheet, the controls are Full Schedule, Track Bus Stop and the direction row. The row's chevron only reopens 'Choose Direction' (verify-01-route-chevron). There is no Walk/Directions control. Dead end.",
+   "C: trip-planner FAB, Destination, type 'Main St and Lamar St', pick the place, Plan My Trip = 5 actions, same error.",
+   "VERIFIER D (new shortest dead end, reported above): long-press the map at the stop, then USE AS DESTINATION, then Plan My Trip = 3 actions, same 'Cannot find any trips for this criteria' error (verify-04..06). The planner coach mark did not appear because it had already been seen.",
+   "Checked the expanded planner sheet for a walk-only or mode option. There is none."
+  ],
+  "frictionNotes": [
+   "There is no 'Walk here' or 'Directions' action on the stop sheet or on the stop's search result.",
+   "The trip planner treats a short walk-only trip as a failure and shows a modal error.",
+   "Routing to a stop takes a 5-option modal, and 'USE AS TO POINT' is jargon.",
+   "A first-use coach mark covers the planner form.",
+   "The error dialog gives no next step: no suggestion to walk, no distance, no 'open in Maps'.",
+   "Inside a transit itinerary, the walking leg is a straight dotted line with no street routing.",
+   "VERIFIER: the original claimed a 6-action expert path to the dead end. A shorter one exists: long-press the map, then USE AS DESTINATION, then Plan My Trip = 3 actions (4 screens), ending in the same error. achieved=no is confirmed: every entry point (search, place search, long-press, stop sheet) dead-ends, and no walking path is ever drawn. The long-press gesture is hidden (no hint anywhere), resolves to a street address (1004 Lamar St) rather than the stop, and switches on trip-planning mode, which hides the stop pins and the user dot. A first-timer would realistically take the 6-8 action search path. In the verify run, BACK from the Explore map also switched unexpectedly into the 'Plan Your Trip' sheet (verify-02-longpress-map)."
+  ]
+ },
+ {
+  "id": "F2",
+  "name": "Returning daily commuter: next Route 82 at stop 2958",
+  "scenario": "GPS 29.7440,-95.3900 (Montrose). Precondition: stop 2958 / route 82 EB viewed once via search, then restart. Goal: from launch, see the next Route 82 arrival at Westheimer Rd @ Montrose Blvd (2958) as fast as possible.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Bottom nav 'Recent' tab",
+    "resultingScreen": "Recent list ('RECENTLY VIEWED STOPS': 82 Westheimer Rd @ Montrose Blvd (2958) 082 EASTBOUND to DOWNTOWN, ...). A 'Recent' tip sheet with a Close button covers the bottom half.",
+    "screenshot": "ux-audit/baseline/F2/verify-07-recent.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "Row 'Westheimer Rd @ Montrose Blvd (2958)'",
+    "resultingScreen": "Stop detail loads underneath, but the 'Recent' tip sheet stays on top and hides the arrivals strip",
+    "screenshot": "ux-audit/baseline/F2/verify-08-row-tapped.png"
+   },
+   {
+    "n": 3,
+    "type": "overlay-dismiss",
+    "target": "'Close' on the Recent tip sheet",
+    "resultingScreen": "Stop detail: 'Westheimer Rd @ Montrose Blvd (2958)', 82 Westheimer EASTBOUND to Congress St @ Smith St, live arrivals 7 min / 8 / 8 / 36 / 44",
+    "screenshot": "ux-audit/baseline/F2/verify-09-stop-2958.png"
+   }
+  ],
+  "counts": {
+   "taps": 2,
+   "typing": 0,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 1,
+   "totalActions": 3,
+   "distinctScreens": 4
+  },
+  "firstTimerTotalActions": 5,
+  "alternativesTried": [
+   "Search by ID: tap search, type '2958', tap 'Westheimer Rd @ Montrose Blvd (Stop #2958)', 'What do you want to do?' dialog > SEE NEARBY ARRIVALS. The sheet shows '1 Nearby Arrival' 82 EASTBOUND 2m 2m 17m but does not name the stop; tap the card to reach stop detail (2958). That is 5 actions to see minutes and 6 to see them with the stop name confirmed (F2/40-46).",
+   "VERIFIER: Search-sheet Recents. Tapping the search bar shows a 'Recents' list that already contains 'Westheimer Rd @ Montrose Blvd (Stop #2958)', so no typing is needed. Path: tap search, tap the recent row, 'What do you want to do?' > SEE NEARBY ARRIVALS gives '1 Nearby Arrival' 82 EASTBOUND 8m 8m 9m. That is 3 actions, a tie with the Recent tab, but the stop name is not shown. Tapping the card to confirm 2958 makes it 4 (F2/verify-03..05).",
+   "VERIFIER: Direct map pin tap. After the map fully settled, a pixel-exact tap on the 2958 pin (located from a UI dump at the lower-left edge of a cluster of 3328/3426/3340) opened 2958 82 EASTBOUND with live minutes in 1 action (F2/verify-11). This is NOT a genuine rider path: the pins are unlabeled 42 px dots overlapping within about 20 px, and the cluster sat at a different screen position on another restart (y=1110 vs 1043). A visual tap on the same cluster gave Montrose Blvd @ Hawthorne St (3339) instead (F2/verify-10). Excluded from the expert count.",
+   "Nearby sheet from Explore: swipe the sheet up (it only half-expands, so the 82 card is cut off), tap the 82 EASTBOUND card. This opens Westheimer Rd @ Stanford St (2959), the nearest stop, not 2958, so it is the WRONG stop. 2 actions and fails (F2/22-23).",
+   "Map pin: at default zoom 2958, 3328, 3340 and 3426 sit within about 20 px of each other. Tapping gave Montrose Blvd @ Westheimer Rd (3328), route 56 SOUTHBOUND. After 2 double-tap zooms, the pins are still unlabeled and overlap a fare-retailer pin. Tapping gave the Circle K retailer popup, then 3328 again, then nothing. Abandoned after about 7 actions without reaching 2958 (F2/31-37).",
+   "Nearby route chip '82' (left column): Choose Direction > EASTBOUND opens stop 2959 (nearest), not 2958 (see F5/02-03 and F5/verify-05)."
+  ],
+  "frictionNotes": [
+   "VERIFIER: confirmed. Re-ran on emulator-5556: the Recent tip sheet appeared again on this visit, and it covered the 2958 stop detail's arrivals until Close was tapped. So 3 actions (2 taps + 1 overlay) is the true expert minimum. The search-sheet Recents list ties at 3 but shows no stop name. A 1-tap map pin hit is only possible with pixel coordinates from a UI dump, not visually.",
+   "The 'Recent' tip sheet ('Quickly access your recently visited stops...' + Close) appeared on EVERY visit to the Recent tab (4 of 4 times, plus the verifier's run). It is not a one-time coach mark. It also stays on top of the stop detail after you tap a row and hides the arrival times, so every daily use costs an extra Close tap.",
+   "In one run the first Close tap was ignored because the stop detail map was still loading (blank map with dots), so it needed a second tap (F2/63 vs 64).",
+   "A 'Plan a trip.' coach-mark spotlight appeared on cold launch in about 3 of 8 restarts. It swallows the first tap: tapping the Recent tab while it showed only dismissed the overlay. That adds +1 overlay action intermittently.",
+   "Recent is ordered by recency, so the commuter's stop moves position in the list. It also behaved inconsistently: stop 3337 (56 NB) was later replaced by 12092 (56 NB), which looks like one entry per route+direction. Recent rows show no arrival times, so the rider must open the stop. There are two separate 'recents' lists (the Recent tab and the search-sheet Recents) with different contents.",
+   "Stop 2958's 'Nearby Arrivals' result sheet does not show the stop name or ID, only '82 EASTBOUND TO DOWNTOWN', so the rider cannot confirm the stop without another tap.",
+   "The direction label differs between screens: 'EASTBOUND to DOWNTOWN' (Recent/nearby/pin) vs 'EASTBOUND to Congress St @ Smith St' (stop detail opened from Recent).",
+   "The bottom tab bar disappears while a stop detail is open. Android BACK from Explore exits the app with no confirmation (happened during map testing).",
+   "Accidental map taps silently open other stops and add them to Recent (3337, 12092 appeared from mis-taps while dismissing overlays; 3328 now appears after the verifier's run)."
+  ],
+  "missingInfo": "No favorites or pinned stop. Nothing on the home screen surfaces the commuter's stop or its next arrival. Minutes are only reachable after opening Recent and dismissing the tip (or through the search Recents, dialog and nearby sheet, which do not name the stop)."
+ },
+ {
+  "id": "F5",
+  "name": "Route lookup: Route 82 stops and EB arrivals at Westheimer @ Montrose",
+  "scenario": "From launch, find Route 82 (Westheimer), see its stops, and get real-time arrivals at the Westheimer @ Montrose stop, EASTBOUND. The measured path does not depend on location; the GPS happened to be at Montrose.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Search bar 'Place, Stop, or Route'",
+    "resultingScreen": "Search sheet with keyboard",
+    "screenshot": "ux-audit/baseline/F5/11-search-open.png"
+   },
+   {
+    "n": 2,
+    "type": "type",
+    "target": "Search field: '82'",
+    "resultingScreen": "Results: '082 Route (METRO)' then 5 x 'Monroe Park & Ride (Stop #82)'",
+    "screenshot": "ux-audit/baseline/F5/verify-07-search82.png"
+   },
+   {
+    "n": 3,
+    "type": "tap",
+    "target": "'082 Route (METRO)'",
+    "resultingScreen": "Modal 'What do you want to do?': SHOW ON MAP / SEE FULL SCHEDULE / Cancel",
+    "screenshot": "ux-audit/baseline/F5/21-dialog.png"
+   },
+   {
+    "n": 4,
+    "type": "tap",
+    "target": "'SEE FULL SCHEDULE'",
+    "resultingScreen": "Route 82 Westheimer page: PDF Schedule link + 6 buttons (Weekday/Saturday/Sunday x EASTBOUND/WESTBOUND with terminal names)",
+    "screenshot": "ux-audit/baseline/F5/verify-09-full-schedule.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "'Weekday: EASTBOUND (Richmond Ave @ Westheimer Rd - Congress St @ Smith St)'",
+    "resultingScreen": "'82 Westheimer EASTBOUND / Weekday' stop-by-stop timetable starting at Richmond Ave @ Westheimer Rd (7886) 3:50 am",
+    "screenshot": "ux-audit/baseline/F5/verify-13-fresh-timetable.png"
+   },
+   {
+    "n": 6,
+    "type": "swipe",
+    "target": "One fast fling up on the timetable (about 80 ms)",
+    "resultingScreen": "Timetable flings to the END of the list. The top row is 'Westheimer Rd @ Montrose Blvd (2958) 4:43 4:53', followed by 2959 ... Congress St @ Smith St (9204)",
+    "screenshot": "ux-audit/baseline/F5/verify-20-one-fling.png"
+   },
+   {
+    "n": 7,
+    "type": "tap",
+    "target": "Row 'Westheimer Rd @ Montrose Blvd (2958)' (not marked clickable)",
+    "resultingScreen": "Modal 'What do you want to do?': HIGHLIGHT / SEE NEARBY ARRIVALS / SHOW ON MAP / USE AS 'TO' / USE AS 'FROM'",
+    "screenshot": "ux-audit/baseline/F5/verify-15-dialog.png"
+   },
+   {
+    "n": 8,
+    "type": "tap",
+    "target": "'SEE NEARBY ARRIVALS'",
+    "resultingScreen": "Explore sheet '1 Nearby Arrival': 82 EASTBOUND TO DOWNTOWN with live minutes (stop name not shown)",
+    "screenshot": "ux-audit/baseline/F5/verify-21-nearby-arrivals.png"
+   },
+   {
+    "n": 9,
+    "type": "tap",
+    "target": "82 EASTBOUND card",
+    "resultingScreen": "Stop detail 'Westheimer Rd @ Montrose Blvd (2958)', 82 EASTBOUND to DOWNTOWN, live 1 min / 2 min ...",
+    "screenshot": "ux-audit/baseline/F5/verify-22-stop-2958.png"
+   }
+  ],
+  "counts": {
+   "taps": 7,
+   "typing": 1,
+   "swipes": 1,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 9,
+   "distinctScreens": 8
+  },
+  "firstTimerTotalActions": 18,
+  "alternativesTried": [
+   "Original claimed path with 4 timetable flings (12 actions). The verifier reproduced it with 1 fast fling (9 actions), twice from a fresh timetable (F5/verify-13/14 and verify-20).",
+   "VERIFIER: Stop dialog 'SHOW ON MAP' instead of SEE NEARBY ARRIVALS: it only recenters the Explore map with the 82 line; no stop detail and no arrivals open ('4 Nearby Arrivals' collapsed). Not shorter (F5/verify-16).",
+   "VERIFIER: Nearby chip '82' > Choose Direction > EASTBOUND opens 2959 with the route 82 line and white stop dots drawn. Tapping the dot for 2958 on the line did nothing, and the 2958 marker disappeared from the accessibility tree while 2959 was selected. The first chip tap after launch was swallowed again (F5/verify-03..06).",
+   "VERIFIER: Stop-detail route row chevron ('82 Westheimer EASTBOUND to DOWNTOWN >') on 2958: tapping it did nothing, so there is no route page and no stop list from a stop (F5/verify-01).",
+   "SHOW ON MAP path: search, type '82', tap 082, SHOW ON MAP, then a second modal 'Please choose direction', pick 82 EASTBOUND. The map jumps to an arbitrary Uptown/Galleria segment (Winsome/Chimney Rock) with small unlabeled white stop dots and no stop list (re-confirmed F5/verify-08). The earlier attempt failed after 7 actions (F5/30-31).",
+   "Searching the stop directly by name/ID skips 'find route 82 and see its stops', so it does not meet this goal (see F2 search-by-ID: 6 actions)."
+  ],
+  "frictionNotes": [
+   "VERIFIER: shorter path found, 9 actions instead of 12. A single fast fling on the stop-by-stop timetable scrolls to the end of the list, and 2958 happens to be the 19th-from-last EB stop, so it lands as the top row (reproduced twice). This is luck of position. A mid-route stop would still need several scrolls with no search or jump, and the fling skips past about 70 stops, so the rider does not really 'see' the stop list. The expert count only holds for stops near the end of the route. A first-timer with normal swipes still needs about 8 scrolls (J4 measured about 3 min).",
+   "The stop list only exists inside 'Full Schedule' as a timetable. It starts at 3:50 am and does not scroll to now. There is no search or filter.",
+   "Timetable rows are tappable but not marked clickable and have no chevron, so nothing hints that tapping a stop leads to arrivals.",
+   "Two modal dialogs ('What do you want to do?' for the route, then again for the stop) plus an intermediate nearby sheet that hides the stop name. The rider passes 8 distinct screens.",
+   "The route result reads '082 Route (METRO)' with a zero-padded number and no 'Westheimer' name. Five 'Monroe Park & Ride (Stop #82)' results compete with it.",
+   "The direction buttons use terminal stop names (Richmond Ave @ Westheimer Rd - Congress St @ Smith St) rather than plain 'toward Downtown'.",
+   "SHOW ON MAP centers on an arbitrary route segment far from the rider and gives no way to list stops or pick one reliably. Pins at intersections overlap across routes, and route-line stop dots are not tappable while another stop is selected."
+  ],
+  "missingInfo": "There is no route page with an ordered stop list and live arrivals per stop. You cannot search within a route's stops, the timetable does not jump to the current time, and the stop-detail route row does not lead to the route."
+ },
+ {
+  "id": "F6",
+  "name": "Service alerts for Route 82",
+  "scenario": "Find out whether a current service alert/detour affects Route 82 and read it. If none exists, read an alert for another route.",
+  "achieved": "partial",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Bottom nav 'More'",
+    "resultingScreen": "More menu: Route Schedules, Service Alerts, Fare Card Retailers, Learn How to Ride, ...",
+    "screenshot": "ux-audit/baseline/F6/verify-01-more.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "'Service Alerts'",
+    "resultingScreen": "LEAVES THE APP: Chrome opens ridemetro.org/alerts/service-alerts-and-detours with a yellow Red Line banner, a hero image and 'Current Alerts' intro text",
+    "screenshot": "ux-audit/baseline/F6/verify-02-alerts-web.png"
+   },
+   {
+    "n": 3,
+    "type": "swipe",
+    "target": "One firm scroll of the page (about 1000 px with momentum)",
+    "resultingScreen": "Scrolls past the route selector to the first alert card, which is fully readable: '5 Southmore / Route 005 Southmore detoured at Scott @ Griggs due to construction. Posted: Tuesday, July 14, 2026 ... Affected stops: Scott St @ Griggs Rd - Stop #9977 (eastbound) ...'",
+    "screenshot": "ux-audit/baseline/F6/verify-03-scroll.png"
+   },
+   {
+    "n": 4,
+    "type": "swipe",
+    "target": "Short scroll back up",
+    "resultingScreen": "'Route / Select a route' dropdown visible above the Route 5 Detour card",
+    "screenshot": "ux-audit/baseline/F6/verify-04-scrollup.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "'Select a route' dropdown",
+    "resultingScreen": "Native picker listing ONLY routes with alerts: 5, 6, 11, 20, 23, 25, 26, 28, 29, 40, 41, 44 ...",
+    "screenshot": "ux-audit/baseline/F6/verify-05-picker.png"
+   },
+   {
+    "n": 6,
+    "type": "swipe",
+    "target": "Scroll picker looking for 82",
+    "resultingScreen": "Picker shows 73, 75, 77, 86, 99 ... 700 METRORAIL RED LINE. 82 is absent between 77 and 86, so the rider must INFER there is no Route 82 alert",
+    "screenshot": "ux-audit/baseline/F6/verify-06-picker-scrolled.png"
+   }
+  ],
+  "counts": {
+   "taps": 3,
+   "typing": 0,
+   "swipes": 3,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 6,
+   "distinctScreens": 5
+  },
+  "firstTimerTotalActions": 11,
+  "alternativesTried": [
+   "Original claimed path (8 actions): More > Service Alerts > scroll to dropdown > open picker > scroll picker (no 82) > scroll picker back up > pick '25 Richmond' > scroll to alert body. Valid but not minimal, because the unfiltered page already shows a complete alert (Route 5) right under the dropdown. There is no need to scroll the picker back and filter to another route.",
+   "VERIFIER: 5-action variant. With a gentler first scroll that stops at the dropdown (original's step 3 position), the Route 5 alert headline 'Route 005 Southmore detoured at Scott @ Griggs due to construction.' is already on screen under the dropdown (F6/verify-04). Then open the picker and scroll it (82 missing). That is 5 actions if a headline counts as 'reading' an alert. It needs +1 swipe to read the affected-stops body, which is why 6 is reported.",
+   "First-timer run: More > Service Alerts triggered Chrome first-run 'Welcome to Chrome' (tap 'Use without an account') and 'Chrome notifications' (tap 'No thanks'), 2 system dialogs, then a cookie consent banner ('No, thank you'), 1 overlay, before the page was usable (F6/02-04). That adds 3 actions.",
+   "Scrolling the unfiltered alerts page instead of the dropdown: 36 'Detour' cards (routes 5, 6, 11, 20, 23/26, 25 x2, 26 x3, 28 ...), each with long raw turn-by-turn text. Confirming 'no 82 alert' this way needs reading the whole page (about 15+ swipes).",
+   "In-app: showing Route 25 on the map (search '25', 025, SHOW ON MAP, EASTBOUND) shows no alert icon, banner or FAB (F6/20-22). The Route 82 map and stop 2958 detail show no alert status either. The More menu has no other alert entry (Route Schedules, Service Alerts, Fare Card Retailers, Learn How to Ride, RideMETRO.org ...)."
+  ],
+  "frictionNotes": [
+   "VERIFIER: shorter path found, 6 actions instead of 8 (5 if the Route 5 headline counts as reading the alert). The original scrolled the picker back up and filtered to Route 25 just to read an alert, but the first alert card (Route 5 Southmore) is already readable on the unfiltered page directly under the dropdown. The achieved=partial rating holds: 'no Route 82 alert' is only inferable from 82's absence in the picker, never stated.",
+   "The scroll position is very sensitive. One firm swipe overshoots the dropdown into the first alert (verify-03), and a gentle one stops at it (verify-04). The page's sticky header then reappears on scroll-up and covers the upper area, which makes it easy for an elderly user to lose the selector.",
+   "Service alerts are not in the app at all. The More menu hands off to Chrome, and on a fresh phone that means browser sign-in and notification dialogs plus a cookie banner.",
+   "A 'no alerts for my route' answer is never stated. The dropdown silently lists only routes with alerts, so the rider must scroll it and notice 82 is missing between 77 and 86.",
+   "The site's sticky social-media footer (Facebook/X/YouTube/Instagram/LinkedIn) covers about 7% of the screen bottom, and a stray tap opens other apps, which is a real risk for elderly users.",
+   "The yellow site-wide banner (Red Line interruption) is the most prominent alert even for a Westheimer rider, and it takes about a quarter to a third of the screen.",
+   "Alert text is raw dispatcher shorthand ('Via Grigg Rd (L) Scott St (L) Scottcrest St (R) into Southeast TC', '**Eastbound**') with no map and no end date.",
+   "The app's stop detail and route views show no alert indicator, so a rider at stop 2958 would never be prompted to check."
+  ],
+  "missingInfo": "No in-app alert list. No per-route or per-stop alert status and no explicit 'No alerts for Route 82' message. Detours have no map or plain-language summary of affected stops. Checking alerts requires an external browser."
+ },
+ {
+  "id": "F3",
+  "name": "Plan a trip and know exactly where to board",
+  "scenario": "Rider at University of Houston (GPS 29.7199,-95.3422) plans a trip from current location to William P. Hobby Airport, picks the first itinerary, and must learn the boarding stop name plus stop ID or direction, and the bus headsign. Measured on RideMETRO v2.71, emulator-5558. First itinerary: walk 5 min to 'M L King Blvd @ Uh University Dr', Route 80, transfer to Route 73, then a 17-min walk.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Trip-planning FAB (icon-only, content-desc 'Turn Trip Planning Mode On')",
+    "resultingScreen": "Plan Your Trip sheet (From: My current location / To: Choose destination / Leave at now / Plan My Trip disabled)",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/01-trip-fab.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "'Choose destination' field",
+    "resultingScreen": "Full-screen destination search with keyboard",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/02-dest-search.png"
+   },
+   {
+    "n": 3,
+    "type": "type",
+    "target": "Destination search field: 'hobby airport'",
+    "resultingScreen": "Autocomplete list (Hobby Airport, William P. Hobby Airport (HOU), Hobby Airport Departure, ...; all with the same pin icon)",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/03-typed-hobby.png"
+   },
+   {
+    "n": 4,
+    "type": "tap",
+    "target": "'William P. Hobby Airport (HOU)' result",
+    "resultingScreen": "Plan Your Trip sheet with destination filled",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/04-dest-picked.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "'Plan My Trip' button",
+    "resultingScreen": "Select Itinerary list (5 options; first is Walk 5m > 80 16m > Walk 1m > 73 18m > Walk 17m, '1:6min')",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/05-itinerary-list.png"
+   },
+   {
+    "n": 6,
+    "type": "tap",
+    "target": "First itinerary card",
+    "resultingScreen": "My Itinerary: 'Walk to M L King Blvd @ Uh University Dr', route badge 80, 'Transfer to the M L King Blvd @ Bellfort on 080 bus'. No stop ID, direction, side of street or headsign.",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/06-itinerary1.png"
+   },
+   {
+    "n": 7,
+    "type": "swipe",
+    "target": "Drag itinerary sheet down (the only one-gesture exit; discards the planned trip)",
+    "resultingScreen": "Explore map left at the zoomed-out trip framing; nearby circle at Golfcrest, '2 Nearby Arrivals'",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/alt-swipe-down-itinerary.png"
+   },
+   {
+    "n": 8,
+    "type": "tap",
+    "target": "My-location FAB",
+    "resultingScreen": "Explore centered on UH, '6 Nearby Arrivals', route chips 25 / 80 / 900",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/alt-locfab-after-exit.png"
+   },
+   {
+    "n": 9,
+    "type": "tap",
+    "target": "'80' nearby-route chip (left column)",
+    "resultingScreen": "Choose Direction sheet: 80 SOUTHBOUND to MLK & PARK VILLAGE / 80 NORTHBOUND to TIDWELL TC",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/alt-route80-choose-direction.png"
+   },
+   {
+    "n": 10,
+    "type": "tap",
+    "target": "'SOUTHBOUND to MLK & PARK VILLAGE' (rider must infer SB from the itinerary map line)",
+    "resultingScreen": "Stop detail: 'M L King Blvd @ Uh University Dr (11424)', 80 MLK / Lockwood, 'SOUTHBOUND to MLK & PARK VILLAGE', map callout 'Stop: 11424', live 5/7/25 min. GOAL MET.",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F3/alt-route80-sb-from-chip.png"
+   }
+  ],
+  "counts": {
+   "taps": 8,
+   "typing": 1,
+   "swipes": 1,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 10,
+   "distinctScreens": 10
+  },
+  "alternativesTried": [
+   "Measured first-timer path (13 actions): steps 1-6, tap the boarding-stop row (only zooms the map to an unlabeled white circle, no ID; 07), then 3 BACK presses to unwind My Itinerary > Select Itinerary > Plan Your Trip > Explore (09-11), swipe the Nearby sheet up (12), tap the '80 SOUTHBOUND TO MLK & PARK VILLAGE' card (13), and dismiss the 'View when the next bus or train will arrive' coach mark (14)",
+   "Exit via 3 BACKs instead of the swipe: 3 actions vs 1, but it may keep the map at UH. Exiting with the swipe needs a my-location FAB tap afterwards, so both reach 'Explore at UH' in 2-3 actions",
+   "From Explore at UH: swipe the Nearby sheet up + tap the 80 SB card (2 actions) is the same cost as route chip 80 + Choose Direction (2 actions)",
+   "Tapping the itinerary's stop row, the route badge or the map boarding circle: none opens the stop. They only pan/zoom the map (07, 08)",
+   "Explore search by stop name was not measured in full here. Per the J2 audit it returns two identical 'M L King Blvd @ Uh University Dr' results (#11424/#11425) plus a 'What do you want to do?' modal, so it is longer than the chip path",
+   "Destination Recents: on a second plan the destination search lists 'William P. Hobby Airport (HOU)' under Recents, so a tap replaces typing (same action count, no keyboard)",
+   "Run A (runA-stale-location/): before a live GPS fix reached the app, 'My current location' silently resolved to a stale downtown point. The planner routed from Milam St @ Dallas St on route 500 with no warning. Only tapping the my-location FAB fixed it",
+   "VERIFIER: Explore search > 'hobby airport' > 'William P Hobby Airport, 7800 Airport Blvd' > 'What do you want to do?' modal > USE AS 'TO' POINT > Plan My Trip. That is 5 actions to the itinerary list, the same as the FAB path, plus a 'Search' coach mark that covers the planner (+1 overlay, so 6 total). Not shorter (verify-14, verify-15, verify-16)",
+   "VERIFIER: long-pressing the boarding row only zooms the map, like a tap. Tapping the 'Every 20 min' frequency chip does nothing. Tapping the green Google transit POI next to the boarding circle does nothing (verify-07, verify-08, verify-09)",
+   "VERIFIER: tapping stop pin 11424 on Explore (content-desc 'Ho414_4620_11424') opens Choose Direction listing '25 WESTBOUND to WESTCHASE' and '80 SOUTHBOUND to MLK & PARK VILLAGE'. That is 2 taps to stop detail, the same cost as the route chip. It needs the map at UH zoom, so it is not shorter (verify-13)",
+   "VERIFIER: if the rider first taps the boarding row (zooms the map to UH) and then swipes the itinerary down, Explore is left at UH ('6 Nearby Arrivals', chips 25/80/900) with no my-location tap needed. That swaps the FAB tap for a row tap, so the count is the same (verify-12). A fresh itinerary open keeps the zoomed-out trip framing, so exiting still lands at Golfcrest ('2 Nearby Arrivals', confirmed)"
+  ],
+  "firstTimerTotalActions": 13,
+  "frictionNotes": [
+   "The itinerary never gives a stop ID, direction (NB/SB), side of street or headsign. 'Transfer to the M L King Blvd @ Bellfort on 080 bus' names the alighting stop, not the headsign ('MLK & PARK VILLAGE'), and misuses 'Transfer' for the first boarding",
+   "Itinerary rows are dead ends. The rider must throw away the planned trip (swipe down or 3 backs) to look up the stop, and the planned trip is lost",
+   "After leaving the planner, the Explore map stays on the trip framing, so the Nearby list shows the wrong area (Golfcrest, 2 arrivals) until the rider taps my-location",
+   "The rider must guess SOUTHBOUND vs NORTHBOUND. The only hint is the direction of the route line on the itinerary map. Same-name stop 11425 exists across the street",
+   "The boarding stop on the itinerary map is an unlabeled white circle. The red destination pin is drawn at the origin (legend mismatch)",
+   "The 'William P. Hobby Airport (HOU)' place adds a 17-min final walk. Durations render as '1:6min' / '1:9min'",
+   "Coach mark on first stop-detail view covers the arrival info (1 extra overlay tap)",
+   "On every app launch the app reopens a stale, unlabeled 'Arrivals' hourly timetable (ArrivalsView pushed over TabsView), so 1 BACK is needed before Explore. It was excluded from the count as start-state noise but is a real launch bug",
+   "The trip planner is behind an icon-only FAB with no text label",
+   "Explore does not recenter on the user at launch. The map opened on downtown ('55 Nearby Arrivals') even though GPS was at UH, and 'My current location' used that stale point until the my-location FAB was tapped (Run A)",
+   "VERIFIER: confirmed. The 10-action expert path holds and I found no genuinely shorter path. The stale 'Arrivals' timetable on launch was reproduced (verify-01)",
+   "VERIFIER: the 'first itinerary' depends on the time of day. At 6:51pm the first card was 25 > 40 (via Eastwood TC - Bay D, with an 'Alert' chip), and 80 > 73 was second (verify-05, verify-11). The count is the same because 25 is also a nearby chip. However, stop 11424's pin lists 25 as 'WESTBOUND to WESTCHASE', while that itinerary rides 25 east to Eastwood TC. For that itinerary the correct boarding stop/direction is probably the opposite one (11425), which makes the rider's direction guess harder still"
+  ],
+  "missingInfo": "The itinerary alone never shows stop ID, direction/side or headsign. They are only reachable outside the planner, via Explore's Nearby list, route chip or stop pin, which shows 'M L King Blvd @ Uh University Dr (11424)' / 'SOUTHBOUND to MLK & PARK VILLAGE'."
+ },
+ {
+  "id": "F8",
+  "name": "Start live trip tracking",
+  "scenario": "From launch at UH (GPS 29.7199,-95.3422), plan a trip to William P. Hobby Airport (HOU), open the first itinerary (80 > 73), start 'Track Itinerary', and reach a state where the app says it is tracking.",
+  "achieved": "partial",
+  "expertSteps": [
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Trip-planning FAB",
+    "resultingScreen": "Plan Your Trip sheet",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/02-plan-your-trip.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "'Choose destination' field",
+    "resultingScreen": "Destination search (Recents list + keyboard)",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/03-dest-search.png"
+   },
+   {
+    "n": 3,
+    "type": "type",
+    "target": "Destination search: 'hobby airport'",
+    "resultingScreen": "Autocomplete results",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/04-typed.png"
+   },
+   {
+    "n": 4,
+    "type": "tap",
+    "target": "'William P. Hobby Airport (HOU)'",
+    "resultingScreen": "Plan Your Trip form filled",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/05-dest-picked.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "'Plan My Trip'",
+    "resultingScreen": "Select Itinerary list",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/06-select-itinerary.png"
+   },
+   {
+    "n": 6,
+    "type": "tap",
+    "target": "First itinerary card",
+    "resultingScreen": "My Itinerary with 'Track Itinerary' button",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/07-my-itinerary.png"
+   },
+   {
+    "n": 7,
+    "type": "tap",
+    "target": "'Track Itinerary' button",
+    "resultingScreen": "Modal 'Track Itinerary: The app will track the itinerary you picked and will try to notify you when you're close to the first, last and transfer bus stops.' Decline / Confirm",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/08-track-confirm-dialog.png"
+   },
+   {
+    "n": 8,
+    "type": "tap",
+    "target": "'Confirm'",
+    "resultingScreen": "Same static My Itinerary. The Track button disappears and a small green bell FAB appears. No text says tracking, no step highlighted, no notification.",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/09-after-confirm.png"
+   },
+   {
+    "n": 9,
+    "type": "tap",
+    "target": "Green bell FAB ('Track itinerary information'), the only way to see any tracking status",
+    "resultingScreen": "Dialog 'Track Itinerary / From: My current location. To: William P. Hobby Airport (HOU).' Close / Cancel Tracking. This is the closest the app gets to saying it is tracking.",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F8/10-bell-dialog.png"
+   }
+  ],
+  "counts": {
+   "taps": 8,
+   "typing": 1,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 9,
+   "distinctScreens": 9
+  },
+  "alternativesTried": [
+   "Destination from Recents (tap 'William P. Hobby Airport (HOU)' under Recents) instead of typing: same action count, no keyboard",
+   "Stopping at step 8 (Confirm) gives 8 actions, but at that point nothing on screen says tracking except an unlabeled green bell icon. Step 9 is needed to see a textual confirmation",
+   "Checked the notification shade after Confirm: no ongoing or persistent tracking notification from RideMETRO (11-notification-shade.png)",
+   "Cancel: bell > 'Cancel Tracking' returned to the static itinerary with the 'Track Itinerary' button restored (12-cancel-dialog.png)",
+   "VERIFIER: re-ran on a fresh restart using the Recents destination (verify-01 to verify-03). The planner does not remember the previous destination, so there is no shortcut. Same 9 actions",
+   "VERIFIER: Explore search > place > 'USE AS TO POINT' reaches the planner in the same number of actions as the FAB, plus a 'Search' coach mark (see F3 verify-16). Not shorter. The Select Itinerary cards have no Track/Go button",
+   "VERIFIER: captured the screen immediately after Confirm (verify-04-confirm-t0) and 1 s later (verify-05-confirm-t1). No toast or snackbar appears. `dumpsys notification` shows no posted RideMETRO notification. The bell dialog text was confirmed (verify-06). Tracking was cancelled afterwards to restore device state (verify-07)"
+  ],
+  "firstTimerTotalActions": 10,
+  "frictionNotes": [
+   "There is no tracking or guidance mode. After Confirm the screen is the same static step list, with no current-step highlight, no countdown and no 'you are here'",
+   "The only feedback is a small, unlabeled green bell FAB. The rider must tap it to see a dialog that never actually says 'tracking is on'",
+   "No ongoing notification is posted, so tracking is invisible once the app is backgrounded (per J3 audit, tracking dies about 60 s after backgrounding)",
+   "The confirmation modal hedges ('will try to notify you') and is an extra step before tracking starts",
+   "Planning is mandatory before tracking. There is no 'Go' / 'Start' directly from a result card",
+   "Launch lands on the stale 'Arrivals' timetable (1 extra BACK before Explore, excluded from the count). First-timer count includes this BACK",
+   "VERIFIER: confirmed. 9 actions, achieved=partial is correct. No toast or notification appears after Confirm, and no shorter path exists. The first itinerary is time-dependent: at 6:51pm the first card was 25 > 40 and 80 > 73 was second. The tracking step count does not depend on which card is chosen"
+  ],
+  "missingInfo": "There is no explicit 'Tracking' status text, live step guidance or notification. The only confirmation is the bell dialog's From/To and 'Cancel Tracking' button."
+ },
+ {
+  "id": "F7",
+  "name": "Transit center departure bay",
+  "scenario": "GPS 29.7890,-95.4560 (given as Northwest Transit Center; it is actually about 500 m north of the TC bays, on N Post Oak Rd). Goal: find which bay Route 58 departs from (outbound, not arrivals) and its next departure time.",
+  "achieved": "yes",
+  "expertSteps": [
+   {
+    "n": 0,
+    "type": "wait",
+    "target": "Launch after restart with a live GPS fix. With a working fix the app centers on GPS at launch, even when the last camera was elsewhere (checked in verify-07/08). Without a fix it stays at the old camera and the my-location FAB is needed.",
+    "resultingScreen": "Explore map, '8 Nearby Arrivals', chips 58/66/85/89",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F7/verify-08-launch-gps.png"
+   },
+   {
+    "n": 1,
+    "type": "swipe",
+    "target": "Pan the map up about 300 px (swipe 700,1500 to 700,1200) so the unlabeled TC at the I-10 / Old Katy Rd interchange sits inside the blue nearby circle",
+    "resultingScreen": "Explore map, '15 Nearby Arrivals', chips 39,47,49,58,66,70,72,84,216,217,298",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F7/verify-05-pan.png"
+   },
+   {
+    "n": 2,
+    "type": "tap",
+    "target": "'58' Nearby route chip (4th chip in the left column after the pan)",
+    "resultingScreen": "Stop sheet 'Northwest Transit Center - Bay M (79)', 58 Hammerly WESTBOUND to WEST BELT, now / 1:00 h / 2:00 h",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F7/verify-06-chip58.png"
+   }
+  ],
+  "counts": {
+   "taps": 1,
+   "typing": 0,
+   "swipes": 1,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 2,
+   "distinctScreens": 3
+  },
+  "alternativesTried": [
+   "GPS Nearby list: dismiss 'Plan a trip.' coach mark (overlay), tap my-location, swipe sheet up, tap '58 WESTBOUND TO WEST BELT'. This opened street stop 'N Post Oak Rd @ Post Oak Green Ln (8249)' with 21 min and no bay. Dead end for the bay goal: 4 actions + 1 overlay (F7/01-05).",
+   "VERIFIER: tapping the 58 chip at the raw GPS position with no pan opens 'Choose Direction' (WESTBOUND to WEST BELT / EASTBOUND to NORTHWEST TC). Picking WESTBOUND opens street stop 8249, not the TC. That is 2 actions and fails the goal (verify-09, verify-10).",
+   "Search: tap search, type 'Northwest Transit', tap 'NW TC - Platform 1 (Stop #13170)', 'What do you want to do?' dialog, SEE NEARBY ARRIVALS. The list first shows STALE arrivals and only refreshes after you swipe the sheet down. Then tap the 58 chip to get Bay M (79). About 6 actions (F7/10-17, 21-27).",
+   "Tapping the TC map pin (from the prior audit, REPORT J1.5): about 8 actions. It lists only routes ending at the TC (arrivals), not departures.",
+   "Search results list 'NW TC - Platform 1 - Bay C/D/E/G/H/I...' all as '(Stop #13170)' with no routes per bay."
+  ],
+  "frictionNotes": [
+   "The 2-action expert path relies on hidden knowledge. The TC has no label or icon on the map, the left chips are unlabeled route numbers, and a chip silently opens one direction at whichever stop the app picks. At the raw GPS position the same 58 chip opens Choose Direction and then street stop 8249 instead of the TC.",
+   "The bay letter only appears on the final stop sheet title ('Bay M (79)'). No list shows bays or departures grouped by bay.",
+   "The stop code is inconsistent: search says Platform 1 = Stop #13170, but the 58 departure sheet says Bay M (79).",
+   "The 'See nearby arrivals' list stayed stale until the sheet was dragged.",
+   "Without a GPS fix the app opens at the previously viewed location and the my-location FAB must be tapped. The FAB gives no error when there is no fix.",
+   "Tapping the sheet drag handle does nothing. The sheet only expands with a swipe.",
+   "Arrival times use '1:00 h' / '1:21m' formats, which are ambiguous for hours versus minutes.",
+   "VERIFIER: confirmed. I reproduced swipe + chip-58 on emulator-5560 and got 'Northwest Transit Center - Bay M (79)', 58 WESTBOUND to WEST BELT, next departure 'now'. After launch I found no 1-action path. On this emulator the emulator geo fix alone did not reach the app. I had to stream test-provider locations (cmd location providers set-test-provider-location for gps, fused and network) before the app would center on GPS. With a live fix the app centers on GPS at launch even from a stale camera, so step 0 is valid as a 0-action start."
+  ],
+  "firstTimerTotalActions": 14,
+  "missingInfo": "No departures-by-bay view, no bay diagram, no TC label on the map, and no way to filter out routes that end at the TC. The bay is only discoverable at the last step."
+ },
+ {
+  "id": "F9",
+  "name": "Fares / show ticket",
+  "scenario": "From launch, reach the screen where a rider would show a ticket/QR or buy a fare. Stop at the login/sign-up wall and do not create an account.",
+  "achieved": "no",
+  "expertSteps": [
+   {
+    "n": 0,
+    "type": "wait",
+    "target": "Launch",
+    "resultingScreen": "Explore map",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F9/00-home.png"
+   },
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "'Fares' bottom tab",
+    "resultingScreen": "Fares page 'Mobile Fare Payments' with the explainer and 'Log In to Your Account' / 'Create an Account' / 'Learn more about mobile fare payments'. This is the wall. On this verification run no tip sheet appeared.",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F9/verify-01-fares.png"
+   }
+  ],
+  "counts": {
+   "taps": 1,
+   "typing": 0,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 1,
+   "distinctScreens": 2
+  },
+  "alternativesTried": [
+   "Original path: Fares tab, then Close the 'Fares' tip sheet, then 'Log In to Your Account' opens the Log In form. That is 3 actions (2 taps + 1 overlay). The Log In tap goes past the wall and is not needed to reach it (F9/01-03).",
+   "'Create an Account' opens the in-app 'Register' webview. It is blank for several seconds, then shows 6 required fields with complex password rules (F9/04, F9/09).",
+   "'Learn more about mobile fare payments' leaves the app for Chrome (F9/05).",
+   "More tab > 'Fare Card Retailers' leaves the app for Chrome (F9/07, F9/10)."
+  ],
+  "frictionNotes": [
+   "The wall is the Fares tab itself: 1 tap. There is no guest purchase, no stored ticket, and no QR without an account.",
+   "Before the wall the app shows 1 fare screen with 3 options. No fare prices, fare types, reduced/senior fare info or balance appear anywhere in-app.",
+   "Both fare-info links jump out to the browser.",
+   "Registration asks for 6 fields with complex password rules, which is heavy for elderly riders.",
+   "VERIFIER: corrected the expert path from 3 actions to 1. The goal stops AT the login wall, and the Fares tab already is the wall. The extra 'Log In to Your Account' tap goes past it. The 'Fares' tip sheet is also not shown once per session: after a force-stop restart, the first Fares visit showed no tip (verify-01-fares). It appears to be a one-time or limited first-use overlay, so first-timer = 2 actions (tap + tip dismissal)."
+  ],
+  "firstTimerTotalActions": 2,
+  "missingInfo": "The ticket/QR screen cannot be reached without an account. No fare price table or senior/reduced fare info is shown in-app."
+ },
+ {
+  "id": "F11",
+  "name": "Search landmark and see nearby stops",
+  "scenario": "GPS 29.7500,-95.3600 (east downtown). Goal: find stops near 'Houston Museum of Natural Science' and see next arrivals at the closest one, without trip planning.",
+  "achieved": "partial",
+  "expertSteps": [
+   {
+    "n": 0,
+    "type": "wait",
+    "target": "Launch after restart",
+    "resultingScreen": "Explore map centered on GPS, '4 Nearby Arrivals', chips 40/41",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-00-launch.png"
+   },
+   {
+    "n": 1,
+    "type": "tap",
+    "target": "Search bar 'Place, Stop, or Route'",
+    "resultingScreen": "Search sheet with Recents and keyboard",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-01-search.png"
+   },
+   {
+    "n": 2,
+    "type": "type",
+    "target": "'natural science'",
+    "resultingScreen": "Results: 'Houston Museum of Natural Science, 5555 Hermann Park Dr...' and the Sugar Land branch",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-02-results.png"
+   },
+   {
+    "n": 3,
+    "type": "tap",
+    "target": "First result (5555 Hermann Park Dr)",
+    "resultingScreen": "'What do you want to do?' dialog (SEE NEARBY ARRIVALS / SHOW ON MAP / USE AS 'TO' POINT / USE AS 'FROM' POINT)",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-03-dialog.png"
+   },
+   {
+    "n": 4,
+    "type": "tap",
+    "target": "'SHOW ON MAP'",
+    "resultingScreen": "Map with orange HMNS pin, about 16 unlabeled stop dots, '12 Nearby Arrivals', chips 5/56/65/292/298/700",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-06-show-on-map.png"
+   },
+   {
+    "n": 5,
+    "type": "tap",
+    "target": "Nearest stop dot to the pin (Ho414_4620_2504 at 476,1083, about 75 px from the pin tip). The first tap was ignored.",
+    "resultingScreen": "No change (map, '12 Nearby Arrivals')",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-07-tap-dot.png"
+   },
+   {
+    "n": 6,
+    "type": "tap",
+    "target": "Same stop dot again (retry)",
+    "resultingScreen": "Stop sheet 'Main St @ Remington Ln (2504)', 56 Airline/Montrose SOUTHBOUND to TMC TC, 10 / 29 / 49 min",
+    "screenshot": "/home/david/htx-hackathon/ux-audit/baseline/F11/verify-08-tap-dot-retry.png"
+   }
+  ],
+  "counts": {
+   "taps": 5,
+   "typing": 1,
+   "swipes": 0,
+   "backs": 0,
+   "systemDialogs": 0,
+   "overlays": 0,
+   "totalActions": 6,
+   "distinctScreens": 5
+  },
+  "alternativesTried": [
+   "Full name or 'natural science', then first result, then SEE NEARBY ARRIVALS: 4 actions to a '12 Nearby Arrivals' list of route-direction cards (5 EB/WB, 56 NB/SB, 65 WB/EB, 292, 298, 700) with minutes but no stop names or distances (verify-04).",
+   "VERIFIER: SEE NEARBY ARRIVALS then tapping a card (65 WESTBOUND) is 5 actions, but it opened 'Main St @ Bissonnet St (11245)'. That stop is about 140 px from the pin, not the closest (2504/688 are about 75 px). It fails the 'closest stop' goal (verify-05).",
+   "VERIFIER: SHOW ON MAP then the '56' chip opens 'Choose Direction' first, so it needs one more tap: 6 actions (verify-09).",
+   "SEE NEARBY ARRIVALS, then swipe the sheet down, then tap the nearest dot: 6+ actions (F11/05-06).",
+   "Recents: on a second attempt HMNS appears in search Recents, which removes the typing step."
+  ],
+  "frictionNotes": [
+   "No list of 'stops near this place' sorted by distance exists. The closest stop has to be guessed from 16dp unlabeled dots clustered around the pin.",
+   "The museum itself is not labeled on the base map, even after 'Show on map'.",
+   "The first tap on the stop dot was ignored in both the original run and this verification. Small dot targets are unreliable for elderly users.",
+   "Tapping a dot that serves one route opens that route's sheet directly. Dots serving several routes, and the route chips, open 'Choose Direction' first.",
+   "Search results include the Sugar Land branch with the same subtitle.",
+   "The 'What do you want to do?' modal adds a step on every search pick.",
+   "The nearby list is ordered by route number, not by distance. It shows arrivals per route-direction, not per stop, and the card-to-stop mapping is not always the nearest stop.",
+   "VERIFIER: path confirmed, but I recounted it as 6 actions instead of 5. The first dot tap was ignored again on emulator-5560 (verify-07), so the retry happens every time and counts as an action. No shorter valid path found: the 5-action card path lands on a farther stop (11245). Stop 2504 is plausibly closest by on-screen pixel distance, with 688 overlapping it. The app never confirms that."
+  ],
+  "firstTimerTotalActions": 7,
+  "missingInfo": "The app never states which stop is closest or its walking distance from the landmark. Arrivals are shown for one route-direction at the tapped stop, not for all routes at that stop."
+ }
+]
