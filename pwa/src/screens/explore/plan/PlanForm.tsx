@@ -1,6 +1,7 @@
 // D11's Edit layout: today's From/To box and time chips ("Leave at" became "Other time ▾").
 
 import { useEffect, useRef, useState } from "react";
+import { useSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock } from "../../../lib/format.ts";
 import type { PlanQuery } from "../../../lib/planQuery.ts";
@@ -105,6 +106,7 @@ function OtherTime({ query, onSet, onCancel }: { query: PlanQuery; onSet: (q: Pl
 export function TimeChips({ query, onChange }: { query: PlanQuery; onChange: (q: PlanQuery) => void }) {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const { setSnap } = useSheet();
   const chip = chipFor(query);
   const when = useWhenText(query);
   return (
@@ -114,7 +116,12 @@ export function TimeChips({ query, onChange }: { query: PlanQuery; onChange: (q:
         {RELATIVE_CHIPS.map((c) => (
           <FilterChip key={c.chip} label={t(`plan.chip.${c.chip}`)} selected={chip === c.chip} onPress={() => onChange(relativeTime(query, c.chip, c.min, Date.now()))} />
         ))}
-        <FilterChip label={`${chip === "other" ? when : t("plan.chip.other")} ▾`} selected={chip === "other"} onPress={() => setOpen(!open)} />
+        <FilterChip label={`${chip === "other" ? when : t("plan.chip.other")} ▾`} selected={chip === "other"} onPress={() => {
+            // The time panel opens below the chips: give it the room to be seen.
+            if (!open) setSnap("full");
+            setOpen(!open);
+          }}
+        />
       </div>
       {open && (
         <OtherTime

@@ -8,20 +8,26 @@ import { Icon } from "../../../ui/Icon.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import styles from "./plan.module.css";
 
-/** Today's mode strip: 🚶6 › [80] › 🚶2 › [73] › 🚶1, with each ride's minutes under its badge. */
+/** The planner ends a trip with a zero-length walk when it ends at a stop; there is nothing to walk. */
+const NO_WALK_M = 5;
+
+/** Today's mode strip: 🚶6 › [80] › 🚶2 › [73], with each ride's minutes under its badge. */
 export function ModeStrip({ it }: { it: Itinerary }) {
   const t = useT();
   const { walkPace } = usePrefs();
-  const parts = it.legs.map((l) =>
-    l.type === "walk"
-      ? { key: "walk", min: walkMinutes(l.distanceM, walkPace), label: t("plan.mode.walk", { min: walkMinutes(l.distanceM, walkPace) }) }
-      : { key: "ride", min: l.durationMin, route: toRouteRef(l.route), label: t("plan.mode.ride", { route: l.route.name, min: l.durationMin }) },
-  );
+  const parts = it.legs
+    .filter((l) => l.type === "transit" || l.distanceM >= NO_WALK_M)
+    .map((l) => {
+      if (l.type === "transit")
+        return { min: l.durationMin, route: toRouteRef(l.route), label: t("plan.mode.ride", { route: l.route.name, min: l.durationMin }) };
+      const min = walkMinutes(l.distanceM, walkPace);
+      return { min, label: t("plan.mode.walk", { min }) };
+    });
   return (
     <span className={styles.modes} role="img" aria-label={parts.map((p) => p.label).join(", ")}>
       {parts.map((p, i) => (
         <Fragment key={i}>
-          {i > 0 && <Icon name="chevron_right" size={16} color="var(--c-text-variant)" />}
+          {i > 0 && <span className={styles.modeSep}>›</span>}
           {p.route ? (
             <span className={styles.modeRide}>
               <RouteBadge route={p.route} size="sm" />

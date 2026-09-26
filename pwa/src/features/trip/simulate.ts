@@ -2,7 +2,7 @@
 // itinerary's own geometry, fast, so every automatic step change and get-off warning can be seen
 // in the foreground. The UI labels it as simulated wherever it is used.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Itinerary, LatLon } from "../../api/types.ts";
 import { haversineM } from "../../lib/geo.ts";
 import { legCoords } from "../../lib/polyline.ts";
@@ -53,5 +53,6 @@ export function useSimulatedFix(legs: SimLeg[] | undefined): LatLon | undefined 
     const timer = setInterval(() => setSeconds((s) => s + TICK_MS / 1000), TICK_MS);
     return () => clearInterval(timer);
   }, [legs]);
-  return legs ? simPosition(legs, seconds) : undefined;
+  // One object per tick, so screens can key effects and memos on it.
+  return useMemo(() => (legs ? simPosition(legs, seconds) : undefined), [legs, seconds]);
 }

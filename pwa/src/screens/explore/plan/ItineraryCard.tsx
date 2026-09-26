@@ -72,14 +72,17 @@ export function ItineraryCard({ it, href, sample }: { it: Itinerary; href: strin
   const times = [
     t("plan.timeRange", { start: formatClock(it.startTime, lang), end: formatClock(it.endTime, lang) }),
     it.transfers ? t("plan.transfers", { count: it.transfers }) : t("plan.noTransfers"),
-    ...(sample ? [t("plan.sampleTimes")] : []),
   ].join(" · ");
   return (
     <article className={styles.card}>
       <Link to={href} className={styles.cardMain}>
         <span className={styles.cardTop}>
           <ModeStrip it={it} />
-          <span className={styles.duration}>{t("time.min", { n: it.durationMin })}</span>
+          <span className={styles.durationCol}>
+            <span className={styles.duration}>{t("time.min", { n: it.durationMin })}</span>
+            {/* A source note, so caption size: it sits beside the strip instead of costing a line (P1). */}
+            {sample && <span className={styles.caption}>{t("plan.sampleTimes")}</span>}
+          </span>
         </span>
         <span className={styles.times}>{times}</span>
         {tight.length > 0 && <span className={styles.alertText}>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</span>}
