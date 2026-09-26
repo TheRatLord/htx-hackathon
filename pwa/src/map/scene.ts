@@ -1,5 +1,6 @@
 // How screens drive the one shared map (spec C.16). A screen sets its scene on mount;
-// the scene is cleared when the screen unmounts.
+// the scene is cleared when the screen unmounts. "Search this area" is an overlay-slot item:
+// request it with useExploreChrome({ banner: "search-this-area" }).
 
 import { createContext, useContext, useEffect } from "react";
 import type { LatLon } from "../api/types.ts";
@@ -14,7 +15,6 @@ export interface MapScene {
   legs?: { coords: [number, number][]; kind: "walk" | "ride"; color: string }[];
   markers?: { id: string; point: LatLon; kind: "origin" | "destination" | "board" | "alight" | "transfer" | "bay"; label?: string }[];
   vehicles?: { id: string; point: LatLon; label: string }[];
-  showSearchThisArea?: boolean;
 }
 
 export interface MapContextValue {
@@ -30,7 +30,7 @@ export const MapContext = createContext<MapContextValue | null>(null);
 
 function useMapContext(): MapContextValue {
   const ctx = useContext(MapContext);
-  if (!ctx) throw new Error("Map hooks must be used inside ExploreLayout");
+  if (!ctx) throw new Error("Map hooks must be used inside AppShell");
   return ctx;
 }
 

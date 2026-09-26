@@ -1,12 +1,6 @@
-.root {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .scroll {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   padding-bottom: var(--sp-6);
 }
