@@ -248,7 +248,8 @@ export async function hookMap(page: Page) {
     const M = mod.Map ?? mod.default!.Map;
     const orig = M.prototype.fire;
     M.prototype.fire = function (this: unknown, ...a: unknown[]) {
-      (window as unknown as { __map: unknown }).__map = this;
+      // fire() lives on maplibre's Evented, shared by sources and the style: keep only the Map.
+      if (this instanceof (M as unknown as new () => unknown)) (window as unknown as { __map: unknown }).__map = this;
       return orig.apply(this, a);
     };
     w.__mapHooked = true;
@@ -263,28 +264,78 @@ export async function hookMap(page: Page) {
 /** Page coordinates of a rendered stop pin, or null when it is not drawn (or not in the map strip). */
 export async function pinPosition(page: Page, stopId: string): Promise<{ x: number; y: number } | null> {
   await hookMap(page);
-  // queryRenderedFeatures can throw while a tile is being re-parsed (maplibre's "Out of bounds" in
-  // FeatureIndex); that is a moment, not an answer, so ask again.
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await queryPin(page, stopId);
-    } catch (e) {
-      if (attempt >= 4 || !/Out of bounds/.test(String(e))) throw e;
-      await page.waitForTimeout(300);
-    }
+  // queryRenderedFeatures throws maplibre's "Out of bounds" (FeatureIndex) while a tile is being
+  // re-parsed, which can last a few seconds after a camera move or a label nudge. That is a moment,
+  // not an answer: wait for the map to go idle and ask again for up to 3 s, then read the pin from
+  // the map's sources (queryPin).
+  const deadline = Date.now() + 3000;
+  for (;;) {
+    const final = Date.now() > deadline;
+    const r = await queryPin(page, stopId, final);
+    if (r.ok) return r.pin;
+    if (final || !/Out of bounds|not hooked/.test(r.error)) throw new Error(`pinPosition(${stopId}): ${r.error}`);
+    await page.waitForTimeout(250);
   }
 }
 
-function queryPin(page: Page, stopId: string): Promise<{ x: number; y: number } | null> {
-  return page.evaluate((id) => {
-    type F = { properties: { id: string }; geometry: { type: string; coordinates: [number, number] } };
-    const m = (window as unknown as { __map: { queryRenderedFeatures: (o?: unknown) => F[]; project: (c: [number, number]) => { x: number; y: number }; getCanvas: () => HTMLCanvasElement } }).__map;
-    const f = m.queryRenderedFeatures().find((x) => String(x.properties?.id) === id && x.geometry.type === "Point");
-    if (!f) return null;
-    const p = m.project(f.geometry.coordinates);
-    const r = m.getCanvas().getBoundingClientRect();
-    return { x: r.left + p.x, y: r.top + p.y };
-  }, stopId);
+type PinQuery = { ok: true; pin: { x: number; y: number } | null } | { ok: false; error: string };
+
+function queryPin(page: Page, stopId: string, final = false): Promise<PinQuery> {
+  return page.evaluate(async ({ id, final }): Promise<PinQuery> => {
+    type F = { properties: { id: string; ids?: string }; geometry: { type: string; coordinates: [number, number] } };
+    type M = {
+      queryRenderedFeatures: (o?: unknown) => F[];
+      project: (c: [number, number]) => { x: number; y: number };
+      getCanvas: () => HTMLCanvasElement;
+      loaded: () => boolean;
+      getLayer: (id: string) => unknown;
+      once: (ev: string, fn: () => void) => void;
+    };
+    const m = (window as unknown as { __map?: M }).__map;
+    if (!m) return { ok: false, error: "map not hooked yet" };
+    // Mid-render (tiles loading, a camera ease): let the frame finish first, but never hang on it.
+    if (!m.loaded()) await new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
+    // Only the pin layers, one at a time: a query that touches a GeoJSON tile whose index is being
+    // rebuilt throws maplibre's "Out of bounds" (DictionaryCoder). A layer that throws is skipped.
+    // A stacked pin ("567 · 259") stands for every stop in its `ids`.
+    const has = (x: F) => x.geometry.type === "Point" && (String(x.properties?.id) === id || String(x.properties?.ids ?? "").split(",").includes(id));
+    const at = (c: [number, number]) => {
+      const p = m.project(c);
+      const r = m.getCanvas().getBoundingClientRect();
+      return { x: r.left + p.x, y: r.top + p.y };
+    };
+    const layers = ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"].filter((l) => m.getLayer(l));
+    let error = "";
+    for (const layer of layers) {
+      try {
+        const f = m.queryRenderedFeatures({ layers: [layer] }).find(has);
+        if (f) return { ok: true, pin: at(f.geometry.coordinates) };
+      } catch (e) {
+        error = `${layer}: ${String(e)}`;
+      }
+    }
+    if (!error) return { ok: true, pin: null };
+    if (!final) return { ok: false, error };
+    // Still throwing at the deadline: a GeoJSON tile whose feature index maplibre left empty after a
+    // setData can stay that way until the next update, while its pins draw fine (seen at 412x800 and
+    // 360x640, 1 load in 3). Answer from the data the app gave the sources instead: from zoom 16
+    // every stop is drawn (stops-pin allows overlap) unless the covered list in its filter hides it,
+    // and then it is drawn as the stacked pin whose `ids` name it.
+    type Src = { serialize?: () => { data?: unknown } };
+    const q = m as unknown as { getSource: (s: string) => Src | undefined; getFilter: (l: string) => unknown; getZoom: () => number };
+    if (q.getZoom() < 16) return { ok: false, error: `${error} (data fallback needs zoom 16, map at ${q.getZoom().toFixed(1)})` };
+    const features = (s: string) => {
+      const d = q.getSource(s)?.serialize?.().data as { features?: F[] } | undefined;
+      return d && typeof d === "object" && Array.isArray(d.features) ? d.features : [];
+    };
+    const covered = JSON.stringify(q.getFilter("stops-pin") ?? []).match(/"literal",\[([^\]]*)\]/)?.[1].split(",").map((x) => x.replace(/"/g, "")) ?? [];
+    const own = covered.includes(id) ? undefined : features("stops").find(has);
+    const f = own ?? features("stops-clusters").find(has);
+    if (!f) return { ok: true, pin: null };
+    const pin = at(f.geometry.coordinates);
+    const c = m.getCanvas().getBoundingClientRect();
+    return { ok: true, pin: pin.x >= c.left && pin.x <= c.right && pin.y >= c.top && pin.y <= c.bottom ? pin : null };
+  }, { id: stopId, final });
 }
 
 // ---------- F-rubric probes ----------
