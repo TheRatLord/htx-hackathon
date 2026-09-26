@@ -24,6 +24,9 @@ const mapMin = (vh: number) => Math.max(vh >= 740 ? 180 : 120, fabColumnH());
 /** The tallest half sheet that keeps `mapMin` of map below the search bar. */
 export const foldCap = (vh: number) => vh - NAV_H - SEARCH_BAR_H - mapMin(vh);
 
+/** The same for a screen that hides the search bar (Select Itinerary): the map strip starts at the top. */
+export const noSearchBarCap = (vh: number) => vh - NAV_H - mapMin(vh);
+
 /**
  * D3: room for its first two cards (spec D3 minHalf, at most 75% of the screen) as long as two FABs
  * still fit under the search bar. On a 640dp screen this equals `foldCap`.
