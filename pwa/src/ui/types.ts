@@ -189,6 +189,7 @@ export interface SearchFieldProps {
 /** C.9 */
 export type FabProps =
   | { kind: "locate"; onPress: () => void }
+  | { kind: "ticket"; onPress: () => void }
   | { kind: "planTrip"; onPress: () => void }
   | { kind: "routeAlerts"; count: number; /** Every alert is an advisory: navy (i), not the red warning. */ advisory?: boolean; onPress: () => void }
   | { kind: "myTrip"; onPress: () => void };

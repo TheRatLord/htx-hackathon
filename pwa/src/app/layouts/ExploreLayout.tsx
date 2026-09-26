@@ -123,8 +123,8 @@ export function ExploreLayout() {
     const count = list.length;
     return count ? [{ kind: "routeAlerts", count, advisory: list.every((a) => isAdvisory(a.effect)), onPress: () => navigate(`/more/alerts?route=${encodeURIComponent(f.routeId)}`) }] : [];
   });
-  // The column sits between the sheet and the search bar, 8dp from each; when it doesn't fit (a
-  // tall half sheet, extra-large text), the first-listed FABs give way.
+  // The column hangs at the top right under the search bar, as in today's app, and stops 8dp above
+  // the sheet; when it doesn't fit (a tall half sheet, extra-large text), the first-listed FABs give way.
   const room = layerH - sheetH - topBottom - 2 * GAP;
   const fit = Math.max(1, Math.floor((room + GAP) / FAB_STEP));
   const fabs = layerH ? requested.slice(Math.max(0, requested.length - fit)) : requested;
@@ -135,12 +135,18 @@ export function ExploreLayout() {
   );
   const full = snap === "full";
 
-  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip).
+  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip). Beside the
+  // search bar, as in today's app, the ticket button opens the rider's QR code.
   const topBar =
     onTrip && arriveAt ? (
       <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete" }} />
     ) : (
-      !chrome?.hideSearchBar && <MapSearchBar onPress={() => navigate("/explore/search")} />
+      !chrome?.hideSearchBar && (
+        <div className={styles.searchRow}>
+          <MapSearchBar onPress={() => navigate("/explore/search")} />
+          <Fab kind="ticket" onPress={() => navigate("/fares/ticket")} />
+        </div>
+      )
     );
 
   return (
@@ -153,7 +159,7 @@ export function ExploreLayout() {
           </div>
         )}
         {!full && fabs.length > 0 && (
-          <div className={styles.fabs} style={{ bottom: sheetH + 8 }} data-map-obstacle="" data-map-fabs="">
+          <div className={styles.fabs} style={{ top: topBottom + GAP }} data-map-obstacle="" data-map-fabs="">
             {fabs.map((f) => (
               <Fab key={f.kind} {...f} />
             ))}

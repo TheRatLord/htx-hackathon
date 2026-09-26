@@ -13,6 +13,12 @@ export function Fab(props: FabProps) {
           <Icon name="my_location" color="var(--c-accent-icon)" />
         </button>
       );
+    case "ticket":
+      return (
+        <button type="button" className={styles.fab} aria-label={t("map.myTicket")} onClick={props.onPress}>
+          <Icon name="qr_code" color="var(--c-accent-icon)" />
+        </button>
+      );
     case "planTrip":
       return (
         // At Extra large on a narrow phone the label goes under the icon in small type: the wide
