@@ -19,7 +19,9 @@
 }
 
 .open {
+  flex: none;
   min-height: var(--touch-min);
+  white-space: nowrap;
   border: none;
   background: none;
   color: #fff;

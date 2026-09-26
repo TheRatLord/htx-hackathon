@@ -5,6 +5,7 @@
   padding: var(--card-pad);
   border-radius: var(--r-card);
   background: var(--c-card);
+  --tonal-bg: var(--c-surface);
 }
 
 .title {

@@ -1,6 +1,7 @@
 .list {
   border-radius: var(--r-box);
   background: var(--c-card);
+  --tonal-bg: var(--c-surface);
   overflow: hidden;
 }
 

@@ -1,6 +1,7 @@
 import { useLang, useT } from "../i18n/index.ts";
 import { formatClock } from "../lib/format.ts";
 import { useNow } from "../state/clock.ts";
+import { useOffline } from "../state/offline.ts";
 import styles from "./UpdatedAgo.module.css";
 import type { UpdatedAgoProps } from "./types.ts";
 
@@ -8,10 +9,11 @@ import type { UpdatedAgoProps } from "./types.ts";
 const STALE_S = 90;
 
 /** C.15: "Updated 8 sec ago · Refresh". Not a live region. */
-export function UpdatedAgo({ at, onRefresh, compact, offline }: UpdatedAgoProps) {
+export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
+  const offline = useOffline();
   const ageS = Math.max(0, Math.round((now - Date.parse(at)) / 1000));
   const stale = !offline && ageS > STALE_S;
   let text: string;

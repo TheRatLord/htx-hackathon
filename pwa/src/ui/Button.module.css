@@ -31,8 +31,9 @@
   color: var(--c-on-primary);
 }
 
+/* --tonal-bg is set by --c-card containers (stop cards, banners, StepList, NotifyPermissionCard). */
 .tonal {
-  background: var(--c-card);
+  background: var(--tonal-bg, var(--c-card));
   color: var(--c-text);
 }
 

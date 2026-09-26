@@ -1,6 +1,7 @@
-import { formatDeparture, statusOf, upcoming } from "../lib/format.ts";
+import { departureA11y, upcoming } from "../lib/format.ts";
 import { useLang, useT } from "../i18n/index.ts";
 import { useNow } from "../state/clock.ts";
+import { useOffline } from "../state/offline.ts";
 import styles from "./LiveStrip.module.css";
 import { TimeValue } from "./TimeValue.tsx";
 import type { LiveStripProps } from "./types.ts";
@@ -8,15 +9,16 @@ import type { LiveStripProps } from "./types.ts";
 const MAX_DEPS = 4;
 
 /** C.3: the blue live-minutes strip. Not a live region: polling never re-announces. */
-export function LiveStrip({ deps, loading, emptyText, offline }: LiveStripProps) {
+export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
+  const offline = useOffline();
   const shown = upcoming(deps, now).slice(0, MAX_DEPS);
   if (loading) {
     return (
       <div className={styles.strip} aria-busy="true" aria-label={t("common.loading")}>
-        <span className={styles.placeholder}>– – min</span>
+        <span className={styles.placeholder}>{t("strip.loading")}</span>
       </div>
     );
   }
@@ -29,17 +31,17 @@ export function LiveStrip({ deps, loading, emptyText, offline }: LiveStripProps)
   }
   return (
     <ul className={styles.strip} aria-label={t("strip.label")}>
-      {shown.map((d) => {
-        const status = offline ? "scheduled" : statusOf(d);
-        const value = formatDeparture(d.departureTime, now, { offline, status, lang });
-        return (
-          <li key={`${d.tripId}-${d.departureTime}`} className={styles.item} aria-label={t("strip.itemA11y", { value, status: t(`status.${status}`) })}>
-            <span aria-hidden="true">
-              <TimeValue dep={d} size="strip" offline={offline} />
-            </span>
-          </li>
-        );
-      })}
+      {shown.map((d) => (
+        <li
+          key={`${d.tripId}-${d.departureTime}`}
+          className={styles.item}
+          aria-label={departureA11y(d, now, { offline, markScheduled: true, lang })}
+        >
+          <span aria-hidden="true">
+            <TimeValue dep={d} size="strip" />
+          </span>
+        </li>
+      ))}
     </ul>
   );
 }
