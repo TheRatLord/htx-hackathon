@@ -22,7 +22,7 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
   Owns: `src/screens/Routes/**`
 - [ ] **T4 Trip steps.** Selected route on the map, step list (walk, board with Live/Scheduled/Lost, transfer, get off), Start trip, Save trip (shows saved state), End trip.
   Owns: `src/screens/Trip/**`
-- [ ] **T5 Stop screen.** Original schedule format restyled: route/direction tabs, departures strip with Live/Scheduled labels, legend, hourly timetable. Tracking lost banner with Report -> "Reported. Thank you."
+- [x] **T5 Stop screen.** Original schedule format restyled: route/direction tabs, departures strip with Live/Scheduled labels, legend, hourly timetable. Tracking lost banner with Report -> "Reported. Thank you."
   Owns: `src/screens/Stop/**`
 - [x] **T6 Fares.** Sample boarding code (QR), "Trouble scanning? Enlarge code" / "Shrink code", works offline badge, stay-signed-in note, free ride progress.
   Owns: `src/screens/Fares/**`
@@ -58,7 +58,8 @@ Stack: Vite + React 19 + TypeScript + MapLibre GL 6, sample data only, hash rout
 
 - Iteration 1 (cont.): fixed sheet drag for fast flicks (window listeners); drafted README (T9) and Playwright smoke + screenshot specs (T8). Pan, button/scroll/pinch zoom, dark mode and reduced motion e2e checks pass. Launched workers for T3, T5, T6 in worktrees.
 - Merged T6 Fares (worker commit 3f6eec4 applied as 8d8af8a; the worker's worktree started from main, so only its Fares files were taken). Typecheck, 58 tests and build pass; Fares checked in light and dark, no console errors. Push still refused (403).
+- Merged T5 Stop screen (9d599bf, merge 1eba4b4). Applied its suggested shared fix: map fits leave room for pin captions (bottom +64) and clear of controls (right 108); Stop screen now fits all numbered stops. 64 tests pass. Launched T2 Search and T4 Trip workers (T3 Routes still running).
 
 ## Next
 
-Review and merge T3, T5, T6 when their workers finish. Then launch T2, T4, T7. Then run the full smoke + screenshot specs (T8), verify README (T9), then T10, T11.
+Review and merge T3, T2, T4 when their workers finish. Then launch T7 (Recent + More). Then run the full smoke + screenshot specs (T8), verify README (T9), then T10, T11.
