@@ -19,7 +19,7 @@
 }
 
 .half {
-  height: min(calc(100% - 8px), max(var(--sheet-half-min), min(52dvh, 460px), var(--min-half)));
+  height: min(calc(100% - 8px), max(var(--sheet-half-min), min(calc(0.52 * var(--win-h, 100dvh)), 460px), var(--min-half)));
 }
 
 /* Full: the sheet covers the whole map (no strip of map and pins peeking over its corners). */

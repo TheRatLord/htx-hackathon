@@ -17,15 +17,19 @@ html {
 
 body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
   background: var(--c-surface);
   color: var(--c-text);
   font: var(--fw-regular) var(--fs-body) / var(--lh-body) var(--font-family);
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The shell is the initial containing block, not 100dvh: in an installed PWA, Android Chrome 113
+   resolves 100dvh to the viewport plus its (absent) toolbar after a reload, 56px taller than the
+   window, which pushed the bottom nav off the screen. The ICB is the window in both a tab and
+   standalone, and like dvh it doesn't shrink for the keyboard. */
 #root {
-  height: 100dvh;
+  height: 100%;
 }
 
 h1,
