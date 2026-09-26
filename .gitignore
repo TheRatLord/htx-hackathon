@@ -5,3 +5,4 @@ challenge-reports-full.md
 .env
 .env.*
 !.env.example
+ux-audit/baseline/
