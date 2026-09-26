@@ -5,48 +5,81 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useLang, useT } from "../../i18n/index.ts";
-import { sideLine } from "../../lib/format.ts";
+import { useSavedStopRoutes } from "../../api/savedStop.ts";
+import { headsignLine, sideLine, upcoming } from "../../lib/format.ts";
+import { useNow } from "../../state/clock.ts";
 import { planUrl, type PlanQuery } from "../../lib/planQuery.ts";
-import { routeRef, routeRefOrFallback, useRoutesLoaded } from "../../lib/routes.ts";
+import { canonicalRouteId, routeRef, routeRefOrFallback, stopDirection, useAllRoutes, useRoutesLoaded } from "../../lib/routes.ts";
 import { useRecents, type RecentStop } from "../../state/recents.ts";
 import { useSaved } from "../../state/saved.ts";
 import { Button } from "../../ui/Button.tsx";
+import cards from "../../ui/cards.module.css";
+import { DepTimes } from "../../ui/DepTimes.tsx";
 import { Dialog } from "../../ui/Dialog.tsx";
 import { EmptyState } from "../../ui/EmptyState.tsx";
 import { Icon } from "../../ui/Icon.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { RouteBadge } from "../../ui/RouteBadge.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import type { SavedStopRoute } from "../../ui/types.ts";
 import styles from "./Recent.module.css";
 import { SavedStops } from "./SavedStops.tsx";
 
-function RouteChips({ routes }: { routes: { id: string; name: string }[] }) {
-  const navigate = useNavigate();
-  const refs = routes.map((r) => routeRefOrFallback(r.id, r.name));
-  return (
-    <div className={styles.chips}>
-      {refs.map((r) => (
-        <RouteBadge key={r.id} route={r} size="md" onPress={() => navigate(`/explore/route/${encodeURIComponent(r.id)}`)} />
-      ))}
-    </div>
-  );
-}
-
-function RecentStopRow({ stop }: { stop: RecentStop }) {
+/** A saved or recently viewed route: its chip and its name ("[82] Westheimer"), as the route list (D20). */
+function RecentRouteRow({ route, longName }: { route: { id: string; name: string }; longName?: string }) {
   const t = useT();
-  const lang = useLang();
-  const names = stop.routes.map((id) => routeRef(id)?.name ?? id);
-  const sub = [sideLine(stop, { withCompass: true, lang }), names.length ? t("recent.routes", { count: names.length, names: names.join(", ") }) : ""]
-    .filter(Boolean)
-    .join(" · ");
+  const ref = routeRefOrFallback(route.id, route.name);
   return (
     <ListRow
       kind="internal"
-      leading={<Icon name="bus_stop" color="var(--c-text-variant)" />}
-      label={t("stopLine.title", { name: stop.name, id: stop.id })}
-      sub={sub}
-      href={`/explore/stop/${encodeURIComponent(stop.id)}`}
+      leading={<RouteBadge route={ref} size="sm" />}
+      label={longName || t("alerts.routeName", { route: ref.name })}
+      href={`/explore/route/${encodeURIComponent(ref.id)}`}
     />
+  );
+}
+
+/** Only the newest few recent stops fetch times, so a long history doesn't poll ten stops. */
+const LIVE_RECENT_STOPS = 5;
+const MAX_ROUTE_ROWS = 3;
+
+/**
+ * A recently viewed stop as a card (today's Recent shows each stop as a card with its route chip and
+ * direction): the bold name, the side of the street, then one row per route with its next buses.
+ * Older entries, and the moment before times arrive, show the route rows from the route table alone.
+ */
+function RecentStopCard({ stop, live }: { stop: RecentStop; live: boolean }) {
+  const t = useT();
+  const lang = useLang();
+  const navigate = useNavigate();
+  const now = useNow();
+  const { routes, arrivals } = useSavedStopRoutes(live ? { id: stop.id, name: stop.name, addedAt: 0 } : undefined);
+  const fromTable: SavedStopRoute[] = stop.routes.flatMap((id) => {
+    const route = routeRef(id);
+    const dir = stopDirection(id, stop.id);
+    return route ? [{ route, directionLabel: dir?.directionLabel ?? "", headsign: dir?.headsign ?? "", deps: [] }] : [];
+  });
+  const loaded = live && routes !== undefined && !arrivals.isError;
+  const rows = (loaded && routes.length ? routes : fromTable).slice(0, MAX_ROUTE_ROWS);
+  const title = t("stopLine.title", { name: stop.name, id: stop.id });
+  const side = sideLine(stop, { withCompass: false, lang });
+  return (
+    <article className={cards.card}>
+      <button type="button" className={cards.hit} aria-label={title} onClick={() => navigate(`/explore/stop/${encodeURIComponent(stop.id)}`)} />
+      <h3 className={cards.name}>{title}</h3>
+      {side && <p className={cards.meta}>{side}</p>}
+      {rows.length > 0 && <hr className={cards.divider} />}
+      {rows.map((r) => (
+        <div key={r.route.id} className={cards.routeRow}>
+          <RouteBadge route={r.route} size="sm" />
+          <div className={cards.rowText}>
+            {r.headsign && <span className={cards.headsign}>{headsignLine(r.route, r.directionLabel, r.headsign, lang)}</span>}
+            {loaded &&
+              (upcoming(r.deps, now).length ? <DepTimes deps={r.deps} /> : <span className={cards.noService}>{t("strip.noBuses3h")}</span>)}
+          </div>
+        </div>
+      ))}
+    </article>
   );
 }
 
@@ -92,8 +125,12 @@ export default function Recent() {
   const [editing, setEditing] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   useRoutesLoaded();
+  const { routes: allRoutes } = useAllRoutes();
+  const longNames = new Map(allRoutes.map((r) => [r.id, r.longName]));
   usePageTitle(t("recent.title"));
 
+  // A saved stop already has its card at the top; don't list it twice.
+  const recentStops = recents.stops.filter((r) => !saved.stops.some((x) => x.id === r.id));
   const hasRecents = recents.routes.length + recents.stops.length + recents.trips.length > 0;
   const empty = !hasRecents && saved.stops.length === 0 && saved.routes.length === 0;
 
@@ -115,27 +152,35 @@ export default function Recent() {
         />
       ) : (
         <>
-          <SavedStops editing={editing} onEdit={setEditing} />
+          {saved.stops.length > 0 && <SavedStops editing={editing} onEdit={setEditing} />}
 
           {saved.routes.length > 0 && (
             <section>
-              <SectionHeader label={`★ ${t("recent.savedRoutes")}`} tone="variant" />
-              <RouteChips routes={saved.routes} />
+              <SectionHeader label={t("recent.savedRoutes")} tone="variant" />
+              {saved.routes.map((r) => (
+                <RecentRouteRow key={r.id} route={r} longName={longNames.get(canonicalRouteId(r.id))} />
+              ))}
+            </section>
+          )}
+
+          {recentStops.length > 0 && (
+            <section>
+              <SectionHeader label={t("recent.recentStops")} tone="variant" />
+              <ul className={styles.cards}>
+                {recentStops.map((s, i) => (
+                  <li key={s.id}>
+                    <RecentStopCard stop={s} live={i < LIVE_RECENT_STOPS} />
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
           {recents.routes.length > 0 && (
             <section>
               <SectionHeader label={t("recent.recentRoutes")} tone="variant" />
-              <RouteChips routes={recents.routes} />
-            </section>
-          )}
-
-          {recents.stops.length > 0 && (
-            <section>
-              <SectionHeader label={t("recent.recentStops")} tone="variant" />
-              {recents.stops.map((s) => (
-                <RecentStopRow key={s.id} stop={s} />
+              {recents.routes.map((r) => (
+                <RecentRouteRow key={r.id} route={r} longName={longNames.get(canonicalRouteId(r.id))} />
               ))}
             </section>
           )}
@@ -147,6 +192,14 @@ export default function Recent() {
                 <RecentTrip key={`${query.from}|${query.to}`} query={query} />
               ))}
             </section>
+          )}
+
+          {/* With nothing saved yet, one line at the end says how (it used to be a whole section on top). */}
+          {saved.stops.length === 0 && (
+            <p className={styles.tip}>
+              <Icon name="star" size={20} color="var(--c-text-variant)" />
+              {t("recent.savedEmpty")}
+            </p>
           )}
         </>
       )}

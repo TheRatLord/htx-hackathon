@@ -1,10 +1,13 @@
 // D16's SAVED STOPS section: live saved rows, with Move up / Move down / Remove in edit mode.
+// Recent renders it only when a stop is saved; with none, Recent ends with a one-line tip instead.
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router";
 import { savedRowKey, useSavedStopRoutes } from "../../api/savedStop.ts";
-import { useT } from "../../i18n/index.ts";
+import { useLang, useT } from "../../i18n/index.ts";
+import { sideLine } from "../../lib/format.ts";
+import { useRecents } from "../../state/recents.ts";
 import { useSaved, type SavedStop } from "../../state/saved.ts";
 import { Button } from "../../ui/Button.tsx";
 import { SavedStopRow } from "../../ui/SavedStopRow.tsx";
@@ -16,6 +19,10 @@ import styles from "./Recent.module.css";
 
 function SavedRow({ stop, editing }: { stop: SavedStop; editing: boolean }) {
   const t = useT();
+  const lang = useLang();
+  // The side of the street, when the stop was opened before (recents keep it), as on every stop card.
+  const seen = useRecents().stops.find((r) => r.id === stop.id);
+  const side = seen ? sideLine(seen, { withCompass: false, lang }) || undefined : undefined;
   const navigate = useNavigate();
   const { routes, preferredRouteId, arrivals } = useSavedStopRoutes(stop);
   const route = stop.preferredRouteId ? `?route=${encodeURIComponent(stop.preferredRouteId)}` : "";
@@ -28,6 +35,7 @@ function SavedRow({ stop, editing }: { stop: SavedStop; editing: boolean }) {
           name={stop.name}
           preferredRouteId={preferredRouteId}
           routes={routes ?? []}
+          side={side}
           onOpen={() => navigate(`/explore/stop/${encodeURIComponent(stop.id)}${route}`)}
         />
       </div>
@@ -66,13 +74,11 @@ export function SavedStops({ editing, onEdit }: { editing: boolean; onEdit: (on:
   return (
     <section>
       <SectionHeader
-        label={`★ ${t("recent.savedStops")}`}
+        label={t("recent.savedStops")}
         tone="variant"
-        action={saved.stops.length ? { label: editing ? t("common.done") : t("common.edit"), onPress: () => onEdit(!editing) } : undefined}
+        action={{ label: editing ? t("common.done") : t("common.edit"), onPress: () => onEdit(!editing) }}
       />
-      {saved.stops.length === 0 ? (
-        <p className={styles.hint}>{t("recent.savedEmpty")}</p>
-      ) : (
+      {saved.stops.length > 0 && (
         <>
           {updatedAt > 0 && (
             <div className={styles.status}>

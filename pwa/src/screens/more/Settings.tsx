@@ -1,4 +1,6 @@
-// D19 Settings: one page of radio groups; the More rows deep-link to each group by #anchor.
+// D19 Settings: one page of groups; the More rows deep-link to each group by #anchor. Language,
+// text size and walking pace use Welcome's segmented control, and the text-size preview sits right
+// under its control.
 
 import type { ReactNode } from "react";
 import type { Dep, NearbyRoute, StopSummary } from "../../api/types.ts";
@@ -14,15 +16,10 @@ import { Button } from "../../ui/Button.tsx";
 import { ListRow } from "../../ui/ListRow.tsx";
 import { NearbyStopCard } from "../../ui/NearbyStopCard.tsx";
 import { SectionHeader } from "../../ui/SectionHeader.tsx";
+import { SegmentedControl } from "../../ui/SegmentedControl.tsx";
+import type { SegmentedOption } from "../../ui/types.ts";
 import styles from "./more.module.css";
 import { locationStatusText, notifyStatusText, useScrollToHash, useShowWelcome } from "./shared.ts";
-
-/** Named in their own language and script, so screen readers and fonts pick the right one. */
-const COMING_SOON: { name: string; lang: string; dir?: "rtl" }[] = [
-  { name: "Tiếng Việt", lang: "vi" },
-  { name: "中文", lang: "zh" },
-  { name: "العربية", lang: "ar", dir: "rtl" },
-];
 
 function Group({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return (
@@ -33,20 +30,15 @@ function Group({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-function RadioGroup<K extends keyof Prefs>({ label, pref, options }: { label: string; pref: K; options: { value: Prefs[K]; label: string; sub?: string }[] }) {
+/**
+ * The same segmented control as Welcome (D1), so riders recognise the language and text-size
+ * choice they made on the first screen. It applies as soon as it is tapped.
+ */
+function Choice<K extends "lang" | "textSize" | "walkPace">({ label, pref, options }: { label: string; pref: K; options: SegmentedOption<Prefs[K]>[] }) {
   const prefs = usePrefs();
   return (
-    <div role="radiogroup" aria-label={label}>
-      {options.map((o) => (
-        <ListRow
-          key={String(o.value)}
-          kind="radio"
-          label={o.label}
-          sub={o.sub}
-          checked={prefs[pref] === o.value}
-          onPress={() => prefs.set({ [pref]: o.value } as Partial<Prefs>)}
-        />
-      ))}
+    <div className={styles.segmented}>
+      <SegmentedControl<Prefs[K]> ariaLabel={label} value={prefs[pref]} onChange={(v) => prefs.set({ [pref]: v } as Partial<Prefs>)} options={options} />
     </div>
   );
 }
@@ -94,7 +86,7 @@ export default function Settings() {
       <AppBar title={t("settings.title")} onBack={useBack()} />
 
       <Group id="language" label={t("more.language")}>
-        <RadioGroup
+        <Choice
           label={t("more.language")}
           pref="lang"
           options={[
@@ -102,27 +94,16 @@ export default function Settings() {
             { value: "es", label: t("more.lang.es") },
           ]}
         />
-        <p className={styles.note}>
-          {t("common.comingSoon")}:{" "}
-          {COMING_SOON.map(({ name, lang, dir }, i) => (
-            <span key={lang}>
-              {i > 0 && " · "}
-              <bdi lang={lang} dir={dir}>
-                {name}
-              </bdi>
-            </span>
-          ))}
-        </p>
       </Group>
 
       <Group id="text-size" label={t("more.textSize")}>
-        <RadioGroup
+        <Choice
           label={t("more.textSize")}
           pref="textSize"
           options={[
-            { value: "standard", label: t("more.size.standard") },
-            { value: "large", label: t("more.size.large") },
-            { value: "xlarge", label: t("more.size.xlarge") },
+            { value: "standard", label: "A", sub: t("more.size.standard") },
+            { value: "large", label: "A+", sub: t("more.size.large"), labelSize: "large" },
+            { value: "xlarge", label: "A++", sub: t("more.size.xlarge"), labelSize: "xlarge" },
           ]}
         />
         <p className={styles.note}>{t("settings.preview")}</p>
@@ -133,7 +114,7 @@ export default function Settings() {
       </Group>
 
       <Group id="walking-pace" label={t("more.walkingPace")}>
-        <RadioGroup
+        <Choice
           label={t("more.walkingPace")}
           pref="walkPace"
           options={[

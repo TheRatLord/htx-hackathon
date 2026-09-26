@@ -22,7 +22,8 @@ import { useMyRoutes } from "./useMyRoutes.ts";
 
 const firstRouteName = (a: Alert) => a.routes.map((r) => r.route).sort(compareRouteNames)[0] ?? "~";
 
-function AlertItem({ alert, demo }: { alert: Alert; demo: boolean }) {
+/** No per-card "Demo" tag: the one banner above the list says every alert is a demo. */
+function AlertItem({ alert }: { alert: Alert }) {
   const lang = useLang();
   const navigate = useNavigate();
   return (
@@ -31,7 +32,6 @@ function AlertItem({ alert, demo }: { alert: Alert; demo: boolean }) {
         alert={alert}
         lang={lang}
         compact="list"
-        demo={demo}
         routes={alertRouteRefs(alert)}
         onOpen={() => navigate(`/more/alerts/${encodeURIComponent(alert.id)}`)}
       />
@@ -95,11 +95,11 @@ export default function Alerts() {
     const live = store.source === "metro";
     body = (
       <>
-        {demo && <p className={styles.demo}>{t("alerts.demoCaption")}</p>}
+        {demo && <p className={styles.demo}>{t("alerts.sourceDemo")}</p>}
         {shown.length > 0 && (
           <ul className={styles.list}>
             {shown.map((a) => (
-              <AlertItem key={a.id} alert={a} demo={demo} />
+              <AlertItem key={a.id} alert={a} />
             ))}
           </ul>
         )}
@@ -134,10 +134,11 @@ export default function Alerts() {
       </div>
       {store.status === "ok" && store.source !== "unavailable" && (
         <footer className={styles.footer}>
-          <span>{demo ? t("alerts.sourceDemo") : t("alerts.sourceMetro")}</span>
+          {/* The demo banner above already names the source. */}
+          {!demo && <span>{t("alerts.sourceMetro")}</span>}
           {updatedAt ? (
             <>
-              <span aria-hidden="true">·</span>
+              {!demo && <span aria-hidden="true">·</span>}
               <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={store.retry} />
             </>
           ) : null}

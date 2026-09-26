@@ -1,5 +1,7 @@
-// D17 Fares: a ticket stub that hands off to METRO, plus the fare table from src/data/fares.json.
-// Every value there is unconfirmed, and the screen says so while `confirmedByMetro` is false.
+// D17 Fares: a compact ticket stub that hands off to METRO, plus the fare table from src/data/fares.json.
+// Every value there is unconfirmed, and the screen says so once, under the title, while
+// `confirmedByMetro` is false. Reduced fares (seniors, riders with disabilities) come right after the
+// base fare, so the rows many older riders need are on the first screen.
 
 import { useState } from "react";
 import { usePageTitle } from "../../app/usePageTitle.ts";
@@ -38,7 +40,10 @@ export default function Fares() {
   // "Reduced fares ›" on itineraries links to #reduced.
   useScrollToHash();
 
-  const note = fares.confirmedByMetro ? undefined : t("fares.toBeConfirmed");
+  const note = fares.confirmedByMetro ? undefined : t("fares.pricesToBeConfirmed");
+  // The one-ride fare, then who pays less, then passes, Park & Ride and transfers.
+  const base = fares.items.filter((i) => i.key === "local");
+  const others = fares.items.filter((i) => i.key !== "local");
   const asOf = new Intl.DateTimeFormat(lang === "es" ? "es-US" : "en-US", { dateStyle: "long", timeZone: "UTC" }).format(new Date(fares.asOf));
 
   return (
@@ -47,28 +52,33 @@ export default function Fares() {
         {t("fares.title")}
       </h1>
 
+      {note && (
+        <p className={styles.note}>{note}</p>
+      )}
+
       <section className={styles.ticket} aria-labelledby="fares-ticket">
         <h2 id="fares-ticket" className={styles.ticketTitle}>
           <Icon name="tickets" color="var(--c-accent-icon)" />
           {t("fares.ticketTitle")}
         </h2>
-        <p>{t("fares.ticketBody")}</p>
         <Button variant="primary" fullWidth label={t("fares.signIn")} onPress={() => setHandoff(true)} />
-        <p className={styles.caption}>{t("fares.ticketNote")}</p>
       </section>
 
-      <SectionHeader label={t("fares.fares")} tone="variant" note={note} />
-      <FareTable items={fares.items} lang={lang} />
+      <SectionHeader label={t("fares.fares")} tone="variant" />
+      <FareTable items={base} lang={lang} />
 
-      <SectionHeader id="reduced" label={t("fares.reduced")} tone="variant" note={note} />
+      <SectionHeader id="reduced" label={t("fares.reduced")} tone="variant" />
       <FareTable items={fares.reduced} lang={lang} />
+
+      <SectionHeader label={t("fares.passes")} tone="variant" />
+      <FareTable items={others} lang={lang} />
 
       <div className={styles.links}>
         <ListRow kind="external" label={t("fares.reducedHow")} href={links.reducedFares} />
         <ListRow kind="external" label={t("fares.whereToBuy")} href={links.whereToBuy} />
       </div>
       <p className={`${styles.caption} ${styles.asOf}`}>
-        {t("fares.asOf", { date: asOf })} {note && `${note}.`}
+        {t("fares.asOf", { date: asOf })}
       </p>
 
       <Dialog
