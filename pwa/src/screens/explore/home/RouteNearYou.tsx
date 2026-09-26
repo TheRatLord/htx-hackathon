@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router";
-import { useArrivals, useRoute } from "../../../api/hooks.ts";
+import { useArrivals, useRoute, useStableAnchor } from "../../../api/hooks.ts";
 import { useAlerts } from "../../../api/alertsStore.ts";
 import type { LatLon, NearbyResponse, StopSummary, TransitCenterDetail } from "../../../api/types.ts";
 import { useT } from "../../../i18n/index.ts";
@@ -22,14 +22,11 @@ import { StreetCard } from "./DirectionCard.tsx";
 import { routeCap } from "./fold.ts";
 import styles from "./Home.module.css";
 import { LoadingCards } from "./NearbyList.tsx";
-import { baysFor, nearestPerDirection, type RouteStop } from "./routeNear.ts";
+import { baysFor, nearestPerDirection, rankByCatch, shortTc, type RouteStop } from "./routeNear.ts";
 import { useHalfUpTo } from "./useHalfUpTo.ts";
 
 /** Beyond this the route is "not near you" (D3 Empty). */
 const NEAR_MIN = 10;
-
-/** "Northwest Transit Center" → "Northwest TC": the map label must stay short beside the pin. */
-const shortTc = (name: string) => name.replace(/\s*Transit Center$/i, " TC").trim();
 
 /** A route's own stop entry as the summary the cards take; `side` is filled in by the card when needed. */
 const asSummary = (s: RouteStop): StopSummary => ({ ...s, routes: [], subtitle: "" });
@@ -54,6 +51,9 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
   const alerts = useAlerts();
   const route = useRoute(routeId);
   const secondCard = useRef<HTMLDivElement>(null);
+  // The map is framed from a steady point: GPS jitter moves only the user dot, never the camera,
+  // so the rider can pan (the raw fix re-fitted the bounds about once a second).
+  const framed = useStableAnchor(origin);
   const data = route.data;
   const streets = data && origin ? nearestPerDirection(data, origin, nearby, walkPace) : [];
   const bays = data && tc ? baysFor(tc, data.id) : [];
@@ -77,7 +77,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
     const s = data?.directions.flatMap((d) => d.stops).find((x) => x.id === b.stopId);
     return s ? [s] : [];
   });
-  const bounds = boundsOf(origin ? [origin, ...bayStops, ...shownStreets.map((s) => s.stop)] : shape);
+  const bounds = boundsOf(framed ? [framed, ...bayStops, ...shownStreets.map((s) => s.stop)] : shape);
   const scene: MapScene = data
     ? {
         legs: data.directions.map((d) => ({ coords: d.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), kind: "ride", color: data.color })),
@@ -96,7 +96,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
     : origin
       ? { focus: { kind: "point", point: origin } }
       : {};
-  useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join(), bayStops.map((s) => s.id).join(), bays.map((b) => b.bay).join(), t]);
+  useMapScene(scene, [data, framed?.lat, framed?.lon, streets.map((s) => s.stop.id).join(), bayStops.map((s) => s.id).join(), bays.map((b) => b.bay).join(), t]);
   useHalfUpTo(() => secondCard.current, routeCap, `${data?.id}|${bays.length}|${shownStreets.length}|${tooFar}|${lateNight}`);
 
   if (route.isError) return <ErrorState error={route.error} context={{ id: routeId }} onRetry={() => void route.refetch()} />;
@@ -111,10 +111,10 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
   const cardStops = new Set([...bays.map((b) => b.stopId), ...shownStreets.map((s) => s.stop.id)]);
   const nearAlerts = routeAlerts.filter((a) => !a.stopIds.length || a.stopIds.some((id) => cardStops.has(id)));
   const alertName = t("routeName.a11y", { name });
-  const cards = [
+  const candidates = [
     ...bays.map((b, i) => {
       const platform = data.directions.flatMap((d) => d.stops).find((s) => s.id === b.stopId);
-      return (
+      const item = (
         <RouteDirectionCard
           key={`tc-${b.bay}-${b.directionLabel}`}
           route={ref}
@@ -130,22 +130,29 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
           onWalk={() => navigate(walkUrl(b.stopId, { d: tcWalkM, route: data.id, from: place?.param, fromName: place?.name }))}
         />
       );
+      return { item, deps: bayDeps[i], walkMin: tcWalkM !== undefined ? walkMinutes(tcWalkM, walkPace) : 0, pinned: true };
     }),
-    ...shownStreets.map((s, i) => (
-      <StreetCard
-        key={s.stop.id}
-        route={ref}
-        directionLabel={s.dir.label}
-        headsign={s.dir.headsigns[0] ?? ""}
-        stopId={s.stop.id}
-        summary={s.fromNearby?.stop}
-        origin={origin ?? s.stop}
-        place={place}
-        seed={{ distanceM: s.distanceM, source: s.fromNearby?.walkSource ?? "estimate" }}
-        arrivals={streetArrivals[i]}
-      />
-    )),
+    ...shownStreets.map((s, i) => ({
+      item: (
+        <StreetCard
+          key={s.stop.id}
+          route={ref}
+          directionLabel={s.dir.label}
+          headsign={s.dir.headsigns[0] ?? ""}
+          stopId={s.stop.id}
+          summary={s.fromNearby?.stop}
+          origin={origin ?? s.stop}
+          place={place}
+          seed={{ distanceM: s.distanceM, source: s.fromNearby?.walkSource ?? "estimate" }}
+          arrivals={streetArrivals[i]}
+        />
+      ),
+      deps: streetArrivals[i],
+      walkMin: walkMinutes(s.distanceM, walkPace),
+    })),
   ];
+  // The earliest bus the rider can catch goes first (06); the transit center stays in the first two (F7).
+  const cards = rankByCatch(candidates, now);
 
   return (
     <>

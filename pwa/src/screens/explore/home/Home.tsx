@@ -68,8 +68,11 @@ function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBanne
   return undefined;
 }
 
-/** How many of the list's stops the map tags and (D4) frames: the cards above the fold and just past it. */
-const TAGGED = 4;
+/**
+ * How many of the list's stops the map tags (besides the saved stop): the cards a rider sees at the
+ * half sheet and the next one. Four put tags on stops far down the list (3425, 3426 on 03).
+ */
+const TAGGED = 3;
 /** D4 frames the place with its nearest stop when the two fit one screen at HOME_ZOOM. */
 const PLACE_FRAME_M = 400;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NearbyResponse, RouteDetail, TransitCenterDetail } from "../../../api/types.ts";
-import { baysFor, nearestPerDirection } from "./routeNear.ts";
+import { baysFor, nearestPerDirection, rankByCatch, shortTc } from "./routeNear.ts";
 
 const origin = { lat: 29.7563, lon: -95.3639 };
 const stop = (id: string, lat: number, lon: number) => ({ id, name: `Stop ${id}`, lat, lon, kind: "stop" });
@@ -52,5 +52,50 @@ describe("baysFor", () => {
       { bay: "L", stopId: "79", directionLabel: "Eastbound", headsign: "DOWNTOWN" },
     ]);
     expect(baysFor(tc, "999")).toEqual([]);
+  });
+});
+
+describe("rankByCatch", () => {
+  const now = Date.parse("2026-09-26T13:00:00Z");
+  const at = (min: number) => ({ departureTime: new Date(now + min * 60_000).toISOString() });
+
+  it("puts the earliest bus the rider can catch first (06: 8249 above the TC)", () => {
+    const cards = [
+      { item: "tc", deps: [at(59)], walkMin: 11 },
+      { item: "8249", deps: [at(2), at(30)], walkMin: 2 },
+    ];
+    expect(rankByCatch(cards, now)).toEqual(["8249", "tc"]);
+  });
+
+  it("skips a bus that leaves before the rider can walk there", () => {
+    const cards = [
+      { item: "far", deps: [at(3), at(40)], walkMin: 8 },
+      { item: "near", deps: [at(20)], walkMin: 2 },
+    ];
+    expect(rankByCatch(cards, now)).toEqual(["near", "far"]);
+  });
+
+  it("keeps a pinned card (the transit center) inside the first two", () => {
+    const cards = [
+      { item: "tc", deps: [at(59)], walkMin: 11, pinned: true },
+      { item: "8249", deps: [at(2)], walkMin: 2 },
+      { item: "8895", deps: [at(37)], walkMin: 3 },
+    ];
+    expect(rankByCatch(cards, now)).toEqual(["8249", "tc", "8895"]);
+  });
+
+  it("keeps the given order while any card is loading", () => {
+    const cards = [
+      { item: "a", deps: [at(50)], walkMin: 1 },
+      { item: "b", deps: undefined, walkMin: 1 },
+    ];
+    expect(rankByCatch(cards, now)).toEqual(["a", "b"]);
+  });
+});
+
+describe("shortTc", () => {
+  it("keeps the TC tag to one short line", () => {
+    expect(shortTc("Northwest Transit Center")).toBe("NW TC");
+    expect(shortTc("Northline Transit Center")).toBe("Northline TC");
   });
 });
