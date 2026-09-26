@@ -8,13 +8,24 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTransitCenters } from "../api/hooks.ts";
 import type { LatLon } from "../api/types.ts";
-import { useLang } from "../i18n/index.ts";
+import { t, useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
 import { addMarkerImages } from "./layers/images.ts";
-import { addSceneLayers, drawScene, showUser } from "./layers/scene.ts";
-import { addTransitLayers, setHighlightedStop, setQuiet, showTransitCenters, STOPS_SOURCE, stopsCollection, transitAt } from "./layers/transit.ts";
+import { addSceneLayers, drawScene, hideSceneLabels, showUser, TALL_PINS } from "./layers/scene.ts";
+import {
+  addTransitLayers,
+  LABELLED_NEAREST,
+  rankFrom,
+  setHighlightedStop,
+  setNearLabels,
+  setQuiet,
+  showTransitCenters,
+  STOPS_SOURCE,
+  stopsCollection,
+  transitAt,
+} from "./layers/transit.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -48,7 +59,18 @@ function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl
     [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
     [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
   ];
-  map.fitBounds(bounds, { padding: { ...pad, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) }, maxZoom: 17 });
+  const want = { top: pad.top ?? 0, bottom: pad.bottom ?? 0, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) };
+  // MapLibre adds the padding an earlier easeTo left on the map to fitBounds' own (Home's
+  // sheet-height bottom plus this one's could exceed the canvas: "Map cannot fit", and the camera
+  // never moved to the route's stops). Ask only for the difference, so the total is `want`.
+  const cur = map.getPadding();
+  const delta = {
+    top: want.top - (cur.top ?? 0),
+    bottom: want.bottom - (cur.bottom ?? 0),
+    left: want.left - (cur.left ?? 0),
+    right: want.right - (cur.right ?? 0),
+  };
+  map.fitBounds(bounds, { padding: delta, maxZoom: 17 });
 }
 
 /** A walk or trip's callout is centred on its pin: keep the pin far enough from the FAB column for it to clear. */
@@ -70,10 +92,10 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   setHighlightedStop(map, highlight?.id);
   // Walks and itineraries draw only their own stops: other pins, ID chips and TCs are noise there.
   setQuiet(map, Boolean(scene.legs?.length));
-  // The callout names the street only where no sheet title does it already: on a walk or trip,
-  // the stop's street ("M L King Blvd", short enough to stay on screen beside the FABs). On the
-  // stop sheet it repeated the title ("Stop: 342").
-  const callout = highlight && scene.legs?.length ? highlight.name.split(" @ ")[0] : "";
+  // On a walk or trip the callout names the stop's street ("M L King Blvd", short enough to stay on
+  // screen beside the FABs); elsewhere (the stop sheet) it marks which pin is the stop, as today's
+  // "Stop: 342" does.
+  const callout = !highlight ? "" : scene.legs?.length ? highlight.name.split(" @ ")[0] : t("map.stopCallout", { id: highlight.id });
   drawScene(map, scene, highlight, callout);
 
   const f = scene.focus;
@@ -83,6 +105,40 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
     const center = f.kind === "user" ? user : (f.point ?? highlight);
     if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
   }
+}
+
+type Rect = { l: number; t: number; r: number; b: number };
+const overlaps = (a: Rect, b: Rect) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+
+/**
+ * What covers the map, in canvas px: the sheet (from its height) and every element marked
+ * `data-map-obstacle` (the search bar and overlay slot, the FAB column).
+ */
+function obstacles(container: HTMLElement, sheetH: number): Rect[] {
+  const box = container.getBoundingClientRect();
+  const out: Rect[] = [{ l: -Infinity, t: box.height - sheetH, r: Infinity, b: Infinity }];
+  for (const el of document.querySelectorAll<HTMLElement>("[data-map-obstacle]")) {
+    const r = el.getBoundingClientRect();
+    if (r.width && r.height) out.push({ l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top });
+  }
+  return out;
+}
+
+/** A stop's pin with its ID chip under it (or above it), in canvas px around the pin's point. */
+const CHIP_BOX = { l: -34, t: -44, r: 34, b: 46 };
+/**
+ * Where a scene marker's label may land: centred above its marker (above the pin head for a tall
+ * pin), or below it, as wide as its text (bold 14px, about 8px a character, wrapping at ~140px).
+ */
+function markerLabelBox(label: string, tall: boolean): Rect {
+  const w = Math.min(label.length * 8, 140) / 2 + 6;
+  return tall ? { l: -w, t: -100, r: w, b: 8 } : { l: -w, t: -50, r: w, b: 54 };
+}
+
+function clear(p: { x: number; y: number }, box: Rect, obs: Rect[], w: number): boolean {
+  const r = { l: p.x + box.l, t: p.y + box.t, r: p.x + box.r, b: p.y + box.b };
+  if (r.l < 0 || r.r > w || r.t < 0) return false;
+  return !obs.some((o) => overlaps(r, o));
 }
 
 /** Where stop-ID labels are ranked from: the rider, else the scene's focus, else the map centre. */
@@ -112,6 +168,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const mapRef = useRef<maplibregl.Map | null>(null);
   const ready = useRef(false);
   const anchorRef = useRef<LatLon | null>(null);
+  const hadUser = useRef(Boolean(user));
   const latest = useRef({ scene, user, bottomPadding, onCenterChange, navigate, tcData });
   latest.current = { scene, user, bottomPadding, onCenterChange, navigate, tcData };
 
@@ -125,6 +182,37 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       (stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops.values(), anchor)),
       () => (anchorRef.current = null),
     );
+  };
+  /**
+   * After the camera or the sheet settles: the ID chips go on the nearest stops whose chip is on
+   * screen and clear of the sheet and chrome, and scene labels that would be covered are left out.
+   */
+  const placeLabels = (map: maplibregl.Map) => {
+    const el = container.current;
+    if (!el || !ready.current) return;
+    const { scene, user, bottomPadding } = latest.current;
+    const obs = obstacles(el, bottomPadding);
+    const w = el.clientWidth;
+    hideSceneLabels(
+      map,
+      (scene.markers ?? [])
+        .filter((m) => m.label && !clear(map.project([m.point.lon, m.point.lat]), markerLabelBox(m.label, TALL_PINS.has(m.kind)), obs, w))
+        .map((m) => m.id),
+    );
+    void loadStops().then((stops) => {
+      if (!ready.current || mapRef.current !== map) return;
+      const b = map.getBounds();
+      const rank = rankFrom(labelAnchor(map, latest.current.scene, latest.current.user ?? user));
+      const inView = [...stops.values()]
+        .filter((s) => s.kind !== "rail" && s.id !== scene.highlightStopId && b.contains([s.lon, s.lat]))
+        .sort((a, c) => rank(a) - rank(c));
+      const ids: string[] = [];
+      for (const s of inView) {
+        if (ids.length === LABELLED_NEAREST) break;
+        if (clear(map.project([s.lon, s.lat]), CHIP_BOX, obs, w)) ids.push(s.id);
+      }
+      setNearLabels(map, ids);
+    }, () => undefined);
   };
   const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0, container.current?.clientHeight ?? 0);
 
@@ -155,6 +243,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         const c = m.getCenter();
         latest.current.onCenterChange({ lat: c.lat, lon: c.lng });
         rankLabels(m);
+        placeLabels(m);
       });
       // A pin opens its stop directly (no "Choose Direction" step, C.16).
       m.on("click", (e) => {
@@ -169,7 +258,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         rankLabels(m);
         const { scene, user, bottomPadding, tcData } = latest.current;
         if (tcData) showTransitCenters(m, tcData);
-        void applyScene(m, scene, user, pad(bottomPadding));
+        // A fix that arrived before the map loaded is this scene's first: the user effect below
+        // must not treat the next GPS update as the first fix and move the camera again.
+        hadUser.current = Boolean(user);
+        void applyScene(m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
       });
     });
     return () => {
@@ -184,17 +276,22 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   useEffect(() => {
     const { user, bottomPadding } = latest.current;
     if (!mapRef.current || !ready.current) return;
-    void applyScene(mapRef.current, scene, user, pad(bottomPadding));
-    rankLabels(mapRef.current);
+    const map = mapRef.current;
+    void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
+    rankLabels(map);
     // `lang`: marker labels built by the screen are re-drawn in the new language.
   }, [scene, lang]);
 
-  // The sheet moved to another snap: fit the scene again above it once it has settled.
+  // The sheet moved to another snap: fit the scene again above it once it has settled (or, with
+  // nothing to fit, re-place the labels the sheet may now cover).
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !ready.current) return;
     const bounds = latest.current.scene.focus?.bounds;
-    if (!map || !ready.current || latest.current.scene.focus?.kind !== "bounds" || !bounds) return;
-    const id = setTimeout(() => fitFocus(map, bounds, fitPad(latest.current.scene, pad(bottomPadding))), SETTLE_MS);
+    const id = setTimeout(() => {
+      if (latest.current.scene.focus?.kind === "bounds" && bounds) fitFocus(map, bounds, fitPad(latest.current.scene, pad(bottomPadding)));
+      else placeLabels(map);
+    }, SETTLE_MS);
     return () => clearTimeout(id);
   }, [bottomPadding]);
 
@@ -203,14 +300,13 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     if (locateNonce && user && mapRef.current) mapRef.current.easeTo({ center: [user.lon, user.lat], zoom: USER_ZOOM, padding: pad(bottomPadding) });
   }, [locateNonce]);
 
-  const hadUser = useRef(Boolean(user));
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready.current) return;
     const first = !hadUser.current && user;
     hadUser.current = Boolean(user);
     const { scene, bottomPadding } = latest.current;
-    if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, pad(bottomPadding));
+    if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
     else showUser(map, user);
     rankLabels(map);
   }, [user]);

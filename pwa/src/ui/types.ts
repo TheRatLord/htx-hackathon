@@ -25,8 +25,6 @@ export interface TimeValueProps {
   dep: Dep;
   size: "minutes" | "strip" | "body";
   walkMin?: number;
-  /** Show a minutes value as its clock time, so a row keeps one format ("1:05 PM · 2:02 PM"). */
-  clock?: boolean;
 }
 
 export interface StatusWordProps {
@@ -58,6 +56,8 @@ export interface NearbyStopCardProps {
   stop: StopSummary;
   walkDistanceM?: number;
   routes: NearbyRoute[];
+  /** NearbyStop.laterFirst: a route with nothing in the window shows its next bus ("First bus 5:10 AM · in 3 hr"). */
+  laterFirst?: Record<string, string>;
   maxRoutes?: 3;
   /** D4: walk times are measured from a place. `label` is the short form ("from the museum"), `name` the full name. */
   walkFrom?: { label: string; param: string; name?: string };
@@ -249,6 +249,8 @@ export interface AlertStatusLineProps {
   /** "Route 82", a stop name or "this trip": used in "No alerts for …". */
   name: string;
   alerts: Alert[];
+  /** Demo alerts and none for this: say "Demo alerts only" (Alerts screens) instead of nothing. */
+  demoNote?: boolean;
 }
 
 /** C.12 map overlay slot (StatusBanner), in priority order. */

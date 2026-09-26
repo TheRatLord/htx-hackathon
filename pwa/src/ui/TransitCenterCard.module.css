@@ -24,11 +24,10 @@
   padding: var(--sp-1) 0;
 }
 
-.bayLine {
-  display: flex;
-  align-items: baseline;
-}
-
+/* "· Bay G" after the headsign: where to stand, regular weight so the time stays the one big answer. */
 .bay {
-  font-size: var(--fs-heading);
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+  letter-spacing: normal;
+  white-space: nowrap;
 }

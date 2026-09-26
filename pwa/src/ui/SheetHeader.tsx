@@ -7,8 +7,9 @@ import type { SheetHeaderProps } from "./types.ts";
 
 /**
  * C.7: the sheet title row. The title is the screen's <h1>, focused after navigation. Inside a
- * BottomSheet it also carries the sheet's "‹ Back" (start) and its one Show list / Show map
- * chevron (end), so no row is spent on them alone.
+ * BottomSheet it also carries the sheet's Back (start) and its one Show list / Show map chevron
+ * (end). A start-aligned title shares their row ("‹ Route 40 near you   ⌃"), so no row is spent
+ * on Back alone; a centred stop title keeps "‹ Back" on a row above it.
  */
 export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
   const t = useT();
@@ -16,7 +17,12 @@ export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlig
   const host = chrome?.host;
   useLayoutEffect(() => host?.(), [host]);
   const center = titleAlign === "center";
-  const back = chrome?.onBack && (
+  const back = chrome?.onBack && !center && (
+    <button type="button" className={styles.backIcon} aria-label={t("common.back")} onClick={chrome.onBack}>
+      <Icon name="chevron_left" size={28} />
+    </button>
+  );
+  const backRow = chrome?.onBack && center && (
     <button type="button" className={styles.back} onClick={chrome.onBack}>
       <Icon name="chevron_left" />
       {t("common.back")}
@@ -36,19 +42,20 @@ export function SheetHeader({ title, titleAlign = "start", titleSize = titleAlig
       {right && <div className={styles.right}>{right}</div>}
     </div>
   );
-  // With Back, the toggle shares Back's row; without, it ends the title row (Home's "Nearby stops").
+  // A centred title: Back and the toggle share a row above it. Otherwise one row: [‹] title [⌃].
   return (
     <div className={`${styles.header} ${center ? styles.center : ""} ${chrome ? styles.inSheet : ""}`}>
-      {back ? (
+      {backRow ? (
         <>
           <div className={styles.controls}>
-            {back}
+            {backRow}
             {toggle}
           </div>
           {text}
         </>
       ) : (
-        <div className={styles.main}>
+        <div className={`${styles.main} ${back ? styles.withBack : ""}`}>
+          {back}
           {text}
           {toggle}
         </div>

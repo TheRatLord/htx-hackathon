@@ -2,6 +2,7 @@
 // next departures per route, so riders can tell same-name stops apart.
 
 import type { Arrival, DataSource } from "../../shared/types.ts";
+import { scheduledDepartures } from "../gtfs/schedule.ts";
 import { gtfs } from "../gtfs/store.ts";
 import { stopsNear } from "../gtfs/spatial.ts";
 import { formatDistance, haversineM } from "../lib/geo.ts";
@@ -36,6 +37,12 @@ export interface NearbyStop {
   walkMin: number;
   walkSource: "estimate" | "osrm";
   routes: NearbyRoute[];
+  /**
+   * For a route serving the stop with nothing in the 2-hour window (late night): its next
+   * scheduled departure within 18 hours, so the card says "First bus 5:10 AM" rather than
+   * only "No buses in the next 2 hours". Keyed by route id.
+   */
+  laterFirst?: Record<string, string>;
   realtimeSources: DataSource[];
 }
 
@@ -78,18 +85,21 @@ export async function getNearby(lat: number, lon: number, opts: { radiusM?: numb
       let walkDistanceM = n.distanceM * WALK_DETOUR_FACTOR;
       let walkSource: NearbyStop["walkSource"] = "estimate";
       if (opts.precise && i < PRECISE_WALK_STOPS) {
-        const w = await walkRoute({ lat, lon }, s);
+        const w = await walkRoute({ lat, lon }, s, undefined, { fast: true });
         if (w.source === "osrm") {
           walkDistanceM = w.distanceM;
           walkSource = "osrm";
         }
       }
       const arrivals = await getArrivals(s.id, { limit: 40, horizonMin: 120, realtime: i < REALTIME_STOPS, now: opts.now });
+      const routes = groupByRoute(arrivals.arrivals);
+      const laterFirst = firstLaterByRoute(n.stopIdx, s.routeIds, new Set(routes.map((r) => r.routeId)), opts.now ?? Date.now());
       return {
         stop: stopSummary(s),
         ...walkEstimate(n.distanceM, walkDistanceM),
         walkSource,
-        routes: groupByRoute(arrivals.arrivals),
+        routes,
+        ...(laterFirst && { laterFirst }),
         realtimeSources: arrivals.realtimeSources,
       };
     }),
@@ -103,6 +113,21 @@ export async function getNearby(lat: number, lon: number, opts: { radiusM?: numb
     stops,
     transitCenters: transitCentersNear(lat, lon),
   };
+}
+
+/** Beyond the 2-hour window, how far ahead a route's next departure is looked up. */
+const LATER_FIRST_MS = 18 * 3600_000;
+
+function firstLaterByRoute(stopIdx: number, routeIds: string[], running: Set<string>, now: number): Record<string, string> | undefined {
+  const g = gtfs();
+  let out: Record<string, string> | undefined;
+  for (const routeId of routeIds) {
+    const routeIdx = g.routeIndex.get(routeId);
+    if (running.has(routeId) || routeIdx === undefined) continue;
+    const [first] = scheduledDepartures(stopIdx, now, now + LATER_FIRST_MS, { routeIdx: new Set([routeIdx]), limit: 1 });
+    if (first) (out ??= {})[routeId] = new Date(first.epochMs).toISOString();
+  }
+  return out;
 }
 
 function groupByRoute(arrivals: Arrival[]): NearbyRoute[] {

@@ -42,7 +42,7 @@ export function subscribeNow(listener: () => void) {
   };
 }
 
-export const getNow = () => now;
+const getNow = () => now;
 
 /** Date.now(), re-rendering every 15s while the page is visible and immediately when it becomes visible. */
 export function useNow(): number {

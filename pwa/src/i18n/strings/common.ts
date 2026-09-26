@@ -33,6 +33,7 @@ const strings: Strings = {
     nav: { label: "Main", explore: "Explore", fares: "Fares", recent: "Recent", more: "More" },
     map: {
       searchPlaceholder: "Place, Stop, or Route",
+      stopCallout: "Stop {id}",
       searchLabel: "Search for a place, stop or route",
       locate: "Show my location",
       planTrip: "Plan Trip",
@@ -64,6 +65,8 @@ const strings: Strings = {
       hr: "{h} hr",
       hrMin: "{h} hr {m} min",
       firstBus: "First bus",
+      nextBus: "Next bus",
+      inDuration: "· in {in}",
       minutesA11y: { one: "{count} minute", other: "{count} minutes" },
     },
     status: {
@@ -155,13 +158,14 @@ const strings: Strings = {
     },
     canMakeIt: { yes: "You have time.", tight: "Hurry: it's close.", no: "Leaves before you get there." },
     legend: { label: "What the times mean", sample: "8 min" },
+    serviceDay: { label: "Service day", weekday: "Weekday", saturday: "Saturday", sunday: "Sunday" },
     updated: {
       ago: "Updated {ago}",
       justNow: "Updated just now",
       justNowShort: "Just now",
       min: "{n} min ago",
       stale: "Not updated for {n} min",
-      offline: "Offline · last update {time}",
+      offline: "Offline — times from {time}",
     },
     alert: {
       unknown: "Alerts can't be checked right now",
@@ -257,6 +261,7 @@ const strings: Strings = {
     nav: { label: "Principal", explore: "Explorar", fares: "Tarifas", recent: "Recientes", more: "Más" },
     map: {
       searchPlaceholder: "Lugar, parada o ruta",
+      stopCallout: "Parada {id}",
       searchLabel: "Buscar un lugar, una parada o una ruta",
       locate: "Mostrar mi ubicación",
       planTrip: "Planear viaje",
@@ -288,6 +293,8 @@ const strings: Strings = {
       hr: "{h} h",
       hrMin: "{h} h {m} min",
       firstBus: "Primer autobús",
+      nextBus: "Próximo autobús",
+      inDuration: "· en {in}",
       minutesA11y: { one: "{count} minuto", other: "{count} minutos" },
     },
     status: {
@@ -382,13 +389,14 @@ const strings: Strings = {
     },
     canMakeIt: { yes: "Tiene tiempo.", tight: "Apúrese: está justo.", no: "Sale antes de que usted llegue." },
     legend: { label: "Qué significan las horas", sample: "8 min" },
+    serviceDay: { label: "Día de servicio", weekday: "Entre semana", saturday: "Sábado", sunday: "Domingo" },
     updated: {
       ago: "Actualizado {ago}",
       justNow: "Actualizado ahora",
       justNowShort: "Ahora",
       min: "hace {n} min",
       stale: "Sin actualizar desde hace {n} min",
-      offline: "Sin conexión · última actualización {time}",
+      offline: "Sin conexión — horarios de las {time}",
     },
     alert: {
       unknown: "No se pueden revisar los avisos ahora",

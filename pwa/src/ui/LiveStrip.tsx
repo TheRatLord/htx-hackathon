@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from "react";
-import { departureA11y, formatClock, formatDayTime, upcoming } from "../lib/format.ts";
+import { departureA11y, formatClock, formatDayTime, formatDuration, upcoming } from "../lib/format.ts";
 import { useLang, useT } from "../i18n/index.ts";
 import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
@@ -102,12 +102,4 @@ export function LiveStrip({ deps, loading, emptyText, nextService }: LiveStripPr
       ))}
     </ul>
   );
-}
-
-/** "3 hr 17 min", "45 min". */
-export function formatDuration(mins: number, t: (key: string, vars?: Record<string, string | number>) => string): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (!h) return t("time.min", { n: m });
-  return m ? t("time.hrMin", { h, m }) : t("time.hr", { h });
 }

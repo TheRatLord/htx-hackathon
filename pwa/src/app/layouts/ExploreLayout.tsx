@@ -145,13 +145,13 @@ export function ExploreLayout() {
     <ExploreContext value={exploreValue}>
       <main ref={layerRef} className={styles.layer}>
         {!full && (
-          <div ref={topRef} className={styles.top}>
+          <div ref={topRef} className={styles.top} data-map-obstacle="">
             {topBar}
             {overlay && <StatusBanner item={overlay} />}
           </div>
         )}
         {!full && fabs.length > 0 && (
-          <div className={styles.fabs} style={{ bottom: sheetH + 8 }}>
+          <div className={styles.fabs} style={{ bottom: sheetH + 8 }} data-map-obstacle="">
             {fabs.map((f) => (
               <Fab key={f.kind} {...f} />
             ))}

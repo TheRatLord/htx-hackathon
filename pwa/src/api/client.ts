@@ -10,14 +10,17 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiGet<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
+/** `signal`: TanStack's, so a superseded request (typing, re-anchoring) is cancelled, not left running upstream. */
+export async function apiGet<T>(path: string, params?: Record<string, string | number | undefined>, signal?: AbortSignal): Promise<T> {
   const query = new URLSearchParams();
   for (const [k, v] of Object.entries(params ?? {})) if (v !== undefined && v !== "") query.set(k, String(v));
   const qs = query.toString();
   let res: Response;
   try {
-    res = await fetch(`/api${path}${qs ? `?${qs}` : ""}`, { headers: { Accept: "application/json" } });
-  } catch {
+    res = await fetch(`/api${path}${qs ? `?${qs}` : ""}`, { headers: { Accept: "application/json" }, signal });
+  } catch (err) {
+    // A cancelled request is not the network being down (that would flag the app offline).
+    if (signal?.aborted) throw err;
     throw new ApiError("network", 0, "We couldn't reach RideMETRO. Check your connection and try again.");
   }
   const body = (await res.json().catch(() => null)) as { error?: { code?: string; message?: string } } | null;

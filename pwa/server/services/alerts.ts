@@ -32,6 +32,8 @@ export interface AlertsResult {
 }
 
 interface RawAlert extends Omit<Alert, "routes"> {
+  /** Every GTFS-RT active period (recurring closures have several); `activeFrom/Until` show the current or next one. */
+  periods?: { from: string | null; until: string | null }[];
   routeIds: string[];
 }
 
@@ -45,7 +47,8 @@ export async function getAlerts(filter: { routeId?: string; stopId?: string } = 
     .filter((a) => isActive(a, now))
     .filter((a) => !filter.routeId || (route && a.routeIds.includes(route.id)))
     .filter((a) => !filter.stopId || (stop && (a.stopIds.includes(stop.id) || a.routeIds.some((r) => stop.routeIds.includes(r)))))
-    .map(({ routeIds, ...a }) => ({
+    // `periods` is internal (activeFrom/Until carry the one shown).
+    .map(({ routeIds, periods: _periods, ...a }) => ({
       ...a,
       routes: routeIds.flatMap((id) => {
         const r = findRoute(id);
@@ -90,8 +93,9 @@ function parseAlerts(buf: Uint8Array): RawAlert[] {
   return feed.entity.flatMap((e) => {
     const a = e.alert;
     if (!a) return [];
-    const period = a.activePeriod?.[0];
     const iso = (s: unknown) => (s ? new Date(Number(s) * 1000).toISOString() : null);
+    const periods = (a.activePeriod ?? []).map((p) => ({ from: iso(p.start), until: iso(p.end) }));
+    const period = shownPeriod(periods, Date.now());
     return [
       {
         id: e.id,
@@ -102,13 +106,24 @@ function parseAlerts(buf: Uint8Array): RawAlert[] {
         description: translations(a.descriptionText),
         routeIds: [...new Set((a.informedEntity ?? []).flatMap((ie) => (ie.routeId ? [ie.routeId] : [])))],
         stopIds: [...new Set((a.informedEntity ?? []).flatMap((ie) => (ie.stopId ? [ie.stopId.split("_")[0]] : [])))],
-        activeFrom: iso(period?.start),
-        activeUntil: iso(period?.end),
+        activeFrom: period?.from ?? null,
+        activeUntil: period?.until ?? null,
+        ...(periods.length > 1 && { periods }),
       },
     ];
   });
 }
 
+type Period = { from: string | null; until: string | null };
+const contains = (p: Period, now: number) => (!p.from || Date.parse(p.from) <= now) && (!p.until || Date.parse(p.until) > now);
+
+/** The period in force now, else the next one to start, else the first. */
+function shownPeriod(periods: Period[], now: number): Period | undefined {
+  const upcoming = periods.filter((p) => p.from && Date.parse(p.from) > now).sort((a, b) => Date.parse(a.from!) - Date.parse(b.from!));
+  return periods.find((p) => contains(p, now)) ?? upcoming[0] ?? periods[0];
+}
+
+/** Active when any of its periods contains `now` (a weekend-only closure is active each weekend). */
 function isActive(a: RawAlert, now: number): boolean {
-  return (!a.activeFrom || Date.parse(a.activeFrom) <= now) && (!a.activeUntil || Date.parse(a.activeUntil) > now);
+  return a.periods ? a.periods.some((p) => contains(p, now)) : contains({ from: a.activeFrom, until: a.activeUntil }, now);
 }

@@ -22,3 +22,36 @@
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
 }
+
+/* "⚠ Offline — times from 12:04 PM · Try again": a tinted row the width of the sheet. */
+.offline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0 0 0 var(--sp-3);
+  border: 1px solid var(--c-warn-border);
+  border-radius: var(--r-chip);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.offlineText {
+  flex: 1 1 12em;
+  min-width: 0;
+  padding: var(--sp-2) 0;
+  font-weight: var(--fw-bold);
+}
+
+.offline > svg {
+  flex: none;
+  align-self: center;
+}
+
+.offline .refresh {
+  flex: none;
+  font-size: var(--fs-body);
+}

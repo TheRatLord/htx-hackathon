@@ -20,21 +20,27 @@
   white-space: nowrap;
 }
 
+/* The scroller and "More ›" sit side by side: the scroller ends 8dp before the button, so no chip
+   ever shows under or through it (hidePartial hides one the edge cuts). */
 .row {
-  position: relative;
+  display: flex;
+  align-items: stretch;
 }
 
 .scroller {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 6px;
   overflow-x: auto;
   padding: var(--sp-1) var(--gutter);
   scrollbar-width: none;
 }
 
-/* Room for the "More ›" button, so the last chip can scroll fully clear of it. */
+/* The gap before "More ›" (no side padding: a chip cut at the edge would show in it). */
 .withMore {
-  padding-right: 112px;
+  padding-right: 0;
+  margin-right: var(--sp-2);
 }
 
 .wrapped {
@@ -47,21 +53,15 @@
   display: none;
 }
 
-/* An opaque button beside the scroller's visible end: a chip under it is covered completely,
-   never half-shown through a fade ("1Más ›"). */
+/* An opaque button after the scroller, never over a chip. */
 .more {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
   display: inline-flex;
+  flex: none;
   align-items: center;
   min-width: var(--touch-min);
-  padding: 0 var(--gutter) 0 var(--sp-3);
+  padding: 0 var(--gutter) 0 var(--sp-2);
   border: none;
-  border-left: 1px solid var(--c-divider);
   background: var(--c-surface);
-  box-shadow: -8px 0 8px -4px var(--c-surface);
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
   white-space: nowrap;

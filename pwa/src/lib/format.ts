@@ -24,6 +24,19 @@ const hourFormat = formats({ hour: "numeric" });
 const serviceDateFormat = formats({ weekday: "short", month: "short", day: "numeric" });
 const dateFormat = formats({ month: "short", day: "numeric" });
 
+/** "3 hr 17 min", "45 min", "2 hr". */
+export function formatDuration(mins: number, tr: (key: string, vars?: Record<string, string | number>) => string = (k, v) => t(k, v)): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (!h) return tr("time.min", { n: m });
+  return m ? tr("time.hrMin", { h, m }) : tr("time.hr", { h });
+}
+
+/** Whole minutes since `ms` (never negative): the one rounding for "last seen 2 min ago" everywhere. */
+export function ageMinutes(ms: number, now: number): number {
+  return Math.max(0, Math.floor((now - ms) / 60_000));
+}
+
 /** "7:05 PM" in Houston time, no leading zero. */
 export function formatClock(iso: string, lang: Lang): string {
   return clockFormat(lang).format(new Date(iso));
@@ -78,14 +91,6 @@ function shown(departureTime: string, now: number, opts: { offline?: boolean; cl
   const m = !realtime && diff > 0 ? Math.max(1, Math.floor(diff / 60_000)) : Math.floor(diff / 60_000);
   if (opts.offline || m >= 60 || (m <= 0 && !realtime) || (opts.clock && m > 0)) return { kind: "clock" };
   return m <= 0 ? { kind: "now" } : { kind: "min", m };
-}
-
-/**
- * One format per row: true when any of these shows as a clock time, so the row's minute values
- * switch to clock times too ("1:05 PM · 2:02 PM", never "55 min · 2:02 PM"). "Now" stays.
- */
-export function rowUsesClock(deps: Dep[], now: number, offline?: boolean): boolean {
-  return deps.some((d) => !d.canceled && showsClock(d, now, offline));
 }
 
 /** True when the departure displays as a clock time ("8:05 PM") rather than "Now" or minutes. */
@@ -182,6 +187,14 @@ export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang:
     if (parsed) return t(`sideOn.${parsed.dir}`, { street: parsed.street }, lang);
   }
   return stop.side ? localiseSide(stop.side, lang) : "";
+}
+
+/**
+ * A stop card's title, "Westheimer Rd @ Montrose Blvd (2958)", with the stop number kept on the
+ * last word's line: "(2958)" alone on a line read as a different stop.
+ */
+export function stopTitle(name: string, id: string, lang: Lang): string {
+  return t("stopLine.title", { name, id }, lang).replace(/ \(([^()]+)\)$/, "\u00a0($1)");
 }
 
 /** "Eastbound" (es "Rumbo este") for a direction label; unknown labels stay as METRO wrote them. */

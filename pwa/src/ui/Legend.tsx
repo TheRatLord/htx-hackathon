@@ -13,9 +13,13 @@ export function Legend() {
         {t("status.scheduled")}
       </li>
       <li className={styles.item}>
+        {/* As a live time looks on the strip: the green word "Live" and arcs beside the number. */}
         <span className={`${styles.chip} ${styles.live}`}>
           {sample}
-          <Icon name="live_arcs" size={16} color="var(--c-live-on-strip)" />
+          <span className={styles.liveWord} aria-hidden="true">
+            {t("status.live")}
+            <Icon name="live_arcs" size={16} color="var(--c-live-on-strip)" />
+          </span>
         </span>
         {t("status.live")}
       </li>

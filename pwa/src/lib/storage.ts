@@ -46,5 +46,13 @@ export function persistentStore<T>(key: string, initial: T, normalize: (stored: 
     },
     use: () => useSyncExternalStore(store.subscribe, store.get, store.get),
   };
+  // Another tab (the PWA open twice) wrote this key: take its value, so the last writer doesn't
+  // silently overwrite the other's saved stops, recents or active trip.
+  if (typeof window !== "undefined")
+    window.addEventListener("storage", (e) => {
+      if (e.key !== key && e.key !== null) return;
+      value = normalize(readJson(key, initial));
+      listeners.forEach((l) => l());
+    });
   return store;
 }
