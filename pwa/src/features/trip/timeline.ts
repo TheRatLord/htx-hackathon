@@ -77,7 +77,6 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
     const next = it.legs.slice(legIndex + 1).find((l): l is TransitLeg => l.type === "transit");
     if (leg.type === "walk") {
       const min = walkMinutes(leg.distanceM, pace);
-      const walk = t("plan.walkMinDistance", { min, distance: formatDistance(leg.distanceM, lang) }, lang);
       if (!next) {
         rows.push({
           legIndex,
@@ -86,10 +85,11 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         });
         return;
       }
-      // The stop on its own line and the side under it, so the narrow timeline column doesn't
-      // break "…University Dr (#11424), west / side" over four lines.
-      const to = t("plan.toStop", { stop: stopTitle(leg.to) }, lang);
-      const side = capitalise(shortSide(leg.to, lang));
+      // "Walk 5 min to stop #11424" then "M L King Blvd @ UH University Dr · west side": two short
+      // lines in the narrow timeline column, not four (the distance is on the walk screen).
+      const side = shortSide(leg.to, lang);
+      const toStop = leg.to.id ? t("plan.walkToStop", { min, id: leg.to.id }, lang) : t("plan.walkTo", { min, place: leg.to.name }, lang);
+      const where = [leg.to.id ? leg.to.name : "", side].filter(Boolean).join(" · ");
       const first = legIndex === 0;
       const wait = t("plan.wait", { min: waitMin(leg.endTime, next) }, lang);
       rows.push({
@@ -97,11 +97,11 @@ export function itineraryTimeline(it: Itinerary, opts: TimelineOpts): TimelineRo
         role: "walk",
         href: walkHref(leg, first ? opts.fromName : leg.from.name, next.route.id),
         step: first
-          ? { kind: "walk", title: opts.fromName, time: formatClock(it.startTime, lang), lines: [walk, to, ...(side ? [side] : [])] }
+          ? { kind: "walk", title: opts.fromName, time: formatClock(it.startTime, lang), lines: [toStop, ...(where ? [where] : [])] }
           : {
               kind: "walk",
-              title: walk,
-              lines: [to, side ? `${side} · ${wait}` : capitalise(wait), ...transferLines(next, lang)],
+              title: toStop,
+              lines: [where ? `${where} · ${wait}` : capitalise(wait), ...transferLines(next, lang)],
             },
       });
       return;

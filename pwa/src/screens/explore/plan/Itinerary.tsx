@@ -82,7 +82,7 @@ function Timeline({ it, rows, onShowPlace }: { it: Trip; rows: TimelineRow[]; on
   );
 }
 
-/** The peek's second line: what to do first, "Walk 5 min to #11424 · 80 leaves 12:15 PM". */
+/** The peek's second line: what to do first, "Walk 5 min · 80 leaves 12:15 PM" (the clock never breaks). */
 export function FirstAction({ it }: { it: Trip }) {
   const t = useT();
   const lang = useLang();
@@ -91,10 +91,12 @@ export function FirstAction({ it }: { it: Trip }) {
   const ride = it.legs[i];
   if (ride?.type !== "transit") return null;
   const walkM = it.legs.slice(0, i).reduce((m, l) => m + (l.type === "walk" ? l.distanceM : 0), 0);
-  const leaves = t("plan.firstRide", { route: ride.route.name, time: formatClock(ride.departureTime, lang) });
+  const leaves = t("plan.firstRide", { route: ride.route.name });
+  const clock = formatClock(ride.departureTime, lang);
   return (
     <span className={styles.peekLine}>
-      {walkM >= 5 && ride.board.id ? `${t("plan.firstWalk", { min: walkMinutes(walkM, walkPace), id: ride.board.id })} · ${leaves}` : leaves}
+      {walkM >= 5 ? `${t("plan.firstWalk", { min: walkMinutes(walkM, walkPace) })} · ${leaves} ` : `${leaves} `}
+      <span className={styles.nowrap}>{clock}</span>
     </span>
   );
 }
@@ -141,11 +143,10 @@ export default function Itinerary() {
     body = (
       <>
         <p className={styles.arrive}>{t("plan.arrive", { time: formatClock(it.endTime, lang), min: it.durationMin })}</p>
-        {/* D11 showed the banner; here one caption line is enough. */}
-        {plan.response.source === "offline-fixture" && <p className={styles.caption}>{t("plan.fixtureBanner")}</p>}
         <Timeline it={it} rows={rows} onShowPlace={setPlace} />
         <FareLine it={it} />
         <ScheduleCaption />
+        {plan.response.source === "offline-fixture" && <p className={styles.caption}>{t("plan.fixtureNote")}</p>}
       </>
     );
   }

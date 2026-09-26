@@ -1,6 +1,7 @@
 // One Live trip step (spec D13): Walk, Wait, Ride, Final walk or Arrived. The headlines are plain
 // text: LiveTrip announces each step once through its own live region.
 
+import type { ReactNode } from "react";
 import { useArrivals, useWalk } from "../../../api/hooks.ts";
 import type { LatLon, TransitLeg, WalkLeg } from "../../../api/types.ts";
 import { boardDeparture } from "../../../features/trip/departures.ts";
@@ -27,8 +28,11 @@ const ARRIVALS_LIMIT = 4;
 /** The bus being caught. A recorded (fixture) trip has no real bus, so only its planned time shows. */
 function useBoardDeparture(ride: TransitLeg, fixture: boolean) {
   const now = useNow();
-  const arrivals = useArrivals(ride.board.id ?? "", { route: ride.route.id, limit: ARRIVALS_LIMIT, enabled: Boolean(ride.board.id) && !fixture });
-  return boardDeparture(ride, fixture ? [] : (arrivals.data?.arrivals ?? []), now);
+  const arrivals = useArrivals(ride.board.id ?? "", { route: ride.route.id, limit: ARRIVALS_LIMIT, enabled: Boolean(ride.board.id) });
+  const list = arrivals.data?.arrivals ?? [];
+  // A sample trip's bus is never the stop's real one, but the real buses after it are still the
+  // rider's fallback ("8 min · 38 min"), so only the match is skipped.
+  return boardDeparture(fixture ? { ...ride, tripId: undefined } : ride, list, now);
 }
 
 interface WalkProps {
@@ -39,9 +43,10 @@ interface WalkProps {
   /** Where the planned walk starts, for D8's title. */
   fromName: string;
   onNavigate: (href: string) => void;
+  actions?: ReactNode;
 }
 
-function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate }: WalkProps) {
+function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate, actions }: WalkProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -69,12 +74,15 @@ function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate }: WalkProps) 
         {t("trip.walk.next", { route: ride.route.name, time: formatClock(dep.departureTime, lang) })} ·{" "}
         <span className={verdict === "yes" ? styles.ok : styles.alert}>{t(`canMakeIt.${verdict}`)}</span>
       </p>
-      <Button
-        variant="tonal"
-        icon="directions_walk"
-        label={`${t("trip.walk.directions")} ›`}
-        onPress={() => onNavigate(`/explore/stop/${encodeURIComponent(stopId)}/walk?${q}`)}
-      />
+      <div className={styles.controls}>
+        <Button
+          variant="tonal"
+          icon="directions_walk"
+          label={`${t("trip.walk.directions")} ›`}
+          onPress={() => onNavigate(`/explore/stop/${encodeURIComponent(stopId)}/walk?${q}`)}
+        />
+        {actions}
+      </div>
     </>
   );
 }
@@ -198,9 +206,22 @@ interface StepCardProps {
   originName: string;
   onNavigate: (href: string) => void;
   onDone: () => void;
+  /** Previous / Next: on the Walk step they share a row with Walking directions. */
+  actions?: ReactNode;
 }
 
-export function StepCard({ step, fix, fixture, stops, rideIndex, basis, destination, originName, onNavigate, onDone }: StepCardProps) {
+export function StepCard(props: StepCardProps) {
+  const { step, actions } = props;
+  if (step.kind === "walk") return <StepBody {...props} />;
+  return (
+    <>
+      <StepBody {...props} />
+      {actions && <div className={styles.controls}>{actions}</div>}
+    </>
+  );
+}
+
+function StepBody({ step, fix, fixture, stops, rideIndex, basis, destination, originName, onNavigate, onDone, actions }: StepCardProps) {
   const t = useT();
   switch (step.kind) {
     case "walk":
@@ -212,6 +233,7 @@ export function StepCard({ step, fix, fixture, stops, rideIndex, basis, destinat
           fixture={fixture}
           fromName={step.legIndex === 0 ? originName : step.leg.from.name}
           onNavigate={onNavigate}
+          actions={actions}
         />
       );
     case "wait":

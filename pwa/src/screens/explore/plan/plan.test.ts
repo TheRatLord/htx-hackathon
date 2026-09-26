@@ -29,7 +29,8 @@ describe("shiftFixture", () => {
     // 2:11:37 rounds to 132 min, which would leave the 80 only 7 min away; walk 5 + 3 needs 8.
     const now = Date.parse("2026-09-26T02:10:00Z");
     const it = shiftFixture(recorded, now, "normal").itineraries[0];
-    expect(ride(it).departureTime).toBe(plus(ride(itinerary).departureTime, 133));
+    // 133 min, rounded up to the 5-minute step.
+    expect(ride(it).departureTime).toBe(plus(ride(itinerary).departureTime, 135));
     expect(canMakeIt(walkMinutes(407, "normal"), ride(it), now)).toBe("yes");
     const slower = shiftFixture(recorded, now, "slower").itineraries[0];
     expect(canMakeIt(walkMinutes(407, "slower"), ride(slower), now)).toBe("yes");
@@ -40,6 +41,11 @@ describe("shiftFixture", () => {
     const later = Date.parse("2026-09-26T02:30:00Z");
     expect(canMakeIt(5, ride(startableFixture(shifted, later, "normal")), later)).toBe("yes");
     expect(startableFixture(shifted, Date.parse("2026-09-26T01:49:00Z"), "normal")).toBe(shifted);
+  });
+
+  it("gives the same times to screens computed a minute or two apart", () => {
+    const at = (iso: string) => ride(shiftFixture(recorded, Date.parse(iso), "normal").itineraries[0]).departureTime;
+    expect(at("2026-09-26T01:43:00Z")).toBe(at("2026-09-26T01:47:00Z"));
   });
 
   it("leaves live plans alone", () => {

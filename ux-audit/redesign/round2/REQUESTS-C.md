@@ -1,0 +1,7 @@
+# Round 2: fixer C requests (shared layer or tests)
+
+1. **Final walk leg missing on Hobby trips (server / fixtures).** The recorded plan ends at the landmark's bus stop (#10567), so there is no walk leg from the stop to the terminal. v2.71 shows "🚶 17m" at the end. ModeStrip and the timeline draw a final walk when the plan has one; `/api/plan` (or the fixture recorder) needs to add it.
+2. **LiveStrip caption (ui/LiveStrip).** The wait step shows "First time: your 80, scheduled 12:10 PM" under the strip. Judges asked for it inside the strip. A `caption` prop on `LiveStrip` (small type, white at 88%, like the late-night caption) would let D13 move it there.
+3. **F8 goal text (tests/e2e/flows.spec.ts).** Judges want "#11424" moved from the live-trip walk headline to the side line. The F8 goal pins "Walk 5 min to M L King Blvd @ UH University Dr (#11424)", so the headline was kept. If the spec is updated, D13 can switch to "Walk 5 min to stop #11424" plus the street as grey text (the itinerary already does this).
+4. **Shared e2e clock file.** `tests/e2e/.results/now.txt` is shared by every fixer's Playwright run; a late-night shot run by one fixer moves the API clock for everyone running at the same time.
+5. **Sort wording.** The dropdown still says Soonest / Fewer transfers / Less walking. "Fastest" (v2.71) would need a different sort than the API order that F3 depends on (card 1 is the 50-min trip, card 2 is 47 min), so it was left as is.
