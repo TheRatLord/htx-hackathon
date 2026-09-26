@@ -21,6 +21,8 @@ const NOW_FILE = resolve(import.meta.dirname, `tests/e2e/.results/now-${apiPort}
 export default defineConfig({
   testDir: "tests/e2e",
   testMatch: /.*\.spec\.ts$/,
+  // .results/ is scratch output (gitignored); a workstream's throwaway spec left there must not run with the suite.
+  testIgnore: "**/.results/**",
   outputDir: "tests/e2e/.results/artifacts",
   globalSetup: "./tests/e2e/global-setup.ts",
   // One API clock is shared by every test (late-night shots move it), so run serially.
