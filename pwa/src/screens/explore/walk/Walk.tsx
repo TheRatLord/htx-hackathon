@@ -3,14 +3,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { useStop, useWalk } from "../../../api/hooks.ts";
+import { useStableAnchor, useStop, useWalk } from "../../../api/hooks.ts";
 import type { LatLon, StopDetail, WalkRoute } from "../../../api/types.ts";
 import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatDistance, platformLabel } from "../../../lib/format.ts";
-import { parseLatLon, roundedKey } from "../../../lib/geo.ts";
+import { parseLatLon } from "../../../lib/geo.ts";
 import { localiseSide, walkStepText } from "../../../lib/i18nServer.ts";
 import { estimateWalk, walkMinutes } from "../../../lib/walk.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
@@ -112,25 +112,30 @@ export default function Walk() {
   const title = walkTitle(t, lang, stop.data, stopId, fromName);
   usePageTitle(title);
 
-  const scene: MapScene = { highlightStopId: stopId };
-  if (walk) {
+  // The camera is framed once per stop, on the first route: later fixes (useWalk re-asks only after
+  // a 40 m move) redraw the line but keep the same frame, and GPS jitter changes nothing on the map.
+  const shown = useStableAnchor(origin, 40);
+  const frame = useRef<{ stopId: string; bounds: [LatLon, LatLon] }>(undefined);
+  if (walk && frame.current?.stopId !== stopId) {
     const coords = walk.geometry.coordinates;
-    scene.legs = [{ coords, kind: "walk" }];
     const lons = coords.map((c) => c[0]);
     const lats = coords.map((c) => c[1]);
-    scene.focus = stepFocus
-      ? { kind: "point", point: stepFocus, zoom: STEP_ZOOM }
-      : {
-          kind: "bounds",
-          bounds: [
-            { lat: Math.min(...lats), lon: Math.min(...lons) },
-            { lat: Math.max(...lats), lon: Math.max(...lons) },
-          ],
-        };
+    frame.current = {
+      stopId,
+      bounds: [
+        { lat: Math.min(...lats), lon: Math.min(...lons) },
+        { lat: Math.max(...lats), lon: Math.max(...lons) },
+      ],
+    };
+  }
+  const bounds = frame.current?.stopId === stopId ? frame.current.bounds : undefined;
+  const scene: MapScene = { highlightStopId: stopId };
+  if (walk) {
+    scene.legs = [{ coords: walk.geometry.coordinates, kind: "walk" }];
+    scene.focus = stepFocus ? { kind: "point", point: stepFocus, zoom: STEP_ZOOM } : bounds && { kind: "bounds", bounds };
   } else if (target) scene.focus = { kind: "point", point: target };
-  if (origin) scene.markers = [{ id: "origin", point: origin, kind: from ? "place" : "origin", label: fromName }];
-  // Rounded, so GPS jitter doesn't move the camera.
-  useMapScene(scene, [stopId, osrm.data, target, stepFocus?.lat, stepFocus?.lon, origin && roundedKey(origin)]);
+  if (shown) scene.markers = [{ id: "origin", point: shown, kind: from ? "place" : "origin", label: fromName }];
+  useMapScene(scene, [stopId, walk, target, stepFocus?.lat, stepFocus?.lon, shown?.lat, shown?.lon]);
 
   const walkMin = distanceM !== undefined ? walkMinutes(distanceM, walkPace) : undefined;
   const maps = target && (() => openGoogleMaps(target, from));
