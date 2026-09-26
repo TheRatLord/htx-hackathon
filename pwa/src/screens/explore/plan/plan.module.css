@@ -151,7 +151,8 @@
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  padding: 0 0 0 var(--sp-4);
+  /* The line ends under the swap button, not past it at the box's edge. */
+  padding: 0 calc(var(--sp-3) + var(--touch-min) / 2) 0 var(--sp-4);
   color: var(--c-text-variant);
 }
 
@@ -397,9 +398,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) 0;
-  padding: var(--card-pad) var(--card-pad) 0;
-  border-radius: var(--r-card) var(--r-card) 0 0;
+  margin: calc(-1 * var(--card-pad));
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
   color: var(--c-text);
   text-decoration: none;
 }
@@ -418,7 +419,7 @@
 .modes {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 2px 6px;
   align-items: flex-start;
 }
 
@@ -462,27 +463,24 @@
 }
 
 
+/* "Board [80] at #11424 · 12:15 PM": one bold line under a divider; the chip sits in the text. */
 .boardLine {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-1) var(--sp-2);
   align-items: center;
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--ls-caps);
-}
-
-.boardStop {
-  font-weight: var(--fw-bold);
-  overflow-wrap: anywhere;
-}
-
-.leaves {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-1) var(--sp-2);
-  align-items: center;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
+}
+
+.boardLine > span:first-child {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  align-items: center;
 }
 
 .alertLine {
@@ -558,18 +556,3 @@
 }
 
 /* The boarding block: a tinted inset instead of a divider, so it reads as "where to stand". */
-.board {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: var(--sp-2);
-  padding-top: var(--sp-2);
-  border-top: 1px solid var(--c-divider);
-}
-
-.alertOne {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

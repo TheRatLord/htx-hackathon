@@ -8,7 +8,7 @@ export const UH: PlanStop = { name: "My current location", lat: 29.7199, lon: -9
 export const BOARD_80: PlanStop = { id: "11424", name: "M L King Blvd @ UH University Dr", lat: 29.718212, lon: -95.339505, directionLabel: "Southbound", side: "West side of M L King Blvd" };
 export const ALIGHT_80: PlanStop = { id: "3938", name: "M L King Blvd @ Bellfort", lat: 29.666724, lon: -95.337365 };
 export const BOARD_73: PlanStop = { id: "4789", name: "Bellfort Av @ M L King Blvd", lat: 29.666163, lon: -95.33749, side: "South side of Bellfort Av" };
-export const HOBBY_STOP: PlanStop = { id: "10567", name: "Hobby Airport", lat: 29.65532, lon: -95.27577 };
+const HOBBY_STOP: PlanStop = { id: "10567", name: "Hobby Airport", lat: 29.65532, lon: -95.27577 };
 export const HOBBY: PlanStop = { name: "Hobby Airport", lat: 29.655337, lon: -95.275771 };
 
 function walk(from: PlanStop, to: PlanStop, start: string, end: string, distanceM: number): WalkLeg {

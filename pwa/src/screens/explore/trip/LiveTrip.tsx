@@ -17,10 +17,10 @@ import type { TripStep } from "../../../features/trip/steps.ts";
 import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip/timeline.ts";
 import { destinationOf, useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
 import { useWakeLock } from "../../../features/trip/wakeLock.ts";
-import { useLang, useT } from "../../../i18n/index.ts";
-import { ageMinutes } from "../../../lib/format.ts";
+import { useLang, useT, type Lang } from "../../../i18n/index.ts";
+import { ageMinutes, STALE_VEHICLE_S } from "../../../lib/format.ts";
 import { boundsOf, formatLatLon } from "../../../lib/geo.ts";
-import { notify, vibrate } from "../../../lib/notify.ts";
+import { BUZZ, notify, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
 import { readJson, writeJson } from "../../../lib/storage.ts";
 import { useMapScene, type MapScene } from "../../../map/scene.ts";
@@ -37,9 +37,7 @@ import { useToast } from "../../../ui/Toast.tsx";
 import { StepCard } from "./StepCard.tsx";
 import styles from "./trip.module.css";
 
-const BUZZ = [200, 100, 200];
 const RESUME_TOAST_AFTER_MS = 30_000;
-const VEHICLE_STALE_S = 120;
 /** Get-off warnings already given, so leaving D13 (for Walk) and coming back doesn't buzz again. */
 const WARNED_KEY = "ridemetro.tripWarned";
 
@@ -56,10 +54,10 @@ function NoTrip() {
 }
 
 /** What the step asks of the rider, without its minutes, so it changes only when the step does. */
-function stepSummary(step: TripStep, destination: string, t: ReturnType<typeof useT>): string {
+function stepSummary(step: TripStep, destination: string, t: ReturnType<typeof useT>, lang: Lang): string {
   switch (step.kind) {
     case "walk":
-      return t("trip.say.walk", { stop: stopTitle(step.ride.board) });
+      return t("trip.say.walk", { stop: stopTitle(step.ride.board, lang) });
     case "wait":
       return t("trip.wait.head", { id: step.ride.board.id ?? "" });
     case "ride":
@@ -123,7 +121,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
 
   // A get-off warning buzzes once per step and trip; the last one also notifies if the rider allowed it.
   const left = step.kind === "ride" && stops ? stops.length - 1 - rideIndex : undefined;
-  const alight = step.kind === "ride" ? stopTitle(step.ride.alight) : "";
+  const alight = step.kind === "ride" ? stopTitle(step.ride.alight, lang) : "";
   useEffect(() => {
     if (left !== 1 && left !== 2) return;
     const key = `${active.startedAt}:${stepIndex}:${left}`;
@@ -171,7 +169,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
               id: vehicle.vehicleId,
               point: vehicle,
               ageSeconds: vehicle.ageSeconds,
-              label: vehicle.ageSeconds > VEHICLE_STALE_S ? t("trip.vehicleStale", { min: ageMinutes(0, vehicle.ageSeconds * 1000) }) : t("trip.vehicle", { route: vehicle.route }),
+              label: vehicle.ageSeconds > STALE_VEHICLE_S ? t("trip.vehicleStale", { min: ageMinutes(0, vehicle.ageSeconds * 1000) }) : t("trip.vehicle", { route: vehicle.route }),
             },
           ]
         : [],
@@ -223,7 +221,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     );
   }
 
-  const summary = stepSummary(step, destination.name, t);
+  const summary = stepSummary(step, destination.name, t, lang);
   return (
     <ExploreSheet
       ariaLabel={t("trip.title")}

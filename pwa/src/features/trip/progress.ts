@@ -8,9 +8,9 @@ import { legCoords } from "../../lib/polyline.ts";
 import type { TripStep } from "./steps.ts";
 
 /** A fix within this distance of a trip stop places the rider at that stop. */
-export const NEAR_STOP_M = 150;
+const NEAR_STOP_M = 150;
 /** Walking steps end within this distance of their target. */
-export const ARRIVED_M = 40;
+const ARRIVED_M = 40;
 /** Wait → Ride on the clock once the departure is this far past. */
 const DEPARTED_GRACE_MS = 60_000;
 
