@@ -25,3 +25,13 @@ describe("homeChips", () => {
     expect(homeChips(nearby, tc, "normal").map((r) => r.name)).toEqual(["58"]);
   });
 });
+
+describe("homeChips with a chosen route (D3)", () => {
+  it("puts the chosen chip first and the rest in number order (06: 58, 39, 66, 85, 89)", () => {
+    const nearby = {
+      stops: [at(100, [bus("58")]), at(200, [bus("66"), bus("85")]), at(250, [bus("89")]), at(700, [bus("39")])],
+      transitCenters: [],
+    } as unknown as NearbyResponse;
+    expect(homeChips(nearby, undefined, "normal", "058").map((r) => r.name)).toEqual(["58", "39", "66", "85", "89"]);
+  });
+});

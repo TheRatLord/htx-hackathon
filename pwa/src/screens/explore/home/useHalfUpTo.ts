@@ -14,6 +14,20 @@ function reach(el: HTMLElement, sheet: HTMLElement): number {
 }
 
 /**
+ * The half height that ends on a whole row: the target's reach, grown to the deepest card or card
+ * row below it that still fits the cap; when the target itself is past the cap, the deepest one
+ * above the cap. A fold through the middle of a route row (a chip top and half a headsign) reads as
+ * broken, so the sheet stops on a row boundary (02-360, 03-360, 38).
+ */
+function wholeRowHeight(el: HTMLElement, sheet: HTMLElement, capPx: number): number {
+  const own = reach(el, sheet);
+  const rows = Array.from(sheet.querySelectorAll<HTMLElement>("article, article li")).map((r) => reach(r, sheet));
+  const fits = rows.filter((r) => r <= capPx);
+  if (own <= capPx) return Math.max(own, ...fits.filter((r) => r >= own));
+  return fits.length ? Math.max(...fits) : capPx;
+}
+
+/**
  * Measures after every `key` change and whenever the target or anything around it resizes
  * (cards fill in as their own requests answer).
  */
@@ -25,7 +39,7 @@ export function useHalfUpTo(target: () => HTMLElement | null | undefined, cap: (
   useLayoutEffect(() => {
     const el = latest.current.target();
     if (!el || !sheet?.contains(el)) return setMinHalf(undefined);
-    const measure = () => setMinHalf(Math.min(Math.ceil(reach(el, sheet)), latest.current.cap(window.innerHeight)));
+    const measure = () => setMinHalf(Math.ceil(wholeRowHeight(el, sheet, latest.current.cap(window.innerHeight))));
     measure();
     const ro = new ResizeObserver(measure);
     for (let p: HTMLElement | null = el; p && p !== sheet; p = p.parentElement) ro.observe(p);

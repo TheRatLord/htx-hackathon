@@ -149,3 +149,12 @@
   padding: 0 var(--gutter);
   background: var(--c-card);
 }
+
+/* "Other routes at this stop": a small grey overline above the collapsed routes. */
+.othersHead {
+  margin: 0;
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+}

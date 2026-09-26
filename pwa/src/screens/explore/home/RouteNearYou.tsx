@@ -28,6 +28,9 @@ import { useHalfUpTo } from "./useHalfUpTo.ts";
 /** Beyond this the route is "not near you" (D3 Empty). */
 const NEAR_MIN = 10;
 
+/** "Northwest Transit Center" → "Northwest TC": the map label must stay short beside the pin. */
+const shortTc = (name: string) => name.replace(/\s*Transit Center$/i, " TC").trim();
+
 /** A route's own stop entry as the summary the cards take; `side` is filled in by the card when needed. */
 const asSummary = (s: RouteStop): StopSummary => ({ ...s, routes: [], subtitle: "" });
 
@@ -78,13 +81,22 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
   const scene: MapScene = data
     ? {
         legs: data.directions.map((d) => ({ coords: d.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), kind: "ride", color: data.color })),
-        markers: streets.map((s) => ({ id: s.stop.id, point: s.stop, kind: "board", label: s.stop.id })),
+        // Every card's stop is marked: the street stops with their ID, and each bay with its TC and bay
+        // (06: the TC is otherwise an unlabelled tile, as a scene with legs hides TC names).
+        markers: [
+          ...bays.flatMap((b) => {
+            const s = bayStops.find((x) => x.id === b.stopId);
+            return s ? [{ id: `bay-${b.bay}-${s.id}`, point: s, kind: "bay" as const, label: `${shortTc(tc?.name ?? "")} · ${t("stopLine.bay", { bay: b.bay })}` }] : [];
+          }),
+          ...streets.map((s) => ({ id: s.stop.id, point: s.stop, kind: "board" as const, label: s.stop.id })),
+        ],
+        tagStopIds: shownStreets.map((s) => s.stop.id),
         ...(bounds && { focus: { kind: "bounds", bounds } }),
       }
     : origin
       ? { focus: { kind: "point", point: origin } }
       : {};
-  useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join(), bayStops.map((s) => s.id).join()]);
+  useMapScene(scene, [data, origin?.lat, origin?.lon, streets.map((s) => s.stop.id).join(), bayStops.map((s) => s.id).join(), bays.map((b) => b.bay).join(), t]);
   useHalfUpTo(() => secondCard.current, routeCap, `${data?.id}|${bays.length}|${shownStreets.length}|${tooFar}|${lateNight}`);
 
   if (route.isError) return <ErrorState error={route.error} context={{ id: routeId }} onRetry={() => void route.refetch()} />;

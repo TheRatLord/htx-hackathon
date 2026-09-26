@@ -94,8 +94,9 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopAction
           label={t("stop.fullSchedule")}
           href={`/explore/stop/${encodeURIComponent(stop.id)}/schedule?route=${encodeURIComponent(entry.routeId)}`}
         />
+        {/* On, the button fills navy: a text change alone didn't show that tracking is running (14). */}
         <Button
-          variant="tonal"
+          variant={tracking ? "primary" : "tonal"}
           icon={tracking ? "notifications_active" : "notifications"}
           label={tracking ? t("stop.tracking") : t("stop.track")}
           ariaLabel={tracking ? t("stop.trackingA11y", { name: entry.name }) : undefined}

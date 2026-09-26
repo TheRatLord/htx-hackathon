@@ -69,18 +69,35 @@ function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBanne
   return undefined;
 }
 
-function HomeScene({ anchor }: { anchor: HomeAnchor }) {
+/** How many of the list's stops the map tags and (D4) frames: the cards above the fold and just past it. */
+const TAGGED = 4;
+/** D4 frames the place with its nearest stop when the two fit one screen at HOME_ZOOM. */
+const PLACE_FRAME_M = 400;
+
+function HomeScene({ anchor, data }: { anchor: HomeAnchor; data?: NearbyResponse }) {
+  const saved = useSaved();
   const at = anchor.kind === "place" ? anchor.point : undefined;
+  const savedId = anchor.kind === "place" ? undefined : saved.stops[0]?.id;
+  const listed = data?.stops.slice(0, TAGGED).map((s) => s.stop) ?? [];
+  // The saved stop first (it is what the rider opened the app for, 03), then the cards' stops.
+  const tagStopIds = [...new Set([...(savedId ? [savedId] : []), ...listed.map((s) => s.id)])];
+  // D4: centred between the place and its nearest stop at the usual zoom (where stop IDs show), so
+  // the rider sees the stop and which way to walk (07). A bounds fit zoomed out past the ID chips.
+  const near = at && listed[0] && haversineM(at.lat, at.lon, listed[0].lat, listed[0].lon) < PLACE_FRAME_M ? listed[0] : undefined;
+  const placeCenter = at && (near ? { lat: (at.lat + near.lat) / 2, lon: (at.lon + near.lon) / 2 } : at);
   useMapScene(
-    anchor.kind === "user"
-      ? { focus: { kind: "user", zoom: HOME_ZOOM } }
-      : at
-        ? {
-            focus: { kind: "point", point: at, zoom: HOME_ZOOM },
-            markers: [{ id: "place", point: at, kind: "place", label: anchor.kind === "place" ? anchor.label : undefined }],
-          }
-        : { focus: { kind: "point", point: DOWNTOWN_VIEW, zoom: HOME_ZOOM - 1 } },
-    [anchor.kind, at?.lat, at?.lon],
+    {
+      tagStopIds,
+      ...(anchor.kind === "user"
+        ? { focus: { kind: "user", zoom: HOME_ZOOM } }
+        : at
+          ? {
+              focus: { kind: "point", point: placeCenter ?? at, zoom: HOME_ZOOM },
+              markers: [{ id: "place", point: at, kind: "place", label: anchor.kind === "place" ? anchor.label : undefined }],
+            }
+          : { focus: { kind: "point", point: DOWNTOWN_VIEW, zoom: HOME_ZOOM - 1 } }),
+    },
+    [anchor.kind, at?.lat, at?.lon, tagStopIds.join(), placeCenter?.lat, placeCenter?.lon],
   );
   return null;
 }
@@ -107,7 +124,7 @@ function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst, 
   useHalfUpTo(() => firstRow.current, foldCap, `${anchor.kind}|${ids}`);
   return (
     <>
-      <HomeScene anchor={anchor} />
+      <HomeScene anchor={anchor} data={data} />
       {!place && <SavedRow origin={anchor.kind === "user" ? anchor.point : undefined} />}
       {afterSaved}
       {origin ? (
@@ -166,7 +183,7 @@ export default function Home() {
   };
   const chips = data && (
     <div className={styles.bleed}>
-      <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} place={Boolean(place)} onPress={(r) => onChip(r.id)} />
+      <RouteChips routes={homeChips(data, tc, walkPace, routeId)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
     </div>
   );
   // Extra large text on a short screen: above card #1 the chips would push every bus time below the
