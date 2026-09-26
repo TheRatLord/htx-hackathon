@@ -1,0 +1,93 @@
+/* Latin covers English and Spanish; the other subsets would only bloat the precache. */
+@import "@fontsource/roboto/latin-400.css";
+@import "@fontsource/roboto/latin-500.css";
+@import "@fontsource/roboto/latin-700.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: var(--fw-regular) var(--fs-body) / var(--lh-body) var(--font-family);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The shell is the initial containing block, not 100dvh: in an installed PWA, Android Chrome 113
+   resolves 100dvh to the viewport plus its (absent) toolbar after a reload, 56px taller than the
+   window, which pushed the bottom nav off the screen. The ICB is the window in both a tab and
+   standalone, and like dvh it doesn't shrink for the keyboard. */
+#root {
+  height: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* Titles take focus after a navigation only so screen readers start there; they are not controls.
+   Android Chrome draws :focus-visible on them when a screen opens with no tap first (a PWA launch
+   redirecting / to /explore, a notification tap), which reads as a stray box around the title. */
+h1[tabindex="-1"]:focus {
+  outline: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--c-link-text);
+}
+
+time,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

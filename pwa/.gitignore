@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+dist/
+# Large generated server data; regenerate with `npm run data:build`
+server/data/generated/
+.env

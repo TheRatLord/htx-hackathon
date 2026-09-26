@@ -1,0 +1,173 @@
+.list {
+  border-radius: var(--r-box);
+  background: var(--c-card);
+  --tonal-bg: var(--c-surface);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: stretch;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--sp-2) 0 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.row:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.row > svg {
+  flex: none;
+  align-self: center;
+}
+
+/* --node-y: the node's centre, level with the first line of the step's title. */
+.rail {
+  --node-y: calc(var(--sp-2) + var(--lh-body) / 2);
+  position: relative;
+  display: flex;
+  flex: none;
+  justify-content: center;
+  width: 40px;
+  padding-top: calc(var(--node-y) - 8px);
+}
+
+/* "You are here" sits above the title. */
+.belowHere {
+  --node-y: calc(var(--sp-2) + var(--lh-body) * 1.5 + 2px);
+}
+
+.rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 6px;
+  margin-left: -3px;
+  background: var(--leg, var(--c-route-line));
+}
+
+.walk::before,
+.afterWalk::after {
+  width: 0;
+  margin-left: -2px;
+  border-left: 4px dotted var(--c-text-variant);
+  background: none;
+}
+
+/* The line starts at the first node and at a boarding node, and stops at the get-off node. */
+.item:first-child .rail::before,
+.board::before {
+  top: var(--node-y);
+}
+
+.alight::before {
+  bottom: auto;
+  height: var(--node-y);
+}
+
+/* The walk before a boarding node runs on to its ring. */
+.afterWalk::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: calc(var(--node-y) - 8px);
+}
+
+.arrive::before,
+.transfer::before {
+  background: none;
+}
+
+.node,
+.origin {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 3px solid var(--c-text-variant);
+}
+
+.origin {
+  border: 2px solid #fff;
+  background: var(--c-origin-dot);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-2) 0;
+}
+
+.title {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  font-weight: var(--fw-bold);
+}
+
+.title > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.titleText {
+  flex: 1;
+  min-width: 0;
+  align-self: center;
+}
+
+.lead {
+  flex: none;
+  align-self: center;
+}
+
+/* "BOARD [80] to MLK & PARK VILLAGE": BOARD and the headsign's first line sit on the chip's middle,
+   however many lines the headsign wraps to (24-xlarge-360). */
+.withRoute > .lead,
+.withRoute > .titleText {
+  align-self: flex-start;
+  padding-top: max(0px, (var(--chip-route-sm) - var(--lh-body)) / 2);
+}
+
+/* An alert inside the timeline: the leg's line runs on beside a pink box (C.11 colours). */
+.alertRow .text {
+  margin: var(--sp-1) 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-alert-border);
+  border-radius: var(--r-alert);
+  background: var(--c-alert-bg);
+}
+
+.alertRow .title {
+  font-weight: var(--fw-regular);
+}
+
+.here {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.line {
+  color: var(--c-text-variant);
+}
+
+.time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--sp-2) 0;
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}

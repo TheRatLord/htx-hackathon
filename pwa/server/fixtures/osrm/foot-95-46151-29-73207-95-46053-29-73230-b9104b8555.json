@@ -1,0 +1,376 @@
+{
+ "key": "foot/-95.46151,29.73207;-95.46053,29.73230",
+ "recordedAt": "2026-09-25T23:58:27.639Z",
+ "json": {
+  "code": "Ok",
+  "routes": [
+   {
+    "legs": [
+     {
+      "steps": [
+       {
+        "intersections": [
+         {
+          "out": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           88
+          ],
+          "location": [
+           -95.461508,
+           29.732011
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.461508,
+           29.732011
+          ],
+          [
+           -95.461087,
+           29.732023
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 88,
+         "bearing_before": 0,
+         "location": [
+          -95.461508,
+          29.732011
+         ],
+         "modifier": "left",
+         "type": "depart"
+        },
+        "name": "Richmond Avenue",
+        "mode": "walking",
+        "weight": 5.1,
+        "duration": 32.6,
+        "distance": 40.8
+       },
+       {
+        "intersections": [
+         {
+          "out": 0,
+          "in": 3,
+          "entry": [
+           true,
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           90,
+           195,
+           270
+          ],
+          "location": [
+           -95.461087,
+           29.732023
+          ]
+         },
+         {
+          "out": 1,
+          "in": 3,
+          "entry": [
+           true,
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           90,
+           195,
+           270
+          ],
+          "location": [
+           -95.460951,
+           29.732118
+          ]
+         },
+         {
+          "out": 1,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           90,
+           270
+          ],
+          "location": [
+           -95.460745,
+           29.732126
+          ]
+         },
+         {
+          "out": 1,
+          "in": 3,
+          "entry": [
+           true,
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           75,
+           195,
+           270
+          ],
+          "location": [
+           -95.460663,
+           29.732129
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.461087,
+           29.732023
+          ],
+          [
+           -95.461068,
+           29.732092
+          ],
+          [
+           -95.461065,
+           29.732104
+          ],
+          [
+           -95.461061,
+           29.732108
+          ],
+          [
+           -95.461055,
+           29.732111
+          ],
+          [
+           -95.461041,
+           29.732115
+          ],
+          [
+           -95.460951,
+           29.732118
+          ],
+          [
+           -95.460831,
+           29.732123
+          ],
+          [
+           -95.460783,
+           29.732124
+          ],
+          [
+           -95.460758,
+           29.732125
+          ],
+          [
+           -95.460745,
+           29.732126
+          ],
+          [
+           -95.460731,
+           29.732126
+          ],
+          [
+           -95.460663,
+           29.732129
+          ],
+          [
+           -95.460581,
+           29.732131
+          ],
+          [
+           -95.460559,
+           29.7322
+          ],
+          [
+           -95.460532,
+           29.7323
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 15,
+         "bearing_before": 87,
+         "location": [
+          -95.461087,
+          29.732023
+         ],
+         "modifier": "left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 6.33,
+        "duration": 60.6,
+        "distance": 75.8
+       },
+       {
+        "intersections": [
+         {
+          "in": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           193
+          ],
+          "location": [
+           -95.460532,
+           29.7323
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.460532,
+           29.7323
+          ],
+          [
+           -95.460532,
+           29.7323
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 0,
+         "bearing_before": 13,
+         "location": [
+          -95.460532,
+          29.7323
+         ],
+         "type": "arrive"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 0,
+        "duration": 0,
+        "distance": 0
+       }
+      ],
+      "weight": 11.43,
+      "summary": "Richmond Avenue",
+      "duration": 93.2,
+      "distance": 116.5
+     }
+    ],
+    "weight_name": "routability",
+    "geometry": {
+     "coordinates": [
+      [
+       -95.461508,
+       29.732011
+      ],
+      [
+       -95.461087,
+       29.732023
+      ],
+      [
+       -95.461068,
+       29.732092
+      ],
+      [
+       -95.461065,
+       29.732104
+      ],
+      [
+       -95.461061,
+       29.732108
+      ],
+      [
+       -95.461055,
+       29.732111
+      ],
+      [
+       -95.461041,
+       29.732115
+      ],
+      [
+       -95.460951,
+       29.732118
+      ],
+      [
+       -95.460831,
+       29.732123
+      ],
+      [
+       -95.460783,
+       29.732124
+      ],
+      [
+       -95.460758,
+       29.732125
+      ],
+      [
+       -95.460745,
+       29.732126
+      ],
+      [
+       -95.460731,
+       29.732126
+      ],
+      [
+       -95.460663,
+       29.732129
+      ],
+      [
+       -95.460581,
+       29.732131
+      ],
+      [
+       -95.460559,
+       29.7322
+      ],
+      [
+       -95.460532,
+       29.7323
+      ]
+     ],
+     "type": "LineString"
+    },
+    "weight": 11.43,
+    "duration": 93.2,
+    "distance": 116.5
+   }
+  ],
+  "waypoints": [
+   {
+    "hint": "ZpaSgZC02I41AQAA_gEAAAAAAAAAAAAAYD7GQRAEI0IAAAAAAAAAAMYAAABGAQAAAAAAAAAAAAAUAAAAfF9P-qusxQF6X0_65qzFAQAAjwUAAAAA",
+    "location": [
+     -95.461508,
+     29.732011
+    ],
+    "name": "Richmond Avenue",
+    "distance": 6.542883428
+   },
+   {
+    "hint": "h7TYjrZthZBfAAAABwAAAIQAAAD3AgAABjc2QQ25TD96A35BKFa2QlsAAAAHAAAAfwAAANkCAAAUAAAATGNP-sytxQFOY0_6zK3FAQQA3wAAAAAA",
+    "location": [
+     -95.460532,
+     29.7323
+    ],
+    "name": "",
+    "distance": 0.1935023889
+   }
+  ]
+ }
+}

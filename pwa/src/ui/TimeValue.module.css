@@ -1,0 +1,106 @@
+.time {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--sp-2);
+  color: var(--c-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  display: inline-flex;
+  align-items: flex-start;
+}
+
+.minutes .value {
+  font-size: var(--fs-minutes);
+  line-height: var(--lh-minutes);
+  font-weight: var(--fw-bold);
+}
+
+.body .value {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-bold);
+}
+
+.strip {
+  flex-direction: column;
+  align-items: flex-start;
+  color: #fff;
+}
+
+.strip .value {
+  height: var(--lh-strip);
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+/* Every status word on the strip starts on the same line, whatever sits beside it. */
+.strip .word:not(:empty) {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: var(--lh-caption);
+}
+
+.unit {
+  margin-left: 2px;
+  font-size: var(--fs-unit);
+}
+
+/* "12:07 PM" in a card: the day half at caption size beside body-size digits. */
+.body .unit {
+  font-size: var(--fs-caption);
+}
+
+.live,
+.simulated {
+  color: var(--c-live-text);
+}
+
+.canceled {
+  color: var(--c-canceled-text);
+}
+
+.canceled time {
+  text-decoration: line-through;
+}
+
+.tooSoon {
+  color: var(--c-text-secondary);
+}
+
+.word {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.word:empty {
+  display: none;
+}
+
+.arcs {
+  color: var(--c-live-icon);
+  margin-left: 1px;
+}
+
+/* On the blue strip (C.3): white digits, status words at 14sp in the strip's own green. */
+.strip .arcs,
+.strip .word,
+.strip .word > span {
+  color: var(--c-live-on-strip);
+}
+
+.strip .word,
+.strip .word > span {
+  font-size: var(--fs-caption);
+}
+
+.strip.live,
+.strip.simulated,
+.strip.canceled,
+.strip.canceled .word > span {
+  color: #fff;
+}

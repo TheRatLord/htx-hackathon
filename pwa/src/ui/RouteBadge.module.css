@@ -1,0 +1,111 @@
+.badge {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-1);
+  border: 1px solid var(--c-chip-border);
+  border-top: none;
+  border-radius: var(--r-chip);
+  background: var(--c-surface);
+  color: var(--c-text-strong);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--chip-band);
+}
+
+.name {
+  padding-top: var(--chip-band);
+}
+
+/* Inline in a line of text ("Also here: [11] ›"). */
+.xs {
+  min-width: 36px;
+  min-height: 28px;
+  font-size: var(--fs-body);
+  vertical-align: middle;
+}
+
+.xs .band {
+  height: 4px;
+}
+
+.xs .name {
+  padding-top: 4px;
+}
+
+/* Three digits wide at every text size, so the headsigns beside a column of chips start on one
+   edge ([137] and [51] put them 6px apart, 46). */
+.sm {
+  min-width: max(var(--chip-route-sm), calc(3ch + 2 * var(--sp-1) + 2px));
+  min-height: var(--chip-route-sm);
+  font-size: var(--fs-body);
+}
+
+.sm .band {
+  height: 6px;
+}
+
+.md {
+  min-width: var(--chip-route-md);
+  min-height: var(--chip-route-md);
+  font-size: var(--fs-heading);
+}
+
+.lg {
+  min-width: var(--chip-route-lg);
+  min-height: var(--chip-route-lg);
+  border: none;
+  color: #fff;
+  font-size: var(--fs-display);
+}
+
+.lg .name {
+  padding-top: 0;
+}
+
+.withIcon {
+  gap: 2px;
+  min-height: 52px;
+  padding-top: var(--chip-band);
+}
+
+.withIcon .name {
+  padding-top: 0;
+}
+
+/* Selected: the chip fills with its band colour (navy for bus) and white numerals. A grey fill
+   read as "disabled" to older riders; the check stays as the non-colour cue. */
+button.badge[aria-pressed="true"] {
+  border: none;
+  background: var(--route-color, var(--c-brand-navy));
+  color: #fff;
+}
+
+button.badge:active {
+  background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
+}
+
+.check {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--route-color, var(--c-brand-navy));
+}

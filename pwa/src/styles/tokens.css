@@ -1,0 +1,145 @@
+/* RideMETRO PWA design tokens. Source: docs/design/existing-style.md (sampled from RideMETRO v2.71).
+   Text-safe tokens (-text) are the ONLY colours allowed for text. Icon-only colours are marked. */
+:root {
+  color-scheme: light;
+
+  /* ---------- Brand ---------- */
+  --c-brand-navy: #004080;        /* route-chip top band, route badge, selected route line, TC pin */
+  --c-brand-blue-deep: #005DAA;   /* live-minutes strip, dialog titles, link text, back button */
+  --c-brand-blue-dark: #005193;   /* More section headers (caps), onboarding hero icon */
+  --c-primary: #2976C7;           /* filled buttons, active nav pill, selected segment/chip border */
+  --c-on-primary: #FFFFFF;        /* 4.66:1 on --c-primary */
+  --c-accent-icon: #2A82E6;       /* ICONS ONLY (3.86:1 on white, fails as text) */
+  --c-stop-pin: #4994EC;          /* stop pin body */
+  --c-user-dot: #4285F4;          /* you-are-here dot */
+  --c-logo-blue: #0053A1;
+  --c-logo-red: #DD052B;
+
+  /* ---------- Surfaces ---------- */
+  --c-surface: #FFFFFF;           /* sheets, search bar, FABs, dialogs, route-chip body */
+  --c-background: #F9F9FF;        /* full pages: More, Settings, Route, TC, Alerts, Welcome */
+  --c-card: #F3F2F8;              /* arrival/stop cards, itinerary cards, from/to box, tonal pills */
+  --c-search-field: #F2F3FB;      /* text input inside search sheet */
+  --c-nav-bg: #E4EBF6;            /* bottom nav; also bay tag and "Route 58 leaves from Bay M" banner */
+  --c-chip-inactive: #EBEBEB;     /* inactive filter/time chips */
+  --c-chip-selected: #C6C6C6;     /* selected route chip fill (always paired with 2dp primary border + check) */
+  --c-disabled-bg: #E3E3E4;
+  --c-scrim: rgba(0, 0, 0, 0.32);
+
+  /* ---------- Text ---------- */
+  --c-text: #1D1B20;              /* titles, stop names, minutes, directions (15.3:1 on card) */
+  --c-text-strong: #000000;       /* route numbers in chips */
+  --c-text-variant: #414752;      /* secondary lines: side of street, section labels, nav inactive (8.4:1 on card) */
+  --c-text-secondary: #595959;    /* captions: "Updated 8 sec ago", sources (6.3:1 on card). Replaces #6A6A6A */
+  --c-text-disabled: #6A6A6A;     /* disabled label (5.4:1 on white; still readable) */
+  --c-link-text: #005DAA;         /* text buttons, links, "Show list", "Back" (6.67:1 on white, 6.0:1 on card) */
+
+  /* ---------- Status ---------- */
+  --c-live-icon: #00BB1F;         /* ICONS ONLY: live arcs, tracking bell */
+  --c-live-text: #007A1A;         /* "Live" word + live minutes (5.53:1 white, 4.97:1 card) */
+  --c-live-on-strip: #A2F7B0;     /* live arcs + "Live" word on the #005DAA strip (5.23:1) */
+  --c-canceled-text: #B3261E;     /* struck-through canceled time + "Canceled" */
+  --c-alert-icon: #FF3B2F;        /* ICONS ONLY: ⚠ / ! glyphs */
+  --c-alert-text: #B3261E;        /* alert text, "Hurry", "Tight transfer", stale "Updated" (6.54:1 white, 5.14:1 on alert-bg) */
+  --c-alert-bg: #F4DFE4;          /* pink alert box */
+  --c-alert-border: #F7BBBB;
+  --c-ok-text: #007A1A;           /* "✓ No alerts for Route 82" */
+  --c-warn-bg: #FFF4D6;           /* amber "Get off at the next stop" card, demo/offline notes */
+  --c-warn-border: #F2B233;
+  --c-warn-text: #5E4300;         /* 8.41:1 on warn-bg */
+  --c-rail-red: #EF0000;          /* rail chip top band, rail leg line (never text) */
+  --c-dest-pin: #FF0000;          /* destination pin (never text) */
+  --c-origin-dot: #2A82E6;        /* origin dot in form, timeline and map (always blue) */
+  --c-offline-bg: #414752;        /* offline banner bg, white text (9.3:1) */
+
+  /* ---------- Lines ---------- */
+  --c-outline: #C6C6C6;           /* pill borders, input borders (decorative) */
+  --c-outline-strong: #767676;    /* borders that convey state or bound an input (4.5:1 on white) */
+  --c-chip-border: #AAA9AD;       /* route chip side/bottom border */
+  --c-divider: #C1C6D4;           /* list/section dividers, route-page spine */
+  --c-handle: #414752;            /* sheet drag handle */
+  --c-focus: #2976C7;             /* focus ring */
+
+  /* ---------- Map ---------- */
+  --c-map-land: #F5F3F3;
+  --c-map-park: #C3F1D5;
+  --c-map-hospital: #FCE8E6;
+  --c-map-commercial: #F8F0DE;
+  --c-map-water: #AADAFF;
+  --c-map-highway: #B8C7D9;
+  --c-map-road: #FFFFFF;
+  --c-map-road-casing: #DADCE0;
+  --c-map-label: #5F6368;
+  --c-route-line: #004080;        /* selected route / bus leg line, 6dp, with 2dp white casing */
+  --c-walk-line: #2A82E6;         /* dotted walk path, 5dp, dash 1:2 */
+
+  /* ---------- Typography ---------- */
+  /* CJK and Arabic fallbacks after the system UI font, so language names in their own script
+     ("中文", "العربية") never render as empty boxes where the device has those fonts. */
+  --font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Noto Sans Arabic", sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+  /* size / line-height pairs, all rem so browser + in-app text size both scale them */
+  --fs-display: 1.75rem;   --lh-display: 2.25rem;   /* 28: Welcome title */
+  --fs-strip: 1.875rem;    --lh-strip: 2.25rem;     /* 30: blue live-minutes strip digits (Medium) */
+  --fs-minutes: 1.5rem;    --lh-minutes: 1.875rem;  /* 24: next-arrival minutes in cards (Bold) */
+  --fs-title: 1.375rem;    --lh-title: 1.75rem;     /* 22: sheet/page titles (Regular, as today) */
+  --fs-stop-title: 1.25rem;--lh-stop-title: 1.625rem;/* 20: centred stop-sheet title (Bold) */
+  --fs-heading: 1.125rem;  --lh-heading: 1.5rem;    /* 18: card stop names, live-step headline, from/to values */
+  --fs-body: 1rem;         --lh-body: 1.375rem;     /* 16: ALL body text, headsign caps, buttons, direction */
+  --fs-caption: 0.875rem;  --lh-caption: 1.125rem;  /* 14: ONLY timestamps, source notes, nav labels, chip sub-labels */
+  --fs-unit: 1rem;                                  /* "min" unit inside the strip */
+  --ls-caps: 0.02em;                                /* letter spacing for ALL-CAPS headsign lines */
+
+  /* ---------- Spacing (4dp grid) ---------- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;  --sp-4: 16px;  --sp-5: 20px;  --sp-6: 24px;  --sp-8: 32px;
+  --gutter: 16px;                 /* screen side margin */
+  --card-gap: 10px;               /* between cards, as today */
+  --card-pad: 12px;
+
+  /* ---------- Radii ---------- */
+  --r-chip: 4px;                  /* route chip */
+  --r-card: 10px;                 /* cards */
+  --r-box: 12px;                  /* from/to box, FABs, grouped lists, dialog */
+  --r-alert: 8px;
+  --r-sheet: 28px;                /* bottom sheet top corners */
+  --r-pill: 999px;
+
+  /* ---------- Elevation (flat M3; shadows only where today's app has them) ---------- */
+  --e-0: none;
+  --e-1: 0 1px 3px rgba(0,0,0,.20), 0 1px 2px rgba(0,0,0,.12);   /* search bar, route chip on map, swap button */
+  --e-2: 0 2px 6px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.14);   /* map FABs, "Search this area" pill */
+  --e-sheet: 0 -2px 10px rgba(0,0,0,.14);                          /* bottom sheet top edge */
+  --e-dialog: 0 8px 24px rgba(0,0,0,.28);
+
+  /* ---------- Sizes ---------- */
+  --touch-min: 48px;              /* every interactive target, no exceptions */
+  --touch-gap: 8px;               /* min space between adjacent targets */
+  --nav-h: 80px;                  /* bottom nav (plus env(safe-area-inset-bottom)) */
+  --searchbar-h: 48px;
+  --fab: 48px;
+  --appbar-h: 56px;
+  --chip-route-sm: 40px;          /* route badge inside rows (visual; row gives the 48dp target) */
+  --chip-route-md: 48px;          /* route filter chip */
+  --chip-route-lg: 56px;          /* route page header badge */
+  --chip-band: 7px;               /* navy top band height (sm: 6px) */
+  --strip-h: 64px;                /* blue live-minutes strip */
+  --sheet-peek: 132px;
+  --sheet-half-min: 340px;        /* see C.6 snap rules */
+  --icon: 24px;
+
+  /* ---------- Motion ---------- */
+  --dur-fast: 120ms;
+  --dur-sheet: 240ms;
+  --ease: cubic-bezier(.2, 0, 0, 1);
+}
+
+/* In-app Text size setting (More › Settings and Welcome). Browser/Android font scale multiplies on top. */
+html[data-text-size="standard"] { font-size: 100%; }   /* 16px */
+html[data-text-size="large"]    { font-size: 115%; }   /* 18.4px: all rem tokens x1.15 */
+html[data-text-size="xlarge"]   { font-size: 130%; }   /* 20.8px: all rem tokens x1.30 */
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur-sheet: 0ms; }
+}

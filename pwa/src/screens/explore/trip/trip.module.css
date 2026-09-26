@@ -1,0 +1,146 @@
+/* D13 Live trip. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.headline {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.rideHead {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+}
+
+.getOff {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  overflow-wrap: anywhere;
+}
+
+.variant {
+  color: var(--c-text-variant);
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.ok {
+  color: var(--c-ok-text);
+  font-weight: var(--fw-medium);
+}
+
+.alert {
+  color: var(--c-alert-text);
+  font-weight: var(--fw-medium);
+}
+
+.board strong {
+  font-weight: var(--fw-bold);
+}
+
+/* Full-bleed inside the sheet body, like the stop sheet's strip. */
+.bleed {
+  align-self: stretch;
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.progress {
+  align-self: stretch;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-divider);
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--c-brand-navy);
+}
+
+.warn {
+  align-self: stretch;
+  padding: var(--card-pad);
+  border: 2px solid var(--c-warn-border);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.walkSteps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.sim {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
+.endRow {
+  margin-top: calc(-1 * var(--sp-2));
+}
+
+/* A line with a route chip in it: the chip sits on the text's centre line. */
+.withChip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+}
+
+/* The Wait step's one big line, "Your bus: 11 min · 12:15 PM", on the strip's blue (27). */
+.yourBus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--gutter);
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+}
+
+.yourBusBig {
+  font-size: var(--fs-minutes);
+  line-height: var(--lh-minutes);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.yourBusSmall {
+  color: rgb(255 255 255 / 88%);
+  font-weight: var(--fw-medium);
+}

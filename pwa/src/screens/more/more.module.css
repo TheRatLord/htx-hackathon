@@ -1,0 +1,89 @@
+/* Full pages of the More tab use the page background, as today's More and Settings. */
+.page {
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: var(--sp-4) var(--gutter) var(--sp-2);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.group {
+  padding: var(--sp-2) 0;
+}
+
+.group + .group {
+  border-top: 1px solid var(--c-divider);
+}
+
+.text {
+  margin: 0;
+  padding: var(--sp-2) var(--gutter);
+}
+
+.note {
+  margin: 0;
+  padding: var(--sp-1) var(--gutter) var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.action {
+  padding: var(--sp-2) var(--gutter);
+}
+
+.list {
+  margin: 0;
+  padding: 0 var(--gutter) var(--sp-2);
+  list-style: none;
+}
+
+.list li + li {
+  margin-top: var(--sp-2);
+}
+
+.caption {
+  margin: 0;
+  padding: var(--sp-2) var(--gutter);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  color: var(--c-text-secondary);
+}
+
+.preview {
+  padding: 0 var(--gutter) var(--sp-3);
+}
+
+.center {
+  min-height: 100%;
+  background: var(--c-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-8) var(--gutter);
+  text-align: center;
+}
+
+.centerTitle {
+  margin: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+}
+
+/* Settings' segmented controls (the Welcome control, D1). */
+.segmented {
+  padding: var(--sp-1) var(--gutter) var(--sp-2);
+}

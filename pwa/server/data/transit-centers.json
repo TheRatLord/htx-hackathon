@@ -1,0 +1,4157 @@
+{
+ "generatedAt": "2026-09-25T23:47:59.027Z",
+ "note": "Bay assignments sampled from METRO's Transit Data API arrivals and GTFS-RT TripUpdates. Bays with no routes had no departures during sampling. Bay coordinates are METRO's; many bays share the hub coordinate.",
+ "transitCenters": [
+  {
+   "id": "mission-bend-transit-center",
+   "name": "Mission Bend Transit Center",
+   "stopIds": [
+    "94"
+   ],
+   "lat": 29.711374,
+   "lon": -95.62941,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "94",
+     "lat": 29.711374,
+     "lon": -95.62941,
+     "routes": [
+      {
+       "routeId": "004",
+       "route": "4",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "EASTWOOD TC",
+       "observations": 14,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "94",
+     "lat": 29.71137,
+     "lon": -95.62941,
+     "routes": [
+      {
+       "routeId": "002",
+       "route": "2",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "TMC TC",
+       "observations": 15,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "94",
+     "lat": 29.711374,
+     "lon": -95.62941,
+     "routes": [
+      {
+       "routeId": "075",
+       "route": "75",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ADDICKS P&R",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "94",
+     "lat": 29.711374,
+     "lon": -95.62941,
+     "routes": [
+      {
+       "routeId": "025",
+       "route": "25",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "EASTWOOD TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "075",
+       "route": "75",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "WEST OAKS MALL",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "151"
+   ]
+  },
+  {
+   "id": "bellaire-transit-center",
+   "name": "Bellaire Transit Center",
+   "stopIds": [
+    "74"
+   ],
+   "lat": 29.705711,
+   "lon": -95.468828,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "74",
+     "lat": 29.705759,
+     "lon": -95.468619,
+     "routes": [
+      {
+       "routeId": "049",
+       "route": "49",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "RIDGEMONT",
+       "observations": 7,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "065",
+       "route": "65",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "WHEELER TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "74",
+     "lat": 29.705759,
+     "lon": -95.468619,
+     "routes": [
+      {
+       "routeId": "020",
+       "route": "20",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MAGNOLIA PARK TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "310",
+       "route": "310",
+       "directionId": 1,
+       "directionLabel": "Counter Clockwise",
+       "headsign": "HILLCROFT TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "74",
+     "lat": 29.70571,
+     "lon": -95.46882,
+     "routes": [
+      {
+       "routeId": "002",
+       "route": "2",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "TMC TC",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "74",
+     "lat": 29.705759,
+     "lon": -95.468619,
+     "routes": [
+      {
+       "routeId": "049",
+       "route": "49",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "NORTHWEST TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "065",
+       "route": "65",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "SYNOTT RD",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "74",
+     "lat": 29.70571,
+     "lon": -95.46882,
+     "routes": [
+      {
+       "routeId": "020",
+       "route": "20",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BELLAIRE TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "309",
+       "route": "309",
+       "directionId": 0,
+       "directionLabel": "Clockwise",
+       "headsign": "HILLCROFT TC / VIA BELLAIRE TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "74",
+     "lat": 29.70571,
+     "lon": -95.46882,
+     "routes": [
+      {
+       "routeId": "002",
+       "route": "2",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "texas-medical-center-transit-center",
+   "name": "Texas Medical Center Transit Center",
+   "stopIds": [
+    "11025"
+   ],
+   "lat": 29.704323,
+   "lon": -95.403613,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "002",
+       "route": "2",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 14,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "060",
+       "route": "60",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "SOUTHEAST TC",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "010",
+       "route": "10",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "FONDREN RD",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DENVER HARBOR TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BEN TAUB HOSPITAL",
+       "observations": 13,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "087",
+       "route": "87",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "FANNIN SOUTH TC",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "004",
+       "route": "4",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "EASTWOOD TC",
+       "observations": 25,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "H",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "292",
+       "route": "292",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "WEST BELLFORT/WESTWOOD VIA WESTPARK/LOWER UPTOWN TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "I",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "041",
+       "route": "41",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "EASTWOOD TC",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "J",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "004",
+       "route": "4",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 27,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "K",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "014",
+       "route": "14",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "L",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "084",
+       "route": "84",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "W BELLFORT ST",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "M",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "056",
+       "route": "56",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "N",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "027",
+       "route": "27",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "O",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "068",
+       "route": "68",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WEST BELT",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "P",
+     "stopId": "11025",
+     "lat": 29.70432,
+     "lon": -95.40361,
+     "routes": [
+      {
+       "routeId": "084",
+       "route": "84",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "NORTHWEST TC",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "270",
+    "297",
+    "298"
+   ]
+  },
+  {
+   "id": "burnett-transit-center",
+   "name": "Burnett Transit Center",
+   "stopIds": [
+    "12176"
+   ],
+   "lat": 29.771938,
+   "lon": -95.358516,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "079",
+       "route": "79",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "ALDINE WESTFIELD",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "051",
+       "route": "51",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "LBJ HOSPITAL",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "051",
+       "route": "51",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "052",
+       "route": "52",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "MESA TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "052",
+       "route": "52",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "12176",
+     "lat": 29.77193,
+     "lon": -95.35851,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ANTOINE & VICTORY",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "kashmere-transit-center",
+   "name": "Kashmere Transit Center",
+   "stopIds": [
+    "76"
+   ],
+   "lat": 29.814114,
+   "lon": -95.327869,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "76",
+     "lat": 29.814114,
+     "lon": -95.327869,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ANTOINE & VICTORY",
+       "observations": 7,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MLK & PARK VILLAGE",
+       "observations": 14,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "76",
+     "lat": 29.814114,
+     "lon": -95.327869,
+     "routes": [
+      {
+       "routeId": "051",
+       "route": "51",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "LBJ HOSPITAL",
+       "observations": 11,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "052",
+       "route": "52",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "MESA TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "76",
+     "lat": 29.814114,
+     "lon": -95.327869,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "BURNETT TC",
+       "observations": 8,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "029",
+       "route": "29",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MLK & MADDEN",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "76",
+     "lat": 29.81411,
+     "lon": -95.32786,
+     "routes": [
+      {
+       "routeId": "026",
+       "route": "26",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MEMORIAL CITY",
+       "observations": 16,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "097",
+       "route": "97",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MESA TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "76",
+     "lat": 29.81411,
+     "lon": -95.32786,
+     "routes": [
+      {
+       "routeId": "051",
+       "route": "51",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 9,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "052",
+       "route": "52",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "76",
+     "lat": 29.81411,
+     "lon": -95.32786,
+     "routes": [
+      {
+       "routeId": "036",
+       "route": "36",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WEST BELT",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "TIDWELL TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "north-shepherd-park-ride",
+   "name": "North Shepherd Park & Ride",
+   "stopIds": [
+    "83"
+   ],
+   "lat": 29.876016,
+   "lon": -95.414097,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "83",
+     "lat": 29.876016,
+     "lon": -95.414097,
+     "routes": [
+      {
+       "routeId": "099",
+       "route": "99",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ALDINE WESTFIELD",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "83",
+     "lat": 29.87602,
+     "lon": -95.4141,
+     "routes": [
+      {
+       "routeId": "027",
+       "route": "27",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "TMC TC",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "83",
+     "lat": 29.876016,
+     "lon": -95.414097,
+     "routes": [
+      {
+       "routeId": "059",
+       "route": "59",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "EASTEX FWY",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "096",
+       "route": "96",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "FM 1960",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "83",
+     "lat": 29.87601,
+     "lon": -95.41409,
+     "routes": []
+    },
+    {
+     "bay": "F",
+     "stopId": "83",
+     "lat": 29.876016,
+     "lon": -95.414097,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ANTOINE & VICTORY",
+       "observations": 8,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "BURNETT TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "83",
+     "lat": 29.87602,
+     "lon": -95.4141,
+     "routes": [
+      {
+       "routeId": "096",
+       "route": "96",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "NORTHLINE TC",
+       "observations": 15,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "I",
+     "stopId": "83",
+     "lat": 29.87601,
+     "lon": -95.41409,
+     "routes": [
+      {
+       "routeId": "030",
+       "route": "30",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "CLINTON PARK",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "40",
+    "108"
+   ]
+  },
+  {
+   "id": "acres-homes-transit-center",
+   "name": "Acres Homes Transit Center",
+   "stopIds": [
+    "68"
+   ],
+   "lat": 29.864924,
+   "lon": -95.430979,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "68",
+     "lat": 29.86492,
+     "lon": -95.43097,
+     "routes": [
+      {
+       "routeId": "030",
+       "route": "30",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "CLINTON PARK",
+       "observations": 2,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "044",
+       "route": "44",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "68",
+     "lat": 29.86492,
+     "lon": -95.43097,
+     "routes": [
+      {
+       "routeId": "044",
+       "route": "44",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "LOUETTA RD",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "68",
+     "lat": 29.86492,
+     "lon": -95.43097,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ANTOINE & VICTORY",
+       "observations": 6,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "68",
+     "lat": 29.86492,
+     "lon": -95.43097,
+     "routes": [
+      {
+       "routeId": "003",
+       "route": "3",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "BURNETT TC",
+       "observations": 3,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "030",
+       "route": "30",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 4,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "eastwood-transit-center",
+   "name": "Eastwood Transit Center",
+   "stopIds": [
+    "75"
+   ],
+   "lat": 29.728231,
+   "lon": -95.335165,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "75",
+     "lat": 29.72823,
+     "lon": -95.33516,
+     "routes": [
+      {
+       "routeId": "004",
+       "route": "4",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 16,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": [
+      {
+       "routeId": "040",
+       "route": "40",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": [
+      {
+       "routeId": "041",
+       "route": "41",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "TMC TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "75",
+     "lat": 29.72823,
+     "lon": -95.33516,
+     "routes": [
+      {
+       "routeId": "040",
+       "route": "40",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MONROE P&R",
+       "observations": 15,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "75",
+     "lat": 29.72823,
+     "lon": -95.33516,
+     "routes": [
+      {
+       "routeId": "025",
+       "route": "25",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WESTCHASE",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "025",
+       "route": "25",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": [
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "TIDWELL TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "KASHMERE TC",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "75",
+     "lat": 29.72823,
+     "lon": -95.33516,
+     "routes": [
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MLK & PARK VILLAGE",
+       "observations": 14,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "H",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": []
+    },
+    {
+     "bay": "I",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": [
+      {
+       "routeId": "050",
+       "route": "50",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HOBBY AIRPORT",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "J",
+     "stopId": "75",
+     "lat": 29.728231,
+     "lon": -95.335165,
+     "routes": [
+      {
+       "routeId": "244",
+       "route": "244",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "MONROE/ EL DORADO / VIA EASTWOOD TC",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "K",
+     "stopId": "75",
+     "lat": 29.72823,
+     "lon": -95.33516,
+     "routes": [
+      {
+       "routeId": "009",
+       "route": "9",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "FONDREN RD",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "249"
+   ]
+  },
+  {
+   "id": "wheeler-transit-center",
+   "name": "Wheeler Transit Center",
+   "stopIds": [
+    "11030"
+   ],
+   "lat": 29.733193,
+   "lon": -95.383191,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "11030",
+     "lat": 29.733193,
+     "lon": -95.383191,
+     "routes": [
+      {
+       "routeId": "025",
+       "route": "25",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "025",
+       "route": "25",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WESTCHASE",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "11030",
+     "lat": 29.733193,
+     "lon": -95.383191,
+     "routes": [
+      {
+       "routeId": "065",
+       "route": "65",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "SYNOTT RD",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "11030",
+     "lat": 29.733193,
+     "lon": -95.383191,
+     "routes": [
+      {
+       "routeId": "153",
+       "route": "153",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BRIAR FOREST DR",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "11030",
+     "lat": 29.733193,
+     "lon": -95.383191,
+     "routes": [
+      {
+       "routeId": "005",
+       "route": "5",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "RICHEY ST",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "152"
+   ]
+  },
+  {
+   "id": "southeast-transit-center",
+   "name": "Southeast Transit Center",
+   "stopIds": [
+    "72"
+   ],
+   "lat": 29.701387,
+   "lon": -95.357172,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "054",
+       "route": "54",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 3,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "72",
+     "lat": 29.70138,
+     "lon": -95.35717,
+     "routes": [
+      {
+       "routeId": "029",
+       "route": "29",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "KASHMERE TC",
+       "observations": 15,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "005",
+       "route": "5",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WHEELER TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DENVER HARBOR TC",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "360",
+       "route": "360",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "PEERLESS SHUTTLE",
+       "observations": 6,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "360",
+       "route": "360",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "PEERLESS SHUTTLE",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "054",
+       "route": "54",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 4,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "72",
+     "lat": 29.70138,
+     "lon": -95.35717,
+     "routes": [
+      {
+       "routeId": "005",
+       "route": "5",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "RICHEY ST",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "H",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "029",
+       "route": "29",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MLK & MADDEN",
+       "observations": 17,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "I",
+     "stopId": "72",
+     "lat": 29.701387,
+     "lon": -95.357172,
+     "routes": [
+      {
+       "routeId": "060",
+       "route": "60",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "TMC TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "J",
+     "stopId": "72",
+     "lat": 29.70138,
+     "lon": -95.35717,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BEN TAUB HOSPITAL",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "downtown-transit-center",
+   "name": "Downtown Transit Center",
+   "stopIds": [
+    "11031"
+   ],
+   "lat": 29.750226,
+   "lon": -95.371139,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "11031",
+     "lat": 29.750068,
+     "lon": -95.371453,
+     "routes": [
+      {
+       "routeId": "006",
+       "route": "6",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "11031",
+     "lat": 29.75021,
+     "lon": -95.37109,
+     "routes": [
+      {
+       "routeId": "052",
+       "route": "52",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "MESA TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "11031",
+     "lat": 29.75021,
+     "lon": -95.37109,
+     "routes": [
+      {
+       "routeId": "051",
+       "route": "51",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "LBJ HOSPITAL",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "11031",
+     "lat": 29.75021,
+     "lon": -95.37109,
+     "routes": [
+      {
+       "routeId": "162",
+       "route": "162",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "ADDICKS P&R",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "11031",
+     "lat": 29.75021,
+     "lon": -95.37109,
+     "routes": [
+      {
+       "routeId": "161",
+       "route": "161",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "W BELLFORT P&R",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "11031",
+     "lat": 29.75021,
+     "lon": -95.37109,
+     "routes": [
+      {
+       "routeId": "054",
+       "route": "54",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "tidwell-transit-center",
+   "name": "Tidwell Transit Center",
+   "stopIds": [
+    "80"
+   ],
+   "lat": 29.85163,
+   "lon": -95.337046,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "B",
+     "stopId": "80",
+     "lat": 29.85163,
+     "lon": -95.33704,
+     "routes": [
+      {
+       "routeId": "080",
+       "route": "80",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MLK & PARK VILLAGE",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "80",
+     "lat": 29.85163,
+     "lon": -95.33704,
+     "routes": [
+      {
+       "routeId": "006",
+       "route": "6",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "80",
+     "lat": 29.85163,
+     "lon": -95.337046,
+     "routes": [
+      {
+       "routeId": "083",
+       "route": "83",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "NORTH BELT & JFK",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "80",
+     "lat": 29.85163,
+     "lon": -95.337046,
+     "routes": [
+      {
+       "routeId": "006",
+       "route": "6",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "greenspoint-transit-center",
+   "name": "Greenspoint Transit Center",
+   "stopIds": [
+    "67"
+   ],
+   "lat": 29.948593,
+   "lon": -95.410372,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "67",
+     "lat": 29.948593,
+     "lon": -95.410372,
+     "routes": [
+      {
+       "routeId": "086",
+       "route": "86",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WILLOWBROOK",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "67",
+     "lat": 29.94859,
+     "lon": -95.41037,
+     "routes": [
+      {
+       "routeId": "006",
+       "route": "6",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "67",
+     "lat": 29.948593,
+     "lon": -95.410372,
+     "routes": [
+      {
+       "routeId": "056",
+       "route": "56",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "TMC TC",
+       "observations": 10,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "67",
+     "lat": 29.948593,
+     "lon": -95.410372,
+     "routes": [
+      {
+       "routeId": "085",
+       "route": "85",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "67",
+     "lat": 29.94859,
+     "lon": -95.41037,
+     "routes": [
+      {
+       "routeId": "099",
+       "route": "99",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 10,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "102",
+       "route": "102",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "DOWNTOWN",
+       "observations": 19,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "399",
+       "route": "399",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "KUYKENDAHL SHUTTLE",
+       "observations": 5,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "399",
+       "route": "399",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "KUYKENDAHL SHUTTLE",
+       "observations": 3,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "west-loop-transit-center",
+   "name": "West Loop Transit Center",
+   "stopIds": [
+    "100"
+   ],
+   "lat": 29.679521,
+   "lon": -95.45719,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "100",
+     "lat": 29.679521,
+     "lon": -95.45719,
+     "routes": [
+      {
+       "routeId": "068",
+       "route": "68",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "TMC TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "100",
+     "lat": 29.679521,
+     "lon": -95.45719,
+     "routes": [
+      {
+       "routeId": "049",
+       "route": "49",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "NORTHWEST TC",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "100",
+     "lat": 29.679521,
+     "lon": -95.45719,
+     "routes": [
+      {
+       "routeId": "007",
+       "route": "7",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "GESSNER RD",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "100",
+     "lat": 29.679521,
+     "lon": -95.45719,
+     "routes": [
+      {
+       "routeId": "049",
+       "route": "49",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "RIDGEMONT",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "100",
+     "lat": 29.679521,
+     "lon": -95.45719,
+     "routes": [
+      {
+       "routeId": "068",
+       "route": "68",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WEST BELT",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "32"
+   ]
+  },
+  {
+   "id": "west-bellfort-park-ride",
+   "name": "West Bellfort Park & Ride",
+   "stopIds": [
+    "99"
+   ],
+   "lat": 29.655206,
+   "lon": -95.559837,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "1",
+     "stopId": "99",
+     "lat": 29.655206,
+     "lon": -95.559837,
+     "routes": [
+      {
+       "routeId": "008",
+       "route": "8",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "FANNIN SOUTH TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "2",
+     "stopId": "99",
+     "lat": 29.655206,
+     "lon": -95.559837,
+     "routes": []
+    },
+    {
+     "bay": "3",
+     "stopId": "99",
+     "lat": 29.655206,
+     "lon": -95.559837,
+     "routes": []
+    },
+    {
+     "bay": "4",
+     "stopId": "99",
+     "lat": 29.6552,
+     "lon": -95.55983,
+     "routes": [
+      {
+       "routeId": "161",
+       "route": "161",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "265",
+    "269",
+    "292"
+   ]
+  },
+  {
+   "id": "fannin-south-transit-center",
+   "name": "Fannin South Transit Center",
+   "stopIds": [
+    "11029"
+   ],
+   "lat": 29.673816,
+   "lon": -95.402138,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "11029",
+     "lat": 29.67381,
+     "lon": -95.40213,
+     "routes": [
+      {
+       "routeId": "073",
+       "route": "73",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "HOBBY AIRPORT",
+       "observations": 20,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "11029",
+     "lat": 29.67381,
+     "lon": -95.40213,
+     "routes": [
+      {
+       "routeId": "008",
+       "route": "8",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "W BELLFORT P&R",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "011",
+       "route": "11",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "11029",
+     "lat": 29.67381,
+     "lon": -95.40213,
+     "routes": [
+      {
+       "routeId": "011",
+       "route": "11",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GELLHORN & 610",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "11029",
+     "lat": 29.67381,
+     "lon": -95.40213,
+     "routes": [
+      {
+       "routeId": "087",
+       "route": "87",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "TMC TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "hiram-clarke-transit-center",
+   "name": "Hiram Clarke Transit Center",
+   "stopIds": [
+    "73"
+   ],
+   "lat": 29.613892,
+   "lon": -95.43185,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "B",
+     "stopId": "73",
+     "lat": 29.613892,
+     "lon": -95.43185,
+     "routes": [
+      {
+       "routeId": "014",
+       "route": "14",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "TMC TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "73",
+     "lat": 29.613892,
+     "lon": -95.43185,
+     "routes": [
+      {
+       "routeId": "011",
+       "route": "11",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GELLHORN & 610",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "73",
+     "lat": 29.613892,
+     "lon": -95.43185,
+     "routes": [
+      {
+       "routeId": "054",
+       "route": "54",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 10,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "98"
+   ]
+  },
+  {
+   "id": "fifth-ward-denver-harbor-transit-center",
+   "name": "Fifth Ward/Denver Harbor Transit Center",
+   "stopIds": [
+    "69"
+   ],
+   "lat": 29.77535,
+   "lon": -95.315375,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "69",
+     "lat": 29.77535,
+     "lon": -95.315375,
+     "routes": [
+      {
+       "routeId": "011",
+       "route": "11",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GELLHORN & 610",
+       "observations": 14,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "011",
+       "route": "11",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "69",
+     "lat": 29.77535,
+     "lon": -95.315375,
+     "routes": [
+      {
+       "routeId": "137",
+       "route": "137",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MAXEY RD P&R",
+       "observations": 21,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "69",
+     "lat": 29.77535,
+     "lon": -95.315375,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BEN TAUB HOSPITAL",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "69",
+     "lat": 29.77535,
+     "lon": -95.31537,
+     "routes": [
+      {
+       "routeId": "048",
+       "route": "48",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "PLEASANTVILLE",
+       "observations": 8,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "048",
+       "route": "48",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "DOWNTOWN",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "137",
+       "route": "137",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "DOWNTOWN",
+       "observations": 18,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "69",
+     "lat": 29.77535,
+     "lon": -95.315375,
+     "routes": [
+      {
+       "routeId": "077",
+       "route": "77",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "HARTWICK RD",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "westpark-lower-uptown-transit-center",
+   "name": "Westpark / Lower Uptown Transit Center",
+   "stopIds": [
+    "13169",
+    "13167"
+   ],
+   "lat": 29.725148,
+   "lon": -95.464659,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "13169",
+     "lat": 29.72533,
+     "lon": -95.46466,
+     "routes": [
+      {
+       "routeId": "309",
+       "route": "309",
+       "directionId": 0,
+       "directionLabel": "Clockwise",
+       "headsign": "HILLCROFT TC / VIA BELLAIRE TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "13169",
+     "lat": 29.72533,
+     "lon": -95.46466,
+     "routes": [
+      {
+       "routeId": "020",
+       "route": "20",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MAGNOLIA PARK TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "13167",
+     "lat": 29.72533,
+     "lon": -95.46466,
+     "routes": [
+      {
+       "routeId": "292",
+       "route": "292",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "WEST BELLFORT/WESTWOOD VIA WESTPARK/LOWER UPTOWN TC",
+       "observations": 4,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "13169",
+     "lat": 29.72533,
+     "lon": -95.46466,
+     "routes": [
+      {
+       "routeId": "020",
+       "route": "20",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BELLAIRE TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "13169",
+     "lat": 29.72533,
+     "lon": -95.46466,
+     "routes": [
+      {
+       "routeId": "310",
+       "route": "310",
+       "directionId": 1,
+       "directionLabel": "Counter Clockwise",
+       "headsign": "HILLCROFT TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "13167",
+     "lat": 29.72533,
+     "lon": -95.46436,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "magnolia-transit-center",
+   "name": "Magnolia Transit Center",
+   "stopIds": [
+    "77"
+   ],
+   "lat": 29.735182,
+   "lon": -95.303042,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "77",
+     "lat": 29.735182,
+     "lon": -95.303042,
+     "routes": [
+      {
+       "routeId": "050",
+       "route": "50",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HOBBY AIRPORT",
+       "observations": 16,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "77",
+     "lat": 29.735182,
+     "lon": -95.303042,
+     "routes": [
+      {
+       "routeId": "050",
+       "route": "50",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "EASTWOOD TC",
+       "observations": 18,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "77",
+     "lat": 29.73518,
+     "lon": -95.30304,
+     "routes": [
+      {
+       "routeId": "020",
+       "route": "20",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BELLAIRE TC",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "77",
+     "lat": 29.735182,
+     "lon": -95.303042,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BEN TAUB HOSPITAL",
+       "observations": 9,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "038",
+       "route": "38",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MANCHESTER DOCK",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "77",
+     "lat": 29.735182,
+     "lon": -95.303042,
+     "routes": [
+      {
+       "routeId": "028",
+       "route": "28",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DENVER HARBOR TC",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "77",
+     "lat": 29.735182,
+     "lon": -95.303042,
+     "routes": [
+      {
+       "routeId": "076",
+       "route": "76",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "HOWARD DR",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "northline-transit-center",
+   "name": "Northline Transit Center",
+   "stopIds": [
+    "10585"
+   ],
+   "lat": 29.832531,
+   "lon": -95.376705,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "10585",
+     "lat": 29.832531,
+     "lon": -95.376705,
+     "routes": [
+      {
+       "routeId": "056",
+       "route": "56",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "TMC TC",
+       "observations": 14,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "10585",
+     "lat": 29.832531,
+     "lon": -95.376705,
+     "routes": [
+      {
+       "routeId": "045",
+       "route": "45",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MESA TC",
+       "observations": 17,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "056",
+       "route": "56",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 27,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "10585",
+     "lat": 29.832531,
+     "lon": -95.376705,
+     "routes": [
+      {
+       "routeId": "023",
+       "route": "23",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "HEMPSTEAD HWY",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "036",
+       "route": "36",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "KASHMERE TC",
+       "observations": 20,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "10585",
+     "lat": 29.832531,
+     "lon": -95.376705,
+     "routes": [
+      {
+       "routeId": "036",
+       "route": "36",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WEST BELT",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "096",
+       "route": "96",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "FM 1960",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "79"
+   ]
+  },
+  {
+   "id": "northwest-transit-center",
+   "name": "Northwest Transit Center",
+   "stopIds": [
+    "79",
+    "13170"
+   ],
+   "lat": 29.783072,
+   "lon": -95.455458,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "C",
+     "stopId": "13170",
+     "lat": 29.78351,
+     "lon": -95.45546,
+     "routes": [
+      {
+       "routeId": "161",
+       "route": "161",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "W BELLFORT P&R",
+       "observations": 9,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "162",
+       "route": "162",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "ADDICKS P&R",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "13170",
+     "lat": 29.78351,
+     "lon": -95.45546,
+     "routes": [
+      {
+       "routeId": "085",
+       "route": "85",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN",
+       "observations": 21,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "13170",
+     "lat": 29.78351,
+     "lon": -95.45546,
+     "routes": [
+      {
+       "routeId": "161",
+       "route": "161",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 13,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "162",
+       "route": "162",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "13170",
+     "lat": 29.78351,
+     "lon": -95.45546,
+     "routes": [
+      {
+       "routeId": "085",
+       "route": "85",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "SH 249",
+       "observations": 11,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "085",
+       "route": "85",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "H",
+     "stopId": "13170",
+     "lat": 29.783072,
+     "lon": -95.455458,
+     "routes": [
+      {
+       "routeId": "433",
+       "route": "433",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "WESTPARK/LOWER UPTOWN TC",
+       "observations": 12,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "I",
+     "stopId": "13170",
+     "lat": 29.78351,
+     "lon": -95.45546,
+     "routes": [
+      {
+       "routeId": "089",
+       "route": "89",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "DACOMA SHUTTLE",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "K",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "066",
+       "route": "66",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DENVER HARBOR TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "L",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "070",
+       "route": "70",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BRITTMOORE",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      },
+      {
+       "routeId": "072",
+       "route": "72",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BRITTMOORE",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "M",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "058",
+       "route": "58",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WEST BELT",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "N",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "039",
+       "route": "39",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BRITOAK LN",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "O",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "216",
+       "route": "216",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "WEST LITTLE YORK/ N.W. STATION/ VIA NORTHWEST TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "P",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "298",
+       "route": "298",
+       "directionId": 1,
+       "directionLabel": "Inbound",
+       "headsign": "KINGSLAND/ADDICKS/VIA NORTHWEST TC",
+       "observations": 14,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "Q",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "217",
+       "route": "217",
+       "directionId": 1,
+       "directionLabel": "Inbound",
+       "headsign": "CYPRESS / VIA NORTHWEST TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "R",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "084",
+       "route": "84",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "W BELLFORT ST",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "S",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "049",
+       "route": "49",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "RIDGEMONT",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "T",
+     "stopId": "79",
+     "lat": 29.78307,
+     "lon": -95.45545,
+     "routes": [
+      {
+       "routeId": "047",
+       "route": "47",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "AIRPORT BLVD",
+       "observations": 10,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "219"
+   ]
+  },
+  {
+   "id": "monroe-park-ride",
+   "name": "Monroe Park & Ride",
+   "stopIds": [
+    "82"
+   ],
+   "lat": 29.66395,
+   "lon": -95.254618,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "82",
+     "lat": 29.66395,
+     "lon": -95.254618,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "82",
+     "lat": 29.66395,
+     "lon": -95.254618,
+     "routes": [
+      {
+       "routeId": "500",
+       "route": "500",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "DOWNTOWN DIRECT/TERMINAL E",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "82",
+     "lat": 29.66395,
+     "lon": -95.254618,
+     "routes": [
+      {
+       "routeId": "040",
+       "route": "40",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "82",
+     "lat": 29.66395,
+     "lon": -95.254618,
+     "routes": [
+      {
+       "routeId": "297",
+       "route": "297",
+       "directionId": 1,
+       "directionLabel": "Inbound",
+       "headsign": "SOUTH POINT/MONROE",
+       "observations": 3,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "244",
+    "249"
+   ]
+  },
+  {
+   "id": "seton-lake-park-ride",
+   "name": "Seton Lake Park & Ride",
+   "stopIds": [
+    "98"
+   ],
+   "lat": 29.927812,
+   "lon": -95.499306,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "98",
+     "lat": 29.927812,
+     "lon": -95.499306,
+     "routes": [
+      {
+       "routeId": "044",
+       "route": "44",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "LOUETTA RD",
+       "observations": 13,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "044",
+       "route": "44",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DOWNTOWN",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "212"
+   ]
+  },
+  {
+   "id": "west-little-york-park-ride",
+   "name": "West Little York Park & Ride",
+   "stopIds": [
+    "93"
+   ],
+   "lat": 29.869782,
+   "lon": -95.553165,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "93",
+     "lat": 29.86978,
+     "lon": -95.55316,
+     "routes": []
+    },
+    {
+     "bay": "C",
+     "stopId": "93",
+     "lat": 29.869782,
+     "lon": -95.553165,
+     "routes": [
+      {
+       "routeId": "046",
+       "route": "46",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "AIRPORT BLVD",
+       "observations": 13,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "93",
+     "lat": 29.869782,
+     "lon": -95.553165,
+     "routes": [
+      {
+       "routeId": "045",
+       "route": "45",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "MESA TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "216",
+    "219"
+   ]
+  },
+  {
+   "id": "missouri-city-park-ride",
+   "name": "Missouri City Park & Ride",
+   "stopIds": [
+    "97"
+   ],
+   "lat": 29.621839,
+   "lon": -95.50714,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "97",
+     "lat": 29.621912,
+     "lon": -95.507143,
+     "routes": [
+      {
+       "routeId": "098",
+       "route": "98",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "HIRAM CLARKE TC",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "97",
+     "lat": 29.621755,
+     "lon": -95.50708,
+     "routes": [
+      {
+       "routeId": "063",
+       "route": "63",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "WESTHEIMER RD",
+       "observations": 17,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "addicks-park-ride",
+   "name": "Addicks Park & Ride",
+   "stopIds": [
+    "88"
+   ],
+   "lat": 29.787456,
+   "lon": -95.638333,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "88",
+     "lat": 29.787456,
+     "lon": -95.638333,
+     "routes": [
+      {
+       "routeId": "075",
+       "route": "75",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "WEST OAKS MALL",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "88",
+     "lat": 29.787456,
+     "lon": -95.638333,
+     "routes": [
+      {
+       "routeId": "298",
+       "route": "298",
+       "directionId": 1,
+       "directionLabel": "Inbound",
+       "headsign": "KINGSLAND/ADDICKS/VIA NORTHWEST TC",
+       "observations": 15,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "88",
+     "lat": 29.787456,
+     "lon": -95.638333,
+     "routes": [
+      {
+       "routeId": "162",
+       "route": "162",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "88",
+     "lat": 29.787456,
+     "lon": -95.638333,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "67",
+    "228",
+    "229"
+   ]
+  },
+  {
+   "id": "mesa-transit-center",
+   "name": "Mesa Transit Center",
+   "stopIds": [
+    "78"
+   ],
+   "lat": 29.849775,
+   "lon": -95.264267,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "78",
+     "lat": 29.849775,
+     "lon": -95.264267,
+     "routes": [
+      {
+       "routeId": "078",
+       "route": "78",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "BROCK PARK DR",
+       "observations": 5,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "078",
+       "route": "78",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "DENVER HARBOR TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "78",
+     "lat": 29.849775,
+     "lon": -95.264267,
+     "routes": [
+      {
+       "routeId": "097",
+       "route": "97",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "KASHMERE TC",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "45",
+    "52"
+   ]
+  },
+  {
+   "id": "eastex-park-ride",
+   "name": "Eastex Park & Ride",
+   "stopIds": [
+    "90"
+   ],
+   "lat": 29.927799,
+   "lon": -95.298148,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "90",
+     "lat": 29.927799,
+     "lon": -95.298148,
+     "routes": [
+      {
+       "routeId": "083",
+       "route": "83",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "NORTH BELT & JFK",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "90",
+     "lat": 29.927799,
+     "lon": -95.298148,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "256",
+    "259"
+   ]
+  },
+  {
+   "id": "spring-transit-center",
+   "name": "Spring Transit Center",
+   "stopIds": [
+    "84"
+   ],
+   "lat": 30.022103,
+   "lon": -95.417595,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "84",
+     "lat": 30.0221,
+     "lon": -95.41759,
+     "routes": [
+      {
+       "routeId": "086",
+       "route": "86",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "GREENSPOINT TC",
+       "observations": 16,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "086",
+       "route": "86",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "WILLOWBROOK",
+       "observations": 12,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "099",
+       "route": "99",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "ALDINE WESTFIELD",
+       "observations": 10,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "099",
+       "route": "99",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "N SHEPHERD P&R",
+       "observations": 6,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "84",
+     "lat": 30.022103,
+     "lon": -95.417595,
+     "routes": [
+      {
+       "routeId": "204",
+       "route": "204",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "SPRING",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "209"
+   ]
+  },
+  {
+   "id": "fuqua-park-ride",
+   "name": "Fuqua Park & Ride",
+   "stopIds": [
+    "81"
+   ],
+   "lat": 29.609886,
+   "lon": -95.21693,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "81",
+     "lat": 29.609886,
+     "lon": -95.21693,
+     "routes": [
+      {
+       "routeId": "247",
+       "route": "247",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "FUQUA/BAY AREA",
+       "observations": 12,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "81",
+     "lat": 29.609886,
+     "lon": -95.21693,
+     "routes": [
+      {
+       "routeId": "088",
+       "route": "88",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "HOBBY AIRPORT",
+       "observations": 11,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "81",
+     "lat": 29.609886,
+     "lon": -95.21693,
+     "routes": [
+      {
+       "routeId": "088",
+       "route": "88",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "SAN JAC COLLEGE",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "249"
+   ]
+  },
+  {
+   "id": "maxey-road-park-ride",
+   "name": "Maxey Road Park & Ride",
+   "stopIds": [
+    "64"
+   ],
+   "lat": 29.784356,
+   "lon": -95.217505,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "64",
+     "lat": 29.784356,
+     "lon": -95.217505,
+     "routes": [
+      {
+       "routeId": "137",
+       "route": "137",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "DOWNTOWN",
+       "observations": 16,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "B",
+     "stopId": "64",
+     "lat": 29.784356,
+     "lon": -95.217505,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "236",
+    "237"
+   ]
+  },
+  {
+   "id": "westchase-transit-center",
+   "name": "Westchase Transit Center",
+   "stopIds": [
+    "11042"
+   ],
+   "lat": 29.717215,
+   "lon": -95.562905,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "1",
+     "stopId": "11042",
+     "lat": 29.71721,
+     "lon": -95.5629,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN",
+       "observations": 2,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "2",
+     "stopId": "11042",
+     "lat": 29.71721,
+     "lon": -95.5629,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "gessner-park-ride",
+   "name": "Gessner Park & Ride",
+   "stopIds": [
+    "85"
+   ],
+   "lat": 29.720336,
+   "lon": -95.537158,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "85",
+     "lat": 29.72033,
+     "lon": -95.53715,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 3,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "D",
+     "stopId": "85",
+     "lat": 29.72034,
+     "lon": -95.53716,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN",
+       "observations": 2,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "hillcroft-park-ride",
+   "name": "Hillcroft Park & Ride",
+   "stopIds": [
+    "71"
+   ],
+   "lat": 29.722577,
+   "lon": -95.495879,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "MISSION BEND TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "C",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "153",
+       "route": "153",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "BRIAR FOREST DR",
+       "observations": 9,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "E",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "310",
+       "route": "310",
+       "directionId": 1,
+       "directionLabel": "Counter Clockwise",
+       "headsign": "HILLCROFT TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "F",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "309",
+       "route": "309",
+       "directionId": 0,
+       "directionLabel": "Clockwise",
+       "headsign": "HILLCROFT TC / VIA BELLAIRE TC",
+       "observations": 8,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    },
+    {
+     "bay": "G",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "152",
+       "route": "152",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "WHEELER TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "153",
+       "route": "153",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "WHEELER TC",
+       "observations": 10,
+       "source": "gtfs-rt"
+      }
+     ]
+    },
+    {
+     "bay": "H",
+     "stopId": "71",
+     "lat": 29.722577,
+     "lon": -95.495879,
+     "routes": [
+      {
+       "routeId": "151",
+       "route": "151",
+       "directionId": 0,
+       "directionLabel": "Eastbound",
+       "headsign": "DOWNTOWN",
+       "observations": 3,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "kuykendahl-park-ride",
+   "name": "Kuykendahl Park & Ride",
+   "stopIds": [
+    "92"
+   ],
+   "lat": 29.973646,
+   "lon": -95.425368,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "92",
+     "lat": 29.97364,
+     "lon": -95.42536,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "92",
+     "lat": 29.97364,
+     "lon": -95.42536,
+     "routes": []
+    },
+    {
+     "bay": "E",
+     "stopId": "92",
+     "lat": 29.97364,
+     "lon": -95.42536,
+     "routes": [
+      {
+       "routeId": "399",
+       "route": "399",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "KUYKENDAHL SHUTTLE",
+       "observations": 3,
+       "source": "gtfs-rt"
+      },
+      {
+       "routeId": "399",
+       "route": "399",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "KUYKENDAHL SHUTTLE",
+       "observations": 4,
+       "source": "metro-arrivals-api"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "202",
+    "209"
+   ]
+  },
+  {
+   "id": "northwest-station-park-ride",
+   "name": "Northwest Station Park & Ride",
+   "stopIds": [
+    "95"
+   ],
+   "lat": 29.902195,
+   "lon": -95.594044,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "95",
+     "lat": 29.902195,
+     "lon": -95.594044,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "95",
+     "lat": 29.902195,
+     "lon": -95.594044,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "216",
+    "219"
+   ]
+  },
+  {
+   "id": "cypress-park-ride",
+   "name": "Cypress Park & Ride",
+   "stopIds": [
+    "11257"
+   ],
+   "lat": 29.964321,
+   "lon": -95.684963,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "11257",
+     "lat": 29.964321,
+     "lon": -95.684963,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "11257",
+     "lat": 29.964321,
+     "lon": -95.684963,
+     "routes": [
+      {
+       "routeId": "217",
+       "route": "217",
+       "directionId": 1,
+       "directionLabel": "Inbound",
+       "headsign": "CYPRESS / VIA NORTHWEST TC",
+       "observations": 7,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": [
+    "219"
+   ]
+  },
+  {
+   "id": "kingsland-park-ride",
+   "name": "Kingsland Park & Ride",
+   "stopIds": [
+    "86"
+   ],
+   "lat": 29.774021,
+   "lon": -95.744426,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "CANOPY",
+     "stopId": "86",
+     "lat": 29.77402,
+     "lon": -95.74442,
+     "routes": []
+    },
+    {
+     "bay": "STOP",
+     "stopId": "86",
+     "lat": 29.77402,
+     "lon": -95.74442,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "221",
+    "229",
+    "298"
+   ]
+  },
+  {
+   "id": "el-dorado-park-ride",
+   "name": "El Dorado Park & Ride",
+   "stopIds": [
+    "12237"
+   ],
+   "lat": 29.547784,
+   "lon": -95.157886,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "12237",
+     "lat": 29.547784,
+     "lon": -95.157886,
+     "routes": []
+    },
+    {
+     "bay": "B",
+     "stopId": "12237",
+     "lat": 29.547784,
+     "lon": -95.157886,
+     "routes": []
+    },
+    {
+     "bay": "C",
+     "stopId": "12237",
+     "lat": 29.547784,
+     "lon": -95.157886,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "244",
+    "249"
+   ]
+  },
+  {
+   "id": "townsen-transit-center",
+   "name": "Townsen Transit Center",
+   "stopIds": [
+    "10706"
+   ],
+   "lat": 30.019122,
+   "lon": -95.263117,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "10706",
+     "lat": 30.01912,
+     "lon": -95.26311,
+     "routes": []
+    },
+    {
+     "bay": "D",
+     "stopId": "10706",
+     "lat": 30.01912,
+     "lon": -95.26311,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "257",
+    "259"
+   ]
+  },
+  {
+   "id": "kingwood-park-ride",
+   "name": "Kingwood Park & Ride",
+   "stopIds": [
+    "91"
+   ],
+   "lat": 30.054341,
+   "lon": -95.183067,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "91",
+     "lat": 30.054341,
+     "lon": -95.183067,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "255",
+    "259"
+   ]
+  },
+  {
+   "id": "westwood-park-ride",
+   "name": "Westwood Park & Ride",
+   "stopIds": [
+    "66"
+   ],
+   "lat": 29.672177,
+   "lon": -95.54828,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "B",
+     "stopId": "66",
+     "lat": 29.672177,
+     "lon": -95.54828,
+     "routes": [
+      {
+       "routeId": "292",
+       "route": "292",
+       "directionId": 0,
+       "directionLabel": "Outbound",
+       "headsign": "WEST BELLFORT/WESTWOOD VIA WESTPARK/LOWER UPTOWN TC",
+       "observations": 5,
+       "source": "gtfs-rt"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  },
+  {
+   "id": "south-point-park-ride",
+   "name": "South Point Park & Ride",
+   "stopIds": [
+    "10280"
+   ],
+   "lat": 29.613761,
+   "lon": -95.208258,
+   "source": "metro-transit-data-api",
+   "bays": [
+    {
+     "bay": "A",
+     "stopId": "10280",
+     "lat": 29.613761,
+     "lon": -95.208258,
+     "routes": []
+    }
+   ],
+   "unassignedRoutes": [
+    "297"
+   ]
+  },
+  {
+   "id": "hobby-airport",
+   "name": "Hobby Airport",
+   "stopIds": [
+    "10567"
+   ],
+   "lat": 29.655337,
+   "lon": -95.275771,
+   "source": "hand-authored-demo",
+   "sourceNote": "GTFS and the Transit Data API list Hobby Airport as one stop (#10567) with no bays. Curb labels below are a plausible layout for the demo and are NOT verified.",
+   "bays": [
+    {
+     "bay": "Curb 1",
+     "stopId": "10567",
+     "lat": 29.655337,
+     "lon": -95.275771,
+     "routes": [
+      {
+       "routeId": "040",
+       "route": "40",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "N SHEPHERD P&R",
+       "source": "hand-authored-demo"
+      },
+      {
+       "routeId": "050",
+       "route": "50",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "EASTWOOD TC",
+       "source": "hand-authored-demo"
+      },
+      {
+       "routeId": "500",
+       "route": "500",
+       "directionId": 0,
+       "directionLabel": "Northbound",
+       "headsign": "DOWNTOWN DIRECT/TERMINAL E",
+       "source": "hand-authored-demo"
+      }
+     ]
+    },
+    {
+     "bay": "Curb 2",
+     "stopId": "10567",
+     "lat": 29.655337,
+     "lon": -95.275771,
+     "routes": [
+      {
+       "routeId": "040",
+       "route": "40",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "MONROE P&R",
+       "source": "hand-authored-demo"
+      },
+      {
+       "routeId": "073",
+       "route": "73",
+       "directionId": 1,
+       "directionLabel": "Westbound",
+       "headsign": "FANNIN SOUTH TC",
+       "source": "hand-authored-demo"
+      },
+      {
+       "routeId": "088",
+       "route": "88",
+       "directionId": 1,
+       "directionLabel": "Southbound",
+       "headsign": "SAN JAC COLLEGE",
+       "source": "hand-authored-demo"
+      }
+     ]
+    }
+   ],
+   "unassignedRoutes": []
+  }
+ ]
+}

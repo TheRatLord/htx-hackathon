@@ -1,0 +1,236 @@
+.header {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+/* In a sheet, Back and the chevron reach into the gutter so their text lines up with the content. */
+.inSheet {
+  padding-inline: var(--gutter) var(--sp-1);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0 calc(-1 * var(--sp-3));
+}
+
+.main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
+/* Title and "Updated just now · Refresh" share a line when they fit. */
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-3);
+  min-width: 0;
+}
+
+.inSheet .text {
+  padding-inline-end: var(--sp-3);
+}
+
+.inSheet .main .text {
+  min-height: var(--touch-min);
+  padding-inline-end: 0;
+}
+
+/* No Back row: clear the grab bar drawn over the top of the header. */
+.inSheet > .main {
+  padding-top: var(--sp-3);
+}
+
+.center .text {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.title {
+  flex: 1 1 auto;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+  overflow-wrap: anywhere;
+}
+
+.overline {
+  flex: 1 1 auto;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  color: var(--c-text-variant);
+}
+
+/* The 48dp toggle is taller than the overline: the title tucks up under the row's spare height. */
+.overlineRow {
+  position: relative;
+  z-index: 1;
+  margin-bottom: calc(-1 * var(--sp-3));
+}
+
+.stopTitle {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.sub,
+.right {
+  flex: none;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin-left: auto;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-link-text);
+}
+
+.toggle:active,
+.back:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+/* The offline row (UpdatedAgo) takes a line of its own under the title, the sheet's full width:
+   the chevron stays on the title's row instead of squeezing the row into two lines. */
+.sub:has([data-offline]) {
+  flex: 1 1 100%;
+}
+
+.main:has(.sub [data-offline]) {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.main:has(.sub [data-offline]) > .text {
+  display: contents;
+}
+
+.main:has(.sub [data-offline]) .sub {
+  order: 2;
+  padding-inline-end: var(--sp-3);
+}
+
+.main:has(.sub [data-offline]) .right {
+  order: 3;
+}
+
+.main:has(.sub [data-offline]) > .toggle {
+  order: 1;
+}
+
+.withBack {
+  align-items: center;
+}
+
+/* The overline under "‹ Back": no grab-bar clearance needed, the Back row already has it. */
+.inSheet > .overlineUnderBack {
+  padding-top: 0;
+}
+
+/* "✕ My location" at the end of the overline row: a link-styled 48dp target, no row of its own. */
+.overlineAction {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-2);
+  border: none;
+  border-radius: var(--touch-min);
+  background: none;
+  color: var(--c-link-text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.overlineAction:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+.overlineAction + .toggle {
+  margin-left: 0;
+}
+
+/* "‹ Back  Title  ⌃" on one row: Back reaches into the gutter so its chevron lines up with the
+   content below, and the title's first line sits on Back's centre line. */
+.inSheet > .backMain {
+  align-items: flex-start;
+  gap: 0;
+  margin-inline-start: calc(-1 * var(--sp-3));
+  padding-top: 0;
+}
+
+.backMain > .back {
+  flex: none;
+  padding-inline: var(--sp-3) var(--sp-2);
+}
+
+.backText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding-top: calc((var(--touch-min) - var(--lh-title)) / 2);
+}
+
+.backStop > .backText {
+  padding-top: calc((var(--touch-min) - var(--lh-stop-title)) / 2);
+}
+
+.inSheet .backText > .text {
+  min-height: 0;
+  padding-inline-end: 0;
+}
+
+.overlineInline {
+  display: flex;
+  align-items: center;
+}
+
+/* A centred stop title stays centred in the space between Back and the chevron. */
+.center .backText {
+  text-align: center;
+}
+
+/* "Updated just now / ↻ Refresh" never drops to a row of its own: the title wraps beside it
+   instead (es at 360: "Paradas / cercanas"). */
+.text:has(> .sub [data-compact-updated]) {
+  flex-wrap: nowrap;
+}
+
+.text:has(> .sub [data-compact-updated]) > .title {
+  min-width: 0;
+}
+
+/* Clear the grab bar drawn over the top of the sheet. */
+.inSheet > .backMain {
+  padding-top: var(--sp-3);
+}

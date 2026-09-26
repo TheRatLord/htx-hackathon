@@ -1,0 +1,175 @@
+/* Shared by the stop cards (C.5): --c-card, radius 10, padding 12, no shadow. The whole card body
+   is one button (.hit) stretched under the content; nested buttons sit above it. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  --tonal-bg: var(--c-surface);
+}
+
+.hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  border-radius: inherit;
+  background: none;
+}
+
+.hit:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.name {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--c-text-variant);
+}
+
+/* The card's head: the stop name over its side line on the left, the compact walk button
+   ("🚶 1 min / walk") at the top right beside both (C.5a). Every card has this one shape, at every
+   width and text size: the button never drops to a row of its own. */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2px var(--sp-2);
+}
+
+.head > * {
+  grid-column: 1;
+}
+
+.head > .walkSlot {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  display: flex;
+}
+
+/* Extra large: the two-line title is already as tall as the walk button, so the side line takes
+   the card's full width under both ("West side of Fannin / St" wrapped beside the button, and only
+   one route row fitted above the nav at 360, 46). */
+:global(html[data-text-size="xlarge"]) .head > .walkSlot {
+  grid-row: 1;
+}
+
+:global(html[data-text-size="xlarge"]) .head > .meta {
+  grid-column: 1 / -1;
+}
+
+.divider {
+  margin: var(--sp-1) 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.row:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headsign {
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+.noService {
+  color: var(--c-text-variant);
+}
+
+/* The card's last line: its text sits 8dp under the rows like any row, and its 48dp target
+   runs down over the card's bottom padding instead of adding space above the text. */
+.link {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-1)) 0 calc(-1 * var(--card-pad));
+  padding: var(--sp-1) 0 0;
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+/* "Also here: [11] [85]          ›": one full-width row, the chevron at its right edge like every
+   other row that opens something (02: a chevron a gap after the chip floated). */
+.alsoHere {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  width: 100%;
+  padding-top: 0;
+}
+
+.alsoMore {
+  color: var(--c-text-variant);
+}
+
+.alsoHere svg {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+.sep {
+  margin: 0 var(--sp-1);
+  color: var(--c-text-variant);
+}
+
+/* "Bay M · Platform 2" under a transit-center row's headsign: where to stand, in bold (C.5c, C.5d). */
+.bayLine {
+  color: var(--c-text);
+  font-weight: var(--fw-bold);
+}
+
+.routeRow {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding: var(--sp-1) 0;
+}

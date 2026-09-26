@@ -1,0 +1,7 @@
+.scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding-bottom: var(--sp-6);
+  background: var(--c-background);
+}

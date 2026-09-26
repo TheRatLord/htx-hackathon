@@ -1,0 +1,5 @@
+# Round 2, fixer B: requests outside my paths
+
+1. **F11 check pins the museum row's text (QA, `tests/e2e/flows.spec.ts:346`).** The judges ask for 10 to use the same tappable "Closest stop" sub-row as 08. The F11 check (and spec E, F11) wants "Closest stop: Main St @ Remington Ln (688) · Northbound" inside the place row's own button, before the tap. So 10 keeps it inline. It now shows as two whole lines ("Closest stop: … (688)" / "Northbound · 4 min walk") with no dangling "·". 08's sub-row uses the same two lines. If the spec moves it to a sub-row, the F11 check has to look in the row's sub-row, not in the body button. The regex also needs a plain space before "(688)", so this line can't use `stopTitle()`'s no-break space.
+2. **INDEX.md, 11-search-empty (QA).** The description still lists the suggestion chips. They are gone. The screen now shows the rider's saved stops, saved and recent routes ("Your routes"), stops they viewed and recent searches, then the spec D5 hint line and a "Browse all routes" row.
+3. **18 vs 03 (2958 times), 20 vs 06 (58 at 57/59 min).** No change here. As SHARED-FIXES item 6 says, the e2e API clock runs on between shots.

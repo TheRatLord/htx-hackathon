@@ -1,0 +1,227 @@
+// D8 Walk to a stop (`/explore/stop/:stopId/walk?from=&fromName=&route=&d=`): one walk time
+// (the card's until OSRM answers), the next bus verdict, street steps and "I'm at the stop".
+
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useStableAnchor, useStop, useWalk } from "../../../api/hooks.ts";
+import type { LatLon, StopDetail, WalkRoute } from "../../../api/types.ts";
+import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChrome.tsx";
+import { useBack } from "../../../app/useBack.ts";
+import { usePageTitle } from "../../../app/usePageTitle.ts";
+import { useLang, useT } from "../../../i18n/index.ts";
+import { formatDistance, platformLabel, stopTitle } from "../../../lib/format.ts";
+import { parseLatLon } from "../../../lib/geo.ts";
+import { localiseSide, walkStepText } from "../../../lib/i18nServer.ts";
+import { estimateWalk, walkMinutes } from "../../../lib/walk.ts";
+import { useMapScene, type MapScene } from "../../../map/scene.ts";
+import { isFinding, useLocation } from "../../../state/location.tsx";
+import { useOffline } from "../../../state/offline.ts";
+import { usePrefs } from "../../../state/prefs.ts";
+import { recordWalkDistance, useWalkDistance } from "../../../state/walkDistance.ts";
+import { Button } from "../../../ui/Button.tsx";
+import { EmptyState } from "../../../ui/EmptyState.tsx";
+import { ErrorState } from "../../../ui/ErrorState.tsx";
+import { Icon } from "../../../ui/Icon.tsx";
+import { SheetHeader } from "../../../ui/SheetHeader.tsx";
+import { Skeleton } from "../../../ui/Skeleton.tsx";
+import { foldCap } from "../home/fold.ts";
+import { useHalfUpTo } from "../home/useHalfUpTo.ts";
+import { NextBus } from "./NextBus.tsx";
+import { googleMapsUrl, stepIcon } from "./steps.ts";
+import styles from "./Walk.module.css";
+
+const STEP_ZOOM = 18;
+/** Show "(about N min at an easy pace)" when the slower pace adds at least this much. */
+const EASY_PACE_GAP_MIN = 2;
+
+/** `?d=`, the distance the linking screen showed; anything else is ignored. */
+function seedParam(value: string | null): number | undefined {
+  const d = value ? Number(value) : NaN;
+  return Number.isFinite(d) && d > 0 ? d : undefined;
+}
+
+function walkTitle(t: ReturnType<typeof useT>, lang: ReturnType<typeof useLang>, detail: StopDetail | undefined, stopId: string, fromName?: string) {
+  // stopTitle keeps "(342)" on its street's line ("Main St (342)", never "(342)" alone).
+  const stop = detail ? stopTitle(detail.stop.name, stopId, lang) : t("stop.fallbackTitle", { id: stopId });
+  if (fromName) return t("walk.titleFrom", { from: fromName, stop });
+  if (detail?.transitCenter) return t("walk.titleTc", { tc: detail.transitCenter.name, platform: platformLabel(detail.stop, lang), id: stopId });
+  return t("walk.title", { stop });
+}
+
+function openGoogleMaps(to: LatLon, from?: LatLon) {
+  window.open(googleMapsUrl(to, from), "_blank", "noopener");
+}
+
+interface StepsProps {
+  walk: WalkRoute;
+  onStep: (point: LatLon) => void;
+}
+
+function Steps({ walk, onStep }: StepsProps) {
+  const t = useT();
+  const lang = useLang();
+  return (
+    <ol className={styles.steps}>
+      {walk.steps.map((s, i) => (
+        <li key={i}>
+          <button type="button" className={styles.step} onClick={() => onStep(s)} aria-description={t("walk.stepZoom")}>
+            <Icon name={stepIcon(s)} color="var(--c-text-variant)" />
+            <span className={styles.stepText}>{walkStepText(s, lang)}</span>
+            {s.distanceM > 0 && <span className={styles.stepDistance}>{formatDistance(s.distanceM, lang)}</span>}
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export default function Walk() {
+  const t = useT();
+  const lang = useLang();
+  const back = useBack();
+  const navigate = useNavigate();
+  const { stopId = "" } = useParams();
+  const [params] = useSearchParams();
+  const rider = useLocation();
+  const offline = useOffline();
+  const { walkPace } = usePrefs();
+  const from = parseLatLon(params.get("from"));
+  const fromName = params.get("fromName") ?? undefined;
+  const routeId = params.get("route") ?? undefined;
+  const origin = from ?? rider.fix;
+  // Only Locate: Plan Trip would sit over the walk's start or end (G.4, screens choose their FABs).
+  useExploreChrome({ fabs: ["locate"] });
+
+  // Name and position only: the next bus comes from NextBus's own arrivals poll.
+  const stop = useStop(stopId, { refetchInterval: false });
+  const target = stop.data?.stop;
+  const osrm = useWalk(origin, stopId);
+  const walk = osrm.data;
+  const seed = seedParam(params.get("d")) ?? (origin && target ? estimateWalk(origin, target, walkPace).distanceM : undefined);
+  const known = useWalkDistance(origin, stopId, seed);
+  const estimate = walk?.source === "straight-line-estimate";
+  // The straight-line fallback has one step: its distance and the summary's must be the same number.
+  const distanceM = estimate ? walk.distanceM : known.distanceM;
+  const [stepFocus, setStepFocus] = useState<LatLon>();
+  const foldTarget = useRef<HTMLDivElement>(null);
+  useHalfUpTo(() => foldTarget.current, foldCap, `${Boolean(origin)}|${rider.status}`);
+
+  useEffect(() => {
+    if (origin && walk?.source === "osrm") recordWalkDistance(origin, stopId, walk.distanceM, "osrm");
+  }, [origin, stopId, walk?.source, walk?.distanceM]);
+
+  const title = walkTitle(t, lang, stop.data, stopId, fromName);
+  usePageTitle(title);
+
+  // The camera is framed once per stop, on the first route: later fixes (useWalk re-asks only after
+  // a 40 m move) redraw the line but keep the same frame, and GPS jitter changes nothing on the map.
+  const shown = useStableAnchor(origin, 40);
+  const frame = useRef<{ stopId: string; bounds: [LatLon, LatLon] }>(undefined);
+  if (walk && frame.current?.stopId !== stopId) {
+    const coords = walk.geometry.coordinates;
+    const lons = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
+    frame.current = {
+      stopId,
+      bounds: [
+        { lat: Math.min(...lats), lon: Math.min(...lons) },
+        { lat: Math.max(...lats), lon: Math.max(...lons) },
+      ],
+    };
+  }
+  const bounds = frame.current?.stopId === stopId ? frame.current.bounds : undefined;
+  const scene: MapScene = { highlightStopId: stopId };
+  if (walk) {
+    scene.legs = [{ coords: walk.geometry.coordinates, kind: "walk" }];
+    scene.focus = stepFocus ? { kind: "point", point: stepFocus, zoom: STEP_ZOOM } : bounds && { kind: "bounds", bounds };
+  } else if (target) scene.focus = { kind: "point", point: target };
+  if (shown) scene.markers = [{ id: "origin", point: shown, kind: from ? "place" : "origin", label: fromName }];
+  useMapScene(scene, [stopId, walk, target, stepFocus?.lat, stepFocus?.lon, shown?.lat, shown?.lon]);
+
+  const walkMin = distanceM !== undefined ? walkMinutes(distanceM, walkPace) : undefined;
+  const maps = target && (() => openGoogleMaps(target, from));
+  // Full width when it is the fallback for missing street directions; outlined, never primary, since it leaves the app.
+  const mapsButton = (primary: boolean) =>
+    target && (
+      <Button
+        variant={primary ? "outline" : "text"}
+        fullWidth={primary}
+        label={t("walk.googleMapsLink")}
+        href={googleMapsUrl(target, from)}
+        external
+        externalLabel={t("walk.newTab")}
+      />
+    );
+
+  let body;
+  if (!origin) {
+    const blocked = rider.status === "denied";
+    body =
+      isFinding(rider.status) && rider.requested ? (
+        <>
+          <p className={styles.summary}>{t("walk.finding")}</p>
+          <Skeleton variant="row" />
+        </>
+      ) : blocked ? (
+        // The browser won't ask again: say how to allow it, and offer the walk in Google Maps.
+        <div ref={foldTarget}>
+          <EmptyState
+            icon="my_location"
+            title={t("walk.needLocation")}
+            body={t("banner.chromeSteps")}
+            action={maps && { label: t("walk.googleMaps"), onPress: maps, variant: "primary" }}
+          />
+        </div>
+      ) : (
+        <div ref={foldTarget} className={styles.stack}>
+          <EmptyState
+            icon="my_location"
+            title={t("walk.needLocation")}
+            body={t("walk.needLocationBody")}
+            action={{ label: t("banner.turnOnLocation"), onPress: rider.request, variant: "primary" }}
+          />
+          {mapsButton(false)}
+        </div>
+      );
+  } else {
+    const side = target?.side ? localiseSide(target.side, lang) : "";
+    const summary = [
+      walkMin !== undefined && t("time.min", { n: walkMin }),
+      // A straight-line estimate no longer gets a paragraph of its own (16): Google Maps is offered in full instead.
+      distanceM !== undefined && formatDistance(distanceM, lang),
+      side && side.charAt(0).toLowerCase() + side.slice(1),
+    ].filter(Boolean);
+    const easy = distanceM !== undefined && walkPace === "normal" ? walkMinutes(distanceM, "slower") : undefined;
+    const noConnection = offline && !osrm.data;
+    body = (
+      <>
+        <p className={styles.summary}>{summary.join(" · ")}</p>
+        {easy !== undefined && walkMin !== undefined && easy - walkMin >= EASY_PACE_GAP_MIN && (
+          <p className={styles.easy}>{t("walk.easyPace", { min: easy })}</p>
+        )}
+        <div ref={foldTarget}>
+          <NextBus stopId={stopId} routeId={routeId} walkMin={walkMin} />
+        </div>
+        {noConnection && <p className={styles.warnBox}>{t("walk.offline")}</p>}
+        {walk ? (
+          // A lone "Arrive" step only repeats the summary line: list steps only when there are street directions.
+          !(walk.steps.length === 1 && walk.steps[0].maneuver === "arrive") && <Steps walk={walk} onStep={setStepFocus} />
+        ) : osrm.isError && !noConnection ? (
+          <ErrorState error={osrm.error} onRetry={() => void osrm.refetch()} />
+        ) : (
+          !noConnection && <Skeleton variant="row" />
+        )}
+        <Button variant="primary" fullWidth label={t("walk.atStop")} onPress={() => navigate(stopUrl(stopId, routeId), { replace: true })} />
+        {mapsButton(Boolean(noConnection || estimate))}
+      </>
+    );
+  }
+
+  return (
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} titleSize="stop" />} onBack={back}>
+      <div className={styles.body}>{body}</div>
+    </ExploreSheet>
+  );
+}
+
+const stopUrl = (stopId: string, routeId?: string) => `/explore/stop/${encodeURIComponent(stopId)}${routeId ? `?route=${encodeURIComponent(routeId)}` : ""}`;

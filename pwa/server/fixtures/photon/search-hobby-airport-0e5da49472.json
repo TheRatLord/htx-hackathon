@@ -1,0 +1,257 @@
+{
+ "key": "search/hobby airport",
+ "recordedAt": "2026-09-25T23:58:36.703Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 209239667,
+     "osm_key": "aeroway",
+     "osm_value": "aerodrome",
+     "type": "house",
+     "name": "William P. Hobby Airport",
+     "street": "Monroe Road",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77075",
+     "countrycode": "US",
+     "extent": [
+      -95.2913053,
+      29.6576549,
+      -95.2646113,
+      29.6331364
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2769303,
+      29.6471491
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1392868122,
+     "osm_key": "landuse",
+     "osm_value": "residential",
+     "type": "locality",
+     "housenumber": "8501",
+     "name": "The Plaza at Hobby Airport",
+     "street": "Broadway Street",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77061",
+     "countrycode": "US",
+     "extent": [
+      -95.2768201,
+      29.6682975,
+      -95.2754865,
+      29.6656529
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.276152,
+      29.6669817
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 366878846,
+     "osm_key": "tourism",
+     "osm_value": "motel",
+     "type": "house",
+     "name": "Red Carpet Inn Hobby Airport",
+     "street": "Brays Bayou Greenway",
+     "district": "Third Ward",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77023",
+     "countrycode": "US",
+     "extent": [
+      -95.3111073,
+      29.7139727,
+      -95.3103105,
+      29.7131485
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3107089,
+      29.7135606
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 368162275,
+     "osm_key": "amenity",
+     "osm_value": "police",
+     "type": "house",
+     "name": "Houston Police Department - Hobby Airport",
+     "street": "Airport Boulevard",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77061",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2802056,
+      29.6570556
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 46598314,
+     "osm_key": "tourism",
+     "osm_value": "hotel",
+     "type": "house",
+     "housenumber": "8730",
+     "name": "Fairfield Inn & Suites Houston Hobby Airport",
+     "street": "Gulf Freeway",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77017",
+     "countrycode": "US",
+     "extent": [
+      -95.2600805,
+      29.6638783,
+      -95.259548,
+      29.6636593
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2598264,
+      29.6637862
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 923627494,
+     "osm_key": "tourism",
+     "osm_value": "hotel",
+     "type": "house",
+     "housenumber": "8720",
+     "name": "Four Points by Sheraton Houston Hobby Airport",
+     "street": "Gulf Freeway",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77017",
+     "countrycode": "US",
+     "extent": [
+      -95.2605691,
+      29.6642399,
+      -95.2599233,
+      29.6640339
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2602462,
+      29.6641374
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 1042574986,
+     "osm_key": "tourism",
+     "osm_value": "hotel",
+     "type": "house",
+     "housenumber": "9101",
+     "name": "TownePlace Suites Houston Hobby Airport",
+     "street": "Gulf Freeway Frontage Road",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77017",
+     "countrycode": "US",
+     "extent": [
+      -95.2551051,
+      29.6593332,
+      -95.2542419,
+      29.6591209
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2546735,
+      29.6592304
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 848672228,
+     "osm_key": "tourism",
+     "osm_value": "hotel",
+     "type": "house",
+     "housenumber": "9190",
+     "name": "Courtyard Houston Hobby Airport",
+     "street": "Gulf Freeway",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77017",
+     "countrycode": "US",
+     "extent": [
+      -95.255563,
+      29.65584,
+      -95.254696,
+      29.6553274
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.2548996,
+      29.6555448
+     ]
+    }
+   }
+  ]
+ }
+}

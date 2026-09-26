@@ -1,0 +1,90 @@
+.row {
+  min-height: 88px;
+}
+
+.name {
+  display: flex;
+  gap: var(--sp-1);
+  align-items: flex-start;
+}
+
+.name svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Extra large: the side of the street closes the card, after the times (03-xlarge-360). */
+.sideLast {
+  margin-top: var(--sp-1);
+}
+
+.route {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+
+.extra {
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+  letter-spacing: normal;
+}
+
+/* "+2 saved ›" stays on one line, so the stop name keeps the width (C.5b, the M2 fold). */
+.more {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-3)) 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+/* A saved stop over a mile away: one short row with a chevron, not a full card (C.5b compact). */
+article.compact {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-block: var(--sp-2);
+}
+
+.compact > svg {
+  flex: none;
+}
+
+.compactMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compactName {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.compactLine {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.compactLine > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactLine > :first-child {
+  flex: none;
+}

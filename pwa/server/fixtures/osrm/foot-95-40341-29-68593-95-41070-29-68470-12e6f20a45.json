@@ -1,0 +1,1021 @@
+{
+ "key": "foot/-95.40341,29.68593;-95.41070,29.68470",
+ "recordedAt": "2026-09-25T23:58:29.829Z",
+ "json": {
+  "code": "Ok",
+  "routes": [
+   {
+    "legs": [
+     {
+      "steps": [
+       {
+        "intersections": [
+         {
+          "out": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           359
+          ],
+          "location": [
+           -95.403415,
+           29.68593
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.403415,
+           29.68593
+          ],
+          [
+           -95.40342,
+           29.686261
+          ],
+          [
+           -95.403389,
+           29.686262
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 359,
+         "bearing_before": 0,
+         "location": [
+          -95.403415,
+          29.68593
+         ],
+         "type": "depart"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 3.97,
+        "duration": 31.8,
+        "distance": 39.7
+       },
+       {
+        "intersections": [
+         {
+          "out": 3,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           90,
+           180,
+           270,
+           285
+          ],
+          "location": [
+           -95.403389,
+           29.686262
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.403389,
+           29.686262
+          ],
+          [
+           -95.40339,
+           29.686286
+          ],
+          [
+           -95.403434,
+           29.686286
+          ],
+          [
+           -95.403474,
+           29.686285
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 288,
+         "bearing_before": 87,
+         "location": [
+          -95.403389,
+          29.686262
+         ],
+         "modifier": "sharp left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 0.89,
+        "duration": 8.6,
+        "distance": 10.8
+       },
+       {
+        "intersections": [
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           105,
+           180
+          ],
+          "location": [
+           -95.403474,
+           29.686285
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.403474,
+           29.686285
+          ],
+          [
+           -95.403473,
+           29.686241
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 178,
+         "bearing_before": 281,
+         "location": [
+          -95.403474,
+          29.686285
+         ],
+         "modifier": "left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 0.41,
+        "duration": 3.9,
+        "distance": 4.9
+       },
+       {
+        "intersections": [
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           180,
+           270
+          ],
+          "location": [
+           -95.403473,
+           29.686241
+          ]
+         },
+         {
+          "out": 3,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           180,
+           270
+          ],
+          "location": [
+           -95.40446,
+           29.686297
+          ]
+         },
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.404998,
+           29.686293
+          ]
+         },
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.405439,
+           29.68629
+          ]
+         },
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.405922,
+           29.686286
+          ]
+         },
+         {
+          "out": 3,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           180,
+           270
+          ],
+          "location": [
+           -95.406851,
+           29.686278
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           90,
+           120,
+           270
+          ],
+          "location": [
+           -95.407578,
+           29.68627
+          ]
+         },
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.407757,
+           29.686268
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           90,
+           210,
+           270
+          ],
+          "location": [
+           -95.408395,
+           29.686265
+          ]
+         },
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.408741,
+           29.686263
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           105,
+           180,
+           285
+          ],
+          "location": [
+           -95.409278,
+           29.686308
+          ]
+         },
+         {
+          "out": 3,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           105,
+           180,
+           285
+          ],
+          "location": [
+           -95.409341,
+           29.686321
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.403473,
+           29.686241
+          ],
+          [
+           -95.403928,
+           29.686241
+          ],
+          [
+           -95.403982,
+           29.686257
+          ],
+          [
+           -95.404137,
+           29.686302
+          ],
+          [
+           -95.40446,
+           29.686297
+          ],
+          [
+           -95.404998,
+           29.686293
+          ],
+          [
+           -95.405439,
+           29.68629
+          ],
+          [
+           -95.405922,
+           29.686286
+          ],
+          [
+           -95.406851,
+           29.686278
+          ],
+          [
+           -95.407578,
+           29.68627
+          ],
+          [
+           -95.407757,
+           29.686268
+          ],
+          [
+           -95.408395,
+           29.686265
+          ],
+          [
+           -95.408741,
+           29.686263
+          ],
+          [
+           -95.409053,
+           29.686262
+          ],
+          [
+           -95.409278,
+           29.686308
+          ],
+          [
+           -95.409341,
+           29.686321
+          ],
+          [
+           -95.409413,
+           29.686336
+          ],
+          [
+           -95.409486,
+           29.68635
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 270,
+         "bearing_before": 178,
+         "location": [
+          -95.403473,
+          29.686241
+         ],
+         "modifier": "right",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 48.69,
+        "duration": 467.4,
+        "distance": 584.3
+       },
+       {
+        "intersections": [
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           15,
+           105,
+           165,
+           285
+          ],
+          "location": [
+           -95.409486,
+           29.68635
+          ]
+         },
+         {
+          "out": 0,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           165,
+           255,
+           345
+          ],
+          "location": [
+           -95.40947,
+           29.686262
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           120,
+           180,
+           300
+          ],
+          "location": [
+           -95.409449,
+           29.685833
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           135,
+           180,
+           315
+          ],
+          "location": [
+           -95.409446,
+           29.685696
+          ]
+         },
+         {
+          "out": 1,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           180,
+           270
+          ],
+          "location": [
+           -95.409436,
+           29.685209
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.409486,
+           29.68635
+          ],
+          [
+           -95.40947,
+           29.686262
+          ],
+          [
+           -95.409455,
+           29.686179
+          ],
+          [
+           -95.409449,
+           29.685833
+          ],
+          [
+           -95.409448,
+           29.685774
+          ],
+          [
+           -95.409446,
+           29.685696
+          ],
+          [
+           -95.409436,
+           29.685209
+          ],
+          [
+           -95.409431,
+           29.685005
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 170,
+         "bearing_before": 282,
+         "location": [
+          -95.409486,
+          29.68635
+         ],
+         "modifier": "left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 12.45,
+        "duration": 119.5,
+        "distance": 149.3
+       },
+       {
+        "intersections": [
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           0,
+           180,
+           270
+          ],
+          "location": [
+           -95.409431,
+           29.685005
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.409431,
+           29.685005
+          ],
+          [
+           -95.409566,
+           29.685009
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 271,
+         "bearing_before": 178,
+         "location": [
+          -95.409431,
+          29.685005
+         ],
+         "modifier": "right",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 1.09,
+        "duration": 10.5,
+        "distance": 13.1
+       },
+       {
+        "intersections": [
+         {
+          "out": 2,
+          "in": 1,
+          "entry": [
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           0,
+           90,
+           180
+          ],
+          "location": [
+           -95.409566,
+           29.685009
+          ]
+         },
+         {
+          "out": 2,
+          "in": 0,
+          "entry": [
+           false,
+           true,
+           true
+          ],
+          "bearings": [
+           15,
+           90,
+           195
+          ],
+          "location": [
+           -95.409572,
+           29.684577
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.409566,
+           29.685009
+          ],
+          [
+           -95.40956,
+           29.68496
+          ],
+          [
+           -95.409553,
+           29.684839
+          ],
+          [
+           -95.409557,
+           29.684678
+          ],
+          [
+           -95.409572,
+           29.684577
+          ],
+          [
+           -95.409577,
+           29.684537
+          ],
+          [
+           -95.409597,
+           29.684465
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 174,
+         "bearing_before": 271,
+         "location": [
+          -95.409566,
+          29.685009
+         ],
+         "modifier": "left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 5.07,
+        "duration": 48.6,
+        "distance": 60.7
+       },
+       {
+        "intersections": [
+         {
+          "in": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           14
+          ],
+          "location": [
+           -95.409597,
+           29.684465
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.409597,
+           29.684465
+          ],
+          [
+           -95.409597,
+           29.684465
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 0,
+         "bearing_before": 194,
+         "location": [
+          -95.409597,
+          29.684465
+         ],
+         "modifier": "right",
+         "type": "arrive"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 0,
+        "duration": 0,
+        "distance": 0
+       }
+      ],
+      "weight": 72.57,
+      "summary": "",
+      "duration": 690.3,
+      "distance": 862.8
+     }
+    ],
+    "weight_name": "routability",
+    "geometry": {
+     "coordinates": [
+      [
+       -95.403415,
+       29.68593
+      ],
+      [
+       -95.40342,
+       29.686261
+      ],
+      [
+       -95.403389,
+       29.686262
+      ],
+      [
+       -95.40339,
+       29.686286
+      ],
+      [
+       -95.403434,
+       29.686286
+      ],
+      [
+       -95.403474,
+       29.686285
+      ],
+      [
+       -95.403473,
+       29.686241
+      ],
+      [
+       -95.403928,
+       29.686241
+      ],
+      [
+       -95.403982,
+       29.686257
+      ],
+      [
+       -95.404137,
+       29.686302
+      ],
+      [
+       -95.40446,
+       29.686297
+      ],
+      [
+       -95.404998,
+       29.686293
+      ],
+      [
+       -95.405439,
+       29.68629
+      ],
+      [
+       -95.405922,
+       29.686286
+      ],
+      [
+       -95.406851,
+       29.686278
+      ],
+      [
+       -95.407578,
+       29.68627
+      ],
+      [
+       -95.407757,
+       29.686268
+      ],
+      [
+       -95.408395,
+       29.686265
+      ],
+      [
+       -95.408741,
+       29.686263
+      ],
+      [
+       -95.409053,
+       29.686262
+      ],
+      [
+       -95.409278,
+       29.686308
+      ],
+      [
+       -95.409341,
+       29.686321
+      ],
+      [
+       -95.409413,
+       29.686336
+      ],
+      [
+       -95.409486,
+       29.68635
+      ],
+      [
+       -95.40947,
+       29.686262
+      ],
+      [
+       -95.409455,
+       29.686179
+      ],
+      [
+       -95.409449,
+       29.685833
+      ],
+      [
+       -95.409448,
+       29.685774
+      ],
+      [
+       -95.409446,
+       29.685696
+      ],
+      [
+       -95.409436,
+       29.685209
+      ],
+      [
+       -95.409431,
+       29.685005
+      ],
+      [
+       -95.409566,
+       29.685009
+      ],
+      [
+       -95.40956,
+       29.68496
+      ],
+      [
+       -95.409553,
+       29.684839
+      ],
+      [
+       -95.409557,
+       29.684678
+      ],
+      [
+       -95.409572,
+       29.684577
+      ],
+      [
+       -95.409577,
+       29.684537
+      ],
+      [
+       -95.409597,
+       29.684465
+      ]
+     ],
+     "type": "LineString"
+    },
+    "weight": 72.57,
+    "duration": 690.3,
+    "distance": 862.8
+   }
+  ],
+  "waypoints": [
+   {
+    "hint": "IST5iyQk-YtmAgAAbwEAACIAAAAAAAAADah1QjDGEkIx8lhAAAAAAOsBAAAmAQAAGwAAAAAAAAAUAAAAaUJQ-qr4xAFuQlD6qvjEAQIAfxYAAAAA",
+    "location": [
+     -95.403415,
+     29.68593
+    ],
+    "name": "",
+    "distance": 0.4839956087
+   },
+   {
+    "hint": "Vbf2kNe39pCCAwAARQAAAAcBAAAlAAAAepHXQiRmA0FMxfxBGbqOQF4DAABCAAAA_QAAACQAAAAUAAAAQypQ-vHyxAH0JVD63PPEAQIA3wAAAAAA",
+    "location": [
+     -95.409597,
+     29.684465
+    ],
+    "name": "",
+    "distance": 109.9011556
+   }
+  ]
+ }
+}

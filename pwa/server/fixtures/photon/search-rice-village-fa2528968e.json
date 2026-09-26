@@ -1,0 +1,237 @@
+{
+ "key": "search/rice village",
+ "recordedAt": "2026-09-25T23:58:43.366Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 10093728943,
+     "osm_key": "place",
+     "osm_value": "neighbourhood",
+     "type": "locality",
+     "name": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4166625,
+      29.7166504
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 912215030,
+     "osm_key": "landuse",
+     "osm_value": "retail",
+     "type": "locality",
+     "name": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "countrycode": "US",
+     "extent": [
+      -95.4183086,
+      29.7166085,
+      -95.4150229,
+      29.7151244
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4166657,
+      29.7158667
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 8442228572,
+     "osm_key": "amenity",
+     "osm_value": "veterinary",
+     "type": "house",
+     "name": "Rice Village Animal Hospital",
+     "street": "Greenbriar Drive",
+     "locality": "Southampton Extension",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4128904,
+      29.7177049
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 908253540,
+     "osm_key": "building",
+     "osm_value": "apartments",
+     "type": "house",
+     "housenumber": "2410",
+     "name": "Rice Village Apartments",
+     "street": "Shakespeare Street",
+     "locality": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US",
+     "extent": [
+      -95.4168142,
+      29.7145247,
+      -95.4150376,
+      29.7143282
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4159259,
+      29.7144243
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 12400784903,
+     "osm_key": "amenity",
+     "osm_value": "restaurant",
+     "type": "house",
+     "housenumber": "2563",
+     "name": "Sprinkles Houston Rice Village",
+     "street": "Amherst Street",
+     "locality": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4175764,
+      29.7157
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 8442225945,
+     "osm_key": "amenity",
+     "osm_value": "dentist",
+     "type": "house",
+     "housenumber": "2402",
+     "name": "The Village Dentistry",
+     "street": "Rice Boulevard",
+     "locality": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.415129,
+      29.7176057
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 8864560577,
+     "osm_key": "shop",
+     "osm_value": "dry_cleaning",
+     "type": "house",
+     "housenumber": "2366",
+     "name": "Village Cleaners",
+     "street": "Rice Boulevard",
+     "locality": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4144116,
+      29.7176848
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 12490664601,
+     "osm_key": "leisure",
+     "osm_value": "fitness_centre",
+     "type": "house",
+     "housenumber": "2369",
+     "name": "Village Fitness",
+     "street": "Rice Boulevard",
+     "locality": "Rice Village",
+     "district": "University Place",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77005",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4146119,
+      29.7172556
+     ]
+    }
+   }
+  ]
+ }
+}

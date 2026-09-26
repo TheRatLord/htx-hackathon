@@ -1,0 +1,45 @@
+.walk {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  min-height: var(--touch-min);
+  padding: 2px var(--sp-3) 2px var(--sp-2);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: start;
+}
+
+.walk svg {
+  flex: none;
+  color: var(--c-accent-icon);
+}
+
+/* "Walk" (14sp) over "1 min" (18sp Bold): it reads "Walk 1 min", never a bare "1 min" that could
+   pass for a bus time (C.5a). */
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.value {
+  font-size: var(--fs-heading);
+  line-height: 1.2;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+/* "Walk": the button stays narrow so the stop name keeps the card's width. */
+.sub {
+  max-width: 7.5em;
+  color: var(--c-text-variant);
+  font-size: var(--fs-caption);
+  line-height: 1.2;
+  text-wrap: balance;
+}

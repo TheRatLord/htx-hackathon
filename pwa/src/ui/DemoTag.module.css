@@ -1,0 +1,12 @@
+/* Small and quiet: a label on demo data, not a headline competing with it. */
+.tag {
+  flex: none;
+  width: fit-content;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--c-outline);
+  border-radius: var(--r-chip);
+  color: var(--c-text-variant);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+}

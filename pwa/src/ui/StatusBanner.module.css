@@ -1,0 +1,68 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) var(--sp-4);
+  border-radius: var(--r-box);
+  color: #fff;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  font-weight: var(--fw-medium);
+}
+
+.tail {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.offline {
+  background: var(--c-offline-bg);
+}
+
+.trip {
+  background: var(--c-brand-blue-deep);
+}
+
+/* Its 48dp target overlaps the banner's padding, so the banner stays 48dp tall. */
+.open {
+  flex: none;
+  min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-1)) 0;
+  white-space: nowrap;
+  border: none;
+  background: none;
+  color: #fff;
+  font-weight: var(--fw-medium);
+}
+
+.pill {
+  min-height: var(--touch-min);
+  margin: 0 auto;
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--e-2);
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.chip {
+  width: fit-content;
+  margin: 0 auto;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--e-1);
+  color: var(--c-text-variant);
+  font-size: var(--fs-caption);
+}

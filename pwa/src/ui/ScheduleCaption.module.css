@@ -1,0 +1,10 @@
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.live {
+  color: var(--c-live-text);
+  font-weight: var(--fw-medium);
+}

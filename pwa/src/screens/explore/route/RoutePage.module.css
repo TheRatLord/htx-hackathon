@@ -1,0 +1,357 @@
+.screen {
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+/* Back, the route name and Save stay on screen however far the stop list scrolls. */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-background);
+}
+
+/* "[82] EASTBOUND to DOWNTOWN · Change" and the column header: shown under the bar once the page header scrolls away. */
+.compact {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  border-bottom: 1px solid var(--c-divider);
+  background: var(--c-background);
+  visibility: hidden;
+}
+
+.compactRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-right: var(--gutter);
+}
+
+.compactButton {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  min-height: var(--touch-min);
+  padding: var(--sp-1) 0 var(--sp-1) var(--gutter);
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+/* "Stop … Next bus (scheduled)": labels the right-hand time column. */
+.columnHead,
+.columnHeadStatic {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+}
+
+.columnHead {
+  padding: 0 var(--gutter) var(--sp-1);
+}
+
+.columnHead span:last-child,
+.columnHeadStatic span:last-child {
+  text-align: end;
+}
+
+.mapLink {
+  margin: calc(-1 * var(--sp-2)) 0 0 calc(-1 * var(--sp-3));
+}
+
+.compact[data-shown="true"] {
+  visibility: visible;
+}
+
+.compactText {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-caps);
+  overflow-wrap: anywhere;
+}
+
+/* "⇅ Change": a small tonal pill beside the direction, not a link at the far edge. */
+.compactAction {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  border: none;
+  border-radius: var(--r-pill, 999px);
+  background: var(--c-nav-bg);
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+/* Save route: a 48dp star, like the stop sheet's Save. */
+.star {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin-right: calc(-1 * var(--sp-2));
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-primary);
+}
+
+.star:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+/* "Mandell St (2953)" leads and stays on one line where it fits; a longer one still wraps rather than overflow. */
+.cross {
+  display: inline-block;
+  max-width: 100%;
+  font-weight: var(--fw-medium);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--gutter) 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.routeName {
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.kind,
+.singleDirection {
+  color: var(--c-text-variant);
+}
+
+.listHead {
+  display: flex;
+  flex-direction: column;
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* Today's timetable look: a grey spine with ring nodes and hairline dividers, full-bleed. */
+.timeline {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.stop {
+  position: relative;
+  padding: 0 var(--gutter);
+}
+
+.stop::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--gutter) + 7px);
+  width: 2px;
+  background: var(--c-divider);
+}
+
+.stop:first-child::before {
+  top: 28px;
+}
+
+.stop:last-child::before {
+  bottom: auto;
+  height: 28px;
+}
+
+.stop + .stop {
+  border-top: 1px solid var(--c-divider);
+}
+
+/* The tapped row: a tinted background, so it never looks like the "Nearest to you" marker. */
+.stop[data-expanded="true"] {
+  background: var(--c-nav-bg);
+}
+
+.stopButton {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: var(--sp-3);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) 0;
+  border: none;
+  background: none;
+  text-align: start;
+}
+
+.stopButton:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.node {
+  position: relative;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--c-text-variant);
+  border-radius: 50%;
+  background: var(--c-surface);
+}
+
+.nodeFilled {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+}
+
+/* "Nearest to you": a you-are-here glyph on the spine instead of a ring. */
+.nodeNearest {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--c-background);
+  background: var(--c-background);
+  color: var(--c-primary);
+}
+
+.stopText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stopName {
+  overflow-wrap: anywhere;
+}
+
+.stopId {
+  color: var(--c-text-variant);
+}
+
+/* The street the bus runs along, under the bold cross street. */
+.street {
+  color: var(--c-text-variant);
+}
+
+.nearest {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* "next bus" under each time, so every number says what it is. */
+.nextCaption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* The stop a bus has just left: greyed, with "Bus just left" under its name. */
+.stop[data-passed="true"] .cross,
+.stop[data-passed="true"] .stopId {
+  color: var(--c-text-secondary);
+}
+
+.stop[data-passed="true"] .node {
+  border-color: var(--c-divider);
+  background: var(--c-divider);
+}
+
+.passedLine {
+  color: var(--c-text-secondary);
+  font-style: italic;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-left: 28px;
+  padding-bottom: var(--sp-3);
+}
+
+.panelNote {
+  color: var(--c-text-variant);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* "Bus here now": its own short line at the top of the row, the glyph on the spine. */
+.busMark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: -2px;
+  padding-top: var(--sp-2);
+  color: var(--c-brand-navy);
+  font-weight: var(--fw-medium);
+}
+
+/* A live bus: a 20dp navy glyph on the spine, between this stop and the one above. */
+.bus {
+  position: relative;
+  flex: none;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--c-surface);
+  background: var(--c-brand-navy);
+  color: #fff;
+}
+
+/* A bus placed by the timetable, not by GPS: outlined, so it never passes for a live one. */
+.busScheduled {
+  border: 2px solid var(--c-brand-navy);
+  background: var(--c-surface);
+  color: var(--c-brand-navy);
+}
+
+.busStale {
+  background: var(--c-text-variant);
+}
+
+.noMatch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}

@@ -1,0 +1,722 @@
+/* D11 Plan Your Trip / Select Itinerary and D12 My Itinerary. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.variant {
+  color: var(--c-text-variant);
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.link {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+
+.alertText {
+  color: var(--c-alert-text);
+}
+
+/* ---------- From / To box (today's form) ---------- */
+
+.box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-box);
+  background: var(--c-card);
+}
+
+.place {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  padding: var(--sp-2) 72px var(--sp-2) var(--sp-4);
+  border: none;
+  background: none;
+  color: var(--c-text);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-medium);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.place:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+/* Inside the box, so the ring is not cut by its edge. */
+.place:focus-visible {
+  outline-offset: -3px;
+}
+
+.placeholder {
+  color: var(--c-text-variant);
+}
+
+/* The destination looks like a field, empty or filled: white, outlined, as on the search bar. */
+.field {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-alert);
+  background: var(--c-surface);
+}
+
+/* Room for the clear (×) button inside the field's right end. */
+.toRow .field {
+  padding-right: 44px;
+}
+
+.fieldEmpty {
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+}
+
+.toRow {
+  position: relative;
+}
+
+.clear {
+  position: absolute;
+  top: 50%;
+  right: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-text-variant);
+}
+
+.placeAlert {
+  color: var(--c-alert-text);
+  font-size: var(--fs-body);
+}
+
+.dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+  box-shadow: 0 0 0 1px var(--c-outline);
+}
+
+.ring {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0 2px;
+  border: 3px solid var(--c-outline);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The line runs under the round swap button, as on v2.71. */
+.between {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  /* The line ends under the swap button, not past it at the box's edge. */
+  padding: 0 calc(var(--sp-3) + var(--touch-min) / 2) 0 var(--sp-4);
+  color: var(--c-text-variant);
+}
+
+.between hr {
+  flex: 1;
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--c-outline-strong);
+}
+
+/* v2.71's round swap button, sitting on the divider at the box's right. */
+.swap {
+  position: absolute;
+  top: 50%;
+  right: var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  transform: translateY(-50%);
+  border: 1px solid var(--c-outline);
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: var(--e-1);
+  color: var(--c-text);
+}
+
+/* "🕒 Leave now ▾": one row, like v2.71's "Leave at  now". */
+.whenRow {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-4);
+  border: none;
+  border-radius: var(--r-box);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+  text-align: start;
+}
+
+.whenRow > span {
+  flex: 1;
+}
+
+.whenRow:active {
+  background: var(--c-chip-inactive);
+}
+
+/* Recent and saved places under the form. */
+.picks ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picksTitle {
+  margin: var(--sp-1) 0;
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+}
+
+.pick {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-1);
+  border: none;
+  border-bottom: 1px solid var(--c-divider);
+  background: none;
+  color: var(--c-text);
+  text-align: start;
+}
+
+.pick > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pick:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+/* ---------- Chips ---------- */
+
+.chipsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Full-bleed inside the sheet body: ChipRow keeps its own gutter. */
+.bleed {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.otherTime {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--card-pad);
+  border-radius: var(--r-box);
+  background: var(--c-card);
+}
+
+.otherTime label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-weight: var(--fw-medium);
+}
+
+.otherTime input {
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-alert);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ---------- Results ---------- */
+
+/* "Arrives first ▾": a compact picker at the right of the summary's last row, 48dp tall. */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-2) var(--card-pad);
+  border-radius: var(--r-box);
+  background: var(--c-card);
+  color: var(--c-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.summary:active:not(:has(select:active)) {
+  background: var(--c-chip-inactive);
+}
+
+.summaryPlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-2);
+  align-items: center;
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.summaryPlaces > span {
+  display: inline-flex;
+  gap: var(--sp-1);
+  align-items: center;
+}
+
+.summaryWhen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* "Leave now · Edit ›": when, then the link word, 48dp tall. */
+.summaryEdit {
+  display: inline-flex;
+  gap: var(--sp-3);
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: start;
+}
+
+.editLink {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+/* Alerts every trip shares, once above the cards (22). */
+.sharedAlert {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  text-decoration: none;
+}
+
+.smallDot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+  box-shadow: 0 0 0 1px var(--c-outline);
+}
+
+.status {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Itinerary card ---------- */
+
+.card {
+  container: itcard / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  --tonal-bg: var(--c-surface);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: calc(-1 * var(--card-pad));
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  color: var(--c-text);
+  text-decoration: none;
+}
+
+.cardMain:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.cardTop {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: var(--sp-1) var(--sp-2);
+  /* wrap-reverse flips the cross axis: flex-end is the top of the line. */
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.cardTop > .durationCol {
+  margin-left: auto;
+}
+
+/* A narrow card: the arrival is on a line of its own above the strip, "12:59 PM  47 min" in one row. */
+@container itcard (max-width: 340px) {
+  .cardTop > .durationCol {
+    flex-direction: row;
+    gap: var(--sp-2);
+    align-items: baseline;
+  }
+}
+
+/* v2.71's strip, final walk included. When it can't share a line with the arrival (360dp, Spanish,
+   large text), the arrival moves up to its own line on the right and the strip gets the card's full
+   width (.cardTop wrap-reverse), so no leg drops to a line of its own (22-360). */
+.modesClip {
+  --mode-sep: 13px;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.modes {
+  display: block;
+  margin-left: calc(-1 * var(--mode-sep));
+  text-wrap: balance;
+}
+
+.modeStep {
+  display: inline-flex;
+  align-items: flex-start;
+  margin-bottom: 2px;
+  vertical-align: top;
+}
+
+.modeSep {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--mode-sep);
+  min-height: 40px;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+}
+
+.modeRide {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 16sp (L1): the minutes are information, not a caption. */
+.modeMin {
+  white-space: nowrap;
+}
+
+.modeWalk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.duration {
+  flex: none;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.timesClip {
+  display: block;
+  overflow: hidden;
+}
+
+.times {
+  display: flex;
+  flex-wrap: wrap;
+  /* " · ", the width of the separator inside a part. */
+  --times-sep: 0.75em;
+  margin-left: calc(-1 * var(--times-sep));
+  font-variant-numeric: tabular-nums;
+}
+
+.timesPart {
+  white-space: nowrap;
+}
+
+.timesSep {
+  display: inline-block;
+  width: var(--times-sep);
+  text-align: center;
+}
+
+
+/* "Board [80] at #11424 · 12:15 PM": one bold line under a divider; the chip sits in the text. */
+.boardLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.boardLine > span:first-child {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  align-items: center;
+}
+
+.alertLine {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  color: var(--c-alert-text);
+}
+
+.fare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-1);
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* L8: a 48dp tall target, although it reads as an inline link. */
+.fare .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+}
+
+
+
+/* ---------- Peek rows (D11, D12) ---------- */
+
+.peek {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter) var(--sp-3);
+}
+
+.peek p {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-medium);
+}
+
+.peekLine {
+  display: block;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-regular);
+}
+
+.peek > :last-child {
+  flex: none;
+}
+
+/* ---------- My Itinerary ---------- */
+
+.arrive {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+/* The fare under the duration, as on v2.71 ("50 min" / "Local fare $1.25"). */
+.durationCol {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.fareSmall {
+  color: var(--c-text-variant);
+  white-space: nowrap;
+}
+
+/* The boarding block: a tinted inset instead of a divider, so it reads as "where to stand". */
+
+/* An advisory (accessibility tip, less frequent service): navy ⓘ and plain text, not red (22). */
+.advisoryLine {
+  align-items: flex-start;
+  color: var(--c-text);
+}
+
+.clamp2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* The small "PM" after the bold arrival time, as on the stop strip. */
+.clockUnit {
+  font-size: 0.7em;
+  font-weight: var(--fw-medium);
+}
+
+/* "Same buses later: 12:35 PM ›", under the card's Board line. */
+.later {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-1);
+  align-items: center;
+  margin: calc(-1 * var(--card-pad)) 0 calc(-1 * var(--sp-2));
+  color: var(--c-text-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.later a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+}
+
+/* v2.71's sort chips under the summary, full-bleed: ChipRow keeps its own gutter. */
+.sortChips {
+  margin: calc(-1 * var(--sp-1)) calc(-1 * var(--gutter)) 0;
+}
+
+/* ---------- "‹ Plan Your Trip ... ⌄": Back, title and toggle on one row (PlanHeader) ---------- */
+
+.header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0;
+  /* Clears the grab bar drawn over the top of the header. */
+  padding: var(--sp-3) var(--sp-1) var(--sp-1) calc(var(--gutter) - var(--sp-3));
+}
+
+.headerBack {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-min);
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: none;
+  background: none;
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.headerToggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-link-text);
+}
+
+.headerBack:active,
+.headerToggle:active {
+  background: rgb(0 0 0 / 6%);
+}
+
+.headerTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+  overflow-wrap: break-word;
+}
+
+.headerToggle {
+  margin-left: auto;
+}
+
+.headerRight {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: end;
+}
+
+.headerRight + .headerToggle {
+  margin-left: 0;
+}

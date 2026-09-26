@@ -1,0 +1,13 @@
+.word {
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-body);
+}
+
+.live,
+.simulated {
+  color: var(--c-live-text);
+}
+
+.canceled {
+  color: var(--c-canceled-text);
+}
