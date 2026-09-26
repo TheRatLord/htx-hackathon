@@ -5,9 +5,11 @@ import { config } from "../server/config.ts";
 import { serviceDayStart } from "../server/lib/time.ts";
 import { getAlerts } from "../server/services/alerts.ts";
 import { getArrivals } from "../server/services/arrivals.ts";
+import { fetchUpstream } from "../server/lib/upstream.ts";
 import { getNearby } from "../server/services/nearby.ts";
+import { getRouteDetail } from "../server/services/routeDetail.ts";
 import { getRouteNext } from "../server/services/routeNext.ts";
-import { getTransitCenterDetail } from "../server/services/stopDetail.ts";
+import { getStopDetail, getTransitCenterDetail } from "../server/services/stopDetail.ts";
 import { getStopSchedule } from "../server/services/stopSchedule.ts";
 import { walkRoute } from "../server/services/walk.ts";
 
@@ -39,6 +41,11 @@ describe("1. /nearby transit centers", () => {
     expect(tc!.bayCount).toBeGreaterThan(0);
     expect(res.transitCenters.every((t) => t.distanceM <= 1000)).toBe(true);
   });
+
+  it("lists transit centers whatever the stop radius", async () => {
+    const res = await getNearby(29.789, -95.456, { radiusM: 100, now: NOW });
+    expect(res.transitCenters.map((t) => t.id)).toContain("northwest-transit-center");
+  });
 });
 
 describe("2. /nearby departures carry their source", () => {
@@ -67,7 +74,7 @@ describe("4. structured walk steps", () => {
     expect(w.source).toBe("osrm");
     expect(w.steps.length).toBeGreaterThan(0);
     expect(w.steps.every((s) => typeof s.maneuver === "string")).toBe(true);
-    expect(w.steps.at(-1)!.maneuver).toBe("arrive");
+    expect(w.steps.at(-1)).toMatchObject({ maneuver: "arrive", street: "Test stop" });
   });
 
   it("falls back to one arrive step naming the stop", async () => {
@@ -92,6 +99,12 @@ describe("5. stop schedule", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ stopId: "342", routeId: "040" });
   });
+
+  it("is a 404 for a route that doesn't serve the stop", async () => {
+    const res = await createApp().request("/api/stops/342/schedule?route=82");
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: { code: "STOP_NOT_ON_ROUTE" } });
+  });
 });
 
 describe("6. route next departures", () => {
@@ -110,11 +123,25 @@ describe("6. route next departures", () => {
 });
 
 describe("7. honest alerts source", () => {
-  it("reports unavailable, not demo alerts, when the live feed fails", async () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("reports unavailable, not demo alerts, when the live feed fails, and caches that for a minute", async () => {
+    // Step past the 60 s alerts cache so earlier tests can't have warmed it.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(Date.now() + 10 * 60_000);
     config.offline = false;
     config.metroApiKey = "test-key";
+    const alertCalls = () => vi.mocked(fetchUpstream).mock.calls.filter(([o]) => o.service === "metro-alerts").length;
+    const before = alertCalls();
+
     const res = await getAlerts();
     expect(res.source).toBe("unavailable");
     expect(res.alerts).toEqual([]);
+
+    await getAlerts({ routeId: "82" });
+    expect(alertCalls()).toBe(before + 1);
+
+    expect((await getStopDetail("342")).alertsSource).toBe("unavailable");
+    expect((await getRouteDetail("82")).alertsSource).toBe("unavailable");
   });
 });

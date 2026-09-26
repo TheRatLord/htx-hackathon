@@ -1,11 +1,12 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { config } from "./config.ts";
-import { findStop, gtfs } from "./gtfs/store.ts";
+import { findStop } from "./gtfs/store.ts";
 import { optionalNumber, parseLatLon, parsePlace, requireParam } from "./params.ts";
 import { getAlerts } from "./services/alerts.ts";
 import { getArrivals } from "./services/arrivals.ts";
 import { ApiError } from "./services/errors.ts";
+import { getHealth } from "./services/health.ts";
 import { getNearby } from "./services/nearby.ts";
 import { plan } from "./services/plan.ts";
 import { getRouteDetail } from "./services/routeDetail.ts";
@@ -35,24 +36,7 @@ export function createApp() {
   });
   app.notFound((c) => c.json({ error: { code: "NOT_FOUND", message: `No endpoint ${c.req.method} ${c.req.path}` } }, 404));
 
-  app.get("/health", (c) => {
-    const g = gtfs();
-    return c.json({
-      ok: true,
-      feedVersion: g.meta.feedVersion,
-      feedValid: `${g.meta.feedStart}–${g.meta.feedEnd}`,
-      dataBuiltAt: g.meta.generatedAt,
-      stops: g.stops.length,
-      routes: g.routes.length,
-      trips: g.meta.trips.ids.length,
-      realtime: {
-        metroArrivalsApi: Boolean(config.metroTransitApiKey) && !config.offline,
-        gtfsRtTripUpdates: Boolean(config.metroApiKey) && !config.offline,
-        simulated: config.demoRealtime,
-      },
-      offline: config.offline,
-    });
-  });
+  app.get("/health", (c) => c.json(getHealth()));
 
   app.get("/stops/:id", async (c) => {
     cacheFor(c, 15);
