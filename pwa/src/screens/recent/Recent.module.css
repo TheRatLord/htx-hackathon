@@ -1,0 +1,107 @@
+/* The whole tab sits on the page background, as today's Recent. */
+.page {
+  min-height: 100%;
+  background: var(--c-background);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: var(--appbar-h);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--gutter);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+  font-weight: var(--fw-regular);
+}
+
+.hint {
+  margin: 0;
+  padding: 0 var(--gutter) var(--sp-2);
+  color: var(--c-text-variant);
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+  padding: 0 var(--gutter);
+}
+
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  margin: 0;
+  padding: 0 var(--gutter) var(--sp-2);
+  list-style: none;
+}
+
+.editRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--touch-gap);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+.trip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 56px;
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--gutter);
+}
+
+/* Origin on one line, destination on the next, each after its marker. */
+.tripText {
+  display: flex;
+  flex: 1 1 12rem;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.place {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  overflow-wrap: anywhere;
+}
+
+.place svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.originDot {
+  flex: none;
+  margin: 6px 4px 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+}
+
+.rowError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-1) 0 0 var(--sp-3);
+  color: var(--c-text-variant);
+}
