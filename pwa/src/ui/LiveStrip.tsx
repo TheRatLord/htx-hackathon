@@ -1,4 +1,5 @@
-import { departureA11y, upcoming } from "../lib/format.ts";
+import type { Dep } from "../api/types.ts";
+import { departureA11y, showsClock, upcoming } from "../lib/format.ts";
 import { useLang, useT } from "../i18n/index.ts";
 import { useNow } from "../state/clock.ts";
 import { useOffline } from "../state/offline.ts";
@@ -6,7 +7,21 @@ import styles from "./LiveStrip.module.css";
 import { TimeValue } from "./TimeValue.tsx";
 import type { LiveStripProps, StripFact } from "./types.ts";
 
-const MAX_DEPS = 4;
+/** Three minute values fit one row at 360dp. */
+const MAX_DEPS = 3;
+/** Clock times ("12:19 AM") are twice as wide. */
+const MAX_CLOCKS = 2;
+
+/**
+ * The departures that fit: minute values after the first departure, so a far-off clock time
+ * never pushes the strip onto a second row; when every time is a clock time (offline, late
+ * night), the first two.
+ */
+function stripDeps(deps: Dep[], now: number, offline: boolean): Dep[] {
+  const next = upcoming(deps, now).slice(0, MAX_DEPS);
+  if (next.every((d) => showsClock(d, now, offline))) return next.slice(0, MAX_CLOCKS);
+  return next.filter((d, i) => i === 0 || !showsClock(d, now, offline));
+}
 
 /** The strip's look with facts instead of times: "**5** stops left · about **7** min" (D13 ride step). */
 export function FactStrip({ facts }: { facts: StripFact[] }) {
@@ -28,7 +43,7 @@ export function LiveStrip({ deps, loading, emptyText }: LiveStripProps) {
   const lang = useLang();
   const now = useNow();
   const offline = useOffline();
-  const shown = upcoming(deps, now).slice(0, MAX_DEPS);
+  const shown = stripDeps(deps, now, offline);
   if (loading) {
     return (
       <div className={styles.strip} aria-busy="true" aria-label={t("common.loading")}>

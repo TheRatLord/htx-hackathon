@@ -1,6 +1,6 @@
 .strip {
   display: flex;
-  /* Wraps rather than scrolling: a clock time ("11:22 PM") among four departures would not fit. */
+  /* Wraps rather than scrolling when two clock times don't fit (large text). */
   flex-wrap: wrap;
   gap: var(--sp-2) var(--sp-8);
   /* Numbers line up across items; a status word hangs under its own number. */
