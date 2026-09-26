@@ -1,7 +1,7 @@
 // Explore home (G.3 `/explore`): Nearby (D2), Route near you (D3, `?route=`) and Stops near a
 // place (D4, `?at=&label=`). One sheet: title row, one banner, the route chips, then the list.
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -87,6 +87,27 @@ function degForPx(px: number, lat: number, zoom: number): number {
   return (px * mPerPx) / 111_320;
 }
 
+/**
+ * The FAB column's width, kept current (fonts loading, a language or text-size change) by a
+ * ResizeObserver instead of read from the DOM during render. Rounded to 8px so a sub-pixel change
+ * doesn't move the camera.
+ */
+const fabColumn = () => document.querySelector<HTMLElement>("[data-map-fabs]");
+const fabWidth = (el: HTMLElement | null) => Math.round((el?.offsetWidth ?? 0) / 8) * 8;
+
+function useFabColumnWidth(enabled: boolean): number {
+  // The first frame's camera already clears the column (07's tag on the first frame).
+  const [w, setW] = useState(() => (enabled ? fabWidth(fabColumn()) : 0));
+  useEffect(() => {
+    const el = enabled ? fabColumn() : null;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setW(fabWidth(el)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [enabled]);
+  return w;
+}
+
 function HomeScene({ anchor, data }: { anchor: HomeAnchor; data?: NearbyResponse }) {
   const saved = useSaved();
   const at = anchor.kind === "place" ? anchor.point : undefined;
@@ -103,7 +124,8 @@ function HomeScene({ anchor, data }: { anchor: HomeAnchor; data?: NearbyResponse
   // And moved right by half the width the FAB column takes past the camera's 72px right margin
   // ("Plan Trip" is ~150px wide): centred on the camera, the museum pin sat under Plan Trip and the
   // map's own nudge moved it out only after a moment.
-  const fabExtra = Math.max(0, (document.querySelector<HTMLElement>("[data-map-fabs]")?.offsetWidth ?? 0) + FAB_GAP_PX - CAMERA_RIGHT_PX);
+  const fabW = useFabColumnWidth(Boolean(at));
+  const fabExtra = Math.max(0, fabW + FAB_GAP_PX - CAMERA_RIGHT_PX);
   const placeCenter =
     at &&
     (near

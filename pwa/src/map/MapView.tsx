@@ -70,6 +70,11 @@ const BOTTOM_LABEL_ROOM = 24;
 const SHEET_CLEAR = 40;
 /** The search bar's usual bottom edge, before the layout can be measured. */
 const SEARCH_BAR_H = 64;
+/** A point focus with label room keeps its drawing this far (px) left of the FAB column. */
+const FAB_GAP = 16;
+/** The camera's side paddings (see padding()). */
+const PAD_LEFT = 32;
+const PAD_RIGHT = 72;
 
 /**
  * Camera padding keeps fitted content clear of the chrome: at the top, the search bar (12 + 48),
@@ -78,7 +83,7 @@ const SEARCH_BAR_H = 64;
  */
 function padding(bottom: number, topChrome: number, canvasH: number): maplibregl.PaddingOptions {
   const top = topChrome + TOP_LABEL_ROOM;
-  return { top, left: 32, right: 72, bottom: Math.max(0, Math.min(bottom + SHEET_CLEAR, canvasH - top - MIN_FIT_H)) };
+  return { top, left: PAD_LEFT, right: PAD_RIGHT, bottom: Math.max(0, Math.min(bottom + SHEET_CLEAR, canvasH - top - MIN_FIT_H)) };
 }
 
 /**
@@ -126,6 +131,20 @@ function fabClear(map: maplibregl.Map, want: { top: number; bottom: number; left
   const byBottom = (w - want.right) * (h - bottom);
   if (h - bottom < MIN_FIT_H) return { ...want, right };
   return byRight >= byBottom ? { ...want, right } : { ...want, bottom };
+}
+
+/**
+ * Where a point focus is drawn, in px from the padded centre (easeTo's `offset`): half its label
+ * room lower, and half the FAB column's overhang past the right padding to the left. The FAB column
+ * is measured here, when the camera moves, so a later width change (fonts, language, text size)
+ * never moves the camera on its own.
+ */
+function pointOffset(map: maplibregl.Map, labelRoomPx: number | undefined, pad: maplibregl.PaddingOptions): [number, number] {
+  if (!labelRoomPx) return [0, 0];
+  const canvas = map.getContainer().getBoundingClientRect();
+  const fabs = document.querySelector<HTMLElement>("[data-map-fabs]")?.getBoundingClientRect();
+  const overhang = fabs?.width ? Math.max(0, canvas.right - fabs.left + FAB_GAP - (pad.right ?? PAD_RIGHT)) : 0;
+  return [-overhang / 2, labelRoomPx / 2];
 }
 
 /** A walk or trip's callout is centred on its pin: keep the pin far enough from the FAB column for it to clear. */
@@ -176,7 +195,7 @@ async function applyScene(state: SceneState, map: maplibregl.Map, scene: MapScen
     fitFocus(map, f.bounds, fitPad(scene, pad));
   } else if (f) {
     const center = f.kind === "user" ? user : (f.point ?? highlight);
-    if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
+    if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad, offset: pointOffset(map, f.kind === "point" ? f.labelRoomPx : undefined, pad) });
   }
 }
 

@@ -36,17 +36,20 @@ function reach(el: HTMLElement, sheet: HTMLElement): number {
 /**
  * What a fold must not cut, from the sheet's top as if unscrolled: every line of text, button,
  * link and icon. Card-sized hit areas (the card's own button) and the pinned footer don't count.
+ * Only elements that hold text or are controls or icons are measured (a text node's parent, and
+ * `button, a, svg, img`), not every element in the sheet.
  */
 function lineBoxes(sheet: HTMLElement, below: number): { top: number; bottom: number }[] {
   const top0 = sheet.getBoundingClientRect().top;
   const footer = sheet.querySelector<HTMLElement>("[data-sheet-footer]");
+  const els = new Set<HTMLElement>(sheet.querySelectorAll<HTMLElement>("button, a, svg, img"));
+  const walker = document.createTreeWalker(sheet, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.textContent!.trim() && n.parentElement) els.add(n.parentElement);
   const scroll = new Map<Element | null, number>();
   const out: { top: number; bottom: number }[] = [];
-  for (const el of sheet.querySelectorAll<HTMLElement>("*")) {
+  for (const el of els) {
     if (footer?.contains(el)) continue;
     const control = el.tagName === "BUTTON" || el.tagName === "A";
-    const ownText = Array.from(el.childNodes).some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
-    if (!control && !ownText && el.tagName !== "svg" && el.tagName !== "IMG") continue;
     const r = el.getBoundingClientRect();
     if (r.height < 4 || r.width < 4) continue;
     // A card's own hit button (no text of its own, as tall as the card) is not a line.
@@ -80,21 +83,26 @@ function lineFolds(sheet: HTMLElement, capPx: number): { clean: (f: number) => b
  * The half height that ends on a whole row: the target's reach, grown to the deepest card or card
  * row below it that still fits the cap; when the target itself is past the cap, the deepest one
  * above the cap. A fold through the middle of a route row (a chip top and half a headsign) reads as
- * broken, so the sheet stops on a row boundary (02-360, 03-360, 38). When no card row fits, or the
- * default half height would still cut a line, the deepest fold that cuts no line of text or button:
- * the tab bar sliced 'The 1 min bus leaves…' (03-xlarge-360) and 'Schedule' / 'Track bus' (47).
+ * broken, so the sheet stops on a row boundary (02-360, 03-360, 38). The sheet is never shorter
+ * than its default half, so when that default would still cut a line of text or a button, it ends
+ * instead on the deepest whole row (or, failing that, the deepest fold that cuts no line) up to one
+ * button row above it, or grows to one below it: the tab bar sliced 'The 1 min bus leaves…'
+ * (03-xlarge-360), 'Schedule' / 'Track bus' (47) and Route 51's 'DOWNTOWN TC' (46).
  * `max` is set when that fold is above the sheet's default half: the sheet then ends there.
  */
 function wholeRowHeight(el: HTMLElement, sheet: HTMLElement, capPx: number): { min: number; max?: number } {
   const own = reach(el, sheet);
   const rows = Array.from(sheet.querySelectorAll<HTMLElement>("article, article li")).map((r) => reach(r, sheet));
   const fits = rows.filter((r) => r <= capPx);
-  if (own <= capPx) return { min: Math.max(own, ...fits.filter((r) => r >= own)) };
   const base = defaultHalfPx();
-  const row = fits.length ? Math.max(...fits) : undefined;
+  // The deepest whole row the sheet may end on: at or below the target when the target fits.
+  const row = own <= capPx ? Math.max(own, ...fits.filter((r) => r >= own)) : fits.length ? Math.max(...fits) : undefined;
   if (row !== undefined && row >= base) return { min: row };
   const folds = lineFolds(sheet, capPx);
   if (row !== undefined && folds.clean(base)) return { min: row };
+  // The default half cuts a line: end on the row above it if it is close enough and ends clean...
+  if (row !== undefined && row >= base - SHRINK_MAX && folds.clean(row)) return { min: row, max: row };
+  // ...else on the deepest fold that cuts nothing.
   const fold = folds.deepest;
   if (fold === undefined || fold < base - SHRINK_MAX) return { min: row ?? capPx };
   return fold >= base ? { min: fold } : { min: fold, max: fold };
@@ -119,9 +127,16 @@ export function useHalfUpTo(target: () => HTMLElement | null | undefined, cap: (
       setMinHalf(Math.ceil(h.min));
     };
     measure();
-    const ro = new ResizeObserver(measure);
+    // Resizes are measured once per frame, after layout settles: measuring inside the observer's
+    // callback changed the layout it was observing (ResizeObserver loop warnings, thrashing).
+    let frame = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
     for (let p: HTMLElement | null = el; p && p !== sheet; p = p.parentElement) ro.observe(p);
     return () => {
+      cancelAnimationFrame(frame);
       ro.disconnect();
       sheet.style.removeProperty(HALF_MAX_VAR);
     };

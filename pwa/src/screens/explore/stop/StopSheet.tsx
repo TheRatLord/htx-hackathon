@@ -85,14 +85,19 @@ function SaveButton({ stop, routeId }: { stop: StopDetail["stop"]; routeId?: str
   );
 }
 
-/** "🚶 Walk here · 2 min": the one place the Stop sheet shows the walk time. */
-function WalkHere({ stop, routeId, compact }: { stop: StopDetail["stop"]; routeId?: string; compact: boolean }) {
-  const t = useT();
-  const navigate = useNavigate();
+/** The walk to the stop from the rider's fix, in metres, when there is a fix. */
+function useStopWalkM(stop: StopDetail["stop"]): number | undefined {
   const { fix } = useLocation();
   const { walkPace } = usePrefs();
   const seed = fix ? estimateWalk(fix, stop, walkPace).distanceM : undefined;
-  const { distanceM } = useWalkDistance(fix, stop.id, seed);
+  return useWalkDistance(fix, stop.id, seed).distanceM;
+}
+
+/** "🚶 Walk here · 2 min": the one place the Stop sheet shows the walk time. */
+function WalkHere({ stop, routeId, compact, distanceM }: { stop: StopDetail["stop"]; routeId?: string; compact: boolean; distanceM?: number }) {
+  const t = useT();
+  const navigate = useNavigate();
+  const { walkPace } = usePrefs();
   const min = distanceM !== undefined ? t("time.min", { n: walkMinutes(distanceM, walkPace) }) : undefined;
   const full = min ? t("common.walkHereMin", { min }) : t("common.walkHere");
   // Narrow screen or Extra large text: "🚶 Walk 2 min" so Save shares the row. The word stays: a bare
@@ -126,6 +131,8 @@ function Loaded({ detail }: { detail: StopDetail }) {
   // or Spanish on a narrow screen ("Caminar aquí · 2 min" and "Guardar" each took a full row, which
   // pushed Horario and Avisarme below the fold, 12-es-360).
   const compact = textSize === "xlarge" || (narrow && (textSize === "large" || lang === "es"));
+  const { walkPace } = usePrefs();
+  const walkM = useStopWalkM(detail.stop);
   const [params, setParams] = useSearchParams();
   const alerts = useAlerts();
   const { stop, serving } = detail;
@@ -161,7 +168,7 @@ function Loaded({ detail }: { detail: StopDetail }) {
   // After the answer, so the strip is on the first screen even at 360 or Extra large (A.1.2).
   const stopActions = (
     <div className={`${styles.pills} ${compact ? styles.pillsCompact : ""}`}>
-      <WalkHere stop={stop} routeId={expanded?.routeId} compact={compact} />
+      <WalkHere stop={stop} routeId={expanded?.routeId} compact={compact} distanceM={walkM} />
       <SaveButton stop={stop} routeId={expanded?.routeId} />
     </div>
   );
@@ -189,6 +196,7 @@ function Loaded({ detail }: { detail: StopDetail }) {
           shared={serving.filter((s) => s.routeId === expanded.routeId).length > 1}
           mixed={departuresOf(expanded, arrivals)}
           stripRef={strip}
+          walkMin={walkM !== undefined ? walkMinutes(walkM, walkPace) : undefined}
           stopActions={stopActions}
           hideLongName={narrow || textSize === "xlarge"}
         />
@@ -254,9 +262,11 @@ export default function StopSheet() {
   }, [summary]);
 
   const side = summary ? sideLine(summary, { withCompass: false, lang }) : "";
+  // Extra large keeps "Montrose Blvd (2958)" breakable: as one word it was split "(2" / "958)" (2958, 360).
+  const xl = usePrefs().textSize === "xlarge";
   const notFound = stop.error instanceof ApiError && stop.error.code === "stop_not_found" ? stop.error : undefined;
   return (
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={known ? stopTitle(known, stopId, lang) : title} titleAlign="center" sub={side || undefined} />} onBack={back}>
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={known ? stopTitle(known, stopId, lang, { xl }) : title} titleAlign="center" sub={side || undefined} />} onBack={back}>
       {!stop.data && <LoadingScene stopId={stopId} />}
       {stop.data ? (
         <Loaded detail={stop.data} />

@@ -6,7 +6,13 @@ import { createContext, useContext, useEffect } from "react";
 import type { LatLon } from "../api/types.ts";
 
 export interface MapScene {
-  focus?: { kind: "user" | "point" | "bounds"; point?: LatLon; bounds?: [LatLon, LatLon]; zoom?: number };
+  /**
+   * `labelRoomPx` (point focus only): the drawing at `point` needs this much room above it (a stop's
+   * pin, pointer and tag), and must stay clear of the FAB column. The map draws the point that far
+   * below the centre by half, and left by half the width the FAB column takes past the camera's
+   * right padding, so the whole drawing sits in the middle of the visible map strip (D4, 07).
+   */
+  focus?: { kind: "user" | "point" | "bounds"; point?: LatLon; bounds?: [LatLon, LatLon]; zoom?: number; labelRoomPx?: number };
   /**
    * Stops the sheet lists (Home's cards, route near you, a place's stops): their ID chips are shown
    * first, before the stops nearest the rider, so every card's stop can be found on the map.
