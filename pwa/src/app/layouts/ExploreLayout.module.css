@@ -1,14 +1,13 @@
-.root {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+/* Over AppShell's map: empty areas let touches through to it; the chrome and the sheet take them. */
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.stage {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+.layer > * {
+  pointer-events: auto;
 }
 
 .top {

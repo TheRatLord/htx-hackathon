@@ -1,10 +1,12 @@
-// The one MapLibre map, mounted once by ExploreLayout. The canvas is hidden from assistive
-// technology: the sheet list is the accessible equivalent of everything on the map (C.16).
+// The one MapLibre map, mounted once by AppShell and kept across navigation. The canvas is
+// hidden from assistive technology: the sheet list is the accessible equivalent of everything
+// on the map (C.16). The attribution links stay reachable.
 
 import type { Feature as GeoFeature, FeatureCollection, Geometry } from "geojson";
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef } from "react";
+import { t } from "../i18n/index.ts";
 import type { ClientStop, LatLon } from "../api/types.ts";
 import type { Fix } from "../state/location.tsx";
 import type { MapScene } from "./scene.ts";
@@ -73,7 +75,7 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
     ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: "vehicle", label: v.label })),
   ];
   const highlight = scene.highlightStopId ? (await stopsById()).get(scene.highlightStopId) : undefined;
-  if (highlight) points.push(point(highlight, { kind: "highlight", label: `Stop: ${highlight.id}` }));
+  if (highlight) points.push(point(highlight, { kind: "highlight", label: t("map.stopCallout", { id: highlight.id }) }));
   src(map, "scene-points")?.setData(collection(points));
 
   const padding = { top: 80, left: 32, right: 72, bottom: bottom + 24 };
@@ -119,6 +121,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     });
     map.touchZoomRotate.disableRotation();
     map.getCanvas().tabIndex = -1;
+    map.getCanvasContainer().setAttribute("aria-hidden", "true");
     mapRef.current = map;
     map.on("moveend", () => {
       const c = map.getCenter();
@@ -160,5 +163,5 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     else showUser(map, user);
   }, [user]);
 
-  return <div ref={container} className={styles.map} aria-hidden="true" />;
+  return <div ref={container} className={styles.map} />;
 }

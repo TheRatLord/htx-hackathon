@@ -1,9 +1,8 @@
 // The URL contract (spec G.3). Module agents fill their screen files; they never edit this file.
 
-import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
 import AlertDetail from "../screens/alerts/AlertDetail.tsx";
 import Alerts from "../screens/alerts/Alerts.tsx";
-import UiGallery from "../screens/dev/UiGallery.tsx";
 import Home from "../screens/explore/home/Home.tsx";
 import Itinerary from "../screens/explore/plan/Itinerary.tsx";
 import Plan from "../screens/explore/plan/Plan.tsx";
@@ -22,16 +21,22 @@ import RouteList from "../screens/more/routes/RouteList.tsx";
 import Settings from "../screens/more/Settings.tsx";
 import Recent from "../screens/recent/Recent.tsx";
 import Welcome from "../screens/welcome/Welcome.tsx";
+import { AppShell } from "./AppShell.tsx";
 import { WelcomeGuard } from "./guards.tsx";
 import { ExploreLayout } from "./layouts/ExploreLayout.tsx";
 import { PageLayout } from "./layouts/PageLayout.tsx";
 import { TabLayout } from "./layouts/TabLayout.tsx";
 
+// The component gallery exists in dev builds only.
+const devRoutes: RouteObject[] = import.meta.env.DEV
+  ? [{ path: "/dev/ui", lazy: async () => ({ Component: (await import("../screens/dev/UiGallery.tsx")).default }) }]
+  : [];
+
 export const router = createBrowserRouter([
   {
     element: (
       <WelcomeGuard>
-        <Outlet />
+        <AppShell />
       </WelcomeGuard>
     ),
     children: [
@@ -69,7 +74,7 @@ export const router = createBrowserRouter([
           { path: "/fares", element: <Fares /> },
           { path: "/recent", element: <Recent /> },
           { path: "/more", element: <More /> },
-          { path: "/dev/ui", element: <UiGallery /> },
+          ...devRoutes,
           { path: "*", element: <NotFound /> },
         ],
       },

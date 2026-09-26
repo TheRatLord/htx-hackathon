@@ -10,8 +10,12 @@ export type FabRequest = "locate" | "planTrip" | { kind: "routeAlerts"; routeId:
 export interface ExploreChromeOptions {
   /** Default ["locate", "planTrip"]; planTrip becomes "My trip" while a trip is active. */
   fabs?: FabRequest[];
-  /** Overlay-slot request; offline and trip-active are added by the layout (priority per C.12). */
-  banner?: "search-this-area" | "demo-location" | "downtown-fallback" | null;
+  /**
+   * The screen's overlay-slot request. The layout adds offline, trip-active, "Showing Downtown
+   * Houston" (home without a fix) and "Demo location" (`?demoLoc=`) itself, by C.12 priority.
+   */
+  banner?: "search-this-area" | null;
+  /** D5, D13. On /explore/trip with an active trip, the trip bar takes the search bar's place. */
   hideSearchBar?: boolean;
 }
 
