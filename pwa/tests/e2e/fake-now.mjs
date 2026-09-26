@@ -2,6 +2,8 @@
 //   E2E_NOW=2026-09-24T12:00:00-05:00  -> the server clock starts at that instant and runs on.
 //   E2E_NOW_FILE=<path>                -> if that file exists, its ISO time replaces E2E_NOW
 //                                          (checked every 300 ms, so a test can jump to late night).
+//                                          "<iso> <tag>" re-applies the same time whenever the tag
+//                                          changes: the screenshot run resets the clock per shot.
 // Tests learn the server's "now" from /api/nearby's generatedAt and set the browser clock to match.
 import { existsSync, readFileSync } from "node:fs";
 
@@ -12,7 +14,7 @@ let source = "";
 
 function apply(iso) {
   if (!iso || iso === source) return;
-  const t = RealDate.parse(iso);
+  const t = RealDate.parse(iso.split(/\s+/)[0]);
   if (Number.isNaN(t)) return;
   source = iso;
   offset = t - realNow();

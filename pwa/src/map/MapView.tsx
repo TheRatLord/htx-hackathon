@@ -56,14 +56,20 @@ const SETTLE_MS = 300;
 const CALLOUT_RIGHT = 140;
 /** The least map height a fit keeps between the paddings (at the full snap the sheet covers nearly all of it). */
 const MIN_FIT_H = 64;
+/** Room above the top chrome for a label drawn above the topmost pin ("Board 80 · #11424"). */
+const TOP_LABEL_ROOM = 44;
+/** Extra room above the sheet on a trip's map, for a label under its lowest ring. */
+const BOTTOM_LABEL_ROOM = 24;
+/** The search bar's usual bottom edge, before the layout can be measured. */
+const SEARCH_BAR_H = 64;
 
 /**
  * Camera padding keeps fitted content clear of the chrome: at the top, the search bar (12 + 48),
  * the 8dp gap and the destination pin's 40dp body, which rises above its point. The bottom is
  * clamped so a fit never asks for more room than the canvas has.
  */
-function padding(bottom: number, safeTop: number, canvasH: number): maplibregl.PaddingOptions {
-  const top = safeTop + 108;
+function padding(bottom: number, topChrome: number, canvasH: number): maplibregl.PaddingOptions {
+  const top = topChrome + TOP_LABEL_ROOM;
   return { top, left: 32, right: 72, bottom: Math.max(0, Math.min(bottom + 24, canvasH - top - MIN_FIT_H)) };
 }
 
@@ -77,7 +83,10 @@ function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl
     [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
     [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
   ];
-  const want = fabClear(map, { top: pad.top ?? 0, bottom: pad.bottom ?? 0, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) });
+  const top = pad.top ?? 0;
+  // Never ask for more padding than the canvas has ("Map cannot fit" leaves the camera where it was).
+  const bottom = Math.max(0, Math.min(pad.bottom ?? 0, map.getContainer().clientHeight - top - MIN_FIT_H));
+  const want = fabClear(map, { top, bottom, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) });
   // MapLibre adds the padding an earlier easeTo left on the map to fitBounds' own (Home's
   // sheet-height bottom plus this one's could exceed the canvas: "Map cannot fit", and the camera
   // never moved to the route's stops). Ask only for the difference, so the total is `want`.
@@ -113,13 +122,22 @@ function fabClear(map: maplibregl.Map, want: { top: number; bottom: number; left
 
 /** A walk or trip's callout is centred on its pin: keep the pin far enough from the FAB column for it to clear. */
 function fitPad(scene: MapScene, pad: maplibregl.PaddingOptions): maplibregl.PaddingOptions {
-  return scene.highlightStopId && scene.legs?.length ? { ...pad, right: Math.max(pad.right ?? 0, CALLOUT_RIGHT) } : pad;
+  if (!scene.legs?.length) return pad;
+  // A trip's marker labels ("Transfer · #4789") may go below their ring: keep a label's height
+  // above the sheet, or at 360x640 the transfer had no label at all (24-360).
+  const out = { ...pad, bottom: (pad.bottom ?? 0) + BOTTOM_LABEL_ROOM };
+  return scene.highlightStopId ? { ...out, right: Math.max(pad.right ?? 0, CALLOUT_RIGHT) } : out;
 }
 
 /** Bumped by every applyScene call: a call that finishes after a newer one started does nothing. */
 let sceneSeq = 0;
 
-async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions) {
+/** What a scene's camera move depends on: two scenes with the same key frame the same view. */
+function focusKey(scene: MapScene): string {
+  return JSON.stringify([scene.focus ?? null, scene.focus?.kind === "point" && !scene.focus.point ? (scene.highlightStopId ?? null) : null]);
+}
+
+async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions, fit = true) {
   const seq = ++sceneSeq;
   showUser(map, user);
   // Without stops.json the scene still draws, just without the enlarged pin.
@@ -135,13 +153,30 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   const callout = highlight ? t("map.stopCallout", { id: highlight.id }) : "";
   drawScene(map, scene, highlight, callout);
 
-  const f = scene.focus;
+  const f = fit ? scene.focus : undefined;
   if (f?.kind === "bounds" && f.bounds) {
     fitFocus(map, f.bounds, fitPad(scene, pad));
   } else if (f) {
     const center = f.kind === "user" ? user : (f.point ?? highlight);
     if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
   }
+}
+
+/**
+ * Where the map's top chrome (search bar, trip bar, banner) ends, in canvas px, or the safe area's
+ * edge when a screen hides it: the itinerary has no search bar, and keeping its 108px at 360x640
+ * squeezed the whole trip into 64px, too small for the [73] chip and "Transfer · #4789" (24-360).
+ */
+function topChrome(container: HTMLElement | null, safeTop: number): number {
+  if (!container) return safeTop + SEARCH_BAR_H;
+  const box = container.getBoundingClientRect();
+  let bottom = safeTop;
+  for (const el of document.querySelectorAll<HTMLElement>("[data-map-obstacle]:not([data-map-fabs])")) {
+    if (!el.childElementCount) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height) bottom = Math.max(bottom, r.bottom - box.top);
+  }
+  return bottom;
 }
 
 /**
@@ -234,6 +269,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const hadUser = useRef(Boolean(user));
   const savedIds = useSaved().stops.map((s) => s.id);
   const nudgeArmed = useRef(false);
+  /** The focus the camera last moved to (see focusKey). */
+  const lastFocus = useRef<string | undefined>(undefined);
+  /** The rider panned or zoomed the map by hand since the camera last fitted a scene. */
+  const riderMoved = useRef(false);
   const latest = useRef({ scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds });
   latest.current = { scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds };
 
@@ -367,7 +406,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     };
     void loadStops().then(place, () => place());
   };
-  const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0, container.current?.clientHeight ?? 0);
+  const pad = (bottom: number) => padding(bottom, topChrome(container.current, safeTopProbe.current?.offsetHeight ?? 0), container.current?.clientHeight ?? 0);
 
   useEffect(() => {
     let map: maplibregl.Map | undefined;
@@ -398,6 +437,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         rankLabels(m);
         placeLabels(m);
       });
+      // Only a gesture has an originalEvent: fitBounds, easeTo and panBy do not.
+      m.on("movestart", (e) => {
+        if ((e as { originalEvent?: Event }).originalEvent) riderMoved.current = true;
+      });
       // A pin opens its stop directly (no "Choose Direction" step, C.16).
       m.on("click", (e) => {
         const hit = transitAt(m, e.point);
@@ -415,6 +458,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         // must not treat the next GPS update as the first fix and move the camera again.
         hadUser.current = Boolean(user);
         nudgeArmed.current = true;
+        lastFocus.current = focusKey(scene);
         void applyScene(m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
       });
     });
@@ -431,8 +475,17 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const { user, bottomPadding } = latest.current;
     if (!mapRef.current || !ready.current) return;
     const map = mapRef.current;
-    nudgeArmed.current = true;
-    void applyScene(map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
+    // A new scene object with the same focus (Walk or Route near you after a 40 m move, a language
+    // switch) redraws without moving the camera once the rider has panned or zoomed by hand, so
+    // they are not snapped back. Untouched, the camera is fitted again (the same view once settled).
+    const key = focusKey(scene);
+    const fit = key !== lastFocus.current || !riderMoved.current;
+    lastFocus.current = key;
+    if (fit) {
+      riderMoved.current = false;
+      nudgeArmed.current = true;
+    }
+    void applyScene(map, scene, user, pad(bottomPadding), fit).then(() => placeLabels(map));
     rankLabels(map);
     // `lang`: marker labels built by the screen are re-drawn in the new language.
   }, [scene, lang]);

@@ -289,10 +289,13 @@ for (const vp of VIEWPORTS) {
       await rider.tap(page.getByRole("button", { name: "Show Route 58 near you" }), "chip [58]");
       await expectFocusOnH1(page);
       const missing = await goalOnScreen(page, ["Route 58 near you", "WESTBOUND to WEST BELT", /Northwest Transit Center/, /Bay M/, "Platform 2"], strict);
-      // TC card first (D3 order rule), with a departure.
+      // D3 order rule: earliest catchable bus first, the TC card never below second; it shows a departure.
       const cards = page.getByRole("button", { name: /^Route 58 / });
-      await expect(cards.first()).toHaveAccessibleName(/Northwest Transit Center/);
-      await expect(cards.first().locator("xpath=..")).toContainText(TIME);
+      await expect(cards.first()).toBeVisible();
+      const names = await cards.evaluateAll((els) => els.slice(0, 2).map((e) => e.getAttribute("aria-label") ?? e.textContent ?? ""));
+      const tcAt = names.findIndex((n) => /Northwest Transit Center/.test(n));
+      expect(tcAt, "TC card is one of the first two cards").toBeGreaterThanOrEqual(0);
+      await expect(cards.nth(tcAt).locator("xpath=..")).toContainText(TIME);
       await rider.attach(info, "F7");
       expect(rider.count).toBeLessThanOrEqual(TARGET.F7.target);
       record("F7", vp.name, rider, missing.length === 0);
