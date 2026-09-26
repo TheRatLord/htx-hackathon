@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, trimLoops } from "./placement.ts";
+import { clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, roomAround, trimLoops } from "./placement.ts";
 
 describe("pointAlong", () => {
   it("finds a point by length along the line", () => {
@@ -83,5 +83,17 @@ describe("placeSceneLabel", () => {
     const soft = Array.from({ length: 12 }, (_, i) => ({ l: 196, t: 200 - i * 8 - 4, r: 204, b: 200 - i * 8 + 4 }));
     const s = { width: 400, hard: [], soft };
     expect(placeSceneLabel({ x: 200, y: 200 }, "Transfer · #4789", "dot", s)?.key).toBe(placeSceneLabel({ x: 200, y: 200 }, "Transbordo · #4789", "dot", s)?.key);
+  });
+});
+
+describe("roomAround", () => {
+  it("is the label's extent around its pin, at least `min` each side", () => {
+    const p = { x: 100, y: 100 };
+    // A tag centred above: 60 wide, 40 tall, ending 6px above the pin.
+    expect(roomAround(p, { l: 70, t: 54, r: 130, b: 94 }, 16)).toEqual({ l: -30, t: -46, r: 30, b: 16 });
+    // A tag beside, to the left: the room reaches left, and right by `min`.
+    expect(roomAround(p, { l: 30, t: 88, r: 90, b: 112 }, 12)).toEqual({ l: -70, t: -12, r: 12, b: 12 });
+    // A fixed room below the pin.
+    expect(roomAround(p, { l: 30, t: 88, r: 90, b: 130 }, 16, 16).b).toBe(16);
   });
 });
