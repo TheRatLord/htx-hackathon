@@ -13,9 +13,14 @@ function tick() {
   listeners.forEach((l) => l());
 }
 
+/** Starts the interval if it should run and isn't running; never restarts a running one. */
 function schedule() {
-  clearInterval(timer);
-  timer = document.visibilityState === "visible" && listeners.size ? setInterval(tick, TICK_MS) : undefined;
+  const run = document.visibilityState === "visible" && listeners.size > 0;
+  if (run && !timer) timer = setInterval(tick, TICK_MS);
+  if (!run && timer) {
+    clearInterval(timer);
+    timer = undefined;
+  }
 }
 
 function onVisibility() {
@@ -23,7 +28,7 @@ function onVisibility() {
   schedule();
 }
 
-function subscribe(listener: () => void) {
+export function subscribeNow(listener: () => void) {
   listeners.add(listener);
   if (listeners.size === 1) {
     document.addEventListener("visibilitychange", onVisibility);
@@ -37,9 +42,9 @@ function subscribe(listener: () => void) {
   };
 }
 
-const get = () => now;
+export const getNow = () => now;
 
 /** Date.now(), re-rendering every 15s while the page is visible and immediately when it becomes visible. */
 export function useNow(): number {
-  return useSyncExternalStore(subscribe, get, get);
+  return useSyncExternalStore(subscribeNow, getNow, getNow);
 }
