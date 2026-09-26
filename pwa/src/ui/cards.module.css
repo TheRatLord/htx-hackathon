@@ -42,22 +42,24 @@
   color: var(--c-text-variant);
 }
 
-/* "On the west side of Fannin St   [🚶 1 min walk]": the walk pill ends the side line, so the stop
-   name above keeps the card's full width. */
-.metaRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin: calc(-1 * var(--sp-1)) 0;
+/* The card's head: the stop name over its side line on the left, the compact walk button
+   ("🚶 1 min / walk") at the top right beside both (C.5a). Every card has this one shape, at every
+   width and text size: the button never drops to a row of its own. */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2px var(--sp-2);
 }
 
-/* The side line never wraps beside the pill ("On the south side of McKinney / St"): when both
-   don't fit on one line, the pill moves under it (start-aligned), as at 360dp with large text. */
-.metaRow .meta {
-  flex: 1 0 auto;
-  max-width: 100%;
+.head > * {
+  grid-column: 1;
+}
+
+.head > .walkSlot {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  display: flex;
 }
 
 .divider {
@@ -122,6 +124,19 @@
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
   text-align: start;
+}
+
+/* "Also here: [11] [85] ›": mini chips and the chevron on the text's line, centred on it. */
+.alsoHere {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  padding-top: 0;
+}
+
+.alsoHere svg {
+  flex: none;
+  margin-inline-start: calc(-1 * var(--sp-1));
 }
 
 .sep {

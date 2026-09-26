@@ -10,6 +10,7 @@ import type { Fix } from "../../state/location.tsx";
 import type { MapScene } from "../scene.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
 import { BOTTOM_TRANSIT_LAYER } from "./transit.ts";
+import { STALE_VEHICLE_S } from "../../lib/format.ts";
 
 type Feature = GeoFeature<Geometry, Record<string, string | number>>;
 const collection = (features: Feature[]): FeatureCollection => ({ type: "FeatureCollection", features });
@@ -23,9 +24,6 @@ let hiddenLabels: string[] = [];
 
 /** Markers drawn as a pin standing on their point (their label goes above the pin's head). */
 export const TALL_PINS = new Set(["place", "destination"]);
-
-/** C.16 / D22: a live bus older than this is drawn grey. */
-const STALE_VEHICLE_S = 120;
 
 /**
  * Lines go under every transit layer. Markers, the callout and the user dot always show and

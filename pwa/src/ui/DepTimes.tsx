@@ -19,8 +19,8 @@ export function shownDeps<T extends Dep>(deps: T[], now: number, walkMin?: numbe
  * big number is one they can catch (a greyed "3 min" first still read as the answer). Only when
  * every listed bus is too soon are they shown, greyed with "Leaves before you get there".
  * The one time rule, per time as on the strip: minutes under an hour, the clock time after
- * ("2 min · 1:02 PM"); offline, clock times. The morning's first bus, late at night, says so on
- * one line with how long that is: "First bus 4:20 AM · in 1 hr 50 min".
+ * ("2 min · 1:02 PM"); offline, clock times. The morning's first bus, late at night, is the same
+ * big time with a grey line under it saying so and how long that is: "4:20 AM" / "First bus · in 1 hr 50 min".
  */
 export function DepTimes({ deps, max = 2, walkMin, firstBus }: { deps: Dep[]; max?: number; walkMin?: number; firstBus?: boolean }) {
   const t = useT();
@@ -33,9 +33,10 @@ export function DepTimes({ deps, max = 2, walkMin, firstBus }: { deps: Dep[]; ma
     const mins = Math.round((Date.parse(first.departureTime) - now) / 60_000);
     return (
       <span className={`${styles.times} ${styles.firstBus}`}>
-        <span className={styles.lead}>{t(early ? "time.firstBus" : "time.nextBus")}</span>
         <TimeValue dep={first} size="minutes" walkMin={walkMin} />
-        <span className={styles.lead}>{t("time.inDuration", { in: formatDuration(mins, t) })}</span>
+        <span className={styles.lead}>
+          {t(early ? "time.firstBus" : "time.nextBus")} {t("time.inDuration", { in: formatDuration(mins, t) })}
+        </span>
       </span>
     );
   }

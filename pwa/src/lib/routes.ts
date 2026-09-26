@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { ApiError } from "../api/client.ts";
 import type { ClientRoute, RouteRef } from "../api/types.ts";
+import { createSignal } from "./signal.ts";
 
 let all: ClientRoute[] = [];
 let byId = new Map<string, RouteRef>();
@@ -11,8 +12,8 @@ let stopDirections: Map<string, StopDirection[]> | null = null;
 let loading: Promise<void> | null = null;
 /** Why the last load failed, until the next one starts. */
 let failure: ApiError | undefined;
-const listeners = new Set<() => void>();
-const notify = () => listeners.forEach((l) => l());
+const signal = createSignal();
+const { notify } = signal;
 
 export interface StopDirection {
   /** The GTFS route id ("082"). */
@@ -107,9 +108,8 @@ export function stopDirection(routeId: string, stopId: string): StopDirection | 
 }
 
 const subscribe = (l: () => void) => {
-  listeners.add(l);
   void loadRoutes();
-  return () => listeners.delete(l);
+  return signal.subscribe(l);
 };
 const size = () => byId.size;
 

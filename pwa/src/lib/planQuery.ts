@@ -18,7 +18,8 @@ export interface PlanQuery {
   sort?: PlanSort;
 }
 
-const SORTS: PlanSort[] = ["soonest", "transfers", "walk"];
+/** The planner's sort options, in the order the sort chips show them. */
+export const PLAN_SORTS: PlanSort[] = ["soonest", "transfers", "walk"];
 
 export function parsePlanQuery(search: URLSearchParams): PlanQuery {
   const q: PlanQuery = {};
@@ -28,7 +29,7 @@ export function parsePlanQuery(search: URLSearchParams): PlanQuery {
   }
   if (search.get("arriveBy") === "1") q.arriveBy = true;
   const sort = search.get("sort") as PlanSort | null;
-  if (sort && SORTS.includes(sort)) q.sort = sort;
+  if (sort && PLAN_SORTS.includes(sort)) q.sort = sort;
   return q;
 }
 

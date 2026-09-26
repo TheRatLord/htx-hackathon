@@ -25,13 +25,15 @@ export function RouteDirectionCard({ route, directionLabel, headsign, stop, walk
   return (
     <article className={styles.card}>
       <button type="button" className={styles.hit} aria-label={`${t("routeName.a11y", { name: route.name })} ${headline}, ${place}${meta ? `, ${meta}` : ""}`} onClick={onOpen} />
-      <h2 className={styles.name}>{place}</h2>
-      {(meta || walkDistanceM !== undefined) && (
-        <div className={styles.metaRow}>
-          <p className={`${styles.meta} ${tcName ? styles.metaStrong : ""}`}>{meta}</p>
-          {walkDistanceM !== undefined && <WalkButton stopId={stop.id} tcName={tcName} walkDistanceM={walkDistanceM} onPress={onWalk} />}
-        </div>
-      )}
+      <div className={styles.head}>
+        <h2 className={styles.name}>{place}</h2>
+        {meta && <p className={`${styles.meta} ${tcName ? styles.metaStrong : ""}`}>{meta}</p>}
+        {walkDistanceM !== undefined && (
+          <div className={styles.walkSlot}>
+            <WalkButton stopId={stop.id} tcName={tcName} walkDistanceM={walkDistanceM} onPress={onWalk} />
+          </div>
+        )}
+      </div>
       <hr className={styles.divider} />
       <div className={styles.routeRow}>
         <RouteBadge route={route} size="sm" />

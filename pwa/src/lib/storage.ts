@@ -2,6 +2,7 @@
 // (private mode, blocked site data) the app keeps working with in-memory state.
 
 import { useSyncExternalStore } from "react";
+import { createSignal } from "./signal.ts";
 
 export function readJson<T>(key: string, fallback: T, storage: "local" | "session" = "local"): T {
   try {
@@ -32,18 +33,15 @@ export interface Store<T> {
 /** A persisted value with change notification; `normalize` repairs values written by older versions. */
 export function persistentStore<T>(key: string, initial: T, normalize: (stored: T) => T = (v) => v): Store<T> {
   let value = normalize(readJson(key, initial));
-  const listeners = new Set<() => void>();
+  const signal = createSignal();
   const store: Store<T> = {
     get: () => value,
     set(next) {
       value = typeof next === "function" ? (next as (prev: T) => T)(value) : next;
       writeJson(key, value);
-      listeners.forEach((l) => l());
+      signal.notify();
     },
-    subscribe(l) {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
+    subscribe: signal.subscribe,
     use: () => useSyncExternalStore(store.subscribe, store.get, store.get),
   };
   // Another tab (the PWA open twice) wrote this key: take its value, so the last writer doesn't
@@ -52,7 +50,7 @@ export function persistentStore<T>(key: string, initial: T, normalize: (stored: 
     window.addEventListener("storage", (e) => {
       if (e.key !== key && e.key !== null) return;
       value = normalize(readJson(key, initial));
-      listeners.forEach((l) => l());
+      signal.notify();
     });
   return store;
 }

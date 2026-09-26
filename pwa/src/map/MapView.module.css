@@ -20,6 +20,11 @@
   opacity: 0.55;
 }
 
+/* A strip of map a few stops tall (extra-large text at 360): the (i) would sit on one of them. */
+.noAttrib :global(.maplibregl-ctrl-bottom-left) {
+  display: none;
+}
+
 /* Measures env(safe-area-inset-top) for the camera padding. */
 .safeTop {
   position: absolute;

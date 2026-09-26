@@ -14,7 +14,8 @@ export async function requestNotify(): Promise<NotifyPermission> {
   return Notification.requestPermission();
 }
 
-const BUZZ = [200, 100, 200];
+/** The one vibration pattern (stop tracking, trip steps, notifications). */
+export const BUZZ = [200, 100, 200];
 /** `serviceWorker.ready` never settles when no worker is registered (e.g. `vite dev`). */
 const SW_READY_TIMEOUT_MS = 3_000;
 

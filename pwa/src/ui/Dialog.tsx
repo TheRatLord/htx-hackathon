@@ -24,7 +24,13 @@ export function Dialog({ open, onClose, title, body, actions }: DialogProps) {
     if (!open) return;
     shown.current = true;
     if (history.state?.dialog !== id) history.pushState({ ...history.state, dialog: id }, "");
-    const onPop = () => onCloseRef.current();
+    // Back closes the native dialog, whose "close" event calls onClose: once, not once from here
+    // and again from the event when the parent then closes it.
+    const onPop = () => {
+      const d = ref.current;
+      if (d?.open) d.close();
+      else onCloseRef.current();
+    };
     window.addEventListener("popstate", onPop);
     return () => {
       shown.current = false;

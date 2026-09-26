@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import type { LatLon } from "../api/types.ts";
 import { MapView } from "../map/MapView.tsx";
-import { MapContext, type MapScene } from "../map/scene.ts";
+import { MapCenterContext, MapSceneContext, type MapScene } from "../map/scene.ts";
 import { useLocation as useRiderLocation } from "../state/location.tsx";
 import styles from "./AppShell.module.css";
 import { BottomNav } from "./BottomNav.tsx";
@@ -32,30 +32,31 @@ export function AppShell() {
   const [center, setCenter] = useState<LatLon>();
   const [locateNonce, setLocateNonce] = useState(0);
 
-  const mapValue = useMemo(() => ({ scene, setScene, padding: { bottom: sheetH }, center }), [scene, sheetH, center]);
   const host = useMemo(() => ({ sheetH, setSheetH, setMapVisible, locate: () => setLocateNonce((n) => n + 1) }), [sheetH]);
 
   return (
-    <MapContext value={mapValue}>
-      <MapHostContext value={host}>
-        <div className={styles.root}>
-          <div className={styles.stage}>
-            {mapMounted && (
-              <div className={`${styles.map} ${mapVisible ? "" : styles.hidden}`}>
-                <MapView
-                  scene={scene}
-                  user={rider.status === "fix" ? rider.fix : undefined}
-                  bottomPadding={sheetH}
-                  locateNonce={locateNonce}
-                  onCenterChange={setCenter}
-                />
-              </div>
-            )}
-            <Outlet />
+    <MapSceneContext value={setScene}>
+      <MapCenterContext value={center}>
+        <MapHostContext value={host}>
+          <div className={styles.root}>
+            <div className={styles.stage}>
+              {mapMounted && (
+                <div className={`${styles.map} ${mapVisible ? "" : styles.hidden}`}>
+                  <MapView
+                    scene={scene}
+                    user={rider.status === "fix" ? rider.fix : undefined}
+                    bottomPadding={sheetH}
+                    locateNonce={locateNonce}
+                    onCenterChange={setCenter}
+                  />
+                </div>
+              )}
+              <Outlet />
+            </div>
+            {pathname !== "/welcome" && <BottomNav />}
           </div>
-          {pathname !== "/welcome" && <BottomNav />}
-        </div>
-      </MapHostContext>
-    </MapContext>
+        </MapHostContext>
+      </MapCenterContext>
+    </MapSceneContext>
   );
 }

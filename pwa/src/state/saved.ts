@@ -24,7 +24,7 @@ const store = persistentStore<Saved>("ridemetro.saved", { stops: [], routes: [] 
 
 const without = <T extends { id: string }>(list: T[], id: string) => list.filter((x) => x.id !== id);
 
-export const savedActions = {
+const savedActions = {
   add(stop: Omit<SavedStop, "addedAt">) {
     store.set((s) => ({ ...s, stops: [...without(s.stops, stop.id), { ...stop, addedAt: Date.now() }] }));
   },

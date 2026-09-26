@@ -12,7 +12,7 @@ const SAVED_ROW_LIMIT = 6;
 export const savedRowKey = (stopId: string) => keys.arrivals(stopId, undefined, SAVED_ROW_LIMIT);
 
 /** One entry per route (its first direction), in order of first departure, so "+1 route" counts routes. */
-export function savedStopRoutes(arrivals: Arrival[]): SavedStopRoute[] {
+function savedStopRoutes(arrivals: Arrival[]): SavedStopRoute[] {
   const groups = new Map<string, SavedStopRoute>();
   for (const a of arrivals) {
     const key = canonicalRouteId(a.routeId);

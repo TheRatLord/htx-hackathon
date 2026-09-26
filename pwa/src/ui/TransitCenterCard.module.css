@@ -24,10 +24,19 @@
   padding: var(--sp-1) 0;
 }
 
-/* "· Bay G" after the headsign: where to stand, regular weight so the time stays the one big answer. */
-.bay {
-  color: var(--c-text-variant);
-  font-weight: var(--fw-regular);
-  letter-spacing: normal;
-  white-space: nowrap;
+/* "9 min · 39 min      [Bay G]": the bay tag at the end of the times row, centred on the big numbers. */
+.timesRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.timesRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.timesRow > :last-child {
+  align-self: center;
 }

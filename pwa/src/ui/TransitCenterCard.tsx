@@ -4,6 +4,7 @@ import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
 import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
+import { BayTag } from "./BayTag.tsx";
 import { DepTimes, shownDeps } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
@@ -25,7 +26,7 @@ function groupRows(deps: TcDeparture[], now: number, walkMin: number): TcDepartu
 
 /**
  * C.5d: a transit center within 1,000 m, with its 2 soonest routes across bays. Each row reads like
- * a stop card's: "SOUTHBOUND to HIRAM CLARKE TC · Bay G" over "9 min · 39 min".
+ * a stop card's: "SOUTHBOUND to HIRAM CLARKE TC" over "9 min · 39 min   [Bay G]".
  */
 export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCenterCardProps) {
   const t = useT();
@@ -37,15 +38,17 @@ export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCente
   return (
     <article className={styles.card}>
       <button type="button" className={styles.hit} aria-label={tc.name} onClick={onOpen} />
-      <h2 className={`${styles.name} ${tcStyles.title}`}>
-        <span className={tcStyles.tile} aria-hidden="true">
-          {t("card.tcTile")}
-        </span>
-        {tc.name}
-      </h2>
-      <div className={styles.metaRow}>
+      <div className={styles.head}>
+        <h2 className={`${styles.name} ${tcStyles.title}`}>
+          <span className={tcStyles.tile} aria-hidden="true">
+            {t("card.tcTile")}
+          </span>
+          {tc.name}
+        </h2>
         <p className={styles.meta}>{t("card.bays", { count: tc.bayCount })}</p>
-        <WalkButton stopId={tc.id} tcName={tc.name} walkDistanceM={tc.walkDistanceM} onPress={onWalk} />
+        <div className={styles.walkSlot}>
+          <WalkButton stopId={tc.id} tcName={tc.name} walkDistanceM={tc.walkDistanceM} onPress={onWalk} />
+        </div>
       </div>
       <hr className={styles.divider} />
       <ul className={styles.rows}>
@@ -55,11 +58,12 @@ export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCente
             <li key={`${d.route.id}|${d.directionLabel}|${d.bay ?? ""}`} className={tcStyles.dep}>
               <RouteBadge route={d.route} size="sm" />
               <span className={styles.rowText}>
-                <span className={styles.headsign}>
-                  {headsignLine(d.route, d.directionLabel, d.headsign, lang)}
-                  {d.bay && <span className={tcStyles.bay}> · {t("stopLine.bay", { bay: d.bay })}</span>}
+                <span className={styles.headsign}>{headsignLine(d.route, d.directionLabel, d.headsign, lang)}</span>
+                {/* Where to stand, as a tag at the end of the times: the headsign keeps its line. */}
+                <span className={tcStyles.timesRow}>
+                  <DepTimes deps={g} walkMin={walkMin} />
+                  {d.bay && <BayTag bay={d.bay} />}
                 </span>
-                <DepTimes deps={g} walkMin={walkMin} />
               </span>
             </li>
           );

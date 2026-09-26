@@ -36,6 +36,8 @@ export function useHealth() {
 
 /** The nearby list re-anchors only once the rider has moved this far (GPS jitter and walking along a block don't). */
 const REANCHOR_M = 75;
+/** Within this, the last list is a fair stand-in while the new one loads (see useNearby). */
+const PLACEHOLDER_SAME_PLACE_M = 300;
 
 /**
  * `p`, held still until it moves more than REANCHOR_M. With a high-accuracy watch, every ~11 m
@@ -58,7 +60,12 @@ export function useNearby(near?: LatLon, opts: { radius?: number; precise?: bool
       apiGet<NearbyResponse>("/nearby", { lat: anchor!.lat, lon: anchor!.lon, radius: opts.radius, precise: opts.precise ? 1 : undefined }, signal),
     enabled: Boolean(anchor),
     refetchInterval: LIVE_POLL_MS,
-    placeholderData: (prev) => prev,
+    // The previous list stands in only while the anchor is the same place (a radius or precision
+    // change, a small move). A new place ("Stops near Hobby Airport", Search this area, back to my
+    // location) shows the loading cards: the old corner's stops under the new title was wrong
+    // information shown with full confidence.
+    placeholderData: (prev) =>
+      prev && anchor && haversineM(prev.origin.lat, prev.origin.lon, anchor.lat, anchor.lon) < PLACEHOLDER_SAME_PLACE_M ? prev : undefined,
   });
 }
 

@@ -27,15 +27,12 @@
   text-align: center;
 }
 
-/* "First bus 4:20 AM · in 1 hr 50 min" (late night): one line, wrapping only if it must. */
+/* "4:20 AM" (the usual big time) over "First bus · in 1 hr 50 min" (grey, body size). */
 .firstBus {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 var(--sp-2);
+  flex-direction: column;
 }
 
 .lead {
   color: var(--c-text-variant);
-  font-weight: var(--fw-medium);
 }

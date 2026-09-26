@@ -3,7 +3,7 @@
 
 import type { ReactNode, Ref } from "react";
 import type { ApiError } from "../api/client.ts";
-import type { Alert, Dep, NearbyRoute, NearbyTransitCenter, RouteRef, Status, StopSummary } from "../api/types.ts";
+import type { Alert, Dep, NearbyRoute, NearbyStop, NearbyTransitCenter, RouteRef, Status, StopSummary } from "../api/types.ts";
 import type { Lang, Vars } from "../i18n/index.ts";
 import type { NotifyContext } from "../state/notifyAsked.ts";
 import type { IconName } from "./Icon.tsx";
@@ -13,7 +13,7 @@ export type Snap = "peek" | "half" | "full";
 /** C.1 */
 export interface RouteBadgeProps {
   route: RouteRef;
-  size: "sm" | "md" | "lg";
+  size: "xs" | "sm" | "md" | "lg";
   selected?: boolean;
   showIcon?: boolean;
   onPress?: () => void;
@@ -58,8 +58,8 @@ export interface NearbyStopCardProps {
   stop: StopSummary;
   walkDistanceM?: number;
   routes: NearbyRoute[];
-  /** NearbyStop.laterFirst: a route with nothing in the window shows its next bus ("First bus 5:10 AM · in 3 hr"). */
-  laterFirst?: Record<string, string>;
+  /** NearbyStop.laterFirst: a route with nothing in the window shows its next bus, with its direction ("First bus 5:10 AM · in 3 hr"). */
+  laterFirst?: NearbyStop["laterFirst"];
   maxRoutes?: 3;
   /** D4: walk times are measured from a place. `label` is the short form ("from the museum"), `name` the full name. */
   walkFrom?: { label: string; param: string; name?: string };

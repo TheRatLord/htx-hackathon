@@ -151,7 +151,7 @@ export function ExploreLayout() {
           </div>
         )}
         {!full && fabs.length > 0 && (
-          <div className={styles.fabs} style={{ bottom: sheetH + 8 }} data-map-obstacle="">
+          <div className={styles.fabs} style={{ bottom: sheetH + 8 }} data-map-obstacle="" data-map-fabs="">
             {fabs.map((f) => (
               <Fab key={f.kind} {...f} />
             ))}

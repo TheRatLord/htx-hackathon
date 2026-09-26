@@ -5,6 +5,7 @@ import { findRoute, findStop } from "./gtfs/store.ts";
 import { optionalNumber, parseLatLon, parsePlace, requireParam } from "./params.ts";
 import { getAlerts } from "./services/alerts.ts";
 import { getArrivals } from "./services/arrivals.ts";
+import { UpstreamError } from "./lib/upstream.ts";
 import { ApiError } from "./services/errors.ts";
 import { getHealth } from "./services/health.ts";
 import { getNearby } from "./services/nearby.ts";
@@ -22,6 +23,13 @@ import { walkRoute } from "./services/walk.ts";
 /** Browser/CDN caching; `swr` lets a CDN serve slightly stale data while refreshing. */
 function cacheFor(c: Context, maxAge: number, swr = maxAge) {
   c.header("Cache-Control", `public, max-age=${maxAge}, stale-while-revalidate=${swr}`);
+}
+
+const MAX_QUERY_CHARS = 100;
+
+/** /nearby's radius, in metres: at least a block, at most what the list can show. */
+function clampRadius(r: number | undefined): number | undefined {
+  return r === undefined ? undefined : Math.max(50, Math.min(r, 2000));
 }
 
 export function createApp() {
@@ -51,7 +59,7 @@ export function createApp() {
 
   app.get("/arrivals", async (c) => {
     const stop = requireParam(c.req.query("stop"), "stop");
-    const limit = Math.min(optionalNumber(c.req.query("limit"), "limit") ?? 10, 50);
+    const limit = Math.max(1, Math.min(Math.floor(optionalNumber(c.req.query("limit"), "limit") ?? 10), 50));
     cacheFor(c, 15);
     return c.json(await getArrivals(stop, { routeId: c.req.query("route"), limit }));
   });
@@ -63,7 +71,7 @@ export function createApp() {
     cacheFor(c, 15);
     return c.json(
       await getNearby(lat, lon, {
-        radiusM: optionalNumber(c.req.query("radius"), "radius"),
+        radiusM: clampRadius(optionalNumber(c.req.query("radius"), "radius")),
         precise: c.req.query("precise") === "1",
       }),
     );
@@ -107,7 +115,8 @@ export function createApp() {
   });
 
   app.get("/search", async (c) => {
-    const q = requireParam(c.req.query("q"), "q");
+    // Longer than any stop, route or place name: nothing past this is forwarded to Photon.
+    const q = requireParam(c.req.query("q"), "q").slice(0, MAX_QUERY_CHARS);
     const lat = optionalNumber(c.req.query("lat"), "lat");
     const lon = optionalNumber(c.req.query("lon"), "lon");
     cacheFor(c, 300);
@@ -140,8 +149,18 @@ export function createApp() {
       cacheFor(c, 300);
       return c.json({ vehicles: [], available: false });
     }
+    // The live feed failing is the same to the rider as no key: no buses drawn, and the client
+    // stops polling (a 500 here was logged with a stack every 15 s per rider).
+    const vehicles = await getVehicles(c.req.query("route")).catch((err: unknown) => {
+      if (err instanceof UpstreamError) return undefined;
+      throw err;
+    });
+    if (!vehicles) {
+      cacheFor(c, 30);
+      return c.json({ vehicles: [], available: false });
+    }
     cacheFor(c, 15);
-    return c.json({ vehicles: await getVehicles(c.req.query("route")) });
+    return c.json({ vehicles });
   });
 
   app.get("/transit-centers", (c) => {

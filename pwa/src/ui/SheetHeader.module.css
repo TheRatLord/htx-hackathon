@@ -118,9 +118,32 @@
   background: rgb(0 0 0 / 6%);
 }
 
-/* The offline row (UpdatedAgo) takes a line of its own under the title. */
+/* The offline row (UpdatedAgo) takes a line of its own under the title, the sheet's full width:
+   the chevron stays on the title's row instead of squeezing the row into two lines. */
 .sub:has([data-offline]) {
   flex: 1 1 100%;
+}
+
+.main:has(.sub [data-offline]) {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.main:has(.sub [data-offline]) > .text {
+  display: contents;
+}
+
+.main:has(.sub [data-offline]) .sub {
+  order: 2;
+  padding-inline-end: var(--sp-3);
+}
+
+.main:has(.sub [data-offline]) .right {
+  order: 3;
+}
+
+.main:has(.sub [data-offline]) > .toggle {
+  order: 1;
 }
 
 /* "‹" before a start-aligned title: a 48dp target reaching into the gutter, the chevron lined up

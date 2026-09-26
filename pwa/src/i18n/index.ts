@@ -3,6 +3,7 @@
 // module adds its own file and never edits another's.
 
 import { useCallback, useSyncExternalStore } from "react";
+import { createSignal } from "../lib/signal.ts";
 
 export type Lang = "en" | "es";
 export type Vars = Record<string, string | number>;
@@ -34,12 +35,12 @@ for (const mod of Object.values(import.meta.glob<{ default: Strings }>("./string
 }
 
 let current: Lang = "en";
-const listeners = new Set<() => void>();
+const signal = createSignal();
 
 export function setLang(lang: Lang) {
   if (lang === current) return;
   current = lang;
-  listeners.forEach((l) => l());
+  signal.notify();
 }
 
 export function getLang(): Lang {
@@ -75,10 +76,7 @@ export function t(key: string, vars?: Vars, lang: Lang = current): string {
   return vars ? text.replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m)) : text;
 }
 
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe } = signal;
 
 /**
  * t() bound to the current language; re-renders the caller when the language changes. The

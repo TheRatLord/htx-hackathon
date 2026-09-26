@@ -2,6 +2,7 @@
 // `beforeinstallprompt` once, early, so it is captured at startup (imported by main.tsx).
 
 import { useSyncExternalStore } from "react";
+import { createSignal } from "../lib/signal.ts";
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -9,8 +10,8 @@ interface InstallPromptEvent extends Event {
 }
 
 let deferred: InstallPromptEvent | null = null;
-const listeners = new Set<() => void>();
-const changed = () => listeners.forEach((l) => l());
+const signal = createSignal();
+const changed = signal.notify;
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
@@ -22,10 +23,7 @@ window.addEventListener("appinstalled", () => {
   changed();
 });
 
-const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const { subscribe } = signal;
 const get = () => deferred !== null;
 
 /** `available` once the browser offers installation; `prompt()` shows its dialog (usable once). */

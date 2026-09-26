@@ -13,15 +13,15 @@ export function Legend() {
         {t("status.scheduled")}
       </li>
       <li className={styles.item}>
-        {/* As a live time looks on the strip: the green word "Live" and arcs beside the number. */}
+        {/* As a live time looks on the strip: the green word "Live" and arcs beside the number. The
+            sample already says "Live", so no second label follows it. */}
         <span className={`${styles.chip} ${styles.live}`}>
           {sample}
-          <span className={styles.liveWord} aria-hidden="true">
+          <span className={styles.liveWord}>
             {t("status.live")}
             <Icon name="live_arcs" size={16} color="var(--c-live-on-strip)" />
           </span>
         </span>
-        {t("status.live")}
       </li>
       <li className={styles.item}>
         <span className={`${styles.chip} ${styles.canceled}`}>{sample}</span>

@@ -53,19 +53,38 @@ export async function getStopDetail(id: string) {
   };
 }
 
+/** The TC board's window ("No buses in the next 90 minutes") and how far past it a route's next buses are looked up. */
+const TC_WINDOW_MIN = 90;
+const TC_LOOKAHEAD_MIN = 180;
+
 export async function getTransitCenterDetail(id: string, now = Date.now()) {
   const tc = transitCenters().find((t) => t.id === id || t.stopIds.includes(id));
   if (!tc) throw new ApiError(404, "TRANSIT_CENTER_NOT_FOUND", `No transit center called "${id}".`);
   // A high limit so busy platforms are never cut off inside the window; `windowEnd` says what the window covered.
-  const results = await Promise.all(tc.stopIds.map((s) => getArrivals(s, { limit: 200, horizonMin: 90, now })));
-  const departures = results.flatMap((r) => r.arrivals.map((a) => ({ ...a, stopId: r.stopId })));
+  const results = await Promise.all(tc.stopIds.map((s) => getArrivals(s, { limit: 300, horizonMin: TC_LOOKAHEAD_MIN, now })));
+  const all = results.flatMap((r) => r.arrivals.map((a) => ({ ...a, stopId: r.stopId })));
+  const windowEndMs = now + TC_WINDOW_MIN * 60_000;
+  const departures = all.filter((d) => Date.parse(d.departureTime) <= windowEndMs);
   const lastMs = Math.max(...departures.map((d) => Date.parse(d.departureTime)));
   return {
     ...tc,
-    bays: tc.bays.map((b) => ({
-      ...b,
-      departures: departures.filter((d) => d.stopId === b.stopId && d.bay === b.bay).slice(0, 4),
-    })),
+    bays: tc.bays.map((b) => {
+      const atBay = (d: (typeof all)[number]) => d.stopId === b.stopId && d.bay === b.bay;
+      const shown = departures.filter(atBay).slice(0, 4);
+      // Each route listed gets up to 3 departures, past the window if need be: an hourly route
+      // shows "59 min · 1:59 PM" like every other row, and still two times when the first can't be
+      // reached in time.
+      const count = new Map<string, number>();
+      for (const d of shown) count.set(`${d.routeId}|${d.directionLabel}`, (count.get(`${d.routeId}|${d.directionLabel}`) ?? 0) + 1);
+      const later = all.filter((d) => {
+        const key = `${d.routeId}|${d.directionLabel}`;
+        const n = count.get(key);
+        if (!atBay(d) || shown.includes(d) || n === undefined || n >= 3) return false;
+        count.set(key, n + 1);
+        return true;
+      });
+      return { ...b, departures: [...shown, ...later] };
+    }),
     unassignedDepartures: departures.filter((d) => !d.bay).slice(0, 10),
     // Platform names for the bay diagram ("Northwest Transit Center - Platform 2"), so a cold
     // visit needs no stops.json.
