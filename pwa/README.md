@@ -57,8 +57,8 @@ npx tsx scripts/shoot.ts --url http://localhost:5173/explore --out /tmp/explore.
 | `--url`, `--out` | required | Page to load and PNG to write |
 | `--w`, `--h` | 412, 800 | Viewport in CSS px (device scale 2, mobile, touch) |
 | `--lat`, `--lon` | none | Grants geolocation with this fix |
-| `--wait-ms` | 1500 | Wait after load and actions, before the shot |
-| `--actions` | none | JSON list run in order: `{"click": target}`, `{"fill": [target, text]}`, `{"press": "Enter"}`, `{"wait": ms}`. A target is a selector (`text=…`, `#id`, `button[aria-pressed]`, a bare tag) or else visible text |
+| `--wait-ms` | 3000 | Wait after load and actions, before the shot |
+| `--actions` | none | JSON list run in order: `{"click": target}`, `{"fill": [target, text]}`, `{"press": "Enter"}`, `{"wait": ms}`. A target is visible text, unless it starts with `css=`, `text=`, `xpath=` or `#` (then it is a selector, e.g. `css=button[aria-pressed]`) |
 | `--storage` | `{"ridemetro.prefs":{"welcomed":true}}` | localStorage seed (JSON values); `'{}'` shows first launch |
 | `--full` | off | Full-page shot (unrolls the app's scrolling `<main>`) |
 
@@ -71,10 +71,10 @@ match the Chromium build installed under `~/.cache/ms-playwright`; if it is miss
 ```
 server/        Hono API (see server/app.ts for endpoints)
 shared/        types shared by the data build, the API and the UI
-src/app/       router (URL contract, spec G.3), layouts, BottomNav, ExploreChrome hooks
+src/app/       router (URL contract, spec G.3), AppShell (persistent map, nav), layouts, ExploreChrome hooks
 src/api/       fetch client, TanStack Query hooks, alerts store, types re-exported from the server
 src/lib/       pure helpers (formatting, walk time, plan query, fares, alerts) with unit tests
-src/state/     location, preferences, saved stops, recents, trip, shared clock
+src/state/     location, offline, preferences, saved stops, recents, trip, shared clock, install prompt
 src/i18n/      t()/useT(); strings/common.ts is shared, each module adds its own strings file
 src/map/       the single MapLibre map and the Scene API screens use to drive it
 src/ui/        every shared component (spec section C); props in src/ui/types.ts
@@ -89,4 +89,4 @@ shared file (`src/ui`, `src/map`, `src/api`, `src/lib`, `src/state`, `src/app`) 
 `"namespace.key"`. Use the file name as your top-level namespace (`home.*`, `stop.*`, …).
 `common.ts` owns `common`, `nav`, `map`, `banner`, `time`, `status`, `schedule`, `strip`, `card`,
 `routeName`, `headsign`, `dir`, `compassStop`, `side`, `sideOn`, `stopLine`, `units`, `walkStep`,
-`canMakeIt`, `legend`, `updated`, `alert`, `bay`, `chips`, `notify`, `error`, `fareLine`, `timeline`.
+`compass`, `canMakeIt`, `legend`, `updated`, `alert`, `bay`, `chips`, `notify`, `error`, `fareLine`, `timeline`.
