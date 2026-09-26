@@ -95,6 +95,12 @@ function usePlaceSubtitle(result: SearchResult): string {
   return [word, rest.join(" · ")].filter(Boolean).join(SEP);
 }
 
+/** Pick mode's place row: the same localised "Place · address" line as PlaceRow, with no actions. */
+export function PickPlaceRow({ result, onPress }: { result: SearchResult; onPress: () => void }) {
+  const subtitle = usePlaceSubtitle(result);
+  return <SimpleRow icon="place" title={result.title} lines={[subtitle]} onPress={onPress} />;
+}
+
 interface PlaceRowProps {
   result: SearchResult;
   /** Directions and Stops near as pills; other rows keep only the tap on the body (Stops near). */

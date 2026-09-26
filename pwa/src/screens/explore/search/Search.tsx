@@ -21,7 +21,7 @@ import { Skeleton } from "../../../ui/Skeleton.tsx";
 import type { RouteStop } from "../route/routeGeo.ts";
 import { EmptyQuery } from "./EmptyQuery.tsx";
 import { groupResults, isRouteQuery, parseRouteStopQuery, type SearchSection } from "./groupResults.ts";
-import { PlaceRow, RouteRow, SimpleRow, StopRow, TransitCenterRow } from "./ResultRows.tsx";
+import { PickPlaceRow, PlaceRow, RouteRow, SimpleRow, StopRow, TransitCenterRow } from "./ResultRows.tsx";
 import { RouteStopShortcut } from "./RouteStopShortcut.tsx";
 import styles from "./Search.module.css";
 
@@ -130,7 +130,7 @@ export default function Search() {
         const hidden = allPlacesFor === query ? 0 : Math.max(0, places.length - (landmarks.length ? 0 : MAX_PLACES));
         const rows = [...landmarks, ...places.slice(0, places.length - hidden)].map((r, i) =>
           pick ? (
-            <SimpleRow key={r.id} icon="place" title={r.title} lines={[r.subtitle]} onPress={() => choose(pick, r)} />
+            <PickPlaceRow key={r.id} result={r} onPress={() => choose(pick, r)} />
           ) : (
             <PlaceRow
               key={r.id}

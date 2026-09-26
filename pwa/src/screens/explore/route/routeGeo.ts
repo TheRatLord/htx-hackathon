@@ -12,7 +12,7 @@ export function routeTitle(route: Pick<RouteDetail, "displayName" | "longName" |
 }
 
 /** The position in `stops` of the stop closest (straight line) to `from`, and how far it is. */
-export function nearestIndex(stops: LatLon[], from: LatLon): { index: number; distanceM: number } | undefined {
+function nearestIndex(stops: LatLon[], from: LatLon): { index: number; distanceM: number } | undefined {
   let best: { index: number; distanceM: number } | undefined;
   stops.forEach((stop, index) => {
     const distanceM = haversineM(from.lat, from.lon, stop.lat, stop.lon);
