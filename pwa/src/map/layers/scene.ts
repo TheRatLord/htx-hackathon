@@ -11,7 +11,7 @@ import type { MapScene } from "../scene.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
 import { BOTTOM_TRANSIT_LAYER } from "./transit.ts";
 import { STALE_VEHICLE_S } from "../../lib/format.ts";
-import { anchorOffset, LABEL_MAX_EM, LABEL_PLACEMENTS, LABEL_POINTER, pointAlong } from "../placement.ts";
+import { anchorOffset, LABEL_MAX_EM, LABEL_PLACEMENTS, LABEL_POINTER, pointAlong, trimLoops } from "../placement.ts";
 
 type Feature = GeoFeature<Geometry, Record<string, string | number>>;
 const collection = (features: Feature[]): FeatureCollection => ({ type: "FeatureCollection", features });
@@ -20,7 +20,9 @@ const line = (coords: [number, number][], props: Record<string, string>): Featur
 
 const round = { "line-cap": "round", "line-join": "round" } as const;
 
-const SCENE_LABEL_FILTER: maplibregl.ExpressionSpecification = ["all", ["has", "label"], ["!=", ["get", "kind"], "highlight"]];
+/** A marker merged into a neighbour's cluster (MapView) is drawn only as part of that one. */
+const SHOWN: maplibregl.ExpressionSpecification = ["!=", ["get", "hid"], 1];
+const SCENE_LABEL_FILTER: maplibregl.ExpressionSpecification = ["all", ["has", "label"], ["!=", ["get", "kind"], "highlight"], SHOWN];
 let hiddenLabels: string[] = [];
 
 /** Markers drawn as a pin standing on their point (their label goes above the pin's head). */
@@ -35,6 +37,7 @@ export function addSceneLayers(map: maplibregl.Map) {
   hiddenLabels = [];
   labelSides = {};
   labelPoints = {};
+  merged = {};
   lastPoints = [];
   for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const lines: maplibregl.LayerSpecification[] = [
@@ -104,7 +107,7 @@ export function addSceneLayers(map: maplibregl.Map) {
     type: "symbol",
     source: "scene-points",
     // A ride leg's route label has no marker of its own.
-    filter: ["!=", ["get", "kind"], "leg"],
+    filter: ["all", ["!=", ["get", "kind"], "leg"], SHOWN],
     layout: {
       "icon-image": [
         "match",
@@ -178,10 +181,19 @@ let labelSides: Record<string, string> = {};
 /** A leg label's point along its leg, when placeLabels moved it off the midpoint. */
 let labelPoints: Record<string, [number, number]> = {};
 let lastPoints: Feature[] = [];
+/**
+ * Stop markers merged into clusters (MapView): the first member moves to the cluster's point with
+ * every member's ID as its tag ("8249 · 8895"); the others are hidden.
+ */
+export type MarkerMerge = { label: string; at: [number, number] } | "hidden";
+let merged: Record<string, MarkerMerge> = {};
 
 const withSides = (features: Feature[]): Feature[] =>
   features.map((f) => {
     const id = String(f.properties.id ?? "");
+    const m = merged[id];
+    if (m === "hidden") return { ...f, properties: { ...f.properties, hid: 1 } };
+    if (m) f = { ...f, properties: { ...f.properties, label: m.label }, geometry: { type: "Point" as const, coordinates: m.at } };
     const side = labelSides[id];
     if (!side || !f.properties.label) return f;
     const at = labelPoints[id];
@@ -192,11 +204,12 @@ const withSides = (features: Feature[]): Feature[] =>
  * Every scene label goes to the side placeLabels found clear (above first), rather than MapLibre's
  * own fallback, which put "Transfer · #4789" under the sheet's edge at 360 (24-360).
  */
-export function setLabelSides(map: maplibregl.Map, sides: Record<string, string>, points: Record<string, [number, number]> = {}) {
-  const key = (o: Record<string, unknown>) => Object.entries(o).sort().join();
-  if (key(sides) === key(labelSides) && key(points) === key(labelPoints)) return;
+export function setLabelSides(map: maplibregl.Map, sides: Record<string, string>, points: Record<string, [number, number]> = {}, merges: Record<string, MarkerMerge> = {}) {
+  const key = (o: Record<string, unknown>) => JSON.stringify(Object.entries(o).sort());
+  if (key(sides) === key(labelSides) && key(points) === key(labelPoints) && key(merges) === key(merged)) return;
   labelSides = sides;
   labelPoints = points;
+  merged = merges;
   src(map, "scene-points")?.setData(collection(withSides(lastPoints)));
 }
 
@@ -229,12 +242,15 @@ function labelEdge(scene: MapScene): (lon: number) => string {
   };
 }
 
+/** A leg's line as drawn: a ride without its terminal loops (placement.ts trimLoops). */
+export const legLine = (l: NonNullable<MapScene["legs"]>[number]) => (l.kind === "ride" ? trimLoops(l.coords) : l.coords);
+
 /** The scene-points id of leg `i`'s route label. */
 export const legLabelId = (i: number) => `leg-${i}`;
 
 export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
   src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
-  src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color ?? "" }))));
+  src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(legLine(l), { kind: l.kind, color: l.color ?? "" }))));
   const edge = labelEdge(scene);
   const points: Feature[] = [
     ...(scene.markers ?? []).map((m) =>
@@ -245,7 +261,7 @@ export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: Clien
   // A route label halfway along each labelled ride leg, so a transfer between two navy lines reads
   // as two buses ([80] then [73], 25).
   (scene.legs ?? []).forEach((l, i) => {
-    const mid = l.label ? pointAlong(l.coords) : undefined;
+    const mid = l.label ? pointAlong(legLine(l)) : undefined;
     if (mid) points.push(point({ lon: mid[0], lat: mid[1] }, { id: legLabelId(i), kind: "leg", lk: "c", label: l.label! }));
   });
   if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, ...(highlightLabel && { label: highlightLabel }) }));
