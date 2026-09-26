@@ -20,11 +20,17 @@ export function compareRouteNames(a: string, b: string): number {
 /**
  * The home chip row: every route serving the returned stops (from `stop.routes`, so a route with
  * no bus in the window keeps its chip) plus nearby transit centers' routes, nearest first, then by
- * number with rail after bus.
+ * number with rail after bus. `bucket` coarsens the distance before comparing (e.g. to walk
+ * minutes, so routes a few steps apart fall back to the numeric order riders scan).
  */
-export function sortRouteChips(stops: NearbyStop[], tcs: { tc: NearbyTransitCenter; routes: RouteRef[] }[] = []): RouteRef[] {
+export function sortRouteChips(
+  stops: NearbyStop[],
+  tcs: { tc: NearbyTransitCenter; routes: RouteRef[] }[] = [],
+  bucket: (distanceM: number) => number = (m) => m,
+): RouteRef[] {
   const best = new Map<string, { route: RouteRef; distanceM: number }>();
-  const offer = (route: RouteRef, distanceM: number) => {
+  const offer = (route: RouteRef, walkDistanceM: number) => {
+    const distanceM = bucket(walkDistanceM);
     const prev = best.get(route.id);
     if (!prev || distanceM < prev.distanceM) best.set(route.id, { route, distanceM });
   };

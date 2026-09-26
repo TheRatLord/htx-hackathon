@@ -12,11 +12,12 @@ import { usePrefs } from "../../../state/prefs.ts";
 import { AlertStatusLine } from "../../../ui/AlertStatusLine.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { ErrorState } from "../../../ui/ErrorState.tsx";
+import { RouteDirectionCard } from "../../../ui/RouteDirectionCard.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { refOfRoute } from "../stop/refs.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 import type { Place } from "./anchor.ts";
-import { DirectionCard, StreetCard } from "./DirectionCard.tsx";
+import { StreetCard } from "./DirectionCard.tsx";
 import { routeCap } from "./fold.ts";
 import styles from "./Home.module.css";
 import { LoadingCards } from "./NearbyList.tsx";
@@ -89,7 +90,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
     ...bays.map((b, i) => {
       const platform = data.directions.flatMap((d) => d.stops).find((s) => s.id === b.stopId);
       return (
-        <DirectionCard
+        <RouteDirectionCard
           key={`tc-${b.bay}-${b.directionLabel}`}
           route={ref}
           directionLabel={b.directionLabel}
@@ -97,7 +98,7 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
           stop={platform ? asSummary(platform) : { id: b.stopId, name: tc!.name, lat: tc!.lat, lon: tc!.lon, kind: "transit-center", routes: [], subtitle: "" }}
           walkDistanceM={tcWalkM}
           deps={bayDeps[i]}
-          loaded
+          noServiceText={t("card.noBuses90m")}
           bay={b.bay}
           tcName={tc!.name}
           onOpen={() => navigate(`/explore/tc/${encodeURIComponent(tc!.id)}?route=${encodeURIComponent(data.id)}`)}

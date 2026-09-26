@@ -35,19 +35,6 @@
 }
 
 /* A RouteDirectionCard with the "No buses in the next 2 hours" line joined under it, as one card. */
-.quietCard {
-  border-radius: var(--r-card);
-  background: var(--c-card);
-}
-
-/* Positioned, so it paints above the card it is pulled up into. */
-.quietLine {
-  position: relative;
-  margin-top: calc(-1 * var(--sp-2));
-  padding: 0 var(--card-pad) var(--card-pad);
-  color: var(--c-text-variant);
-}
-
 .caption {
   color: var(--c-text-secondary);
   font-size: var(--fs-caption);

@@ -85,6 +85,7 @@ const strings: Strings = {
     },
     card: {
       noBuses2h: "No buses in the next 2 hours",
+      noBuses90m: "No buses in the next 90 minutes",
       moreRoutes: { one: "+ {count} more route ({names})", other: "+ {count} more routes ({names})" },
       walk: "walk",
       walkFrom: "walk {from}",
@@ -312,6 +313,7 @@ const strings: Strings = {
     },
     card: {
       noBuses2h: "No hay autobuses en las próximas 2 horas",
+      noBuses90m: "No hay autobuses en los próximos 90 minutos",
       moreRoutes: { one: "+ {count} ruta más ({names})", other: "+ {count} rutas más ({names})" },
       walk: "a pie",
       walkFrom: "a pie {from}",
@@ -324,7 +326,7 @@ const strings: Strings = {
       walkToTcA11y: { one: "Caminar a {name}, {count} minuto", other: "Caminar a {name}, {count} minutos" },
       walkToTcDistanceA11y: "Caminar a {name}, {distance}",
       then: "después",
-      departuresByBay: "Salidas por andén",
+      departuresByBay: "Salidas por bahía",
       transitCenterLine: "Centro de tránsito · {bays} andenes · {distance}",
       tcTile: "TC",
       routeRowA11y: "Ruta {route} {headsign}",
@@ -361,7 +363,7 @@ const strings: Strings = {
       east: "En el lado este de {street}",
       west: "En el lado oeste de {street}",
     },
-    stopLine: { railStation: "Estación de tren", title: "{name} ({id})", bay: "Andén {bay}" },
+    stopLine: { railStation: "Estación de tren", title: "{name} ({id})", bay: "Bahía {bay}" },
     units: { ft: "{n} pies", mi: "{n} mi" },
     walkStep: {
       depart: { street: "Camine hacia el {dir} por {street}", bare: "Camine hacia el {dir}" },
@@ -422,7 +424,7 @@ const strings: Strings = {
     bay: {
       diagramCaption: "Diagrama, no a escala",
       handAuthored: "Los andenes vienen del mapa impreso de METRO y pueden cambiar.",
-      tileA11y: "Andén {bay}, {platform}, rutas {routes}",
+      tileA11y: "Bahía {bay}, {platform}, rutas {routes}",
     },
     chips: { more: "Más", back: "Atrás" },
     notify: {

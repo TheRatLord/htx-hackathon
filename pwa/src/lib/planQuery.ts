@@ -50,8 +50,12 @@ export function planUrl(q: PlanQuery, extra: { edit?: boolean; index?: number } 
 
 type PickResult = SearchResult | { kind: "my-location"; point: LatLon };
 
-function placeOf(result: PickResult): { value: string; name: string } | undefined {
-  if ("kind" in result) return { value: formatLatLon(result.point), name: t("common.myLocation") };
+/**
+ * The rider's location as From carries no name, so the planner shows it in the current language
+ * (features/trip/origin.ts); as To it is named like any place.
+ */
+function placeOf(result: PickResult, field: "from" | "to"): { value: string; name?: string } | undefined {
+  if ("kind" in result) return { value: formatLatLon(result.point), name: field === "to" ? t("common.myLocation") : undefined };
   switch (result.type) {
     case "stop":
       return { value: result.id, name: result.title };
@@ -70,7 +74,7 @@ function placeOf(result: PickResult): { value: string; name: string } | undefine
 export function encodePick(returnTo: string, field: "from" | "to", result: PickResult): string {
   const url = new URL(returnTo, "http://x");
   const q = parsePlanQuery(url.searchParams);
-  const place = placeOf(result);
+  const place = placeOf(result, field);
   if (place) {
     q[field] = place.value;
     q[field === "from" ? "fromName" : "toName"] = place.name;

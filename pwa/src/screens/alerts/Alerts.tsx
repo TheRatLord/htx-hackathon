@@ -1,9 +1,7 @@
 // D14 Service Alerts. "No alerts" is said only when the live METRO feed answered (C.11).
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router";
 import { useAlerts } from "../../api/alertsStore.ts";
-import { keys } from "../../api/keys.ts";
 import type { Alert, RouteRef } from "../../api/types.ts";
 import { usePageTitle } from "../../app/usePageTitle.ts";
 import { useBack } from "../../app/useBack.ts";
@@ -63,7 +61,6 @@ export default function Alerts() {
   const onBack = useBack();
   const navigate = useNavigate();
   const store = useAlerts();
-  const qc = useQueryClient();
   const myRoutes = useMyRoutes();
   const [params, setParams] = useSearchParams();
   useRoutesLoaded();
@@ -90,11 +87,10 @@ export default function Alerts() {
     .slice()
     .sort((a, b) => compareRouteNames(firstRouteName(a), firstRouteName(b)));
   const mineWithout = (myRoutes ?? []).filter((r) => alertsForRoute(store.alerts, r.id).length === 0);
-  const updatedAt = qc.getQueryState(keys.alerts())?.dataUpdatedAt;
+  const updatedAt = store.updatedAt;
 
   let body;
-  // AlertStatusLine owns the loading and "can't be checked" states. It must stay mounted across
-  // both: a remount retries the failed query, which resets it to loading.
+  // AlertStatusLine owns the loading and "can't be checked" states.
   if (store.status !== "ok" || store.source === "unavailable") {
     body = <AlertStatusLine scope="route" name={t("alerts.title")} alerts={[]} />;
   } else if (routeParam && shown.length === 0) {

@@ -7,7 +7,7 @@ import { useStop, useStopSchedule } from "../../../api/hooks.ts";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { headsignLine } from "../../../lib/format.ts";
+import { formatDayTime, formatServiceDate, headsignLine } from "../../../lib/format.ts";
 import { canonicalRouteId } from "../../../lib/routes.ts";
 import { useNow } from "../../../state/clock.ts";
 import { AppBar } from "../../../ui/AppBar.tsx";
@@ -18,7 +18,6 @@ import { Skeleton } from "../../../ui/Skeleton.tsx";
 import styles from "./FullSchedule.module.css";
 import { hourKey, hourRows } from "./hours.ts";
 import { refOfServing } from "./refs.ts";
-import { formatDayTime, formatServiceDate } from "./when.ts";
 
 /** Space between the sticky header and the hour scrolled to. */
 const SCROLL_GAP = 8;

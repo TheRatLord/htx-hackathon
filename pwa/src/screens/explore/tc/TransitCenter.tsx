@@ -8,7 +8,7 @@ import type { TransitCenterDetail } from "../../../api/types.ts";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
-import { formatClock, formatDistance, headsignLine, platformLabel } from "../../../lib/format.ts";
+import { directionWord, formatClock, formatDistance, headsignLine, platformLabel } from "../../../lib/format.ts";
 import { canonicalRouteId, useRoutesLoaded } from "../../../lib/routes.ts";
 import { estimateWalk } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
@@ -26,7 +26,6 @@ import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { SectionHeader } from "../../../ui/SectionHeader.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
-import { useDirectionWord } from "../route/useDirectionWord.ts";
 import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
 
@@ -197,7 +196,7 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
 function RouteBanner({ tc, routeName, routeId, platformName }: { tc: TransitCenterDetail; routeName: string; routeId: string; platformName: (stopId: string) => string }) {
   const t = useT();
   const now = useNow();
-  const dirWord = useDirectionWord();
+  const lang = useLang();
   const bays = tc.bays.filter((b) => servesRoute(b, routeId));
   const depsOf = (deps: TransitCenterDetail["unassignedDepartures"]) => departureRows(deps, now, routeId).flatMap((r) => r.deps);
   if (!bays.length) {
@@ -218,7 +217,7 @@ function RouteBanner({ tc, routeName, routeId, platformName }: { tc: TransitCent
       </p>
       {bays.map((b) => {
         const entries = b.routes.filter((r) => servesRoute({ routes: [r] }, routeId));
-        const direction = `${dirWord(entries[0]?.directionLabel ?? "")} ${t("route.to", { headsign: entries.map((r) => r.headsign).join(" / ") })}`.trim();
+        const direction = `${directionWord(entries[0]?.directionLabel ?? "", lang)} ${t("route.to", { headsign: entries.map((r) => r.headsign).join(" / ") })}`.trim();
         return (
           <div key={`${b.stopId}-${b.bay}`} className={styles.bannerBay}>
             <p>{single ? t("card.platformLine", { platform: platformName(b.stopId), id: b.stopId }) : t("tc.bayLine", { direction, bay: b.bay })}</p>

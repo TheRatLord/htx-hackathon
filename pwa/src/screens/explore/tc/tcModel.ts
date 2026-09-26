@@ -3,7 +3,7 @@
 
 import type { Arrival, RouteRef, TransitCenterDetail } from "../../../api/types.ts";
 import { upcoming } from "../../../lib/format.ts";
-import { canonicalRouteId, routeRef, routeRefByName, toRouteRef } from "../../../lib/routes.ts";
+import { canonicalRouteId, routeRefByName, routeRefOrFallback } from "../../../lib/routes.ts";
 import { compareRouteNames } from "../../../lib/sortRoutes.ts";
 
 export type Bay = TransitCenterDetail["bays"][number];
@@ -15,16 +15,10 @@ export interface DepartureRow {
   deps: Arrival[];
 }
 
-/** METRO's bus navy, for a route the static table doesn't know. */
-const BUS_NAVY = "#004080";
-
-const refFor = (id: string, name: string, color = BUS_NAVY): RouteRef =>
-  routeRef(id) ?? toRouteRef({ id, name, color, textColor: "#FFFFFF" });
-
 /** Every route at the center: bay routes plus the ones METRO publishes without a bay, in route-number order. */
 export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoutes">): RouteRef[] {
   const refs = new Map<string, RouteRef>();
-  for (const b of tc.bays) for (const r of b.routes) refs.set(canonicalRouteId(r.routeId), refFor(r.routeId, r.route));
+  for (const b of tc.bays) for (const r of b.routes) refs.set(canonicalRouteId(r.routeId), routeRefOrFallback(r.routeId, r.route));
   for (const name of tc.unassignedRoutes) {
     const ref = routeRefByName(name);
     if (ref) refs.set(ref.id, ref);
@@ -46,7 +40,7 @@ export function departureRows(deps: Arrival[], now: number, routeId?: string): D
     const key = `${d.routeId}|${d.directionLabel}|${d.headsign}`;
     let row = rows.get(key);
     if (!row) {
-      row = { route: refFor(d.routeId, d.routeShortName, d.routeColor), directionLabel: d.directionLabel, headsign: d.headsign, deps: [] };
+      row = { route: routeRefOrFallback(d.routeId, d.routeShortName, d.routeColor), directionLabel: d.directionLabel, headsign: d.headsign, deps: [] };
       rows.set(key, row);
     }
     row.deps.push(d);

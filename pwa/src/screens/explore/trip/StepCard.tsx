@@ -1,13 +1,12 @@
 // One Live trip step (spec D13): Walk, Wait, Ride, Final walk or Arrived. The headlines are plain
 // text: LiveTrip announces each step once through its own live region.
 
-import { useArrivals } from "../../../api/hooks.ts";
+import { useArrivals, useWalk } from "../../../api/hooks.ts";
 import type { LatLon, TransitLeg, WalkLeg } from "../../../api/types.ts";
 import { boardDeparture } from "../../../features/trip/departures.ts";
 import { walkOrigin, type RideStop } from "../../../features/trip/progress.ts";
 import type { TripStep } from "../../../features/trip/steps.ts";
 import { shortSide, stopTitle } from "../../../features/trip/timeline.ts";
-import { useFinalWalk } from "../../../features/trip/useFinalWalk.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock, sideLine } from "../../../lib/format.ts";
 import { formatLatLon } from "../../../lib/geo.ts";
@@ -167,11 +166,14 @@ function GetOffWarning({ left, alight }: { left: number; alight: string }) {
   );
 }
 
+/** Below this there is nothing to explain: the place is at the stop. */
+const MIN_DIRECTIONS_M = 30;
+
 function FinalCard({ leg, place }: { leg: WalkLeg; place: string }) {
   const t = useT();
   const lang = useLang();
   const { walkPace } = usePrefs();
-  const directions = useFinalWalk(leg);
+  const directions = useWalk(leg.from, leg.to, { enabled: leg.distanceM >= MIN_DIRECTIONS_M });
   return (
     <>
       <p className={styles.headline}>{t("trip.final.head", { min: walkMinutes(leg.distanceM, walkPace), place })}</p>

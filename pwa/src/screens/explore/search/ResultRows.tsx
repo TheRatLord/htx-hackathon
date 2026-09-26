@@ -3,7 +3,7 @@
 import { useAlerts, useRoute } from "../../../api/hooks.ts";
 import type { SearchResult, StopSummary, TransitCenterSummary } from "../../../api/types.ts";
 import { hasKey, useLang, useT } from "../../../i18n/index.ts";
-import { formatDistance, sideLine } from "../../../lib/format.ts";
+import { directionWord, formatDistance, sideLine } from "../../../lib/format.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
 import { estimateWalk } from "../../../lib/walk.ts";
 import { useLocation } from "../../../state/location.tsx";
@@ -13,7 +13,6 @@ import { Button } from "../../../ui/Button.tsx";
 import { Icon, type IconName } from "../../../ui/Icon.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { nearestDirection } from "../route/routeGeo.ts";
-import { useDirectionWord } from "../route/useDirectionWord.ts";
 import { useStopWalk } from "../route/useStopWalk.ts";
 import styles from "./Search.module.css";
 
@@ -60,12 +59,12 @@ export function SimpleRow(props: { icon: IconName | "tc"; title: string; lines?:
 /** "Hobby Airport (10567) · Eastbound · 3 min walk from there". */
 function useClosestStopLine(place: { lat?: number; lon?: number }, stop: StopSummary | undefined): string | undefined {
   const t = useT();
-  const dirLabel = useDirectionWord();
+  const lang = useLang();
   const { fix } = useLocation();
   const { walkPace } = usePrefs();
   if (!stop) return undefined;
   const parts = [t("stopLine.title", { name: stop.name, id: stop.id })];
-  if (stop.kind !== "rail" && stop.directionLabel) parts.push(dirLabel(stop.directionLabel));
+  if (stop.kind !== "rail" && stop.directionLabel) parts.push(directionWord(stop.directionLabel, lang));
   if (fix && place.lat !== undefined && place.lon !== undefined) {
     parts.push(t("search.closestWalk", { count: estimateWalk({ lat: place.lat, lon: place.lon }, stop, walkPace).minutes }));
   }
@@ -153,7 +152,7 @@ export function StopRow({ result, walkable, onOpen, onWalk }: StopRowProps) {
 
 export function RouteRow({ result, onOpen }: { result: SearchResult; onOpen: (dir: 0 | 1) => void }) {
   const t = useT();
-  const dirLabel = useDirectionWord();
+  const lang = useLang();
   const alerts = useAlerts();
   const { fix } = useLocation();
   const detail = useRoute(result.id);
@@ -176,8 +175,8 @@ export function RouteRow({ result, onOpen }: { result: SearchResult; onOpen: (di
             <Button
               key={d.directionId}
               variant="tonal"
-              label={dirLabel(d.label)}
-              ariaLabel={t("search.openRouteA11y", { route: result.title, direction: `${dirLabel(d.label)} ${t("route.to", { headsign: d.headsigns[0] ?? "" })}` })}
+              label={directionWord(d.label, lang)}
+              ariaLabel={t("search.openRouteA11y", { route: result.title, direction: `${directionWord(d.label, lang)} ${t("route.to", { headsign: d.headsigns[0] ?? "" })}` })}
               onPress={() => onOpen(d.directionId)}
             />
           ))}

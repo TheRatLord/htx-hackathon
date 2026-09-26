@@ -32,4 +32,9 @@ describe("sortRouteChips", () => {
     const chips = sortRouteChips([stop(60, ["40"]), stop(130, ["11"])], [{ tc, routes: [routeRef("58")!] }]);
     expect(chips.map((c) => c.name)).toEqual(["40", "58", "11"]);
   });
+
+  it("compares bucketed distances, so near ties sort by number", () => {
+    const chips = sortRouteChips([stop(118, ["137", "11"]), stop(158, ["6"])], [], (m) => Math.round(m / 75));
+    expect(chips.map((c) => c.name)).toEqual(["6", "11", "137"]);
+  });
 });

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useArrivals, useHealth, useStopSchedule } from "../../../api/hooks.ts";
 import type { Arrival, StopSummary } from "../../../api/types.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { headsignLine, upcoming } from "../../../lib/format.ts";
+import { formatDayTime, headsignLine, upcoming } from "../../../lib/format.ts";
 import { useNow } from "../../../state/clock.ts";
 import { useOffline } from "../../../state/offline.ts";
 import { Button } from "../../../ui/Button.tsx";
@@ -15,7 +15,6 @@ import { refOfServing } from "./refs.ts";
 import { servingKey, type Serving } from "./serving.ts";
 import styles from "./StopSheet.module.css";
 import { useTrackStop } from "./useTrackStop.ts";
-import { formatDayTime } from "./when.ts";
 
 interface ExpandedRouteProps {
   stop: StopSummary;

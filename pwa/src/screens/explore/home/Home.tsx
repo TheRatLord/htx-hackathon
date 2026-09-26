@@ -1,7 +1,7 @@
 // Explore home (G.3 `/explore`): Nearby (D2), Route near you (D3, `?route=`) and Stops near a
 // place (D4, `?at=&label=`). One sheet: title row, one banner, the route chips, then the list.
 
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useAlerts, useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -48,14 +48,6 @@ function routeFabs(routeId: string, alerting: boolean): FabRequest[] {
 }
 
 /** The transit center detail is fetched only when one is within 1,000 m. */
-function WithTransitCenter({ id, children }: { id?: string; children: (tc?: TransitCenterDetail) => ReactNode }) {
-  return id ? <FetchTransitCenter id={id}>{children}</FetchTransitCenter> : children(undefined);
-}
-
-function FetchTransitCenter({ id, children }: { id: string; children: (tc?: TransitCenterDetail) => ReactNode }) {
-  return children(useTransitCenter(id).data);
-}
-
 /** C.12 sheet banner row: trip planned > location off > demo data. */
 function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBannerProps | undefined {
   const t = useT();
@@ -148,6 +140,8 @@ export default function Home() {
   const nearby = useNearby(origin, { precise: true });
   const data = origin ? nearby.data : undefined;
   const banner = useSheetBanner(anchor, data);
+  const tcId = data?.transitCenters[0]?.id;
+  const tc = useTransitCenter(tcId ?? "", { enabled: Boolean(tcId) }).data;
 
   const panned = Boolean(!routeId && origin && center && haversineM(origin.lat, origin.lon, center.lat, center.lon) > SEARCH_AREA_M);
   const alerting = routeId !== undefined && alerts.source !== "unavailable" && alerts.forRoute(routeId).length > 0;
@@ -169,29 +163,25 @@ export default function Home() {
   return (
     // D4's two-line title leaves no room beside it: its UpdatedAgo shares the "Back to my location" row.
     <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId || place ? back : undefined}>
-      <WithTransitCenter id={data?.transitCenters[0]?.id}>
-        {(tc) => (
-          <div className={styles.body}>
-            {place && !routeId && (
-              <div className={styles.backToMe}>
-                <Button variant="tonal" icon="close" label={t("home.backToMe")} onPress={() => navigate("/explore")} />
-                {updated}
-              </div>
-            )}
-            {banner && !place && <SheetBanner {...banner} />}
-            {data && (
-              <div className={styles.bleed}>
-                <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
-              </div>
-            )}
-            {routeId ? (
-              <RouteNearYou routeId={routeId} origin={origin} finding={anchor.kind === "finding"} place={place} nearby={data} tc={tc} />
-            ) : (
-              <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} />
-            )}
+      <div className={styles.body}>
+        {place && !routeId && (
+          <div className={styles.backToMe}>
+            <Button variant="tonal" icon="close" label={t("home.backToMe")} onPress={() => navigate("/explore")} />
+            {updated}
           </div>
         )}
-      </WithTransitCenter>
+        {banner && !place && <SheetBanner {...banner} />}
+        {data && (
+          <div className={styles.bleed}>
+            <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
+          </div>
+        )}
+        {routeId ? (
+          <RouteNearYou routeId={routeId} origin={origin} finding={anchor.kind === "finding"} place={place} nearby={data} tc={tc} />
+        ) : (
+          <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} />
+        )}
+      </div>
     </ExploreSheet>
   );
 }

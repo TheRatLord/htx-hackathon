@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayHeadsign, placeVehicles, type RouteDirectionDetail } from "./routeGeo.ts";
+import { placeVehicles, type RouteDirectionDetail } from "./routeGeo.ts";
 
 // Three stops ~1.1 km apart along a meridian.
 const stop = (id: string, lat: number) => ({ sequence: 0, id, name: id, lat, lon: -95.4, kind: "stop" });
@@ -16,13 +16,5 @@ describe("placeVehicles", () => {
   it("leaves out buses of the other direction or far from every stop", () => {
     expect(placeVehicles([bus(29.702, -95.4, "Southbound")], direction).size).toBe(0);
     expect(placeVehicles([bus(29.705, -95.41)], direction).size).toBe(0);
-  });
-});
-
-describe("displayHeadsign", () => {
-  it("drops the METRORail prefix", () => {
-    expect(displayHeadsign("METRORail - FANNIN SOUTH")).toBe("FANNIN SOUTH");
-    expect(displayHeadsign("METRORail -NORTH LINE TC")).toBe("NORTH LINE TC");
-    expect(displayHeadsign("DOWNTOWN")).toBe("DOWNTOWN");
   });
 });

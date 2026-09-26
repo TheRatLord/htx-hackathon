@@ -1,12 +1,11 @@
 // D20 Route Schedules: every route, rail first, then buses by number; each opens the Route page.
 
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { ClientRoute } from "../../../api/types.ts";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useT } from "../../../i18n/index.ts";
-import { routeRef, useRoutesLoaded } from "../../../lib/routes.ts";
+import { routeRef, useAllRoutes } from "../../../lib/routes.ts";
 import { compareRouteNames } from "../../../lib/sortRoutes.ts";
 import { AppBar } from "../../../ui/AppBar.tsx";
 import { EmptyState } from "../../../ui/EmptyState.tsx";
@@ -25,26 +24,17 @@ const byRailThenNumber = (a: ClientRoute, b: ClientRoute) =>
 /** "82" finds route 82 (not 182); words match the route's name. */
 const matches = (r: ClientRoute, q: string) => (/^\d+$/.test(q.trim()) ? r.displayName === q.trim() : stopMatches({ id: "", name: routeTitle(r) }, q));
 
-/** The static file the service worker precaches. TODO(requests.md): list it through src/lib/routes.ts (`useAllRoutes()`). */
-async function fetchRoutes(): Promise<ClientRoute[]> {
-  const res = await fetch("/data/routes.json");
-  if (!res.ok) throw new Error(`Request failed (HTTP ${res.status}).`);
-  return (await res.json()) as ClientRoute[];
-}
-
 export default function RouteList() {
   const t = useT();
   const [query, setQuery] = useState("");
   usePageTitle(t("route.listTitle"));
-  // Badges use the same RouteRefs as every other screen.
-  useRoutesLoaded();
-  const routes = useQuery({ queryKey: ["static", "routes.json"], queryFn: fetchRoutes, staleTime: Infinity });
-  const shown = (routes.data ?? []).filter((r) => matches(r, query)).sort(byRailThenNumber);
+  const { routes, error, retry } = useAllRoutes();
+  const shown = routes.filter((r) => matches(r, query)).sort(byRailThenNumber);
 
   let body;
-  if (routes.isError) {
-    body = <ErrorState error={routes.error} onRetry={() => void routes.refetch()} />;
-  } else if (routes.isPending) {
+  if (error) {
+    body = <ErrorState error={error} onRetry={retry} />;
+  } else if (!routes.length) {
     body = (
       <div className={styles.find}>
         <Skeleton variant="row" />

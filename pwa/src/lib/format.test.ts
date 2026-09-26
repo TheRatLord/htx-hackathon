@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client.ts";
 import type { Dep } from "../api/types.ts";
-import { departureA11y, formatClock, formatDeparture, formatDistance, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
+import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
 import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
@@ -82,11 +82,33 @@ describe("formatDistance", () => {
   });
 });
 
+describe("dates", () => {
+  it("formats days and ranges in Houston time", () => {
+    // 10:12 UTC is 5:12 AM in Houston (CDT).
+    expect(formatDayTime("2026-09-26T10:12:00Z", "en")).toBe("Sat 5:12 AM");
+    expect(formatServiceDate("20260925", "en")).toBe("Fri, Sep 25");
+    expect(formatDateRange("2026-09-25T10:00:00Z", "2026-10-03T10:00:00Z", "en", { withTime: true })).toBe("From Sep 25, 5:00 AM until Oct 3");
+    expect(formatDateRange(null, "2026-10-03T10:00:00Z", "en")).toBe("Until Oct 3");
+  });
+});
+
 describe("headsignLine", () => {
   it("omits the unreliable rail direction", () => {
     expect(headsignLine({ mode: "bus" }, "Northbound", "N Shepherd P&R", "en")).toBe("NORTHBOUND to N SHEPHERD P&R");
     expect(headsignLine({ mode: "rail" }, "Southbound", "Fannin South", "en")).toBe("to FANNIN SOUTH");
     expect(headsignLine({ mode: "bus" }, "Inbound", "Downtown", "es")).toBe("HACIA EL CENTRO a DOWNTOWN");
+  });
+
+  it("drops the METRORail prefix of rail headsigns", () => {
+    expect(displayHeadsign("METRORail - FANNIN SOUTH")).toBe("FANNIN SOUTH");
+    expect(displayHeadsign("METRORail -NORTH LINE TC")).toBe("NORTH LINE TC");
+    expect(displayHeadsign("DOWNTOWN")).toBe("DOWNTOWN");
+    expect(headsignLine({ mode: "rail" }, "", "METRORail - Fannin South", "en")).toBe("to FANNIN SOUTH");
+  });
+
+  it("names directions, keeping unknown labels", () => {
+    expect(directionWord("Eastbound", "en")).toBe("Eastbound");
+    expect(directionWord("Loop", "en")).toBe("Loop");
   });
 });
 
