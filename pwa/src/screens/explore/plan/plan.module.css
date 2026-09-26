@@ -1,0 +1,431 @@
+/* D11 Plan Your Trip / Select Itinerary and D12 My Itinerary. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.variant {
+  color: var(--c-text-variant);
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.link {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+
+.alertText {
+  color: var(--c-alert-text);
+}
+
+/* ---------- From / To box (today's form) ---------- */
+
+.box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-box);
+  background: var(--c-card);
+}
+
+.place {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  padding: var(--sp-2) 100px var(--sp-2) var(--sp-4);
+  border: none;
+  background: none;
+  color: var(--c-text);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-medium);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.place:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+/* Inside the box, so the ring is not cut by its edge. */
+.place:focus-visible {
+  outline-offset: -3px;
+}
+
+.placeholder {
+  color: var(--c-text-variant);
+}
+
+.placeAlert {
+  color: var(--c-alert-text);
+  font-size: var(--fs-body);
+}
+
+.dot {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0 4px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+  box-shadow: 0 0 0 1px var(--c-outline);
+}
+
+.ring {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0 2px;
+  border: 3px solid var(--c-outline);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.between {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-left: var(--sp-4);
+  color: var(--c-text-variant);
+}
+
+.between hr {
+  flex: 1;
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--c-outline-strong);
+}
+
+.swap {
+  position: absolute;
+  top: 50%;
+  right: var(--sp-3);
+  display: inline-flex;
+  gap: var(--sp-1);
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  transform: translateY(-50%);
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--e-1);
+  color: var(--c-text);
+  font-weight: var(--fw-medium);
+}
+
+/* ---------- Chips ---------- */
+
+.chipsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Full-bleed inside the sheet body: ChipRow keeps its own gutter. */
+.bleed {
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.otherTime {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--card-pad);
+  border-radius: var(--r-box);
+  background: var(--c-card);
+}
+
+.otherTime label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  font-weight: var(--fw-medium);
+}
+
+.otherTime input {
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-outline-strong);
+  border-radius: var(--r-alert);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ---------- Results ---------- */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--sp-2) var(--card-pad);
+  border: none;
+  border-radius: var(--r-box);
+  background: var(--c-card);
+  color: var(--c-text);
+  text-align: start;
+}
+
+.summary:active {
+  background: var(--c-chip-inactive);
+}
+
+.summaryPlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-2);
+  align-items: center;
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.summaryPlaces > span {
+  display: inline-flex;
+  gap: var(--sp-1);
+  align-items: center;
+}
+
+.summaryWhen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summaryWhen > span:last-child {
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+}
+
+.smallDot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--c-origin-dot);
+  box-shadow: 0 0 0 1px var(--c-outline);
+}
+
+.status {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- Itinerary card ---------- */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--card-pad);
+  border-radius: var(--r-card);
+  background: var(--c-card);
+  --tonal-bg: var(--c-surface);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) 0;
+  padding: var(--card-pad) var(--card-pad) 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  color: var(--c-text);
+  text-decoration: none;
+}
+
+.cardMain:active {
+  background: rgb(0 0 0 / 5%);
+}
+
+.cardTop {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.modeSep {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 2px;
+  color: var(--c-text-variant);
+  font-weight: var(--fw-medium);
+}
+
+.modeRide {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modeMin {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.modeWalk {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-weight: var(--fw-medium);
+}
+
+.durationCol {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.duration {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.times {
+  font-variant-numeric: tabular-nums;
+}
+
+.divider {
+  width: 100%;
+  margin: var(--sp-1) 0;
+  border: none;
+  border-top: 1px solid var(--c-divider);
+}
+
+.boardLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-caps);
+}
+
+.boardStop {
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.leaves {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: baseline;
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.alertLine {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  color: var(--c-alert-text);
+}
+
+.fare {
+  font-variant-numeric: tabular-nums;
+}
+
+.cardFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-2);
+}
+
+.details {
+  display: inline-flex;
+  margin-left: auto;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-2);
+}
+
+/* ---------- Peek rows (D11, D12) ---------- */
+
+.peek {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter) var(--sp-3);
+}
+
+.peek p {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-medium);
+}
+
+.peek > :last-child {
+  flex: none;
+}
+
+/* ---------- My Itinerary ---------- */
+
+.arrive {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
