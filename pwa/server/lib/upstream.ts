@@ -3,7 +3,9 @@
 // Every call names a `fixtureKey` that describes the request WITHOUT secrets
 // (API keys never reach disk). With RECORD_FIXTURES=1 successful responses are
 // saved under server/fixtures/<service>/; with OFFLINE=1 only those are served;
-// otherwise a fixture is used as a fallback when the live call fails.
+// otherwise a fixture is a fallback when the live call fails, for the slow-changing services only
+// (trip plans, place search, walking routes). Realtime services never fall back: a months-old
+// recording shown as today's METRO alerts or live arrivals is worse than "unavailable".
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -11,6 +13,9 @@ import { join } from "node:path";
 import { PWA_ROOT, config } from "../config.ts";
 
 export type UpstreamService = "transitous" | "photon" | "osrm" | "metro-odata" | "metro-alerts" | "metro-tripupdates";
+
+/** Services whose answer is about right now: a recorded one is never passed off as current. */
+const REALTIME = new Set<UpstreamService>(["metro-odata", "metro-alerts", "metro-tripupdates"]);
 
 export class UpstreamError extends Error {
   constructor(
@@ -68,8 +73,13 @@ export async function fetchUpstream<T = unknown>(opts: {
   fixtureKey: string;
   binary?: boolean;
   timeoutMs?: number;
+  /** Extra request headers (METRO's subscription key goes here, not in the URL, so it stays out of logs). */
+  headers?: Record<string, string>;
+  /** Serve the recorded fixture when the live call fails. Default: off for realtime services. */
+  allowFixtureFallback?: boolean;
 }): Promise<UpstreamResult<T>> {
-  const { service, url, fixtureKey, binary = false, timeoutMs = 8000 } = opts;
+  const { service, url, fixtureKey, binary = false, timeoutMs = 8000, headers = {} } = opts;
+  const fallback = opts.allowFixtureFallback ?? !REALTIME.has(service);
   if (config.offline) {
     const f = readFixture(service, fixtureKey);
     if (!f) throw new UpstreamError(service, `offline mode has no recorded ${service} response for this request`);
@@ -77,7 +87,7 @@ export async function fetchUpstream<T = unknown>(opts: {
   }
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": config.userAgent, Accept: binary ? "application/x-protobuf" : "application/json" },
+      headers: { "User-Agent": config.userAgent, Accept: binary ? "application/x-protobuf" : "application/json", ...headers },
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) throw new UpstreamError(service, `${service} responded with HTTP ${res.status}`, res.status);
@@ -85,10 +95,13 @@ export async function fetchUpstream<T = unknown>(opts: {
     if (config.recordFixtures) writeFixture(service, fixtureKey, body);
     return { body: body as T };
   } catch (err) {
-    const f = readFixture(service, fixtureKey);
+    const f = fallback ? readFixture(service, fixtureKey) : null;
     if (f) return fromFixture<T>(f, binary);
     if (err instanceof UpstreamError) throw err;
     const reason = err instanceof Error && err.name === "TimeoutError" ? "timed out" : "could not be reached";
     throw new UpstreamError(service, `${service} ${reason}`);
   }
 }
+
+/** METRO's API Management key, sent as a header rather than a `subscription-key` query parameter. */
+export const metroKeyHeader = (key: string | undefined): Record<string, string> => (key ? { "Ocp-Apim-Subscription-Key": key } : {});

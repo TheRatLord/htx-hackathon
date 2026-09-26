@@ -124,7 +124,7 @@ function straightLine(from: LatLon, to: LatLon, destination: WalkDestination | u
   return {
     source: "straight-line-estimate",
     warning: `Street-by-street directions are unavailable (${reason}). Distance is an estimate.`,
-    ...durations(d, d / 1.3),
+    ...durations(d, d / WALK_SPEED_MPS.normal),
     geometry: { type: "LineString", coordinates: [[from.lon, from.lat], [to.lon, to.lat]] },
     steps: [
       {

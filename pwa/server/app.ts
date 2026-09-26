@@ -1,4 +1,4 @@
-import { Hono, type Context } from "hono";
+import { Hono, type Context, type MiddlewareHandler } from "hono";
 import { cors } from "hono/cors";
 import { config } from "./config.ts";
 import { findRoute, findStop } from "./gtfs/store.ts";
@@ -27,6 +27,57 @@ function cacheFor(c: Context, maxAge: number, swr = maxAge) {
 
 const MAX_QUERY_CHARS = 100;
 
+/** Origins allowed to call the API from a browser: CORS_ORIGINS (comma-separated), and localhost for development. */
+function allowedOrigin(origin: string): boolean {
+  if (config.corsOrigins.includes(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
+/** A token bucket per client address: bursts of BURST requests, refilled at PER_MINUTE a minute. */
+const BURST = 30;
+const PER_MINUTE = 60;
+const buckets = new Map<string, { tokens: number; at: number }>();
+
+const LOOPBACK = /^(127\.|::1$|::ffff:127\.)/;
+
+/**
+ * Behind a proxy, its X-Forwarded-For; otherwise the socket's address (@hono/node-server).
+ * Undefined, not limited: a loopback caller with no proxy header (the Vite dev proxy, e2e runs) or
+ * an in-process request (tests).
+ */
+function clientAddress(c: Context): string | undefined {
+  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
+  if (forwarded) return forwarded;
+  const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket?.remoteAddress;
+  return socket && !LOOPBACK.test(socket) ? socket : undefined;
+}
+
+const rateLimit: MiddlewareHandler = async (c, next) => {
+  const address = clientAddress(c);
+  if (!address) return next();
+  const key = `${c.req.path}|${address}`;
+  const now = Date.now();
+  const b = buckets.get(key) ?? { tokens: BURST, at: now };
+  b.tokens = Math.min(BURST, b.tokens + ((now - b.at) / 60_000) * PER_MINUTE);
+  b.at = now;
+  if (b.tokens < 1) {
+    buckets.set(key, b);
+    c.header("Retry-After", "5");
+    c.header("Cache-Control", "no-store");
+    return c.json({ error: { code: "RATE_LIMITED", message: "Too many requests. Please wait a few seconds and try again." } }, 429);
+  }
+  b.tokens -= 1;
+  buckets.set(key, b);
+  // Forget idle clients now and then, so the map stays small.
+  if (buckets.size > 5000) for (const [k, v] of buckets) if (now - v.at > 120_000) buckets.delete(k);
+  await next();
+};
+
 /** /nearby's radius, in metres: at least a block, at most what the list can show. */
 function clampRadius(r: number | undefined): number | undefined {
   return r === undefined ? undefined : Math.max(50, Math.min(r, 2000));
@@ -34,7 +85,11 @@ function clampRadius(r: number | undefined): number | undefined {
 
 export function createApp() {
   const app = new Hono().basePath("/api");
-  app.use("*", cors());
+  // Only the app's own pages may read the API from a browser: it proxies METRO's keyed feeds and
+  // rate-limited community services (Transitous, Photon, OSRM), and must not be an open proxy.
+  app.use("*", cors({ origin: (origin) => (allowedOrigin(origin) ? origin : null) }));
+  // Per client: the endpoints that call an upstream on every cache miss.
+  for (const path of ["/plan", "/search", "/walk", "/arrivals"]) app.use(path, rateLimit);
 
   app.onError((err, c) => {
     c.header("Cache-Control", "no-store");
@@ -119,8 +174,11 @@ export function createApp() {
     const q = requireParam(c.req.query("q"), "q").slice(0, MAX_QUERY_CHARS);
     const lat = optionalNumber(c.req.query("lat"), "lat");
     const lon = optionalNumber(c.req.query("lon"), "lon");
-    cacheFor(c, 300);
-    return c.json(await search(q, { near: lat !== undefined && lon !== undefined ? { lat, lon } : undefined }));
+    const result = await search(q, { near: lat !== undefined && lon !== undefined ? { lat, lon } : undefined });
+    // A degraded answer ("Address search is unavailable") must not be kept for 10 minutes.
+    if (result.warnings?.length) c.header("Cache-Control", "public, max-age=15");
+    else cacheFor(c, 300);
+    return c.json(result);
   });
 
   app.get("/routes/:id", async (c) => {
@@ -147,17 +205,17 @@ export function createApp() {
       const routeId = c.req.query("route");
       if (routeId && !findRoute(routeId)) throw new ApiError(404, "ROUTE_NOT_FOUND", `Route ${routeId} doesn't exist.`);
       cacheFor(c, 300);
-      return c.json({ vehicles: [], available: false });
+      return c.json({ vehicles: [], available: false, reason: config.offline ? "offline" : "no-key" });
     }
-    // The live feed failing is the same to the rider as no key: no buses drawn, and the client
-    // stops polling (a 500 here was logged with a stack every 15 s per rider).
+    // The live feed failing: no buses drawn, and the client polls less often until it is back (a
+    // 500 here was logged with a stack every 15 s per rider).
     const vehicles = await getVehicles(c.req.query("route")).catch((err: unknown) => {
       if (err instanceof UpstreamError) return undefined;
       throw err;
     });
     if (!vehicles) {
-      cacheFor(c, 30);
-      return c.json({ vehicles: [], available: false });
+      c.header("Cache-Control", "no-store");
+      return c.json({ vehicles: [], available: false, reason: "upstream" });
     }
     cacheFor(c, 15);
     return c.json({ vehicles });

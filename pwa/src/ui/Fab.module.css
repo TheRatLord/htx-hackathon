@@ -24,3 +24,18 @@
 .fab:active {
   background-image: linear-gradient(rgb(0 0 0 / 8%), rgb(0 0 0 / 8%));
 }
+
+@media (max-width: 399px) {
+  :global(html[data-text-size="xlarge"]) .planTrip {
+    padding: 0;
+  }
+
+  :global(html[data-text-size="xlarge"]) .planTrip .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

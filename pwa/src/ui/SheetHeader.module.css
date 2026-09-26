@@ -146,27 +146,13 @@
   order: 1;
 }
 
-/* "‹" before a start-aligned title: a 48dp target reaching into the gutter, the chevron lined up
-   with the content edge. */
-.backIcon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: var(--touch-min);
-  height: var(--touch-min);
-  margin-left: calc(-1 * var(--sp-3) - 2px);
-  border: none;
-  border-radius: 50%;
-  background: none;
-  color: var(--c-link-text);
-}
-
-.backIcon:active {
-  background: rgb(0 0 0 / 6%);
-}
-
 .withBack {
   align-items: center;
+}
+
+/* The overline under "‹ Back": no grab-bar clearance needed, the Back row already has it. */
+.inSheet > .overlineUnderBack {
+  padding-top: 0;
 }
 
 /* "✕ My location" at the end of the overline row: a link-styled 48dp target, no row of its own. */

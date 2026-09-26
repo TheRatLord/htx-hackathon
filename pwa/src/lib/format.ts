@@ -3,7 +3,7 @@
 import { formatDistance as formatDistanceEn } from "../../server/lib/geo.ts";
 import type { Dep, RouteRef, Status } from "../api/types.ts";
 import { hasKey, t, type Lang } from "../i18n/index.ts";
-import { localiseSide, sideDirection } from "./i18nServer.ts";
+import { localiseSide } from "./i18nServer.ts";
 import { canMakeIt } from "./walk.ts";
 
 /** Every clock and date is shown in Houston time. */
@@ -177,18 +177,14 @@ export interface SideLineStop {
 }
 
 /**
- * The line under a stop name: "On the north side of Lamar St" where a route line on the same
- * card gives the direction, "North side of Lamar St" where none is shown (`withCompass`). The
- * stop's own compass word ("Westbound stop") is no longer shown: it is the direction of the
- * street, and contradicted the route's ("NORTHBOUND to N SHEPHERD") at corners where buses turn.
+ * The line under a stop name: "North side of Lamar St" on every card and sheet ("On the" added a
+ * word and, at 360dp or Extra large, a line). The stop's own compass word ("Westbound stop") is not
+ * shown: it is the direction of the street, and contradicted the route's ("NORTHBOUND to N SHEPHERD")
+ * at corners where buses turn. `withCompass` is kept for callers; both read the same now.
  */
 export function sideLine(stop: SideLineStop, opts: { withCompass: boolean; lang: Lang }): string {
   const { lang } = opts;
   if (stop.kind === "rail") return t("stopLine.railStation", undefined, lang);
-  if (!opts.withCompass) {
-    const parsed = stop.side ? sideDirection(stop.side) : undefined;
-    if (parsed) return t(`sideOn.${parsed.dir}`, { street: parsed.street }, lang);
-  }
   return stop.side ? localiseSide(stop.side, lang) : "";
 }
 

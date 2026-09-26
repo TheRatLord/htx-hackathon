@@ -20,6 +20,8 @@ export const config = {
   recordFixtures: flag("RECORD_FIXTURES"),
   /** Perturb scheduled times to look live when no real-time source is available. */
   demoRealtime: flag("DEMO_REALTIME"),
+  /** Browser origins allowed to call the API besides localhost, e.g. "https://ridemetro.example.org". */
+  corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean),
   userAgent: "htx-metro-hackathon-demo (hackathon prototype; contact via github)",
   timezone: "America/Chicago",
 };

@@ -11,6 +11,7 @@ import type { MapScene } from "../scene.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
 import { BOTTOM_TRANSIT_LAYER } from "./transit.ts";
 import { STALE_VEHICLE_S } from "../../lib/format.ts";
+import { anchorOffset, LABEL_PLACEMENTS, midpoint } from "../placement.ts";
 
 type Feature = GeoFeature<Geometry, Record<string, string | number>>;
 const collection = (features: Feature[]): FeatureCollection => ({ type: "FeatureCollection", features });
@@ -79,15 +80,8 @@ export function addSceneLayers(map: maplibregl.Map) {
         ["literal", ["bottom-right", [-0.8, -4], "bottom", [0, -4], "right", [-1.8, -1.4], "left", [1.8, -1.4]]],
         "t",
         ["literal", ["bottom", [0, -4], "left", [1.8, -1.4], "right", [-1.8, -1.4]]],
-        // Forced to one side by placeLabels (MapView) when above and below are under the chrome.
-        "l",
-        ["literal", ["right", [-2.6, 0]]],
-        "r",
-        ["literal", ["left", [2.6, 0]]],
-        "lt",
-        ["literal", ["right", [-1.8, -1.4]]],
-        "rt",
-        ["literal", ["left", [1.8, -1.4]]],
+        // The side placeLabels (MapView) chose, clear of the sheet, chrome, markers and lines.
+        ...Object.entries(LABEL_PLACEMENTS).flatMap(([key, p]) => [key, ["literal", anchorOffset(p)]]),
         ["literal", ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]]],
       ] as unknown as maplibregl.ExpressionSpecification,
       "icon-image": "label-chip",
@@ -100,6 +94,8 @@ export function addSceneLayers(map: maplibregl.Map) {
     id: "scene-markers",
     type: "symbol",
     source: "scene-points",
+    // A ride leg's route label has no marker of its own.
+    filter: ["!=", ["get", "kind"], "leg"],
     layout: {
       "icon-image": [
         "match",
@@ -168,22 +164,22 @@ export function hideSceneLabels(map: maplibregl.Map, ids: string[]) {
   map.setFilter("scene-labels", ids.length ? ["all", SCENE_LABEL_FILTER, ["!", ["in", ["get", "id"], ["literal", ids]]]] : SCENE_LABEL_FILTER);
 }
 
-/** Marker id to the side its label is forced to ("l" or "r"), set by placeLabels. */
-let labelSides: Record<string, "l" | "r"> = {};
+/** Marker id to the side its label goes (a LABEL_PLACEMENTS key), set by placeLabels. */
+let labelSides: Record<string, string> = {};
 let lastPoints: Feature[] = [];
 
 const withSides = (features: Feature[]): Feature[] =>
   features.map((f) => {
     const side = labelSides[String(f.properties.id ?? "")];
     if (!side || !f.properties.label) return f;
-    return { ...f, properties: { ...f.properties, lk: `${side}${TALL_PINS.has(String(f.properties.kind)) ? "t" : ""}` } };
+    return { ...f, properties: { ...f.properties, lk: side } };
   });
 
 /**
- * A marker label whose places above and below its pin are covered (the bay pin beside Plan Trip)
- * goes to the side that is clear, rather than being dropped.
+ * Every scene label goes to the side placeLabels found clear (above first), rather than MapLibre's
+ * own fallback, which put "Transfer · #4789" under the sheet's edge at 360 (24-360).
  */
-export function setLabelSides(map: maplibregl.Map, sides: Record<string, "l" | "r">) {
+export function setLabelSides(map: maplibregl.Map, sides: Record<string, string>) {
   const a = Object.entries(sides).sort().join();
   const b = Object.entries(labelSides).sort().join();
   if (a === b) return;
@@ -220,6 +216,9 @@ function labelEdge(scene: MapScene): (lon: number) => string {
   };
 }
 
+/** The scene-points id of leg `i`'s route label. */
+export const legLabelId = (i: number) => `leg-${i}`;
+
 export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
   src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
   src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color ?? "" }))));
@@ -230,6 +229,12 @@ export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: Clien
     ),
     ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: (v.ageSeconds ?? 0) > STALE_VEHICLE_S ? "vehicle-stale" : "vehicle", label: v.label })),
   ];
+  // A route label halfway along each labelled ride leg, so a transfer between two navy lines reads
+  // as two buses ([80] then [73], 25).
+  (scene.legs ?? []).forEach((l, i) => {
+    const mid = l.label ? midpoint(l.coords) : undefined;
+    if (mid) points.push(point({ lon: mid[0], lat: mid[1] }, { id: legLabelId(i), kind: "leg", lk: "c", label: l.label! }));
+  });
   if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, ...(highlightLabel && { label: highlightLabel }) }));
   lastPoints = points;
   src(map, "scene-points")?.setData(collection(withSides(points)));

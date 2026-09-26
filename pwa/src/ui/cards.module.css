@@ -62,6 +62,17 @@
   display: flex;
 }
 
+/* Extra large: the two-line title is already as tall as the walk button, so the side line takes
+   the card's full width under both ("West side of Fannin / St" wrapped beside the button, and only
+   one route row fitted above the nav at 360, 46). */
+:global(html[data-text-size="xlarge"]) .head > .walkSlot {
+  grid-row: 1;
+}
+
+:global(html[data-text-size="xlarge"]) .head > .meta {
+  grid-column: 1 / -1;
+}
+
 .divider {
   margin: var(--sp-1) 0;
   border: none;
@@ -134,9 +145,10 @@
   padding-top: 0;
 }
 
+/* The chevron right after the last chip, not floating a gap away from it (02). */
 .alsoHere svg {
   flex: none;
-  margin-inline-start: calc(-1 * var(--sp-1));
+  margin-inline-start: calc(-1 * var(--sp-2) - 2px);
 }
 
 .sep {

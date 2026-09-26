@@ -35,7 +35,8 @@
 
 .liveWord {
   display: inline-flex;
-  align-items: flex-start;
-  color: var(--c-live-on-strip);
+  align-items: center;
+  gap: 2px;
+  color: #fff;
   font-weight: var(--fw-bold);
 }
