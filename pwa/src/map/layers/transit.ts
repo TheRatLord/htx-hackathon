@@ -90,8 +90,6 @@ export function addTransitLayers(map: maplibregl.Map) {
       "text-field": ["get", "id"],
       "text-font": LABEL_FONT_BOLD,
       "text-size": 14,
-      // Under the pin when there is room, as in the spec; otherwise above or beside it, always
-      // clear of the pin's own square (in ems of the 14px text).
       // Always directly above its pin, pointing down at it, like the "Stop 342" callout (a chip
       // beside or below a pin read as the next pin's, 02); a chip with no room there is dropped.
       "text-variable-anchor-offset": ["literal", anchorOffset(CHIP_PLACEMENTS.above)] as unknown as Expr,
@@ -229,8 +227,13 @@ let nearKey = "";
 let clusterKey = "";
 let coveredIds: string[] = [];
 
+/** Stops whose own pin, notch and chip are not drawn: covered by the chrome or a cluster pin, or highlighted. */
+const hiddenIds = () => [...coveredIds, ...(highlighted ? [highlighted] : [])];
+/** The layers applyFilters hides `hiddenIds` from. */
+const FILTERED = new Set(["stops-pin", "stops-pin-far", "stops-label", "stops-notch"]);
+
 function applyFilters(map: maplibregl.Map) {
-  const hidden = [...coveredIds, ...(highlighted ? [highlighted] : [])];
+  const hidden = hiddenIds();
   const shown: maplibregl.FilterSpecification = ["!", ["in", ["get", "id"], ["literal", hidden]]];
   map.setFilter("stops-pin", hidden.length ? shown : null);
   map.setFilter("stops-pin-far", hidden.length ? shown : null);
@@ -329,13 +332,12 @@ export function transitAt(map: maplibregl.Map, point: maplibregl.Point): Transit
     [point.x + TAP_REACH, point.y + TAP_REACH],
   ];
   const layers = PIN_LAYERS.filter((l) => map.getLayer(l));
-  let best: { tap: TransitTap; d: number } | undefined;
-  const consider = (coords: [number, number], layer: string, t: () => TransitTap) => {
+  const hits: { tap: () => TransitTap; d: number }[] = [];
+  const consider = (coords: [number, number], layer: string, tap: () => TransitTap) => {
     const p = map.project(coords);
     const half = pinHalf(map, layer);
     const d = Math.hypot(Math.max(0, Math.abs(p.x - point.x) - half), Math.max(0, Math.abs(p.y - point.y) - half));
-    if (d > TAP_SLOP || (best && best.d <= d)) return;
-    best = { tap: t(), d };
+    if (d <= TAP_SLOP) hits.push({ tap, d });
   };
   // One layer at a time: when maplibre's feature index for a GeoJSON tile is left empty after a
   // setData, querying it throws ("Out of bounds ... _numberToString") until the next update while its
@@ -354,7 +356,9 @@ export function transitAt(map: maplibregl.Map, point: maplibregl.Point): Transit
       );
     }
   }
-  return (best as { tap: TransitTap } | undefined)?.tap;
+  // The nearest pin; on a tie, the one found first (PIN_LAYERS order: a TC over a stop).
+  const best = hits.reduce<(typeof hits)[number] | undefined>((a, h) => (a && a.d <= h.d ? a : h), undefined);
+  return best?.tap();
 }
 
 function safeQuery(map: maplibregl.Map, at: maplibregl.PointLike | [maplibregl.PointLike, maplibregl.PointLike], layers: string[]) {
@@ -373,13 +377,14 @@ type DataPin = { id: string; ids?: string[]; coordinates: [number, number] };
  * stops-pin-far drops colliding pins, so guessing from its data could open a stop that isn't shown.
  */
 function drawnFromData(map: maplibregl.Map, layer: string): DataPin[] {
+  // The layer's own zoom range, source and visibility, as the style has them.
+  const spec = map.getLayer(layer);
   const zoom = map.getZoom();
-  const minzoom = layer === "tc-pin" ? 11 : ALL_PINS_ZOOM;
-  if (layer === "stops-pin-far" || zoom < minzoom || map.getLayoutProperty(layer, "visibility") === "none") return [];
-  const source = layer === "tc-pin" ? TCS_SOURCE : layer === "stops-cluster" ? CLUSTERS_SOURCE : STOPS_SOURCE;
-  const data = (map.getSource(source) as GeoJSONSource | undefined)?.serialize().data;
+  if (!spec || layer === "stops-pin-far" || zoom < spec.minzoom || zoom >= spec.maxzoom || spec.visibility === "none" || !spec.source) return [];
+  const data = (map.getSource(spec.source) as GeoJSONSource | undefined)?.serialize().data;
   if (!data || typeof data !== "object" || !("features" in data)) return [];
-  const hidden = layer === "stops-pin" ? new Set([...coveredIds, ...(highlighted ? [highlighted] : [])]) : undefined;
+  // The same stops applyFilters leaves out of the layer.
+  const hidden = FILTERED.has(layer) ? new Set(hiddenIds()) : undefined;
   const out: DataPin[] = [];
   for (const f of (data as FeatureCollection).features) {
     if (f.geometry?.type !== "Point" || !f.properties) continue;
