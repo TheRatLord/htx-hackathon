@@ -1,0 +1,157 @@
+/* D13 Live trip. */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-4);
+}
+
+.stepHeader {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-1) 0 var(--gutter);
+}
+
+.stepOf {
+  color: var(--c-text-variant);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.headline {
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+  overflow-wrap: anywhere;
+}
+
+.rideHead {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+}
+
+.getOff {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  overflow-wrap: anywhere;
+}
+
+.variant {
+  color: var(--c-text-variant);
+}
+
+.caption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.ok {
+  color: var(--c-ok-text);
+  font-weight: var(--fw-medium);
+}
+
+.alert {
+  color: var(--c-alert-text);
+  font-weight: var(--fw-medium);
+}
+
+.board strong {
+  font-weight: var(--fw-bold);
+}
+
+/* Full-bleed inside the sheet body, like the stop sheet's strip. */
+.bleed {
+  align-self: stretch;
+  margin: 0 calc(-1 * var(--gutter));
+}
+
+/* The LiveStrip look with "5 stops left · about 7 min": big digits, 16sp words. */
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-2);
+  align-items: baseline;
+  min-height: var(--strip-h);
+  padding: var(--sp-3) var(--gutter);
+  background: var(--c-brand-blue-deep);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.stripDigits {
+  font-size: var(--fs-strip);
+  line-height: var(--lh-strip);
+  font-weight: var(--fw-medium);
+}
+
+.progress {
+  align-self: stretch;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-divider);
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--c-brand-navy);
+}
+
+.warn {
+  align-self: stretch;
+  padding: var(--card-pad);
+  border: 2px solid var(--c-warn-border);
+  border-radius: var(--r-alert);
+  background: var(--c-warn-bg);
+  color: var(--c-warn-text);
+  font-size: var(--fs-stop-title);
+  line-height: var(--lh-stop-title);
+  font-weight: var(--fw-bold);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.walkSteps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.sim {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
