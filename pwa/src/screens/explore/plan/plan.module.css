@@ -302,22 +302,6 @@
 /* ---------- Results ---------- */
 
 /* "Arrives first ▾": a compact picker at the right of the summary's last row, 48dp tall. */
-.sort {
-  min-height: var(--touch-min);
-  max-width: 100%;
-  padding: 0 36px 0 var(--sp-3);
-  border: 1px solid var(--c-outline-strong);
-  border-radius: var(--r-pill);
-  background: var(--c-surface)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%23444'/%3E%3C/svg%3E")
-    no-repeat right 8px center;
-  color: var(--c-text);
-  font: inherit;
-  font-weight: var(--fw-medium);
-  appearance: none;
-  cursor: pointer;
-}
-
 .summary {
   display: flex;
   flex-direction: column;
@@ -440,7 +424,7 @@
 .modes {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 6px;
+  gap: 2px 4px;
   align-items: flex-start;
 }
 
@@ -448,7 +432,6 @@
   display: inline-flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 1px;
   color: var(--c-text-variant);
   font-weight: var(--fw-medium);
 }
@@ -577,3 +560,44 @@
 }
 
 /* The boarding block: a tinted inset instead of a divider, so it reads as "where to stand". */
+
+/* An advisory (accessibility tip, less frequent service): navy ⓘ and plain text, not red (22). */
+.advisoryLine {
+  align-items: flex-start;
+  color: var(--c-text);
+}
+
+.clamp2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* The small "PM" after the bold arrival time, as on the stop strip. */
+.clockUnit {
+  font-size: 0.7em;
+  font-weight: var(--fw-medium);
+}
+
+/* "Same buses later: 12:35 PM ›", under the card's Board line. */
+.later {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-1);
+  align-items: center;
+  margin: calc(-1 * var(--card-pad)) 0 calc(-1 * var(--sp-2));
+  color: var(--c-text-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+.later a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+}
+
+/* v2.71's sort chips under the summary, full-bleed: ChipRow keeps its own gutter. */
+.sortChips {
+  margin: calc(-1 * var(--sp-1)) calc(-1 * var(--gutter)) 0;
+}

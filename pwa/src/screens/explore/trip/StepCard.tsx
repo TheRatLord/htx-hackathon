@@ -90,23 +90,22 @@ function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate, actions }: Wa
 function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const t = useT();
   const lang = useLang();
-  const { matched, strip } = useBoardDeparture(ride, fixture);
+  const { dep, matched, strip } = useBoardDeparture(ride, fixture);
   const route = toRouteRef(ride.route);
   const side = shortSide(ride.board, lang);
   const id = ride.board.id ?? "";
   const now = useNow();
-  const time = formatClock(ride.departureTime, lang).replace(" ", "\u00a0");
-  // "Your bus: 11 min (12:15 PM)": which of the strip's times is the rider's own (27).
-  const min = Math.floor((Date.parse(ride.departureTime) - now) / 60_000);
-  const yours = min >= 1 ? t("trip.wait.plannedFirst", { min, time }) : t("trip.wait.plannedNow", { time });
-  const planned = strip.length > 1 ? yours : t("trip.wait.planned", { time });
+  // One big number, the rider's own bus; the bus after it only in the small line (27).
+  const time = formatClock(dep.departureTime, lang).replace(" ", "\u00a0");
+  const after = strip[1] && Math.max(0, Math.round((Date.parse(strip[1].departureTime) - now) / 60_000));
+  const yours = t(matched ? "trip.wait.yours" : "trip.wait.yoursScheduled", { time });
+  const caption = after !== undefined && after !== 0 ? `${yours} · ${t("trip.wait.nextAfter", { min: after })}` : yours;
   return (
     <>
       <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
       {ride.board.bay && <BayTag bay={ride.board.bay} />}
       <div className={styles.bleed}>
-        {/* Which of the strip's times is the planned bus, said inside the strip ("10:40 PM" on one line). */}
-        <LiveStrip deps={strip} caption={matched ? undefined : planned} />
+        <LiveStrip deps={[dep]} caption={caption} />
       </div>
       <p className={`${styles.board} ${styles.withChip}`}>
         {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <RouteBadge route={route} size="sm" /> <strong>{ride.headsign.toUpperCase()}</strong>

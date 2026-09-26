@@ -3,7 +3,7 @@ import type { Itinerary, PlanResponse, TransitLeg, WalkLeg } from "../../../api/
 import { HOBBY, itinerary, UH } from "../../../features/trip/testItinerary.ts";
 import { canMakeIt, walkMinutes } from "../../../lib/walk.ts";
 import { shiftFixture, startableFixture } from "./shiftFixture.ts";
-import { sortItineraries } from "./sortItineraries.ts";
+import { foldRepeats, sortItineraries } from "./sortItineraries.ts";
 import { relativeTime } from "./timeChoice.ts";
 import { recentTrip } from "./recentTrip.ts";
 
@@ -90,5 +90,17 @@ describe("sortItineraries", () => {
     expect(sortItineraries([a, b, c]).map((x) => [x.it.id, x.index])).toEqual([["a", 0], ["c", 2], ["b", 1]]);
     expect(sortItineraries([a, b, c], "transfers").map((x) => [x.it.id, x.index])).toEqual([["c", 2], ["b", 1], ["a", 0]]);
     expect(sortItineraries([a, b, c], "walk").map((x) => x.it.id)).toEqual(["c", "a", "b"]);
+  });
+});
+
+describe("foldRepeats", () => {
+  it("folds a later trip on the same buses from the same stops into the first card", () => {
+    const later = { ...itinerary, id: "later" };
+    const other = { ...itinerary, id: "other", legs: itinerary.legs.map((l) => (l.type === "transit" ? { ...l, route: { ...l.route, name: `${l.route.name}X` } } : l)) };
+    const groups = foldRepeats(sortItineraries([itinerary, other, later]));
+    expect(groups.map((g) => [g.first.it.id, g.later.map((l) => l.index)])).toEqual([
+      [itinerary.id, [2]],
+      ["other", []],
+    ]);
   });
 });
