@@ -125,7 +125,61 @@ Each idea is mapped to the complaint it addresses. Effort is a rough hackathon g
 
 ---
 
-## 4. Design Principles (from NYC's wins and stumbles)
+## 4. Team Requirements (whiteboard session, September 25, 2026)
+
+Our team's whiteboard for "Ride Metro Revamp" set these requirements. The right column shows how Prototype v1 handles each one. Prototype v1 is the "Prototype v1" page of the Claude Design canvas "RideMETRO Redesign Mockup" (https://claude.ai/artifact/TepnZU9hGLp3mekLKQ1Bdg, private until shared from its Share menu). The "Reference" page keeps the earlier static mockups.
+
+| # | Requirement (as written on the whiteboard) | How Prototype v1 handles it |
+|---|---|---|
+| 1 | **Reduce clutter: remove the circle radius showing nearby bus stops** | The circle is gone. Nearby stops are numbered pins, each with a walk-time label (for example "3 min"). The numbers match the numbered "Near you" cards. |
+| 2 | **Reduce clutter: remove bus route numbers on the left side of the screen** | Removed. Route numbers now appear only inside cards, route badges and the timetable. |
+| 3 | **Make "Plan your trip" the main feature** | The home screen leads with a large "Where to?" search. Home, Work and saved places are one tap. The app opens with the nearby-stops sheet tucked down to one line (the next bus at the closest stop). Riders tap or drag it up for the full list. |
+| 3a | Show routes with fastest travel time | A "Fastest" sort on the route options. Each option shows arrival time, total minutes and when to leave. |
+| 3b | Show routes with shortest walking distance | A "Least walking" sort. The prototype measures walking in minutes, since that's what riders feel. Distance can be shown alongside if we get real walking data. |
+| 3c | Show multiple routes displayed on the map at once | All options are drawn on the map together in different colors, each with a lettered badge (A, B, C). Tapping a card or a badge highlights that route. |
+| 4 | **Be able to select specific nearby stops and see a clearly labeled bus schedule** | Tapping a stop pin or card opens that stop. The screen shows a tab per route and direction, the next departures labeled LIVE or SCHEDULED with a legend, and a timetable by hour. |
+| 5 | **Be able to save destinations / trips** | A star saves a destination from search results and from the route screen. Saved places appear as chips on the home screen. A "Save trip" button on the trip screen adds it to a "Saved trips" list on the home screen. |
+
+### 4.1 Visual direction: keep the app's glass look
+
+The current RideMETRO app already has a glassy, polished, premium look. Our pitch is a **redesign and a set of feature add-ons, not a rebuild**, so Prototype v1 keeps that visual language and changes layout and content instead:
+
+- **Frosted glass surfaces.** The search bar, chips, zoom controls, bottom sheet and full-screen pages are translucent and blurred, so the map shows through, as in the existing app.
+- **Floating tab bar.** A rounded capsule tab bar (Trip, Fares, Recent, More) with a highlighted active tab, sitting over the sheet.
+- **Route number cards.** Route numbers are white rounded cards with a colored top band, like the current app's route cards (blue, with red for the 700).
+- **Same feel.** Soft shadows, large corner radii, one blue accent. The screens are cleaner because clutter was removed, not because the style changed.
+
+### 4.2 Interactions in Prototype v1
+
+- **Map:** drag to pan, scroll or pinch to zoom, double-click to zoom in, + and − buttons, and a locate button that re-centers.
+- **Opens quiet:** the home screen opens with the nearby-stops sheet tucked away. Tapping or dragging the handle steps it through three heights (one line, half, full).
+- **Fares tab:** a boarding pass screen (sample code only, not a valid fare code).
+- **Recent tab:** recent destinations and saved trips.
+- **More tab:** manage saved places and saved trips.
+- **Numbered stop pins:** the map pins are numbered 1, 2 and 3 by distance and match the numbered Near you cards, with the walk time under each pin. Down the line we'd like to show real bus stop numbers (the app names stops like "Wheeler Transit Center - Bay F (11030)" today), which needs METRO's stop data.
+- **Tracking lost, with a report button:** when a route's bus isn't being tracked, the card shows a LOST tag and the stop screen says so plainly, with a Report button that answers "Reported. Thank you." This is a design concept; the report goes nowhere until there is a backend.
+- **Enlarge code:** on the Fares tab, "Trouble scanning? Enlarge code" makes the boarding code bigger for the scanner, and "Shrink code" puts it back. The code shown is a sample.
+- **Placeholder data:** all places, times, routes and stops are placeholders, except the Wheeler Transit Center Bay F stop and the 5 Eastbound to Richey St route, which come from our screenshots. The map is a hand-drawn stand-in for a real map.
+
+### 4.3 Stop schedule: we kept the app's format
+
+We looked at how other apps show a stop's departures and tried a simplified version, but the team preferred RideMETRO's existing format. Prototype v1 keeps it, restyled in the same glass look: route and direction tabs, a strip of upcoming times, a legend for live and scheduled, and an hourly timetable.
+
+Ideas we looked at and did not adopt, in case we want them later:
+
+- **Transit** shows live times in bold with a radio-wave icon and scheduled times in gray, one row per route and direction, with the full timetable behind "More departures".
+- **Google Maps** shows the next departure, then later ones as full clock times ("Also at 1:30 PM & 2:15 PM"), colors live times by status (green on time, orange early, red delayed), and hides the rest behind "More departures".
+
+Sources: [Transit: check a schedule](https://help.transitapp.com/article/151-check-a-schedule), [Transit: how to track departures on your line](https://help.transitapp.com/article/445-how-to-track-departures-on-your-transit-line), [Google Maps: get train and bus departures](https://support.google.com/maps/answer/6142130?hl=en&co=GENIE.Platform%3DiOS).
+
+**Open questions before building the real thing**
+- Whether METRO's existing trip planner can be reached by an API, and whether it can return several route options at once. Not verified. The prototype uses placeholder routes.
+- Whether the real data includes walking paths, so we can show walking distance and not just estimated minutes.
+- How saved destinations and trips are stored (on the phone or in a rider account), which also affects the login complaints in complaints.md.
+
+---
+
+## 5. Design Principles (from NYC's wins and stumbles)
 
 1. **Don't remove features people rely on.** The MTA's widget removal drew immediate anger. If something has to go, say why and offer a replacement.
 2. **Default to nearby, keep everything else one tap away.** This is praised, but only when other lines are clearly still reachable.
@@ -137,7 +191,7 @@ Each idea is mapped to the complaint it addresses. Effort is a rough hackathon g
 
 ---
 
-## 5. Suggested Hackathon Plan (scope guidance)
+## 6. Suggested Hackathon Plan (scope guidance)
 
 A reasonable demo for a short hackathon is a clickable prototype covering **#1 to #4** and the **fare screen (#7)**, tied to a short demo story: *"Maria is running late, opens the app from her lock screen, sees the bus is live and 4 minutes away, and boards with a big, bright QR that works without signal."* Then show the same trip in the current app failing in the three ways riders complain about.
 
@@ -145,7 +199,7 @@ A reasonable demo for a short hackathon is a clickable prototype covering **#1 t
 
 ---
 
-## 6. Limits of This Research
+## 7. Limits of This Research
 
 - Store review pages show only a handful of reviews to a text fetch, so quotes are examples, not statistics. For rigor, export full review sets.
 - Ratings were read on the date compiled and change over time.

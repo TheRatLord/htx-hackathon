@@ -85,10 +85,26 @@ The current version (2.71) lists: transit center search showing departures for a
 | 5 | Lost rewards and balance migration | Medium-high | Mostly a policy and backend issue, but can show a "balance and history" screen |
 | 6 | Offline / no-data behavior | Medium | Yes |
 | 7 | App fragmentation | Medium | Design-level (single entry point) |
+| 8 | Map clutter: nearby-stops circle and left-side route numbers (team observation, section 5) | Medium | Yes, already redesigned in Prototype v1 |
+| 9 | Trip planning buried instead of leading (team observation, section 5) | High | Yes, already redesigned in Prototype v1 |
 
 ---
 
-## 5. Limits of This Research (read before quoting)
+## 5. Team Observations (whiteboard session, September 25, 2026)
+
+These come from our own team's review of the app screens (Explore and stop detail), not from store reviews, so treat them as design findings rather than rider quotes.
+
+| # | Observation | Why it hurts |
+|---|---|---|
+| 1 | **Circle radius showing nearby bus stops.** A blue circle surrounds your location with tiny unlabeled dots inside it. | No label, no scale, and the arrivals sheet cuts it off. Riders can't tell what the circle means or which dot is a stop. |
+| 2 | **Bus route numbers stacked down the left side of the screen** (5, 25, 65, 152, 153, 700). | They float over street names, repeat what the arrivals list already says, and nothing explains what they are. |
+| 3 | **"Plan your trip" is not the main feature.** The app opens on nearby stops instead of asking where the rider wants to go. | Riders with a destination have to find the planner, and there is no easy way to compare routes. |
+| 4 | **Routes can't be compared on the map.** There is no fastest vs. shortest-walking view, and no way to see several routes at once. | Riders can't judge trade-offs, such as a faster bus that needs a longer walk. |
+| 5 | **Nearby arrival cards don't name the stop or the walk.** For example, "5 Eastbound to Richey St" shows 37 min on the list, while the Wheeler Transit Center Bay F screen shows 6 min for the same route. They are probably different stops, but nothing on the card says so. | Times look inconsistent, and riders can't tell which stop to walk to. |
+
+---
+
+## 6. Limits of This Research (read before quoting)
 
 - **Sample is small.** Apple shows only 144 ratings and the review text we could retrieve is a handful of quotes. Treat themes as directional. A stronger version would export full review sets from both stores.
 - **Some quotes are old.** The tracking complaints are dated July 2024 and March 2025, before the January 2026 relaunch. They may partly predate the current backend. The Google Play quotes are from 2026.
