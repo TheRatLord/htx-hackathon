@@ -1,0 +1,37 @@
+{
+ "key": "search/westheimer and kirby",
+ "recordedAt": "2026-09-25T23:58:40.014Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 13390045801,
+     "osm_key": "shop",
+     "osm_value": "sewing",
+     "type": "house",
+     "housenumber": "3727",
+     "name": "Tops Vacuum and Sewing",
+     "street": "Westheimer Road",
+     "locality": "Greenway / Upper Kirby",
+     "district": "Greenway",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77027",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.4392777,
+      29.7414015
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,242 @@
+{
+ "key": "search/uh",
+ "recordedAt": "2026-09-25T23:58:45.021Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 2331033669,
+     "osm_key": "railway",
+     "osm_value": "station",
+     "type": "house",
+     "name": "UH-Downtown",
+     "street": "Main Street",
+     "district": "Downtown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77009",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3587493,
+      29.7658955
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 2667408431,
+     "osm_key": "railway",
+     "osm_value": "station",
+     "type": "house",
+     "name": "UH South/University Oaks",
+     "street": "Wheeler Street",
+     "locality": "University Oaks",
+     "district": "MacGregor",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77204",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3411778,
+      29.7161124
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 1229920413,
+     "osm_key": "railway",
+     "osm_value": "stop",
+     "type": "house",
+     "name": "UH-Downtown",
+     "street": "Main Street",
+     "district": "Downtown",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77009",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3586365,
+      29.7661691
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 2133055256,
+     "osm_key": "railway",
+     "osm_value": "stop",
+     "type": "house",
+     "name": "UH South/University Oaks",
+     "street": "Wheeler Street",
+     "district": "Third Ward",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77204",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.340857,
+      29.7159951
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 363817944,
+     "osm_key": "building",
+     "osm_value": "yes",
+     "type": "house",
+     "name": "UH Technology Bridge 6",
+     "street": "Schlumberger Street",
+     "district": "Eastwood",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77023",
+     "countrycode": "US",
+     "extent": [
+      -95.3284174,
+      29.7197932,
+      -95.3278095,
+      29.7194609
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3281133,
+      29.7196247
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 363817940,
+     "osm_key": "building",
+     "osm_value": "yes",
+     "type": "house",
+     "name": "UH Technology Bridge 2",
+     "street": "Gulf Freeway Frontage Road",
+     "district": "Eastwood",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77023",
+     "countrycode": "US",
+     "extent": [
+      -95.3272948,
+      29.7200441,
+      -95.3264852,
+      29.7196675
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3268794,
+      29.7198465
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 363817941,
+     "osm_key": "building",
+     "osm_value": "yes",
+     "type": "house",
+     "name": "UH Technology Bridge 3",
+     "street": "Jean Street",
+     "district": "Eastwood",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77023",
+     "countrycode": "US",
+     "extent": [
+      -95.3267096,
+      29.720243,
+      -95.3259311,
+      29.7191577
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3261719,
+      29.7198153
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "W",
+     "osm_id": 363817938,
+     "osm_key": "building",
+     "osm_value": "yes",
+     "type": "house",
+     "name": "UH Technology Bridge 11",
+     "street": "Hansford Avenue",
+     "district": "Eastwood",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77023",
+     "countrycode": "US",
+     "extent": [
+      -95.3285998,
+      29.718716,
+      -95.3277572,
+      29.71812
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.3281842,
+      29.7184043
+     ]
+    }
+   }
+  ]
+ }
+}

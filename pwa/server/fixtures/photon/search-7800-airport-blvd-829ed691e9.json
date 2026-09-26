@@ -1,0 +1,35 @@
+{
+ "key": "search/7800 airport blvd",
+ "recordedAt": "2026-09-25T23:58:38.358Z",
+ "json": {
+  "type": "FeatureCollection",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "osm_type": "N",
+     "osm_id": 5695877078,
+     "osm_key": "amenity",
+     "osm_value": "bus_station",
+     "type": "house",
+     "housenumber": "7800",
+     "name": "Hobby Transit Center",
+     "street": "Airport Blvd",
+     "city": "Houston",
+     "county": "Harris",
+     "state": "Texas",
+     "country": "United States",
+     "postcode": "77061",
+     "countrycode": "US"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      -95.275818,
+      29.6554
+     ]
+    }
+   }
+  ]
+ }
+}
