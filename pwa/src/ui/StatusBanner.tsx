@@ -7,12 +7,12 @@ import type { OverlayItem } from "./types.ts";
  * banner stays one 48dp row at 360dp instead of wrapping to a taller one (C.12). Every locale's
  * banner string puts " · " between the two parts.
  */
-function TwoLine({ text, dot }: { text: string; dot?: boolean }) {
+function TwoLine({ text, mark }: { text: string; mark?: string }) {
   const cut = text.indexOf(" · ");
   const head = cut < 0 ? text : text.slice(0, cut);
   return (
     <span className={styles.lines}>
-      <span className={styles.head}>{dot ? `● ${head}` : head}</span>
+      <span className={styles.head}>{mark ? `${mark} ${head}` : head}</span>
       {cut >= 0 && <span className={styles.tail}>{text.slice(cut + 3)}</span>}
     </span>
   );
@@ -31,7 +31,11 @@ export function StatusBanner({ item }: { item: OverlayItem }) {
     case "trip-active":
       return (
         <div className={`${styles.banner} ${styles.trip}`}>
-          <TwoLine text={t("banner.tripActive", { time: item.arriveAt })} dot />
+          {item.complete ? (
+            <TwoLine text={t("banner.tripComplete", { time: item.arriveAt })} mark="✓" />
+          ) : (
+            <TwoLine text={t("banner.tripActive", { time: item.arriveAt })} mark="●" />
+          )}
           {item.onOpen && (
             <button type="button" className={styles.open} onClick={item.onOpen}>
               {t("common.open")} ›

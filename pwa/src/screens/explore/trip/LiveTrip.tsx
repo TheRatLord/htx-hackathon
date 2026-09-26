@@ -46,6 +46,7 @@ function NoTrip() {
   const t = useT();
   const navigate = useNavigate();
   const onBack = useBack();
+  useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
   return (
     <ExploreSheet ariaLabel={t("trip.title")} onBack={onBack} header={<SheetHeader title={t("trip.title")} />}>
       <EmptyState icon="route_plan" title={t("trip.none.title")} body={t("trip.none.body")} action={{ label: t("trip.none.action"), onPress: () => navigate("/explore/plan") }} />
@@ -111,6 +112,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   const { step, stepIndex, total, stops, rideIndex } = live;
   const n = Math.min(stepIndex + 1, total);
   useWakeLock(true);
+  useExploreChrome({ fabs: ["locate"], hideSearchBar: true, tripBar: step.kind === "arrived" ? "complete" : undefined });
 
   // A new step starts at the top of the sheet, where its instruction is.
   const body = useRef<HTMLDivElement>(null);
@@ -308,6 +310,5 @@ export default function LiveTrip() {
   const { active } = useTrip();
   const destination = useMemo(() => active && destinationOf(active), [active]);
   usePageTitle(t("trip.title"));
-  useExploreChrome({ fabs: ["locate"], hideSearchBar: true });
   return active && destination ? <Running active={active} destination={destination} /> : <NoTrip />;
 }

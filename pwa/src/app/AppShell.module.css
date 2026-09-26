@@ -15,9 +15,13 @@
 .map {
   position: absolute;
   inset: 0;
+  /* Contains MapLibre's controls (z-index 2) so the screens drawn after it always cover them. */
+  isolation: isolate;
 }
 
-/* Kept laid out (not display: none) so MapLibre keeps its size while another screen is shown. */
-.hidden {
+/* Kept laid out (not display: none) so MapLibre keeps its size while another screen is shown.
+   The attribution sets its own `visibility: visible`, so its container is hidden explicitly. */
+.hidden,
+.hidden :global(.maplibregl-control-container) {
   visibility: hidden;
 }
