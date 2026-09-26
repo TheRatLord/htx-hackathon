@@ -22,7 +22,11 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
       {steps.map((s, i) => (
         <li key={i} className={styles.item}>
           <button type="button" className={styles.row} onClick={() => onStepPress(s, i)} aria-current={i === currentIndex ? "step" : undefined}>
-            <span className={`${styles.rail} ${MARKER[s.kind]}`} style={s.route ? { ["--leg" as string]: s.route.color } : undefined} aria-hidden="true">
+            <span
+              className={[styles.rail, MARKER[s.kind], i === currentIndex && styles.belowHere, steps[i - 1]?.kind === "walk" && styles.afterWalk].filter(Boolean).join(" ")}
+              style={s.route ? { ["--leg" as string]: s.route.color } : undefined}
+              aria-hidden="true"
+            >
               {i === 0 && s.kind === "walk" ? <span className={styles.origin} /> : s.kind === "arrive" ? <Icon name="place" color="var(--c-dest-pin)" /> : <span className={styles.node} />}
             </span>
             <span className={styles.text}>

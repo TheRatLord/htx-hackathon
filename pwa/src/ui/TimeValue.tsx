@@ -24,6 +24,12 @@ export function TimeValue({ dep, size, walkMin }: TimeValueProps) {
   const realtime = !tooSoon && (status === "live" || status === "simulated");
   const parts = size === "strip" ? splitUnit(text) : undefined;
   const className = [styles.time, styles[size], styles[status], tooSoon && styles.tooSoon].filter(Boolean).join(" ");
+  // After the number (C.2), or on the blue strip after the word "Live" (C.3).
+  const arcs = (
+    <span className={styles.arcs}>
+      <Icon name="live_arcs" size={16} />
+    </span>
+  );
   return (
     <span className={className}>
       <span className={styles.value}>
@@ -37,13 +43,12 @@ export function TimeValue({ dep, size, walkMin }: TimeValueProps) {
             text
           )}
         </time>
-        {realtime && (
-          <span className={styles.arcs}>
-            <Icon name="live_arcs" size={16} />
-          </span>
-        )}
+        {realtime && size !== "strip" && arcs}
       </span>
-      <span className={styles.word}>{tooSoon ? t("status.tooSoon") : <StatusWord status={status} />}</span>
+      <span className={styles.word}>
+        {tooSoon ? t("status.tooSoon") : <StatusWord status={status} />}
+        {realtime && size === "strip" && arcs}
+      </span>
     </span>
   );
 }

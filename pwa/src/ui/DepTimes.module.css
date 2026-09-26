@@ -1,18 +1,28 @@
+/* Every time carries a leading "·"; the line is shifted left by one separator and clipped, so a
+   time that starts a line (the first, or one that wrapped) never starts with a dot. */
 .times {
+  --sep-w: 24px;
+  display: block;
+  overflow: hidden;
+}
+
+.line {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  column-gap: var(--sp-2);
+  margin-left: calc(-1 * var(--sep-w));
 }
 
 .item {
   display: inline-flex;
   align-items: baseline;
-  gap: var(--sp-2);
 }
 
 .sep {
+  flex: none;
+  width: var(--sep-w);
   color: var(--c-text-variant);
   font-size: var(--fs-minutes);
   font-weight: var(--fw-bold);
+  text-align: center;
 }
