@@ -24,6 +24,7 @@ const strings: Strings = {
       searchInstead: "Search",
       routes: "Routes at this stop",
       otherRoutes: "Other routes at this stop",
+      laterToday: "Route {name} later today",
       schedule: {
         title: "Full Schedule",
         at: "at {stop}",
@@ -58,6 +59,7 @@ const strings: Strings = {
       searchInstead: "Buscar",
       routes: "Rutas en esta parada",
       otherRoutes: "Otras rutas en esta parada",
+      laterToday: "Ruta {name} más tarde hoy",
       schedule: {
         title: "Horario completo",
         at: "en {stop}",

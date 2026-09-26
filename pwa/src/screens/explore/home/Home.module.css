@@ -47,3 +47,8 @@
   line-height: var(--lh-body);
   font-weight: var(--fw-medium);
 }
+
+/* D4's "Walk times from the museum", under the place name. */
+.walkFrom {
+  color: var(--c-text-variant);
+}

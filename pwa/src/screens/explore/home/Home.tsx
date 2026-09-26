@@ -192,7 +192,15 @@ export default function Home() {
   const offFirst = !routeId && banner?.kind === "location-off" && saved.stops.length > 0;
   // Location off and nothing saved: the prompt is all there is, so no "Show list" chevron (36).
   const noList = !routeId && anchor.kind === "off" && saved.stops.length === 0;
-  const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
+  // D4 says once where the walk times start ("Walk times from the museum"): the pills say only
+  // "4 min walk". "Just now · Refresh" took that row on its own (07); the list refreshes itself.
+  // Extra large on a short screen drops it too, for one more route row above the nav (46).
+  const updated =
+    place && !routeId ? (
+      <span className={styles.walkFrom}>{t("home.walkTimesFrom", { from: short })}</span>
+    ) : (
+      !routeId && !chipsLater && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />
+    );
 
   return (
     // D4 has one way back, "✕ My location" at the end of the overline row (no row of its own);

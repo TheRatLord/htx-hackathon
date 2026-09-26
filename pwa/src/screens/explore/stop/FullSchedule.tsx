@@ -32,7 +32,8 @@ export default function FullSchedule() {
   const back = useBack();
   const { stopId = "" } = useParams();
   const [params] = useSearchParams();
-  const stop = useStop(stopId);
+  // The stop's name and routes only: the times come from the schedule.
+  const stop = useStop(stopId, { refetchInterval: false });
   const routeParam = params.get("route");
   const routeId = routeParam ? canonicalRouteId(routeParam) : stop.data?.serving[0]?.routeId;
   const today = useStopSchedule(stopId, routeId ?? "", { enabled: Boolean(routeId) });
