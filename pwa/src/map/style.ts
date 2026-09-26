@@ -6,10 +6,13 @@ import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 import { DOWNTOWN } from "../lib/geo.ts";
 
 export const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
-export const LABEL_FONT = ["Noto Sans Regular"];
+const GLYPHS_URL = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 /** Stop-ID chips and the TC tile read better in bold at 14px. */
 export const LABEL_FONT_BOLD = ["Noto Sans Bold"];
-export const ATTRIBUTION = "© OpenFreeMap © OpenStreetMap";
+export const ATTRIBUTION =
+  '<a href="https://openfreemap.org" target="_blank" rel="noopener">© OpenFreeMap</a> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>';
+/** A stalled style request must not keep the map, pins and user dot from drawing. */
+const STYLE_TIMEOUT_MS = 4000;
 
 export const DEFAULT_CAMERA = { center: [DOWNTOWN.lon, DOWNTOWN.lat] as [number, number], zoom: 14 };
 /** Zoom 16 shows the ID labels of the pins nearest the rider (M4). */
@@ -18,8 +21,13 @@ export const USER_ZOOM = 16;
 /** Reads a colour token from tokens.css, so the map and the UI share one palette. */
 export const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-/** Layers that add noise without helping a rider find a stop. OSM's own bus stops are replaced by ours. */
-const DROP = /^(natural_earth|park_outline|landuse_residential|landuse_school|landcover_wetland|landcover_sand|building-3d|poi_transit|road_area_pattern|boundary_)/;
+/**
+ * Layers that add noise without helping a rider find a stop. OSM's own bus stops are replaced by
+ * ours, and downtown's pedestrian tunnels and underground streets are not drawn: riders wait at
+ * street level, and today's map doesn't show them either.
+ */
+const DROP =
+  /^(natural_earth|park_outline|landuse_residential|landuse_school|landcover_wetland|landcover_sand|building-3d|poi_transit|road_area_pattern|boundary_|highway-name-path|tunnel_(path_pedestrian|street|minor|service_track|link))/;
 const SHOP_FOOD = ["shop", "grocery", "clothing_store", "restaurant", "fast_food", "cafe", "bar", "beer", "ice_cream", "bakery", "alcohol_shop", "jewelry"];
 
 type Paint = Record<string, unknown>;
@@ -27,6 +35,8 @@ type Paint = Record<string, unknown>;
 function roadPaint(id: string, c: Record<string, string>): Paint | undefined {
   if (!/^(road|bridge|tunnel)_/.test(id) || /rail|one_way|pedestrian/.test(id)) return undefined;
   const freeway = id.includes("motorway");
+  // The remaining road tunnels stay faint, so they never read as streets to walk on.
+  if (id.startsWith("tunnel_")) return { "line-color": freeway ? c.highway : c.casing, "line-opacity": 0.4 };
   if (id.endsWith("_casing")) return { "line-color": freeway ? c.highway : c.casing };
   return { "line-color": freeway ? c.highway : c.road };
 }
@@ -46,6 +56,8 @@ function restyleLayer(layer: LayerSpecification, c: Record<string, string>): Lay
   if (id === "aeroway_fill") return set({ "fill-color": c.casing, "fill-opacity": 1 });
   if (id.startsWith("aeroway_")) return set({ "line-color": c.road });
   if (id === "building") return set({ "fill-color": c.building, "fill-outline-color": c.casing });
+  // Sidewalks and footpaths only once streets are wide enough to tell them apart.
+  if (/path_pedestrian/.test(id)) return { ...layer, minzoom: 17 };
   if (layer.type === "line") {
     const road = roadPaint(id, c);
     if (road) return set(road);
@@ -65,9 +77,10 @@ function restyleLayer(layer: LayerSpecification, c: Record<string, string>): Lay
   return layer;
 }
 
-/** A plain land-coloured style, used when the base style can't be fetched (offline, first run). */
+/** A plain land-coloured style, used when the base style can't be fetched in time (offline, first run). */
 function fallbackStyle(land: string): StyleSpecification {
-  return { version: 8, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": land } }] };
+  // The glyphs (cached by the service worker) still draw the stop-ID chips.
+  return { version: 8, glyphs: GLYPHS_URL, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": land } }] };
 }
 
 export async function loadMapStyle(): Promise<StyleSpecification> {
@@ -84,7 +97,7 @@ export async function loadMapStyle(): Promise<StyleSpecification> {
     rail: token("--c-outline"),
   };
   try {
-    const res = await fetch(MAP_STYLE_URL);
+    const res = await fetch(MAP_STYLE_URL, { signal: AbortSignal.timeout(STYLE_TIMEOUT_MS) });
     if (!res.ok) throw new Error(String(res.status));
     const base = (await res.json()) as StyleSpecification;
     const layers = base.layers.flatMap((l) => restyleLayer(l, c) ?? []);

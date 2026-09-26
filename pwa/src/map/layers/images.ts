@@ -1,8 +1,10 @@
 // Map marker images drawn on a canvas at device resolution, so they stay sharp and need no sprite
 // file: stop pins (bus and rail, three sizes), the TC tile, the direction notch, the destination
-// pin, the live-bus icon and the white chips behind stop-ID labels and the "Stop: 342" callout.
+// pin, the live-bus icon, the rider and itinerary dots, and the white chips behind stop-ID labels
+// and the "Stop: 342" callout.
 
 import type maplibregl from "maplibre-gl";
+import { t } from "../../i18n/index.ts";
 import { iconPath } from "../../ui/Icon.tsx";
 import { token } from "../style.ts";
 
@@ -45,24 +47,27 @@ function pin(size: number, color: string, glyphName: "directions_bus" | "tram"):
   });
 }
 
-/** A 16x10 chevron that points up; the layer rotates it to the stop's bearing. */
+/**
+ * C.16's direction notch: a small white triangle that points up, outlined in the pin's colour on
+ * its two outer sides so it shows on light streets. Its base merges with the pin's white ring;
+ * the layer rotates it to the stop's bearing.
+ */
 function notch(color: string): ImageData {
-  return image(16, 10, (ctx) => {
+  return image(12, 7, (ctx) => {
     ctx.beginPath();
-    ctx.moveTo(8, 1.5);
-    ctx.lineTo(14.5, 9);
-    ctx.lineTo(1.5, 9);
-    ctx.closePath();
-    ctx.fillStyle = color;
+    ctx.moveTo(1, 7);
+    ctx.lineTo(6, 1);
+    ctx.lineTo(11, 7);
+    ctx.fillStyle = "#fff";
     ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1;
     ctx.lineJoin = "round";
+    ctx.strokeStyle = color;
     ctx.stroke();
   });
 }
 
-function tcTile(navy: string): ImageData {
+function tcTile(navy: string, text: string): ImageData {
   const size = 36;
   return image(size, size, (ctx) => {
     ctx.beginPath();
@@ -76,7 +81,7 @@ function tcTile(navy: string): ImageData {
     ctx.font = `700 15px ${token("--font-family")}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("TC", size / 2, size / 2 + 1);
+    ctx.fillText(text, size / 2, size / 2 + 1);
   });
 }
 
@@ -95,16 +100,32 @@ function destinationPin(red: string): ImageData {
   });
 }
 
+/** C.16: the live bus, a navy 24dp disc with a white ring and bus glyph. */
 function vehicle(color: string): ImageData {
-  return image(28, 28, (ctx) => {
+  return image(24, 24, (ctx) => {
     ctx.beginPath();
-    ctx.arc(14, 14, 13, 0, Math.PI * 2);
+    ctx.arc(12, 12, 11, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#fff";
     ctx.stroke();
-    glyph(ctx, iconPath("directions_bus"), 7, 7, 14, "#fff");
+    glyph(ctx, iconPath("directions_bus"), 6, 6, 12, "#fff");
+  });
+}
+
+/** A dot with a ring outside it, drawn as an image so it takes part in label placement. */
+function dot(diameter: number, fill: string, ring: string, ringWidth: number): ImageData {
+  const size = diameter + ringWidth * 2;
+  const circle = (ctx: CanvasRenderingContext2D, r: number, color: string) => {
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
+  return image(size, size, (ctx) => {
+    circle(ctx, size / 2, ring);
+    circle(ctx, diameter / 2, fill);
   });
 }
 
@@ -162,9 +183,12 @@ export function addMarkerImages(map: maplibregl.Map) {
   }
   add("notch-bus", notch(blue));
   add("notch-rail", notch(red));
-  add("pin-tc", tcTile(navy));
+  add("pin-tc", tcTile(navy, t("card.tcTile")));
   add("pin-dest", destinationPin(token("--c-dest-pin")));
   add("vehicle", vehicle(navy));
+  add("dot-user", dot(16, token("--c-user-dot"), "#fff", 2));
+  add("dot-origin", dot(16, token("--c-origin-dot"), "#fff", 2));
+  add("dot-stop", dot(14, "#fff", navy, 3));
   const label = chip(token("--c-outline-strong"), false);
   add("label-chip", label.data, label.options);
   const callout = chip(token("--c-outline"), true);

@@ -1,6 +1,6 @@
 // The one MapLibre map, mounted once by AppShell and kept across navigation. The canvas is
 // hidden from assistive technology: the sheet list is the accessible equivalent of everything
-// on the map (C.16). The attribution links stay reachable.
+// on the map (C.16). The attribution's (i) button and its two links stay in the tab order.
 
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -19,18 +19,34 @@ import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts
 import styles from "./MapView.module.css";
 
 let stopsPromise: Promise<ClientStop[]> | null = null;
-const loadStops = () => (stopsPromise ??= fetch("/data/stops.json").then((r) => r.json() as Promise<ClientStop[]>));
-let stopsByIdPromise: Promise<Map<string, ClientStop>> | null = null;
-const stopsById = () => (stopsByIdPromise ??= loadStops().then((stops) => new Map(stops.map((s) => [s.id, s]))));
+/** Loaded once; a failed load is forgotten, so the next camera move or scene tries again. */
+function loadStops(): Promise<ClientStop[]> {
+  stopsPromise ??= fetch("/data/stops.json")
+    .then((r) => {
+      if (!r.ok) throw new Error(`stops.json: ${r.status}`);
+      return r.json() as Promise<ClientStop[]>;
+    })
+    .catch((err: unknown) => {
+      stopsPromise = null;
+      throw err;
+    });
+  return stopsPromise;
+}
 
 /** Label ranking is recomputed only when the anchor moves this far. */
 const RESORT_M = 50;
 
-const padding = (bottom: number) => ({ top: 80, left: 32, right: 72, bottom: bottom + 24 });
+/**
+ * Camera padding keeps fitted content clear of the chrome: at the top, the search bar (12 + 48),
+ * the 8dp gap and the destination pin's 40dp body, which rises above its point.
+ */
+const padding = (bottom: number, safeTop: number) => ({ top: safeTop + 108, left: 32, right: 72, bottom: bottom + 24 });
 
-async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, bottom: number) {
+async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions) {
   showUser(map, user);
-  const highlight = scene.highlightStopId ? (await stopsById()).get(scene.highlightStopId) : undefined;
+  // Without stops.json the scene still draws, just without the enlarged pin.
+  const stops = scene.highlightStopId ? await loadStops().catch(() => []) : [];
+  const highlight = stops.find((s) => s.id === scene.highlightStopId);
   setHighlightedStop(map, highlight?.id);
   drawScene(map, scene, highlight, highlight ? t("map.stopCallout", { id: highlight.id }) : "");
 
@@ -41,10 +57,10 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
       [Math.min(a.lon, b.lon), Math.min(a.lat, b.lat)],
       [Math.max(a.lon, b.lon), Math.max(a.lat, b.lat)],
     ];
-    map.fitBounds(bounds, { padding: padding(bottom), maxZoom: 17 });
+    map.fitBounds(bounds, { padding: pad, maxZoom: 17 });
   } else if (f) {
     const center = f.kind === "user" ? user : (f.point ?? highlight);
-    if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: padding(bottom) });
+    if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
   }
 }
 
@@ -70,6 +86,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const tcs = useTransitCenters();
   const tcData = tcs.data?.transitCenters;
   const container = useRef<HTMLDivElement>(null);
+  const safeTopProbe = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const ready = useRef(false);
   const anchorRef = useRef<LatLon | null>(null);
@@ -81,8 +98,12 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const anchor = labelAnchor(map, scene, user);
     if (anchorRef.current && haversineM(anchorRef.current.lat, anchorRef.current.lon, anchor.lat, anchor.lon) < RESORT_M) return;
     anchorRef.current = anchor;
-    void loadStops().then((stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops, anchor)));
+    void loadStops().then(
+      (stops) => (map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(stopsCollection(stops, anchor)),
+      () => (anchorRef.current = null),
+    );
   };
+  const pad = (bottom: number) => padding(bottom, safeTopProbe.current?.offsetHeight ?? 0);
 
   useEffect(() => {
     let map: maplibregl.Map | undefined;
@@ -98,8 +119,9 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         pitchWithRotate: false,
         dragRotate: false,
       });
-      map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "bottom-left");
-      // Compact means collapsed to its (i) button until tapped.
+      map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: ATTRIBUTION }), "top-left");
+      // Collapsed to its (i) button until tapped. MapLibre 5.x opens a compact attribution
+      // (class maplibregl-compact-show) until the first drag; this class name is its internals.
       map.once("idle", () => container.current?.querySelector(".maplibregl-compact-show")?.classList.remove("maplibregl-compact-show"));
       map.touchZoomRotate.disableRotation();
       map.getCanvas().tabIndex = -1;
@@ -119,12 +141,12 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       m.on("load", () => {
         addMarkerImages(m);
         addTransitLayers(m);
-        addSceneLayers(m, "stops-notch");
+        addSceneLayers(m);
         ready.current = true;
         rankLabels(m);
         const { scene, user, bottomPadding, tcData } = latest.current;
         if (tcData) showTransitCenters(m, tcData);
-        void applyScene(m, scene, user, bottomPadding);
+        void applyScene(m, scene, user, pad(bottomPadding));
       });
     });
     return () => {
@@ -139,13 +161,13 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   useEffect(() => {
     const { user, bottomPadding } = latest.current;
     if (!mapRef.current || !ready.current) return;
-    void applyScene(mapRef.current, scene, user, bottomPadding);
+    void applyScene(mapRef.current, scene, user, pad(bottomPadding));
     rankLabels(mapRef.current);
   }, [scene]);
 
   useEffect(() => {
     const { user, bottomPadding } = latest.current;
-    if (locateNonce && user && mapRef.current) mapRef.current.easeTo({ center: [user.lon, user.lat], zoom: USER_ZOOM, padding: padding(bottomPadding) });
+    if (locateNonce && user && mapRef.current) mapRef.current.easeTo({ center: [user.lon, user.lat], zoom: USER_ZOOM, padding: pad(bottomPadding) });
   }, [locateNonce]);
 
   const hadUser = useRef(Boolean(user));
@@ -155,7 +177,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const first = !hadUser.current && user;
     hadUser.current = Boolean(user);
     const { scene, bottomPadding } = latest.current;
-    if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, bottomPadding);
+    if (first && scene.focus?.kind === "user") void applyScene(map, scene, user, pad(bottomPadding));
     else showUser(map, user);
     rankLabels(map);
   }, [user]);
@@ -164,6 +186,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     if (mapRef.current && ready.current && tcData) showTransitCenters(mapRef.current, tcData);
   }, [tcData]);
 
-  // The attribution follows the sheet's top edge so it is never hidden under it.
-  return <div ref={container} className={styles.map} style={{ ["--attribution-bottom" as string]: `${bottomPadding}px` }} />;
+  return (
+    <>
+      <div ref={container} className={styles.map} />
+      <div ref={safeTopProbe} className={styles.safeTop} aria-hidden="true" />
+    </>
+  );
 }
