@@ -6,7 +6,7 @@ import { useOffline } from "../../../state/offline.ts";
 import { DepTimes } from "../../../ui/DepTimes.tsx";
 import { Icon } from "../../../ui/Icon.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
-import { refOfServing } from "./refs.ts";
+import { keepHeadsign, refOfServing } from "./refs.ts";
 import type { Serving } from "./serving.ts";
 import styles from "./StopSheet.module.css";
 
@@ -30,7 +30,8 @@ export function CollapsedRoute({ entry, deps, onExpand }: { entry: Serving; deps
     >
       <RouteBadge route={route} size="sm" />
       <span className={styles.routeText}>
-        <span className={styles.headsign}>{headline}</span>
+        {entry.longName && <span className={styles.longName}>{entry.longName}</span>}
+        <span className={styles.headsign}>{keepHeadsign(headline, entry.headsign)}</span>
         {next.length ? <DepTimes deps={next} /> : <span className={styles.noService}>{t("strip.noBuses3h")}</span>}
       </span>
       <Icon name="chevron_right" />

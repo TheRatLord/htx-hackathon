@@ -1,7 +1,7 @@
 // Explore home (G.3 `/explore`): Nearby (D2), Route near you (D3, `?route=`) and Stops near a
 // place (D4, `?at=&label=`). One sheet: title row, one banner, the route chips, then the list.
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -36,6 +36,8 @@ import { useHalfUpTo } from "./useHalfUpTo.ts";
 /** Panning further than this from the list's anchor offers "Search this area" (C.16). */
 const SEARCH_AREA_M = 300;
 const HOME_ZOOM = 16;
+/** Below this viewport height (with Extra large text) the chips go after card #1. */
+const SHORT_SCREEN = 700;
 
 /** C.12 sheet banner row: trip planned > location off > demo data. */
 function useSheetBanner(anchor: HomeAnchor, nearby?: NearbyResponse): SheetBannerProps | undefined {
@@ -83,10 +85,12 @@ interface NearbyBodyProps {
   nearby: ReturnType<typeof useNearby>;
   data?: NearbyResponse;
   tc?: TransitCenterDetail;
+  /** The chips, when they go after card #1 instead of above it. */
+  chipsAfterFirst?: ReactNode;
 }
 
 /** D2 / D4 below the chips: the saved row (D2), the stop cards and the footer. */
-function NearbyBody({ anchor, origin, place, nearby, data, tc }: NearbyBodyProps) {
+function NearbyBody({ anchor, origin, place, nearby, data, tc, chipsAfterFirst }: NearbyBodyProps) {
   const t = useT();
   const firstRow = useRef<HTMLLIElement>(null);
   const ids = data?.stops.map((s) => s.stop.id).join() ?? "";
@@ -95,9 +99,9 @@ function NearbyBody({ anchor, origin, place, nearby, data, tc }: NearbyBodyProps
   return (
     <>
       <HomeScene anchor={anchor} />
-      {!place && <SavedRow />}
+      {!place && <SavedRow origin={anchor.kind === "user" ? anchor.point : undefined} />}
       {origin ? (
-        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} />
+        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstRow={firstRow} afterFirst={chipsAfterFirst} />
       ) : (
         anchor.kind === "finding" && <LoadingCards />
       )}
@@ -117,7 +121,7 @@ export default function Home() {
   const back = useBack();
   const [params] = useSearchParams();
   const anchor = useHomeAnchor();
-  const { walkPace } = usePrefs();
+  const { walkPace, textSize } = usePrefs();
   const center = useMapCenter();
   useRoutesLoaded();
 
@@ -132,8 +136,8 @@ export default function Home() {
   const tc = useTransitCenter(tcId ?? "", { enabled: Boolean(tcId) }).data;
 
   const panned = Boolean(!routeId && origin && center && haversineM(origin.lat, origin.lon, center.lat, center.lon) > SEARCH_AREA_M);
-  // D3 adds the route's alerts FAB (shown only when it has alerts); the layout drops Locate first when three don't fit.
-  useExploreChrome(routeId ? { fabs: ["locate", "planTrip", { kind: "routeAlerts", routeId }] } : { banner: panned ? "search-this-area" : null });
+  // D3 keeps the usual FABs in place: its alerts are a line in the sheet, not a third FAB that pushed Locate out.
+  useExploreChrome(routeId ? { fabs: ["locate", "planTrip"] } : { banner: panned ? "search-this-area" : null });
 
   let title: string;
   if (routeId) title = t("home.route.title", { name: routeRef(routeId)?.name ?? routeParam! });
@@ -146,11 +150,19 @@ export default function Home() {
     if (id === routeId) navigate(`/explore${extra ? `?${extra}` : ""}`, { replace: true });
     else navigate(`/explore?route=${encodeURIComponent(id)}${extra ? `&${extra}` : ""}`, { replace: Boolean(routeId) });
   };
+  const chips = data && (
+    <div className={styles.bleed}>
+      <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
+    </div>
+  );
+  // Extra large text on a short screen: above card #1 the chips would push every bus time below the
+  // fold, so D2's chips follow the first card there (the first departure is the one job of Home).
+  const chipsLater = !routeId && textSize === "xlarge" && window.innerHeight < SHORT_SCREEN && Boolean(data?.stops.length);
   const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
 
   return (
-    // D4's two-line title leaves no room beside it: its UpdatedAgo shares the "Back to my location" row.
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId || place ? back : undefined}>
+    // D4 has one way back, "Back to my location" (its UpdatedAgo shares that row); D3 keeps the sheet's "‹ Back".
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId ? back : undefined}>
       <div className={styles.body}>
         {place && !routeId && (
           <div className={styles.backToMe}>
@@ -159,15 +171,11 @@ export default function Home() {
           </div>
         )}
         {banner && !place && <SheetBanner {...banner} />}
-        {data && (
-          <div className={styles.bleed}>
-            <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
-          </div>
-        )}
+        {data && !chipsLater && chips}
         {routeId ? (
           <RouteNearYou routeId={routeId} origin={origin} finding={anchor.kind === "finding"} place={place} nearby={data} tc={tc} />
         ) : (
-          <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} />
+          <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} chipsAfterFirst={data && chipsLater ? chips : undefined} />
         )}
       </div>
     </ExploreSheet>

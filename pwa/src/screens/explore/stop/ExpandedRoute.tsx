@@ -1,9 +1,9 @@
-import { useState, type RefObject } from "react";
+import { useState, type ReactNode, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useArrivals, useHealth, useStopSchedule } from "../../../api/hooks.ts";
 import type { Arrival, StopSummary } from "../../../api/types.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { formatDayTime, headsignLine, upcoming } from "../../../lib/format.ts";
+import { headsignLine, upcoming } from "../../../lib/format.ts";
 import { useNow } from "../../../state/clock.ts";
 import { useOffline } from "../../../state/offline.ts";
 import { Button } from "../../../ui/Button.tsx";
@@ -11,7 +11,7 @@ import { Icon } from "../../../ui/Icon.tsx";
 import { LiveStrip } from "../../../ui/LiveStrip.tsx";
 import { NotifyPermissionCard } from "../../../ui/NotifyPermissionCard.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
-import { refOfServing } from "./refs.ts";
+import { keepHeadsign, refOfServing } from "./refs.ts";
 import { servingKey, type Serving } from "./serving.ts";
 import styles from "./StopSheet.module.css";
 import { useTrackStop } from "./useTrackStop.ts";
@@ -23,12 +23,14 @@ interface ExpandedRouteProps {
   shared: boolean;
   /** This pattern's trips among the stop's mixed arrivals, for when the other pattern fills the strip call. */
   mixed: Arrival[];
-  /** The strip: the half sheet grows until it is visible (A.1.2). */
+  /** The row under the strip: the half sheet grows until it (and so the strip) is visible, within the fold cap (A.1.2). */
   stripRef: RefObject<HTMLDivElement | null>;
+  /** The stop's own actions (Save, Walk here), right under the strip: walking there is the next thing a rider does. */
+  stopActions?: ReactNode;
 }
 
-/** D6: the expanded route, as today: header row, Full Schedule / Track Bus Stop, the blue strip. */
-export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: ExpandedRouteProps) {
+/** D6: the expanded route: header row, the blue strip (the answer, first), the stop's Walk here / Save, then Schedule / Track. */
+export function ExpandedRoute({ stop, entry, shared, mixed, stripRef, stopActions }: ExpandedRouteProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -52,9 +54,9 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
   const headline = headsignLine(route, entry.directionLabel, entry.headsign, lang);
   useTrackStop({ on: tracking, deps, routeName: entry.name, headsign: headline, stopName: stop.name });
 
-  let emptyText: string | undefined;
-  if (crowdedOut) emptyText = t("stop.crowdedOut", { headsign: entry.headsign });
-  else if (next) emptyText = t("strip.nextServiceFirst", { when: formatDayTime(next.departureTime, lang) });
+  const emptyText = crowdedOut ? t("stop.crowdedOut", { headsign: entry.headsign }) : undefined;
+  // The next trip after now: later today when one remains (late night), else the next service day.
+  const nextService = !crowdedOut && next && schedule.data ? { departureTime: next.departureTime, today: next.serviceDate === schedule.data.serviceDate } : undefined;
 
   return (
     <section className={styles.expanded} aria-label={`${t("routeName.a11y", { name: entry.name })} ${headline}`}>
@@ -67,11 +69,23 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
         <RouteBadge route={route} size="sm" showIcon />
         <span className={styles.routeText}>
           <span className={styles.longName}>{entry.longName}</span>
-          <span className={styles.headline}>{headline}</span>
+          <span className={styles.headline}>{keepHeadsign(headline, entry.headsign)}</span>
         </span>
         <Icon name="chevron_right" />
       </button>
-      <div className={styles.routePills}>
+      <div className={styles.bleed}>
+        {strip.isError && !strip.data ? (
+          <div className={styles.stripError}>
+            <p>{t("stop.stripError")}</p>
+            <Button variant="text" label={t("common.tryAgain")} onPress={() => void strip.refetch()} />
+          </div>
+        ) : (
+          <LiveStrip deps={deps} loading={strip.isPending} emptyText={emptyText} nextService={nextService} />
+        )}
+      </div>
+      {liveMissing && <p className={styles.note}>{t("stop.liveUnavailable")}</p>}
+      {stopActions}
+      <div ref={stripRef} className={styles.routePills}>
         <Button
           variant="tonal"
           icon="calendar_month"
@@ -81,8 +95,8 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
         <Button
           variant="tonal"
           icon={tracking ? "notifications_active" : "notifications"}
-          label={tracking ? t("stop.tracking", { name: entry.name }) : t("stop.track")}
-          pressed={tracking}
+          label={tracking ? t("stop.tracking") : t("stop.track")}
+          ariaLabel={tracking ? t("stop.trackingA11y", { name: entry.name }) : undefined}
           onPress={() => setTracking(!tracking)}
         />
       </div>
@@ -92,17 +106,6 @@ export function ExpandedRoute({ stop, entry, shared, mixed, stripRef }: Expanded
           <NotifyPermissionCard context="stop-track" />
         </>
       )}
-      {liveMissing && <p className={styles.note}>{t("stop.liveUnavailable")}</p>}
-      <div ref={stripRef} className={styles.bleed}>
-        {strip.isError && !strip.data ? (
-          <div className={styles.stripError}>
-            <p>{t("stop.stripError")}</p>
-            <Button variant="text" label={t("common.tryAgain")} onPress={() => void strip.refetch()} />
-          </div>
-        ) : (
-          <LiveStrip deps={deps} loading={strip.isPending} emptyText={emptyText} />
-        )}
-      </div>
     </section>
   );
 }

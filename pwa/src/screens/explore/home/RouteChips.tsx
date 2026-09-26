@@ -9,12 +9,12 @@ interface RouteChipsProps {
   onPress: (route: RouteRef) => void;
 }
 
-/** D2 item 4: "Your route? Tap it:" and one chip per route near the anchor. */
+/** D2 item 4: "Your route:" and one chip per route near the anchor. Once one is chosen (D3) the chips speak for themselves. */
 export function RouteChips({ routes, selectedId, onPress }: RouteChipsProps) {
   const t = useT();
   if (!routes.length) return null;
   return (
-    <ChipRow label={t("home.chipLabel")} ariaLabel={t("home.chipGroup")}>
+    <ChipRow label={selectedId ? undefined : t("home.chipLabel")} ariaLabel={t("home.chipGroup")}>
       {routes.map((r) => (
         <RouteBadge
           key={r.id}

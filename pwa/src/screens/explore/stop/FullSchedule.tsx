@@ -7,7 +7,7 @@ import { useStop, useStopSchedule } from "../../../api/hooks.ts";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { formatDayTime, formatServiceDate, headsignLine } from "../../../lib/format.ts";
+import { formatClock, formatDayTime, formatServiceDate, headsignLine } from "../../../lib/format.ts";
 import { canonicalRouteId } from "../../../lib/routes.ts";
 import { useNow } from "../../../state/clock.ts";
 import { AppBar } from "../../../ui/AppBar.tsx";
@@ -52,6 +52,7 @@ export default function FullSchedule() {
   const entry = stop.data?.serving.find((s) => s.routeId === routeId);
   const route = entry && refOfServing(entry);
   const error = stop.error ?? schedule.error;
+  const next = schedule.data?.nextServiceFirst;
 
   return (
     <>
@@ -67,6 +68,7 @@ export default function FullSchedule() {
             )}
             <p>{t("stop.schedule.at", { stop: t("stopLine.title", { name: stop.data.stop.name, id: stopId }) })}</p>
             {schedule.data && <p className={styles.date}>{t("stop.schedule.today", { date: formatServiceDate(schedule.data.serviceDate, lang) })}</p>}
+            {rows.length > 0 && <p className={styles.hint}>{t("stop.schedule.hint")}</p>}
           </div>
         )}
       </div>
@@ -83,7 +85,7 @@ export default function FullSchedule() {
           <EmptyState
             icon="calendar_month"
             title={t("stop.schedule.empty", { name: route?.name ?? routeParam ?? "" })}
-            body={schedule.data.nextServiceFirst ? t("stop.schedule.next", { when: formatDayTime(schedule.data.nextServiceFirst.departureTime, lang) }) : ""}
+            body={next ? t("stop.schedule.next", { when: next.serviceDate === schedule.data.serviceDate ? formatClock(next.departureTime, lang) : formatDayTime(next.departureTime, lang) }) : ""}
           />
         ) : (
           <ol className={styles.grid}>
@@ -102,7 +104,9 @@ export default function FullSchedule() {
                   </span>
                   <span className={styles.minutes}>
                     {r.minutes.map((m, i) => (
-                      <span key={i}>{m}</span>
+                      <span key={i} className={isNow && r.times[i] < now - 60_000 ? styles.gone : undefined}>
+                        {m}
+                      </span>
                     ))}
                   </span>
                 </li>

@@ -1,4 +1,4 @@
-import { Fragment, type RefObject } from "react";
+import { Fragment, type ReactNode, type RefObject } from "react";
 import { useNavigate } from "react-router";
 import { useNearby } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
@@ -25,13 +25,16 @@ interface CardsProps {
   tcDetail?: TransitCenterDetail;
   max: number;
   firstRow?: RefObject<HTMLLIElement | null>;
+  /** Rendered right after card #1 (the route chips, when the sheet is too short for them above it). */
+  afterFirst?: ReactNode;
 }
 
-function Cards({ data, origin, place, tcDetail, max, firstRow }: CardsProps) {
+function Cards({ data, origin, place, tcDetail, max, firstRow, afterFirst }: CardsProps) {
   const tc = data.transitCenters[0];
   return data.stops.slice(0, max).map((item, i) => (
     <Fragment key={item.stop.id}>
       <NearbyCard item={item} origin={origin} place={place} firstRowRef={i === 0 ? firstRow : undefined} />
+      {i === 0 && afterFirst}
       {i === 0 && tc && <NearbyTcCard tc={tc} detail={tcDetail?.id === tc.id ? tcDetail : undefined} origin={origin} place={place} />}
     </Fragment>
   ));
@@ -62,10 +65,11 @@ interface NearbyListProps {
   tcDetail?: TransitCenterDetail;
   /** Wraps the first card: its first route row is the fold target (M2, M3). */
   firstRow: RefObject<HTMLLIElement | null>;
+  afterFirst?: ReactNode;
 }
 
 /** D2 items 6–7 and their states: loading, error, nothing within 500 m, late night. */
-export function NearbyList({ nearby, data, origin, place, tcDetail, firstRow }: NearbyListProps) {
+export function NearbyList({ nearby, data, origin, place, tcDetail, firstRow, afterFirst }: NearbyListProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
@@ -89,7 +93,7 @@ export function NearbyList({ nearby, data, origin, place, tcDetail, firstRow }: 
   return (
     <>
       {quiet && <p className={styles.info}>{t("home.lateNight")}</p>}
-      <Cards data={data} origin={origin} place={place} tcDetail={tcDetail} max={MAX_CARDS} firstRow={firstRow} />
+      <Cards data={data} origin={origin} place={place} tcDetail={tcDetail} max={MAX_CARDS} firstRow={firstRow} afterFirst={afterFirst} />
     </>
   );
 }
