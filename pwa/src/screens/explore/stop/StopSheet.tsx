@@ -11,7 +11,7 @@ import { ExploreSheet } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
-import { sideLine, upcoming } from "../../../lib/format.ts";
+import { sideLine, stopTitle, upcoming } from "../../../lib/format.ts";
 import { errorText } from "../../../lib/i18nServer.ts";
 import { canonicalRouteId } from "../../../lib/routes.ts";
 import { useClientStop } from "../../../lib/stops.ts";
@@ -253,7 +253,7 @@ export default function StopSheet() {
   const side = summary ? sideLine(summary, { withCompass: false, lang }) : "";
   const notFound = stop.error instanceof ApiError && stop.error.code === "stop_not_found" ? stop.error : undefined;
   return (
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} titleAlign="center" sub={side || undefined} />} onBack={back}>
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={known ? stopTitle(known, stopId, lang) : title} titleAlign="center" sub={side || undefined} />} onBack={back}>
       {!stop.data && <LoadingScene stopId={stopId} />}
       {stop.data ? (
         <Loaded detail={stop.data} />

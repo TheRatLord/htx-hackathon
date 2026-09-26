@@ -147,6 +147,10 @@
   padding-top: 0;
 }
 
+.alsoMore {
+  color: var(--c-text-variant);
+}
+
 .alsoHere svg {
   flex: none;
   margin-inline-start: auto;
@@ -157,10 +161,10 @@
   color: var(--c-text-variant);
 }
 
-/* "Bay M · Platform 2" on a transit-center card: where to stand, so it reads darker than a side line. */
-.metaStrong {
+/* "Bay M · Platform 2" under a transit-center row's headsign: where to stand, in bold (C.5c, C.5d). */
+.bayLine {
   color: var(--c-text);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-bold);
 }
 
 .routeRow {

@@ -23,12 +23,30 @@
   font-weight: var(--fw-medium);
 }
 
-/* "↻ Just now": the age is the button's label, with the refresh icon before it. */
+/* "Updated just now" over "↻ Refresh": two caption lines in one 48dp target, right-aligned. */
 .compact {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 var(--sp-2);
+  white-space: nowrap;
+  text-align: end;
+}
+
+.compactAge {
+  color: var(--c-text-secondary);
+  font-weight: var(--fw-regular);
+}
+
+.compactAction {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  white-space: nowrap;
+}
+
+.stale .compactAge {
+  color: var(--c-alert-text);
 }
 
 .stale .compact {

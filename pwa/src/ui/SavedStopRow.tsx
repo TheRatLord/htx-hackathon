@@ -1,7 +1,8 @@
 import { useLang, useT } from "../i18n/index.ts";
-import { headsignLine, stopTitle, upcoming } from "../lib/format.ts";
+import { departureView, directionWord, formatDistance, headsignLine, stopTitle, upcoming } from "../lib/format.ts";
 import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
+import { useOffline } from "../state/offline.ts";
 import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
 import { DepTimes } from "./DepTimes.tsx";
@@ -19,17 +20,49 @@ function pickRoute(routes: SavedStopRoute[], preferredRouteId: string | undefine
   return [...routes].sort((a, b) => first(a) - first(b))[0];
 }
 
-/** C.5b: a saved stop's next buses, in the nearby card's layout with a star. It never waits on location. */
-export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, moreSaved, side, walkDistanceM, onWalk }: SavedStopRowProps) {
+/**
+ * C.5b: a saved stop's next buses, in the nearby card's layout with a star. It never waits on location.
+ * The grey line reads like a nearby card's: "Eastbound · South side of Westheimer Rd".
+ * `compact` (the stop is over a mile away): one short row, "★ Westheimer Rd @ Montrose Blvd (2958)"
+ * over "[82] Eastbound · 1 min · 9 min · 2.4 mi", so a stop the rider can't walk to doesn't push
+ * the stops around them below the fold, and no "Leaves before you get there" for a walk nobody takes.
+ */
+export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, moreSaved, side, walkDistanceM, onWalk, compact }: SavedStopRowProps & { compact?: boolean }) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
-  const { walkPace } = usePrefs();
+  const { walkPace, textSize } = usePrefs();
+  const xl = textSize === "xlarge";
+  const offline = useOffline();
   // As on every card: a bus that leaves before the rider can walk there isn't the answer.
   const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
   const shown = pickRoute(routes, preferredRouteId, now);
   const extra = routes.length - 1;
   const title = stopTitle(name, stopId, lang);
+  const dir = shown?.directionLabel && shown.route.mode !== "rail" ? directionWord(shown.directionLabel, lang) : "";
+  if (compact) {
+    const next = shown ? upcoming(shown.deps, now).filter((d) => !d.canceled).slice(0, 2) : [];
+    const times = next.map((d) => departureView(d, now, { offline, lang }).text);
+    const far = walkDistanceM !== undefined ? formatDistance(walkDistanceM, lang) : "";
+    const line = [dir, times.join(" · ") || t("strip.noBuses3h"), far].filter(Boolean);
+    return (
+      <article className={`${styles.card} ${rowStyles.compact}`}>
+        <button type="button" className={styles.hit} aria-label={[title, shown && t("routeName.a11y", { name: shown.route.name }), ...line].filter(Boolean).join(", ")} onClick={onOpen} />
+        <div className={rowStyles.compactMain}>
+          <h2 className={`${styles.name} ${rowStyles.name} ${rowStyles.compactName}`}>
+            <Icon name="star_filled" size={20} color="var(--c-accent-icon)" />
+            {title}
+          </h2>
+          <p className={rowStyles.compactLine}>
+            {shown && <RouteBadge route={shown.route} size="xs" />}
+            <span>{line.join(" · ")}</span>
+          </p>
+        </div>
+        <Icon name="chevron_right" color="var(--c-link-text)" />
+      </article>
+    );
+  }
+  const fullSide = side ? [dir, side].filter(Boolean).join(" · ") : undefined;
   return (
     <article className={`${styles.card} ${rowStyles.row}`}>
       <button type="button" className={styles.hit} aria-label={title} onClick={onOpen} />
@@ -45,7 +78,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
             </button>
           )}
         </div>
-        {side && <p className={styles.meta}>{side}</p>}
+        {fullSide && <p className={styles.meta}>{fullSide}</p>}
         {walkDistanceM !== undefined && onWalk && (
           <div className={styles.walkSlot}>
             <WalkButton stopId={stopId} walkDistanceM={walkDistanceM} onPress={onWalk} />
@@ -58,7 +91,7 @@ export function SavedStopRow({ stopId, name, preferredRouteId, routes, onOpen, m
           <RouteBadge route={shown.route} size="sm" />
           <div className={styles.rowText}>
             <span className={styles.headsign}>
-              {headsignLine(shown.route, shown.directionLabel, shown.headsign, lang)}
+              {headsignLine(shown.route, shown.directionLabel, shown.headsign, lang, { short: xl })}
               {extra > 0 && <span className={rowStyles.extra}> {t("card.plusRoutes", { count: extra })}</span>}
             </span>
             {upcoming(shown.deps, now).length ? (

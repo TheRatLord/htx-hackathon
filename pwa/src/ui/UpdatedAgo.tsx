@@ -25,7 +25,8 @@ const STALE_S = 90;
 
 /**
  * C.15: "Updated just now · Refresh", "Updated 2 min ago · Refresh"; `compact` (a sheet's title
- * row), one "↻ Just now" button. Not a live region. Offline, "Refresh" reads "Try again".
+ * row), the same words stacked in one 48dp button, "Updated just now" over "↻ Refresh", so they fit
+ * beside the title at 360dp in every language. Not a live region. Offline, "Refresh" reads "Try again".
  */
 export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   const t = useT();
@@ -53,11 +54,8 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
   else if (stale) text = t("updated.stale", { n: ageMinutes(atMs, now) });
   else {
     // Under a minute old it is simply "just now": seconds read as machine output.
-    if (ageS < 60) text = t(compact ? "updated.justNowShort" : "updated.justNow");
-    else {
-      const ago = t("updated.min", { n: ageMinutes(atMs, now) });
-      text = compact ? ago : t("updated.ago", { ago });
-    }
+    if (ageS < 60) text = t("updated.justNow");
+    else text = t("updated.ago", { ago: t("updated.min", { n: ageMinutes(atMs, now) }) });
   }
   if (offline) {
     // Times may be stale: an amber row with an icon, not grey small print a rider would miss.
@@ -71,15 +69,17 @@ export function UpdatedAgo({ at, onRefresh, compact }: UpdatedAgoProps) {
       </span>
     );
   }
-  // In a sheet's title row, one button: "↻ Just now" (es "↻ Ahora"). "Ahora · Actualizar" took a
-  // row of its own at 360 (es-home-360), and "Just now · Refresh" beside the chevron was three
-  // controls on one row (02).
+  // In a sheet's title row: "Updated just now" over "↻ Refresh", one button. "Just now" alone read
+  // as a status, not a way to refresh; "Ahora · Actualizar" on one line took a row of its own at 360.
   if (compact) {
     return (
-      <span className={`${styles.updated} ${stale ? styles.stale : ""}`}>
+      <span className={`${styles.updated} ${stale ? styles.stale : ""}`} data-compact-updated="">
         <button type="button" className={`${styles.refresh} ${styles.compact}`} aria-label={`${t("common.refresh")}. ${text}`} onClick={onRefresh}>
-          <Icon name="refresh" size={20} />
-          {text}
+          <span className={styles.compactAge}>{text}</span>
+          <span className={styles.compactAction}>
+            <Icon name="refresh" size={16} />
+            {t("common.refresh")}
+          </span>
         </button>
       </span>
     );

@@ -4,7 +4,6 @@ import { walkMinutes } from "../lib/walk.ts";
 import { useNow } from "../state/clock.ts";
 import { usePrefs } from "../state/prefs.ts";
 import styles from "./cards.module.css";
-import { BayTag } from "./BayTag.tsx";
 import { DepTimes, shownDeps } from "./DepTimes.tsx";
 import { Icon } from "./Icon.tsx";
 import { RouteBadge } from "./RouteBadge.tsx";
@@ -26,13 +25,15 @@ function groupRows(deps: TcDeparture[], now: number, walkMin: number): TcDepartu
 
 /**
  * C.5d: a transit center within 1,000 m, with its 2 soonest routes across bays. Each row reads like
- * a stop card's: "SOUTHBOUND to HIRAM CLARKE TC" over "9 min · 39 min   [Bay G]".
+ * a stop card's, with where to stand in bold on its own line between them:
+ * "SOUTHBOUND to HIRAM CLARKE TC" / "Bay G" / "9 min · 39 min". The walk pill is the card's one distance.
  */
 export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCenterCardProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
-  const { walkPace } = usePrefs();
+  const { walkPace, textSize } = usePrefs();
+  const xl = textSize === "xlarge";
   const walkMin = walkMinutes(tc.walkDistanceM, walkPace);
   const rows = groupRows(nextDeps, now, walkMin).slice(0, 2);
   return (
@@ -55,15 +56,12 @@ export function TransitCenterCard({ tc, nextDeps, onOpen, onWalk }: TransitCente
         {rows.map((g) => {
           const [d] = g;
           return (
-            <li key={`${d.route.id}|${d.directionLabel}|${d.bay ?? ""}`} className={tcStyles.dep}>
+            <li key={`${d.route.id}|${d.directionLabel}|${d.bay ?? ""}`} className={styles.routeRow}>
               <RouteBadge route={d.route} size="sm" />
               <span className={styles.rowText}>
-                <span className={styles.headsign}>{headsignLine(d.route, d.directionLabel, d.headsign, lang)}</span>
-                {/* Where to stand, as a tag at the end of the times: the headsign keeps its line. */}
-                <span className={tcStyles.timesRow}>
-                  <DepTimes deps={g} walkMin={walkMin} />
-                  {d.bay && <BayTag bay={d.bay} />}
-                </span>
+                <span className={styles.headsign}>{headsignLine(d.route, d.directionLabel, d.headsign, lang, { short: xl })}</span>
+                {d.bay && <span className={styles.bayLine}>{t("stopLine.bay", { bay: d.bay })}</span>}
+                <DepTimes deps={g} walkMin={walkMin} />
               </span>
             </li>
           );

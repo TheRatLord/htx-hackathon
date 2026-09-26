@@ -204,14 +204,16 @@ describe("stopTitle", () => {
 describe("clockRow", () => {
   const now = Date.parse("2026-09-25T12:00:00-05:00");
   const dep = (min: number) => ({ departureTime: new Date(now + min * 60_000).toISOString(), isRealtime: false, canceled: false, source: "schedule" as const, tripId: `t${min}` });
-  it("keeps a row in minutes, leaving off a later bus an hour or more away", () => {
+  it("applies the one rule per time: minutes under an hour, the clock time from an hour", () => {
     const [a, b] = [dep(2), dep(62)];
-    expect(clockRow([a, b], now, false)).toEqual({ deps: [a], clock: false });
-    expect(clockRow([dep(6), dep(23)], now, false).deps).toHaveLength(2);
+    expect(clockRow([a, b], now, false)).toEqual({ deps: [a, b], clock: false });
+    expect(formatDeparture(a.departureTime, now, { status: "scheduled", lang: "en" })).toBe("2 min");
+    expect(formatDeparture(b.departureTime, now, { status: "scheduled", lang: "en" })).toBe("1:02 PM");
   });
-  it("shows the whole row as clock times when the first bus is half an hour or more away", () => {
-    const row = [dep(59), dep(120)];
-    expect(clockRow(row, now, false)).toEqual({ deps: row, clock: true });
+  it("never turns a bus under an hour into a clock time because the next one is far off", () => {
+    const row = [dep(37), dep(97)];
+    expect(clockRow(row, now, false)).toEqual({ deps: row, clock: false });
+    expect(formatDeparture(row[0].departureTime, now, { status: "scheduled", lang: "en" })).toBe("37 min");
   });
   it("leaves an offline row alone (every time is a clock time there)", () => {
     const row = [dep(2), dep(62)];

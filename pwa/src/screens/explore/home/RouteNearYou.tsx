@@ -16,6 +16,7 @@ import { ErrorState } from "../../../ui/ErrorState.tsx";
 import { RouteDirectionCard } from "../../../ui/RouteDirectionCard.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { refOfRoute } from "../stop/refs.ts";
+import { RouteAlertRow } from "./RouteAlertRow.tsx";
 import { walkUrl } from "../walk/walkUrl.ts";
 import type { Place } from "./anchor.ts";
 import { StreetCard } from "./DirectionCard.tsx";
@@ -156,8 +157,9 @@ export function RouteNearYou({ routeId, origin, finding, place, nearby, tc }: Ro
 
   return (
     <>
-      {/* An alert goes right under the title, where the rider reads first (it used to be a FAB on the map). */}
-      {nearAlerts.length > 0 && <AlertStatusLine scope="route" name={alertName} alerts={nearAlerts} />}
+      {/* An alert goes right under the title, where the rider reads first (it used to be a FAB on the
+          map), as one line so the cards stay above the fold (F1). */}
+      {nearAlerts.length > 0 && <RouteAlertRow alerts={nearAlerts} routeId={data.id} />}
       {lateNight && <p className={styles.info}>{t("home.lateNight")}</p>}
       {tooFar ? (
         <p className={styles.notice}>

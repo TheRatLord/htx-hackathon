@@ -59,6 +59,9 @@ function orderRows(props: NearbyStopCardProps, now: number): Row[] {
   ];
 }
 
+/** "Also here: [209] [244] [247] [108] +3 ›" stays one row with its chevron at the right edge. */
+const ALSO_HERE_BADGES = 4;
+
 /** C.5a: a nearby stop with its walk time and next buses per route. */
 export function NearbyStopCard(props: NearbyStopCardProps) {
   const { stop, walkDistanceM, maxRoutes = 3, walkFrom, onOpen, onOpenRoute, onWalk, firstRowRef, titleSuffix } = props;
@@ -66,7 +69,8 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
   const lang = useLang();
   const now = useNow();
   const offline = useOffline();
-  const { walkPace } = usePrefs();
+  const { walkPace, textSize } = usePrefs();
+  const xl = textSize === "xlarge";
   const walkMin = walkDistanceM !== undefined ? walkMinutes(walkDistanceM, walkPace) : undefined;
   const rows = orderRows(props, now);
   const shown = rows.slice(0, maxRoutes);
@@ -122,7 +126,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
                 <button type="button" className={styles.row} aria-label={rowText(row)} onClick={() => onOpenRoute(row.id)}>
                   <RouteBadge route={ref} size="sm" />
                   <span className={styles.rowText}>
-                    <span className={styles.headsign}>{headsignLine(ref, row.directionLabel, row.headsign, lang)}</span>
+                    <span className={styles.headsign}>{headsignLine(ref, row.directionLabel, row.headsign, lang, { short: xl })}</span>
                     <DepTimes deps={[row.dep]} max={1} firstBus />
                   </span>
                 </button>
@@ -136,7 +140,7 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
               <button type="button" className={styles.row} aria-label={rowText(row)} onClick={() => onOpenRoute(r.routeId)}>
                 <RouteBadge route={ref} size="sm" />
                 <span className={styles.rowText}>
-                  <span className={styles.headsign}>{headsignLine(ref, r.directionLabel, r.headsign, lang)}</span>
+                  <span className={styles.headsign}>{headsignLine(ref, r.directionLabel, r.headsign, lang, { short: xl })}</span>
                   <DepTimes deps={row.deps} walkMin={walkMin} />
                 </span>
               </button>
@@ -152,13 +156,14 @@ export function NearbyStopCard(props: NearbyStopCardProps) {
           onClick={onOpen}
         >
           {t("card.alsoHereLabel")}
-          {hidden.map((r) => (
+          {hidden.slice(0, ALSO_HERE_BADGES).map((r) => (
             <RouteBadge
               key={r.kind === "route" ? `${r.route.routeId}|${r.route.directionLabel}` : r.id}
               route={toRouteRef(r.kind === "route" ? { id: r.route.routeId, name: r.route.name, color: r.route.color, textColor: r.route.textColor } : r)}
               size="xs"
             />
           ))}
+          {hidden.length > ALSO_HERE_BADGES && <span className={styles.alsoMore}>+{hidden.length - ALSO_HERE_BADGES}</span>}
           <Icon name="chevron_right" />
         </button>
       )}

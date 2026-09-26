@@ -8,7 +8,8 @@ import type { SheetHeaderProps } from "./types.ts";
 /**
  * C.7: the sheet title row. The title is the screen's <h1>, focused after navigation. Inside a
  * BottomSheet it also carries the sheet's Back (start) and its one Show list / Show map chevron
- * (end), on a row above the title ("‹ Back ... ⌃"), the same on every sheet.
+ * (end) on the title's own row: "‹ Back  Route 40 near you  ⌃". A row holding only Back and the
+ * chevron cost a 48dp line on every sheet and pushed the answer down (05, 12, 16).
  */
 export function SheetHeader({ title, overline, overlineAction, titleAlign = "start", titleSize = titleAlign === "center" ? "stop" : "title", sub, right }: SheetHeaderProps) {
   const t = useT();
@@ -50,25 +51,26 @@ export function SheetHeader({ title, overline, overlineAction, titleAlign = "sta
       {overline}
     </p>
   );
-  // With Back: "‹ Back ... ⌃" on one row, then the overline (if any), then the title at full width.
-  // Without: the overline shares the row with its action and the toggle, so the title below gets
-  // the full width ("Houston Museum of Natural Science" fits one 22sp line at 412dp).
+  // With Back: "‹ Back", the title (and its overline and sub) and the chevron share one row; the
+  // title wraps beside Back rather than taking a row under it. Without: the overline shares the row
+  // with its action and the toggle, so the title below gets the full width ("Houston Museum of
+  // Natural Science" fits one 22sp line at 412dp).
   return (
     <div className={`${styles.header} ${center ? styles.center : ""} ${chrome ? styles.inSheet : ""}`}>
       {backRow ? (
-        <>
-          <div className={styles.controls}>
-            {backRow}
-            {toggle}
+        <div className={`${styles.main} ${styles.backMain} ${titleSize === "stop" ? styles.backStop : ""}`}>
+          {backRow}
+          <div className={styles.backText}>
+            {overline && (
+              <div className={`${styles.withBack} ${styles.overlineInline}`}>
+                {overlineText}
+                {action}
+              </div>
+            )}
+            {text}
           </div>
-          {overline && (
-            <div className={`${styles.main} ${styles.withBack} ${styles.overlineUnderBack}`}>
-              {overlineText}
-              {action}
-            </div>
-          )}
-          {text}
-        </>
+          {toggle}
+        </div>
       ) : overline ? (
         <>
           <div className={`${styles.main} ${styles.withBack} ${styles.overlineRow}`}>

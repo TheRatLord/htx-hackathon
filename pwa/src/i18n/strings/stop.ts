@@ -12,7 +12,9 @@ const strings: Strings = {
       savedToast: "Saved. It will show at the top of Explore.",
       removedToast: "Removed from saved.",
       saveA11y: "Save stop {id}",
-      fullSchedule: "Schedule",
+      fullSchedule: "Full Schedule",
+      /** 360dp or Extra large: "Full Schedule" wrapped to two lines and pushed Track bus under the nav. */
+      scheduleShort: "Schedule",
       track: "Track bus",
       tracking: "Stop tracking",
       trackingA11y: "Stop tracking Route {name}",
@@ -47,7 +49,9 @@ const strings: Strings = {
       savedToast: "Guardada. Aparecerá arriba en Explorar.",
       removedToast: "Se quitó de guardadas.",
       saveA11y: "Guardar la parada {id}",
+      // "Horario completo" wrapped to two lines in the half-width button even at 412dp.
       fullSchedule: "Horario",
+      scheduleShort: "Horario",
       track: "Avisarme",
       tracking: "Dejar de avisar",
       trackingA11y: "Dejar de avisar de la ruta {name}",
