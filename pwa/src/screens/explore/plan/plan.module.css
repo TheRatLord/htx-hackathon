@@ -412,7 +412,13 @@
 }
 
 .peek p {
+  flex: 1;
+  min-width: 0;
   font-weight: var(--fw-medium);
+}
+
+.peek > :last-child {
+  flex: none;
 }
 
 /* ---------- My Itinerary ---------- */
