@@ -162,8 +162,8 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - From: A (D3 at 360x640)
 - Where: src/ui/BottomSheet.tsx, src/app/layouts/ExploreLayout.tsx
 - Need: `minHalf` can only raise the half height (floor 340 dp), so three FABs (Locate, Plan Trip,
-  "1 alert") don't fit under the search bar at 360x640. D3 now drops Locate there when the alerts
-  FAB shows. At extra-large text the search bar grows to 2 lines and the top FAB still slides
+  "1 alert") don't fit under the search bar at 360x640, and at 412x800 they cost D3 its second
+  card. D3 drops Locate whenever the alerts FAB shows (`routeFabs` in home/Home.tsx). At extra-large text the search bar grows to 2 lines and the top FAB still slides
   under it; the layout could hide the lowest-priority FAB when the column doesn't fit.
 - Status: open
 
