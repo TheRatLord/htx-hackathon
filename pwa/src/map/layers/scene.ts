@@ -1,6 +1,6 @@
 // The layers a screen draws through the Scene API (C.16): the selected route, itinerary and walk
 // legs under the stop pins; markers, live buses, the highlighted stop with its "Stop: 342"
-// callout and the rider's dot above them.
+// callout and the rider's dot above them; marker labels placed around them.
 
 import type { Feature as GeoFeature, FeatureCollection, Geometry } from "geojson";
 import type maplibregl from "maplibre-gl";
@@ -9,6 +9,7 @@ import type { ClientStop, LatLon } from "../../api/types.ts";
 import type { Fix } from "../../state/location.tsx";
 import type { MapScene } from "../scene.ts";
 import { LABEL_FONT_BOLD, token } from "../style.ts";
+import { BOTTOM_TRANSIT_LAYER } from "./transit.ts";
 
 type Feature = GeoFeature<Geometry, Record<string, string | number>>;
 const collection = (features: Feature[]): FeatureCollection => ({ type: "FeatureCollection", features });
@@ -16,10 +17,13 @@ const point = (p: LatLon, props: Record<string, string | number>): Feature => ({
 const line = (coords: [number, number][], props: Record<string, string>): Feature => ({ type: "Feature", properties: props, geometry: { type: "LineString", coordinates: coords } });
 
 const round = { "line-cap": "round", "line-join": "round" } as const;
-const kindIs = (...kinds: string[]) => ["in", ["get", "kind"], ["literal", kinds]] as maplibregl.FilterSpecification;
 
-/** `below`: the first transit layer, so route lines run under the stop pins. */
-export function addSceneLayers(map: maplibregl.Map, below: string) {
+/**
+ * Lines go under every transit layer. Markers, the callout and the user dot always show and
+ * reserve their space; the scene's labels are placed next (moving off them), and before the stop
+ * pins and ID chips, so dense stop pins never push a scene label off the map.
+ */
+export function addSceneLayers(map: maplibregl.Map) {
   for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const lines: maplibregl.LayerSpecification[] = [
     { id: "scene-route-casing", type: "line", source: "scene-route", paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
@@ -35,32 +39,7 @@ export function addSceneLayers(map: maplibregl.Map, below: string) {
       layout: round,
     },
   ];
-  for (const l of lines) map.addLayer(l, below);
-
-  map.addLayer({
-    id: "scene-stops",
-    type: "circle",
-    source: "scene-points",
-    filter: kindIs("origin", "board", "alight", "transfer"),
-    paint: {
-      "circle-radius": ["match", ["get", "kind"], "origin", 8, 7],
-      "circle-color": ["match", ["get", "kind"], "origin", token("--c-origin-dot"), "#fff"],
-      "circle-stroke-color": ["match", ["get", "kind"], "origin", "#fff", token("--c-brand-navy")],
-      "circle-stroke-width": ["match", ["get", "kind"], "origin", 2, 3],
-    },
-  });
-  map.addLayer({
-    id: "scene-icons",
-    type: "symbol",
-    source: "scene-points",
-    filter: kindIs("destination", "vehicle", "highlight"),
-    layout: {
-      "icon-image": ["match", ["get", "kind"], "destination", "pin-dest", "vehicle", "vehicle", ["case", ["==", ["get", "rail"], 1], "pin-rail-lg", "pin-bus-lg"]],
-      "icon-anchor": ["match", ["get", "kind"], "destination", "bottom", "center"],
-      "icon-allow-overlap": true,
-      "icon-ignore-placement": true,
-    },
-  });
+  for (const l of lines) map.addLayer(l, BOTTOM_TRANSIT_LAYER);
   map.addLayer({
     id: "scene-labels",
     type: "symbol",
@@ -70,15 +49,37 @@ export function addSceneLayers(map: maplibregl.Map, below: string) {
       "text-field": ["get", "label"],
       "text-font": LABEL_FONT_BOLD,
       "text-size": 14,
-      "text-anchor": "top",
-      "text-offset": [0, 1.3],
+      // Above its marker (the camera's top padding leaves room; below, it could fall under the
+      // sheet), else on whichever side is free of the markers, callout and user dot. Far enough
+      // out to clear the 36dp highlighted pin a board marker may share a point with.
+      "text-variable-anchor-offset": ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]],
       "icon-image": "label-chip",
       "icon-text-fit": "both",
       "icon-text-fit-padding": [1, 5, 1, 5],
-      "text-allow-overlap": true,
-      "icon-allow-overlap": true,
     },
     paint: { "text-color": token("--c-text") },
+  });
+  map.addLayer({
+    id: "scene-markers",
+    type: "symbol",
+    source: "scene-points",
+    layout: {
+      "icon-image": [
+        "match",
+        ["get", "kind"],
+        "origin",
+        "dot-origin",
+        "destination",
+        "pin-dest",
+        "vehicle",
+        "vehicle",
+        "highlight",
+        ["case", ["==", ["get", "rail"], 1], "pin-rail-lg", "pin-bus-lg"],
+        "dot-stop",
+      ],
+      "icon-anchor": ["match", ["get", "kind"], "destination", "bottom", "center"],
+      "icon-allow-overlap": true,
+    },
   });
   // Today's white "Stop: 342" callout with its pointer on the pin.
   map.addLayer({
@@ -108,9 +109,9 @@ export function addSceneLayers(map: maplibregl.Map, below: string) {
   });
   map.addLayer({
     id: "scene-user",
-    type: "circle",
+    type: "symbol",
     source: "scene-user",
-    paint: { "circle-radius": 8, "circle-color": token("--c-user-dot"), "circle-stroke-color": "#fff", "circle-stroke-width": 2 },
+    layout: { "icon-image": "dot-user", "icon-allow-overlap": true },
   });
 }
 

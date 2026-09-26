@@ -4,7 +4,16 @@
   background: var(--c-map-land);
 }
 
-/* Compact attribution, bottom-left, just above the sheet (C.16). */
-.map :global(.maplibregl-ctrl-bottom-left) {
-  bottom: var(--attribution-bottom, 0px);
+/* The compact attribution sits top-left under the search bar, inside the camera's top padding,
+   where no focused pin or chip is drawn (C.16 asks for bottom-left, where it covered pins). */
+.map :global(.maplibregl-ctrl-top-left) {
+  top: calc(env(safe-area-inset-top) + 60px);
+}
+
+/* Measures env(safe-area-inset-top) for the camera padding. */
+.safeTop {
+  position: absolute;
+  width: 0;
+  height: env(safe-area-inset-top);
+  visibility: hidden;
 }
