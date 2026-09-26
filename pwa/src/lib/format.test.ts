@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "../api/client.ts";
 import type { Dep } from "../api/types.ts";
-import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
+import { departureA11y, directionWord, displayHeadsign, formatClock, formatDateRange, formatDayTime, formatDeparture, formatDistance, formatServiceDate, showsClock, headsignLine, platformLabel, sideLine, statusOf, upcoming } from "./format.ts";
 import { errorText, localiseSide, walkStepText } from "./i18nServer.ts";
 
 // 7:00 PM CDT on 2026-09-25.
@@ -32,6 +32,17 @@ describe("formatDeparture", () => {
   it("localises", () => {
     expect(formatDeparture(at(0.5), NOW, { status: "live", lang: "es" })).toBe("Ahora");
     expect(formatClock(at(65), "es")).toMatch(/^8:05\sp/);
+  });
+});
+
+describe("showsClock", () => {
+  const dep = (min: number, isRealtime = false) => ({ departureTime: at(min), isRealtime, canceled: false, source: "schedule" as const, tripId: "t" });
+  it("is true for clock times only", () => {
+    expect(showsClock(dep(16), NOW)).toBe(false);
+    expect(showsClock(dep(65), NOW)).toBe(true);
+    expect(showsClock(dep(0), NOW)).toBe(true);
+    expect(showsClock(dep(0, true), NOW)).toBe(false);
+    expect(showsClock(dep(16), NOW, true)).toBe(true);
   });
 });
 

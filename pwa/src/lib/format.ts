@@ -66,6 +66,11 @@ function shown(departureTime: string, now: number, opts: { offline?: boolean; st
   return m <= 0 ? { kind: "now" } : { kind: "min", m };
 }
 
+/** True when the departure displays as a clock time ("8:05 PM") rather than "Now" or minutes. */
+export function showsClock(dep: Dep, now: number, offline?: boolean): boolean {
+  return shown(dep.departureTime, now, { offline, status: statusOf(dep) }).kind === "clock";
+}
+
 export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; status: Status; lang: Lang }): string {
   const s = shown(departureTime, now, opts);
   if (s.kind === "clock") return formatClock(departureTime, opts.lang);

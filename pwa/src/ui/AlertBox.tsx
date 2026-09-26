@@ -18,16 +18,18 @@ export function AlertBox({ alert, lang, compact, demo, routes, onOpen }: AlertBo
     <button type="button" className={styles.box} onClick={onOpen}>
       <Icon name="warning" color="var(--c-alert-icon)" />
       <span className={styles.text}>
-        {routes && routes.length > 0 && (
-          <span className={styles.badges}>
-            {routes.slice(0, MAX_BADGES).map((r) => (
-              <RouteBadge key={r.id} route={r} size="sm" />
-            ))}
-            {routes.length > MAX_BADGES && <span className={styles.moreBadges}>+{routes.length - MAX_BADGES}</span>}
+        <span className={styles.lead}>
+          {routes && routes.length > 0 && (
+            <span className={styles.badges}>
+              {routes.slice(0, MAX_BADGES).map((r) => (
+                <RouteBadge key={r.id} route={r} size="sm" />
+              ))}
+              {routes.length > MAX_BADGES && <span className={styles.moreBadges}>+{routes.length - MAX_BADGES}</span>}
+            </span>
+          )}
+          <span className={styles.headline}>
+            <strong>{effectWord(alert.effect, lang)}:</strong> {header.text}
           </span>
-        )}
-        <span className={styles.headline}>
-          <strong>{effectWord(alert.effect, lang)}:</strong> {header.text}
         </span>
         {header.englishOnly && <span className={styles.caption}>{t("alert.englishOnly")}</span>}
         {!compact && description.text && <span className={styles.description}>{description.text}</span>}
