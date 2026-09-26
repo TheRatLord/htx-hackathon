@@ -64,7 +64,8 @@ for (const scheme of ['light', 'dark'] as const) {
       test(s.name, async ({ page }) => {
         const con = watchConsole(page);
         await page.goto(`/${s.hash}`);
-        await settle(page);
+        // Let camera animations finish so the picture is the settled view.
+        await settle(page, 2000);
         if (s.act) {
           await s.act(page);
           await page.waitForTimeout(700);

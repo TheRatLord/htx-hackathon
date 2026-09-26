@@ -1,0 +1,322 @@
+/* Trip screen: the selected route on the map, steps in a sheet. */
+
+.trip__back {
+  position: absolute;
+  top: calc(var(--s-2) + var(--safe-top));
+  left: var(--gutter);
+  z-index: 5;
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Header                                                              */
+/* ------------------------------------------------------------------ */
+
+.trip-head {
+  display: grid;
+  gap: var(--s-half);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--hairline);
+}
+/* Rides on top of the sheet's edge, centred between the back button and the map controls. */
+.trip-head__live {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  padding: 0 var(--s-2) 0 12px;
+  border-radius: var(--r-pill);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    var(--shadow-2);
+  color: var(--text);
+  font-size: var(--t-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: trip-fade-in var(--dur-2) var(--ease-out) both;
+}
+.trip-head__live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 4px var(--live-soft);
+}
+.trip-head__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Option letter, styled like the letter pin on the map. */
+.trip-head__letter {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  box-shadow: inset 0 0 0 2px var(--opt);
+  color: var(--opt);
+  font-size: var(--t-small);
+  font-weight: 700;
+  line-height: 1;
+}
+.trip-head__title {
+  flex: 1;
+  min-width: 0;
+}
+.trip-head__total {
+  flex: none;
+  font-size: var(--t-title-sm);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  color: var(--text-2);
+}
+.trip-head__sub {
+  padding-left: 44px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Step timeline                                                       */
+/* ------------------------------------------------------------------ */
+
+.trip-steps {
+  --node: 44px;
+  --step-gap: var(--s-3);
+  padding-top: var(--s-3);
+}
+.trip-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--node) minmax(0, 1fr);
+  column-gap: var(--s-2);
+  padding-bottom: var(--step-gap);
+}
+.trip-step:last-child {
+  padding-bottom: 0;
+}
+
+/* Node column. The line under each node runs to the next node and shows the leg. */
+.trip-step__rail {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  min-height: var(--node);
+}
+.trip-step__rail::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(var(--node) + var(--s-half));
+  bottom: calc(-1 * var(--step-gap) + var(--s-half));
+  transform: translateX(-50%);
+}
+.trip-step:last-child .trip-step__rail::after {
+  display: none;
+}
+/* Walking and waiting: dotted, neutral. */
+.trip-step--walk .trip-step__rail::after,
+.trip-step--wait .trip-step__rail::after {
+  width: 4px;
+  background-image: radial-gradient(circle, var(--text-3) 1.75px, transparent 2.25px);
+  background-size: 4px 9px;
+  background-repeat: repeat-y;
+  background-position: center top;
+  opacity: 0.8;
+}
+/* Riding: solid, in the route's colour (matches the line on the map). */
+.trip-step--ride .trip-step__rail::after {
+  width: 6px;
+  border-radius: var(--r-pill);
+  background: var(--opt);
+}
+
+.trip-node {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--glass-solid);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    var(--shadow-1);
+  color: var(--text-2);
+  transition:
+    background-color var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease);
+}
+/* Destination: same red marker as the pin on the map. */
+.trip-node--arrive {
+  background: var(--destination);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--destination) 18%, transparent),
+    var(--shadow-1);
+}
+.trip-node__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-on-accent);
+}
+
+.trip-step__body {
+  display: grid;
+  align-content: start;
+  gap: var(--s-half);
+  min-width: 0;
+  padding-top: var(--s-1);
+}
+.trip-step__title {
+  font-size: var(--t-body);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  text-wrap: balance;
+}
+.trip-step__line {
+  font-size: var(--t-small);
+  line-height: var(--lh-body);
+  color: var(--text-2);
+}
+.trip-step__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-half) var(--s-1);
+  font-size: var(--t-small);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+.trip-step__when .status-tag {
+  padding: 4px 10px;
+}
+
+/* Tracking lost: a calm, warm note under the ride. */
+.trip-step__lost {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  margin-top: var(--s-half);
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--lost-soft);
+  box-shadow: inset 0 0 0 1px var(--lost-border);
+  color: var(--text);
+  font-size: var(--t-small);
+  line-height: var(--lh-body);
+}
+.trip-step__lost-icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--lost);
+}
+
+/* In progress: the first step is where the rider is now. */
+.trip-step--current .trip-node {
+  background: var(--accent-fill);
+  color: var(--text-on-accent);
+  box-shadow:
+    0 0 0 5px var(--accent-soft-2),
+    var(--shadow-1);
+}
+.trip-step--current .trip-step__body {
+  margin: 0 0 0 calc(-1 * var(--s-1));
+  padding: var(--s-1) 12px 12px;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+}
+.trip-step__now {
+  justify-self: start;
+  font-size: var(--t-caption);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--accent);
+  padding-bottom: 2px;
+}
+
+/* Steps rise in one after another once loaded. */
+@keyframes trip-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes trip-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.trip-steps:not(.trip-steps--loading) .trip-step {
+  animation: trip-step-in var(--dur-3) var(--ease-out) both;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trip-steps:not(.trip-steps--loading) .trip-step {
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+}
+
+/* Loading */
+.trip-node--ghost {
+  background: var(--fill-2);
+  box-shadow: none;
+}
+.trip-step--ghost .trip-step__rail::after {
+  width: 4px;
+  border-radius: var(--r-pill);
+  background: var(--fill-2);
+}
+.trip-step--ghost .trip-step__body {
+  padding-top: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                              */
+/* ------------------------------------------------------------------ */
+
+.trip-foot {
+  display: flex;
+  gap: 12px;
+}
+.trip-foot__save {
+  flex: none;
+  padding: 0 var(--s-3);
+}
+.trip-foot__save--on {
+  background: var(--accent-soft);
+}
+.trip-foot__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip__concept {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--s-4);
+}
+.trip__concept--center {
+  margin-top: 0;
+}
