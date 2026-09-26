@@ -440,16 +440,31 @@
 /* v2.71's strip, final walk included. When it can't share a line with the arrival (360dp, Spanish,
    large text), the arrival moves up to its own line on the right and the strip gets the card's full
    width (.cardTop wrap-reverse), so no leg drops to a line of its own (22-360). */
+.modesClip {
+  --mode-sep: 13px;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .modes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 4px;
+  display: block;
+  margin-left: calc(-1 * var(--mode-sep));
+  text-wrap: balance;
+}
+
+.modeStep {
+  display: inline-flex;
   align-items: flex-start;
+  margin-bottom: 2px;
+  vertical-align: top;
 }
 
 .modeSep {
   display: inline-flex;
+  justify-content: center;
   align-items: center;
+  width: var(--mode-sep);
   min-height: 40px;
   color: var(--c-text-variant);
   font-weight: var(--fw-medium);
@@ -481,8 +496,28 @@
   white-space: nowrap;
 }
 
+.timesClip {
+  display: block;
+  overflow: hidden;
+}
+
 .times {
+  display: flex;
+  flex-wrap: wrap;
+  /* " · ", the width of the separator inside a part. */
+  --times-sep: 0.75em;
+  margin-left: calc(-1 * var(--times-sep));
   font-variant-numeric: tabular-nums;
+}
+
+.timesPart {
+  white-space: nowrap;
+}
+
+.timesSep {
+  display: inline-block;
+  width: var(--times-sep);
+  text-align: center;
 }
 
 

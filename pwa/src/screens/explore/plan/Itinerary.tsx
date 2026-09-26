@@ -61,21 +61,27 @@ function withAlertRows(it: Trip, rows: TimelineRow[], alerts: Alert[], demo: boo
 
 /**
  * The deepest timeline row, from `from` on, whose bottom (plus the pinned "Start trip" footer) is
- * within the half sheet's cap; `from` itself when none is.
+ * within the half sheet's cap. When `from` itself can't fit whole (Extra large at 360x640: the BOARD
+ * row is ~160px), the deepest row above it that does: the sheet then ends on a whole row and the
+ * footer never slices BOARD mid-headsign (24-xlarge-360); BOARD is one scroll away.
  */
 function deepestWholeRow(sheet: HTMLElement, from: number): HTMLElement | undefined {
   const rows = Array.from(sheet.querySelectorAll<HTMLElement>("ol > li"));
   const footer = sheet.querySelector<HTMLElement>("[data-sheet-footer]")?.offsetHeight ?? 0;
   const top = sheet.getBoundingClientRect().top;
   const cap = foldCap(window.innerHeight);
-  let best = rows[from];
-  for (let i = from; i < rows.length; i++) {
+  const fits = (row: HTMLElement) => {
     let scrolled = 0;
-    for (let p = rows[i].parentElement; p && p !== sheet; p = p.parentElement) scrolled += p.scrollTop;
+    for (let p = row.parentElement; p && p !== sheet; p = p.parentElement) scrolled += p.scrollTop;
     // 8: the gap useHalfUpTo leaves under the row.
-    if (rows[i].getBoundingClientRect().bottom - top + scrolled + 8 + footer <= cap) best = rows[i];
-    else break;
+    return row.getBoundingClientRect().bottom - top + scrolled + 8 + footer <= cap;
+  };
+  if (rows[from] && !fits(rows[from])) {
+    for (let i = from - 1; i >= 0; i--) if (fits(rows[i])) return rows[i];
+    return rows[0];
   }
+  let best = rows[from];
+  for (let i = from + 1; i < rows.length && fits(rows[i]); i++) best = rows[i];
   return best;
 }
 

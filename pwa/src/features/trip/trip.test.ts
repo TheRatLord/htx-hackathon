@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Dep, TransitLeg, TripDetail, WalkLeg } from "../../api/types.ts";
-import { boardDeparture } from "./departures.ts";
+import type { Dep, Itinerary, TransitLeg, TripDetail, WalkLeg } from "../../api/types.ts";
+import { boardDeparture, nextChance } from "./departures.ts";
 import { fromIsRider } from "./origin.ts";
 import { ridePosition, rideStops, stepDone, walkOrigin } from "./progress.ts";
 import { simPosition } from "./simulate.ts";
@@ -180,6 +180,27 @@ describe("boardDeparture", () => {
     expect(matched).toBe(true);
     expect(first).toBe(live);
     expect(strip.map((d) => d.tripId)).toEqual(["trip-80", "b"]);
+  });
+});
+
+describe("nextChance", () => {
+  const later = (min: number): Itinerary => ({
+    ...itinerary,
+    legs: itinerary.legs.map((l) =>
+      l.type === "transit" ? { ...l, departureTime: new Date(Date.parse(l.departureTime) + min * 60_000).toISOString() } : l,
+    ),
+  });
+  const ride73 = itinerary.legs.find((l, i) => l.type === "transit" && i > 1) as TransitLeg;
+
+  it("is the same ride on the list's next later copy of the trip (the 'Also at' time), not another route's", () => {
+    const other = { ...later(5), legs: later(5).legs.map((l) => (l.type === "transit" ? { ...l, route: { ...l.route, name: "25" } } : l)) };
+    const planned = [itinerary, other, later(40), later(20)];
+    expect(nextChance(itinerary, ride80, planned)).toBe(new Date(Date.parse(ride80.departureTime) + 20 * 60_000).toISOString());
+    expect(nextChance(itinerary, ride73, planned)).toBe(new Date(Date.parse(ride73.departureTime) + 20 * 60_000).toISOString());
+  });
+
+  it("is undefined without a later copy (the stop's next bus is used then)", () => {
+    expect(nextChance(itinerary, ride80, [itinerary])).toBeUndefined();
   });
 });
 
