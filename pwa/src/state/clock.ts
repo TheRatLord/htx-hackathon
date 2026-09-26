@@ -2,6 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 import { createSignal } from "../lib/signal.ts";
+// Dev/test only: ?now=<ISO> or window.__NOW__ freezes Date for reproducible screenshots (src/dev).
+import { frozenNow } from "../dev/frozenNow.ts";
 
 const TICK_MS = 15_000;
 
@@ -10,7 +12,7 @@ let timer: ReturnType<typeof setInterval> | undefined;
 const signal = createSignal();
 
 function tick() {
-  now = Date.now();
+  now = frozenNow ?? Date.now();
   signal.notify();
 }
 
@@ -45,7 +47,7 @@ export function subscribeNow(listener: () => void) {
 
 const getNow = () => now;
 
-/** Date.now(), re-rendering every 15s while the page is visible and immediately when it becomes visible. */
+/** Date.now() (or the dev-only frozen instant), re-rendering every 15s while the page is visible and immediately when it becomes visible. */
 export function useNow(): number {
   return useSyncExternalStore(subscribeNow, getNow, getNow);
 }

@@ -6,6 +6,12 @@ import { expect, type Locator, type Page, type TestInfo } from "@playwright/test
 
 export const API = `http://localhost:${process.env.API_PORT ?? 8787}`;
 
+/**
+ * The API clock is frozen (fake-now.mjs, E2E_FREEZE; playwright.config.ts defaults it on): the
+ * browser's Date is then fixed at the same instant, so every time on screen is reproducible.
+ */
+export const FROZEN = (process.env.E2E_FREEZE ?? "1") !== "0";
+
 /** Scenario GPS positions from docs/baseline-flows.json. */
 export const GPS = {
   downtown: { latitude: 29.7563, longitude: -95.3639 }, // F10, F1, F4 (Main St @ Lamar)
@@ -58,7 +64,7 @@ export async function serverNow(page: Page): Promise<Date> {
 
 const launched = new WeakSet<Page>();
 
-/** Cold launch of `path` with a GPS fix, seeded storage and the browser clock on the API's clock. */
+/** Cold launch of `path` with a GPS fix, seeded storage and the browser clock on the API's (frozen) clock. */
 export async function launch(page: Page, path: string, opts: SetupOptions = {}) {
   const ctx = page.context();
   const gps = opts.gps === undefined ? GPS.downtown : opts.gps;
@@ -77,7 +83,11 @@ export async function launch(page: Page, path: string, opts: SetupOptions = {}) 
       localStorage.clear();
       for (const [k, v] of Object.entries(s)) localStorage.setItem(k, JSON.stringify(v));
     }, seed);
-    await page.clock.install({ time: await serverNow(page) });
+    // Frozen: Date.now() and new Date() return the API's instant for the whole test, while timers,
+    // animations and requests run in real time. Otherwise the fake clock starts there and runs on.
+    const now = await serverNow(page);
+    if (FROZEN) await page.clock.setFixedTime(now);
+    else await page.clock.install({ time: now });
   } else {
     // A second launch in the same test: reseed on the current origin, then reload cold.
     await page.evaluate((s: Record<string, unknown>) => {
@@ -253,6 +263,19 @@ export async function hookMap(page: Page) {
 /** Page coordinates of a rendered stop pin, or null when it is not drawn (or not in the map strip). */
 export async function pinPosition(page: Page, stopId: string): Promise<{ x: number; y: number } | null> {
   await hookMap(page);
+  // queryRenderedFeatures can throw while a tile is being re-parsed (maplibre's "Out of bounds" in
+  // FeatureIndex); that is a moment, not an answer, so ask again.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await queryPin(page, stopId);
+    } catch (e) {
+      if (attempt >= 4 || !/Out of bounds/.test(String(e))) throw e;
+      await page.waitForTimeout(300);
+    }
+  }
+}
+
+function queryPin(page: Page, stopId: string): Promise<{ x: number; y: number } | null> {
   return page.evaluate((id) => {
     type F = { properties: { id: string }; geometry: { type: string; coordinates: [number, number] } };
     const m = (window as unknown as { __map: { queryRenderedFeatures: (o?: unknown) => F[]; project: (c: [number, number]) => { x: number; y: number }; getCanvas: () => HTMLCanvasElement } }).__map;
