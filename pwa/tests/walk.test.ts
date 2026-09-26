@@ -1,6 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { formatDistance } from "../server/lib/geo.ts";
-import { describeSteps, type WalkModifier } from "../server/services/walk.ts";
+import { describeSteps, walkRoute, type WalkModifier } from "../server/services/walk.ts";
+import { implausibleWalk } from "../shared/walk.ts";
+
+// A downtown start snapped onto the pedestrian tunnels: 945 m routed for a 136 m walk to stop 342.
+vi.mock("../server/lib/upstream.ts", async (importActual) => {
+  const actual = await importActual<typeof import("../server/lib/upstream.ts")>();
+  return {
+    ...actual,
+    fetchUpstream: vi.fn(() =>
+      Promise.resolve({
+        body: {
+          code: "Ok",
+          routes: [{ distance: 945, duration: 700, geometry: { coordinates: [] }, legs: [{ steps: [] }] }],
+        },
+      }),
+    ),
+  };
+});
 
 const step = (type: string, modifier: WalkModifier | undefined, name: string, distance: number, bearing = 0) => ({
   distance,
@@ -34,5 +51,20 @@ describe("walking steps", () => {
     expect(formatDistance(10)).toBe("50 ft");
     expect(formatDistance(61)).toBe("200 ft");
     expect(formatDistance(1609.344)).toBe("1.0 mi");
+  });
+});
+
+describe("implausible street routes", () => {
+  it("rejects a routed walk far longer than the straight line", () => {
+    expect(implausibleWalk(136, 945)).toBe(true);
+    expect(implausibleWalk(136, 250)).toBe(false);
+    // Short walks may detour around a block.
+    expect(implausibleWalk(20, 200)).toBe(false);
+  });
+
+  it("answers a tunnel route with the straight-line estimate", async () => {
+    const walk = await walkRoute({ lat: 29.7563, lon: -95.3639 }, { lat: 29.75727, lon: -95.36464 });
+    expect(walk.source).toBe("straight-line-estimate");
+    expect(walk.distanceM).toBeLessThan(300);
   });
 });

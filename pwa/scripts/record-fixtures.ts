@@ -4,6 +4,7 @@
 
 import { readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { implausibleWalk } from "../shared/walk.ts";
 
 process.env.RECORD_FIXTURES = "1";
 process.env.OFFLINE = "";
@@ -99,7 +100,7 @@ for (const file of readdirSync(osrmDir)) {
   const [[lon1, lat1], [lon2, lat2]] = key.replace(/^foot\//, "").split(";").map((p) => p.split(",").map(Number));
   const straightM = haversineM(lat1, lon1, lat2, lon2);
   const routedM = json.routes?.[0]?.distance ?? 0;
-  if (routedM > 3 * straightM + 150) {
+  if (implausibleWalk(straightM, routedM)) {
     rmSync(path);
     console.log(`dropped ${key}: ${Math.round(routedM)} m routed for ${Math.round(straightM)} m straight`);
   }

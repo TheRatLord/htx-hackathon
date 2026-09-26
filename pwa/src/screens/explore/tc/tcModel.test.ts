@@ -72,10 +72,10 @@ describe("departureRows", () => {
     expect(departureRows(deps, now, "72").map((r) => r.route.name)).toEqual(["72"]);
   });
 
-  it("counts a repeated trip once and drops departures that have left", () => {
+  it("drops departures that have left", () => {
     const due = arrival("058", "WEST BELT", "2026-09-26T02:03:00Z");
     const gone = arrival("058", "WEST BELT", "2026-09-26T01:55:00Z");
-    expect(departureRows([gone, due, { ...due }], now).map((r) => r.deps.length)).toEqual([1]);
+    expect(departureRows([gone, due], now).map((r) => r.deps.length)).toEqual([1]);
     expect(departureRows([gone], now)).toEqual([]);
   });
 });

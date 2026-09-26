@@ -27,7 +27,6 @@ import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { foldCap } from "../home/fold.ts";
 import { useHalfUpTo } from "../home/useHalfUpTo.ts";
 import { NextBus } from "./NextBus.tsx";
-import { plausibleWalk } from "./plausible.ts";
 import { googleMapsUrl, stepIcon } from "./steps.ts";
 import styles from "./Walk.module.css";
 
@@ -95,7 +94,7 @@ export default function Walk() {
   const stop = useStop(stopId);
   const target = stop.data?.stop;
   const osrm = useWalk(origin, stopId);
-  const walk = osrm.data && origin && target ? plausibleWalk(osrm.data, origin, target) : undefined;
+  const walk = osrm.data;
   const seed = seedParam(params.get("d")) ?? (origin && target ? estimateWalk(origin, target, walkPace).distanceM : undefined);
   const known = useWalkDistance(origin, stopId, seed);
   const estimate = walk?.source === "straight-line-estimate";

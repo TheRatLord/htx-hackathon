@@ -37,16 +37,12 @@ export const servesRoute = (bay: Pick<Bay, "routes">, routeId: string) =>
 
 /**
  * Upcoming departures (C.2: more than a minute past is dropped) as rows of one route, direction
- * and headsign, in the order they leave. A trip listed twice (the server can repeat one) counts once.
+ * and headsign, in the order they leave.
  */
 export function departureRows(deps: Arrival[], now: number, routeId?: string): DepartureRow[] {
   const rows = new Map<string, DepartureRow>();
-  const seen = new Set<string>();
   for (const d of upcoming(deps, now)) {
     if (routeId && canonicalRouteId(d.routeId) !== canonicalRouteId(routeId)) continue;
-    const trip = `${d.tripId}|${d.departureTime}`;
-    if (seen.has(trip)) continue;
-    seen.add(trip);
     const key = `${d.routeId}|${d.directionLabel}|${d.headsign}`;
     let row = rows.get(key);
     if (!row) {
