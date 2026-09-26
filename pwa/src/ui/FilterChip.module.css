@@ -4,8 +4,8 @@
   align-items: center;
   gap: var(--sp-1);
   min-height: var(--touch-min);
-  padding: 0 var(--sp-4);
-  border: none;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--c-outline-strong);
   border-radius: var(--r-pill);
   background: var(--c-chip-inactive);
   color: var(--c-text);
@@ -14,6 +14,7 @@
 }
 
 .chip[aria-pressed="true"] {
+  border-color: var(--c-primary);
   background: var(--c-primary);
   color: var(--c-on-primary);
   font-weight: var(--fw-medium);

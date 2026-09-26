@@ -53,10 +53,10 @@
   margin: calc(-1 * var(--sp-1)) 0;
 }
 
-/* With large text the side line takes the row and the pill drops under it, right-aligned,
-   rather than squeezing the line to a word per row. */
+/* With large text the side line wraps to two lines beside the pill (shorter than a line plus a
+   pill row under it); only when it would get narrower than 7em does the pill drop under it. */
 .metaRow .meta {
-  flex: 1 1 11em;
+  flex: 1 1 7em;
   min-width: 0;
 }
 

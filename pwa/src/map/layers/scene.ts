@@ -54,8 +54,18 @@ export function addSceneLayers(map: maplibregl.Map) {
       "text-size": 14,
       // Above its marker (the camera's top padding leaves room; below, it could fall under the
       // sheet), else on whichever side is free of the markers, callout and user dot. Far enough
-      // out to clear the 36dp highlighted pin a board marker may share a point with.
-      "text-variable-anchor-offset": ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]],
+      // out to clear the 36dp highlighted pin a board marker may share a point with. A marker on
+      // the scene's west or east edge puts its label on the inward side first, so a wide label
+      // ("Transfer · #4789") never runs off the screen edge (see labelEdge).
+      "text-variable-anchor-offset": [
+        "match",
+        ["get", "edge"],
+        "w",
+        ["literal", ["bottom-left", [0.8, -1.4], "left", [2.6, 0], "bottom", [0, -2], "top-left", [0.8, 1.4], "top", [0, 2], "right", [-2.6, 0]]],
+        "e",
+        ["literal", ["bottom-right", [-0.8, -1.4], "right", [-2.6, 0], "bottom", [0, -2], "top-right", [-0.8, 1.4], "top", [0, 2], "left", [2.6, 0]]],
+        ["literal", ["bottom", [0, -2], "left", [2.6, 0], "right", [-2.6, 0], "top", [0, 2]]],
+      ] as unknown as maplibregl.ExpressionSpecification,
       "icon-image": "label-chip",
       "icon-text-fit": "both",
       "icon-text-fit-padding": [1, 5, 1, 5],
@@ -88,12 +98,12 @@ export function addSceneLayers(map: maplibregl.Map) {
       "icon-allow-overlap": true,
     },
   });
-  // Today's white "Stop: 342" callout with its pointer on the pin.
+  // Today's white callout with its pointer on the pin (the stop's name, on walk and trip scenes).
   map.addLayer({
     id: "scene-callout",
     type: "symbol",
     source: "scene-points",
-    filter: ["==", ["get", "kind"], "highlight"],
+    filter: ["all", ["==", ["get", "kind"], "highlight"], ["has", "label"]],
     layout: {
       "text-field": ["get", "label"],
       "text-font": LABEL_FONT_BOLD,
@@ -136,13 +146,29 @@ export function showUser(map: maplibregl.Map, user: Fix | undefined) {
   if (user) map.setPaintProperty("scene-user-halo", "circle-radius", haloRadius(user));
 }
 
+/**
+ * "w" or "e" for a marker in the west or east quarter of the scene's extent (markers and legs):
+ * a fitted scene puts those near the screen's edge, so their label goes on the inward side.
+ */
+function labelEdge(scene: MapScene): (lon: number) => string {
+  const lons = [...(scene.markers ?? []).map((m) => m.point.lon), ...(scene.legs ?? []).flatMap((l) => l.coords.map((c) => c[0]))];
+  const min = Math.min(...lons);
+  const span = Math.max(...lons) - min;
+  if (!(span > 0)) return () => "";
+  return (lon) => {
+    const f = (lon - min) / span;
+    return f < 0.25 ? "w" : f > 0.75 ? "e" : "";
+  };
+}
+
 export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
   src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
   src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(l.coords, { kind: l.kind, color: l.color ?? "" }))));
+  const edge = labelEdge(scene);
   const points: Feature[] = [
-    ...(scene.markers ?? []).map((m) => point(m.point, { kind: m.kind, ...(m.label && { label: m.label }) })),
+    ...(scene.markers ?? []).map((m) => point(m.point, { kind: m.kind, edge: edge(m.point.lon), ...(m.label && { label: m.label }) })),
     ...(scene.vehicles ?? []).map((v) => point(v.point, { kind: (v.ageSeconds ?? 0) > STALE_VEHICLE_S ? "vehicle-stale" : "vehicle", label: v.label })),
   ];
-  if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, label: highlightLabel }));
+  if (highlight) points.push(point(highlight, { kind: "highlight", rail: highlight.kind === "rail" ? 1 : 0, ...(highlightLabel && { label: highlightLabel }) }));
   src(map, "scene-points")?.setData(collection(points));
 }

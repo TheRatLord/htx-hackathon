@@ -109,10 +109,11 @@ export function useRouteNext(id: string, dir: 0 | 1) {
   });
 }
 
-export function useStopSchedule(stopId: string, routeId: string, opts: { enabled?: boolean } = {}) {
+/** Today's schedule, or with `date` ("20260926", a GTFS service date) that day's (D7 day tabs). */
+export function useStopSchedule(stopId: string, routeId: string, opts: { enabled?: boolean; date?: string } = {}) {
   return useQuery({
-    queryKey: keys.stopSchedule(stopId, routeId),
-    queryFn: () => apiGet<StopSchedule>(`/stops/${encodeURIComponent(stopId)}/schedule`, { route: routeId }),
+    queryKey: keys.stopSchedule(stopId, routeId, opts.date),
+    queryFn: () => apiGet<StopSchedule>(`/stops/${encodeURIComponent(stopId)}/schedule`, { route: routeId, ...(opts.date && { date: opts.date }) }),
     enabled: opts.enabled ?? true,
     staleTime: 5 * 60_000,
   });

@@ -80,7 +80,7 @@ const alert: Alert = {
   cause: "CONSTRUCTION",
   effect: "STOP_MOVED",
   severity: "WARNING",
-  header: { en: "Route 82 Westheimer: eastbound stop at Westheimer Rd @ Kirby Dr moved 150 ft east" },
+  header: { en: "Eastbound stop at Westheimer Rd @ Kirby Dr is now 150 ft east" },
   description: { en: "Board at the temporary stop east of Kirby Dr until construction ends." },
   routes: [{ routeId: "082", route: "82", color: "#004080" }],
   stopIds: [],

@@ -8,21 +8,24 @@
   margin-bottom: var(--sp-1);
   color: var(--c-text-variant);
   font-weight: var(--fw-medium);
-  text-transform: uppercase;
 }
 
 .bays {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
+  padding: var(--sp-2);
+  border-radius: var(--r-box);
+  background: var(--c-chip-inactive);
 }
 
 .bay {
   width: 48px;
   height: 48px;
   border: 1px solid var(--c-outline-strong);
-  border-radius: var(--r-chip);
+  border-radius: 50%;
   background: var(--c-surface);
+  color: var(--c-text);
   font-size: var(--fs-heading);
   font-weight: var(--fw-bold);
 }

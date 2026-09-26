@@ -14,7 +14,7 @@ export function RouteChips({ routes, selectedId, onPress }: RouteChipsProps) {
   const t = useT();
   if (!routes.length) return null;
   return (
-    <ChipRow label={selectedId ? undefined : t("home.chipLabel")} ariaLabel={t("home.chipGroup")}>
+    <ChipRow label={selectedId ? undefined : t("home.chipLabel")} ariaLabel={t("home.chipGroup")} inlineLabel>
       {routes.map((r) => (
         <RouteBadge
           key={r.id}

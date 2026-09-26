@@ -15,12 +15,12 @@ const splitUnit = (text: string) => text.match(/^(\d+)\s(.+)$/)?.slice(1) as [st
  * Offline, every time is a scheduled clock time. With `walkMin`, a bus that leaves before the
  * rider can get there is greyed with "Leaves before you get there" (canceled wins).
  */
-export function TimeValue({ dep, size, walkMin }: TimeValueProps) {
+export function TimeValue({ dep, size, walkMin, clock }: TimeValueProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
   const offline = useOffline();
-  const { status, text, tooSoon } = departureView(dep, now, { walkMin, offline, lang });
+  const { status, text, tooSoon } = departureView(dep, now, { walkMin, offline, clock, lang });
   const realtime = !tooSoon && (status === "live" || status === "simulated");
   const parts = size === "strip" ? splitUnit(text) : undefined;
   const className = [styles.time, styles[size], styles[status], tooSoon && styles.tooSoon].filter(Boolean).join(" ");

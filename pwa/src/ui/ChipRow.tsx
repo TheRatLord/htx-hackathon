@@ -7,8 +7,9 @@ import type { ChipRowProps } from "./types.ts";
  * C.10: a horizontal chip scroller with an optional visible label (which is also the group's
  * name) and a "More ›" button when it overflows; it turns into "‹ Back" at the end. `wrap`
  * lays short sets (sort chips) out on as many rows as they need instead: nothing is hidden.
+ * `inlineLabel` puts the label on the chips' row as its first item, saving a line.
  */
-export function ChipRow({ children, label, ariaLabel, wrap }: ChipRowProps) {
+export function ChipRow({ children, label, ariaLabel, wrap, inlineLabel }: ChipRowProps) {
   const t = useT();
   const labelId = useId();
   const scroller = useRef<HTMLDivElement>(null);
@@ -42,13 +43,18 @@ export function ChipRow({ children, label, ariaLabel, wrap }: ChipRowProps) {
 
   return (
     <div className={styles.wrap} role="group" aria-label={label ? undefined : ariaLabel} aria-labelledby={label ? labelId : undefined}>
-      {label && (
+      {label && !inlineLabel && (
         <p id={labelId} className={styles.label}>
           {label}
         </p>
       )}
       <div className={styles.row}>
         <div ref={scroller} className={`${styles.scroller} ${wrap ? styles.wrapped : ""} ${overflow !== "none" ? styles.withMore : ""}`}>
+          {label && inlineLabel && (
+            <span id={labelId} className={styles.inlineLabel}>
+              {label}
+            </span>
+          )}
           {children}
         </div>
         {overflow !== "none" && (

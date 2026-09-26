@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTransitCenters } from "../api/hooks.ts";
 import type { LatLon } from "../api/types.ts";
-import { t, useLang } from "../i18n/index.ts";
+import { useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
 import type { Fix } from "../state/location.tsx";
@@ -23,6 +23,8 @@ import styles from "./MapView.module.css";
 const RESORT_M = 50;
 /** A fitted scene is fitted again this long after the sheet stops changing height. */
 const SETTLE_MS = 300;
+/** Right fit padding when a callout is drawn: the FAB column (72) plus half a street-name callout. */
+const CALLOUT_RIGHT = 140;
 /** The least map height a fit keeps between the paddings (at the full snap the sheet covers nearly all of it). */
 const MIN_FIT_H = 64;
 
@@ -49,6 +51,11 @@ function fitFocus(map: maplibregl.Map, [a, b]: [LatLon, LatLon], pad: maplibregl
   map.fitBounds(bounds, { padding: { ...pad, left: Math.max(pad.left ?? 0, 88), right: Math.max(pad.right ?? 0, 88) }, maxZoom: 17 });
 }
 
+/** A walk or trip's callout is centred on its pin: keep the pin far enough from the FAB column for it to clear. */
+function fitPad(scene: MapScene, pad: maplibregl.PaddingOptions): maplibregl.PaddingOptions {
+  return scene.highlightStopId && scene.legs?.length ? { ...pad, right: Math.max(pad.right ?? 0, CALLOUT_RIGHT) } : pad;
+}
+
 /** Bumped by every applyScene call: a call that finishes after a newer one started does nothing. */
 let sceneSeq = 0;
 
@@ -63,11 +70,15 @@ async function applyScene(map: maplibregl.Map, scene: MapScene, user: Fix | unde
   setHighlightedStop(map, highlight?.id);
   // Walks and itineraries draw only their own stops: other pins, ID chips and TCs are noise there.
   setQuiet(map, Boolean(scene.legs?.length));
-  drawScene(map, scene, highlight, highlight ? t("map.stopCallout", { id: highlight.id }) : "");
+  // The callout names the street only where no sheet title does it already: on a walk or trip,
+  // the stop's street ("M L King Blvd", short enough to stay on screen beside the FABs). On the
+  // stop sheet it repeated the title ("Stop: 342").
+  const callout = highlight && scene.legs?.length ? highlight.name.split(" @ ")[0] : "";
+  drawScene(map, scene, highlight, callout);
 
   const f = scene.focus;
   if (f?.kind === "bounds" && f.bounds) {
-    fitFocus(map, f.bounds, pad);
+    fitFocus(map, f.bounds, fitPad(scene, pad));
   } else if (f) {
     const center = f.kind === "user" ? user : (f.point ?? highlight);
     if (center) map.easeTo({ center: [center.lon, center.lat], zoom: f.zoom ?? USER_ZOOM, padding: pad });
@@ -175,7 +186,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     if (!mapRef.current || !ready.current) return;
     void applyScene(mapRef.current, scene, user, pad(bottomPadding));
     rankLabels(mapRef.current);
-    // `lang`: the "Stop: 342" callout is re-drawn in the new language.
+    // `lang`: marker labels built by the screen are re-drawn in the new language.
   }, [scene, lang]);
 
   // The sheet moved to another snap: fit the scene again above it once it has settled.
@@ -183,7 +194,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const map = mapRef.current;
     const bounds = latest.current.scene.focus?.bounds;
     if (!map || !ready.current || latest.current.scene.focus?.kind !== "bounds" || !bounds) return;
-    const id = setTimeout(() => fitFocus(map, bounds, pad(bottomPadding)), SETTLE_MS);
+    const id = setTimeout(() => fitFocus(map, bounds, fitPad(latest.current.scene, pad(bottomPadding))), SETTLE_MS);
     return () => clearTimeout(id);
   }, [bottomPadding]);
 

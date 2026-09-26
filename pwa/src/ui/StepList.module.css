@@ -157,7 +157,7 @@
   border: 1px solid var(--c-outline);
   border-radius: var(--r-chip);
   background: var(--c-surface);
-  font-size: var(--fs-caption);
+  font-size: var(--fs-body);
 }
 
 .time {

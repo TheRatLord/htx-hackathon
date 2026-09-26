@@ -34,6 +34,17 @@ export function formatDayTime(iso: string, lang: Lang): string {
   return `${weekdayFormat(lang).format(new Date(iso))} ${formatClock(iso, lang)}`;
 }
 
+const hour24Format = formats({ hour: "numeric", hourCycle: "h23" });
+
+/**
+ * The first bus of the morning: over an hour away and before 7 AM Houston time (late night,
+ * "First bus 4:20 AM"). A long daytime gap is not called "first".
+ */
+export function isFirstBus(iso: string, now: number): boolean {
+  if (Date.parse(iso) - now < 60 * 60_000) return false;
+  return Number(hour24Format("en").format(new Date(iso))) < 7;
+}
+
 /** "7 PM": an hour label (D7's grid). */
 export function formatHour(ms: number, lang: Lang): string {
   return hourFormat(lang).format(new Date(ms));
@@ -59,14 +70,22 @@ type Shown = { kind: "now" } | { kind: "min"; m: number } | { kind: "clock" };
  * otherwise the clock time. Offline, always the clock time (the cache may be old).
  * A scheduled time never says "Now": the bus may already have gone.
  */
-function shown(departureTime: string, now: number, opts: { offline?: boolean; status: Status }): Shown {
+function shown(departureTime: string, now: number, opts: { offline?: boolean; clock?: boolean; status: Status }): Shown {
   const diff = Date.parse(departureTime) - now;
   const realtime = opts.status === "live" || opts.status === "simulated";
   // A scheduled bus still ahead but under a minute away is "1 min", never its clock time
   // ("12:01 PM" at 12:00:30 beside "8 min" read as two formats for one thing).
   const m = !realtime && diff > 0 ? Math.max(1, Math.floor(diff / 60_000)) : Math.floor(diff / 60_000);
-  if (opts.offline || m >= 60 || (m <= 0 && !realtime)) return { kind: "clock" };
+  if (opts.offline || m >= 60 || (m <= 0 && !realtime) || (opts.clock && m > 0)) return { kind: "clock" };
   return m <= 0 ? { kind: "now" } : { kind: "min", m };
+}
+
+/**
+ * One format per row: true when any of these shows as a clock time, so the row's minute values
+ * switch to clock times too ("1:05 PM · 2:02 PM", never "55 min · 2:02 PM"). "Now" stays.
+ */
+export function rowUsesClock(deps: Dep[], now: number, offline?: boolean): boolean {
+  return deps.some((d) => !d.canceled && showsClock(d, now, offline));
 }
 
 /** True when the departure displays as a clock time ("8:05 PM") rather than "Now" or minutes. */
@@ -74,7 +93,7 @@ export function showsClock(dep: Dep, now: number, offline?: boolean): boolean {
   return shown(dep.departureTime, now, { offline, status: statusOf(dep) }).kind === "clock";
 }
 
-export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; status: Status; lang: Lang }): string {
+export function formatDeparture(departureTime: string, now: number, opts: { offline?: boolean; clock?: boolean; status: Status; lang: Lang }): string {
   const s = shown(departureTime, now, opts);
   if (s.kind === "clock") return formatClock(departureTime, opts.lang);
   return s.kind === "now" ? t("time.now", undefined, opts.lang) : t("time.min", { n: s.m }, opts.lang);
@@ -89,20 +108,20 @@ export interface DepartureView {
 }
 
 /** How one departure displays, for TimeValue and every accessible label (C.2). */
-export function departureView(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; lang: Lang }): DepartureView {
+export function departureView(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; clock?: boolean; lang: Lang }): DepartureView {
   const status = opts.offline ? "scheduled" : statusOf(dep);
   const tooSoon = opts.walkMin !== undefined && status !== "canceled" && canMakeIt(opts.walkMin, dep, now) === "no";
-  return { status, text: formatDeparture(dep.departureTime, now, { offline: opts.offline, status, lang: opts.lang }), tooSoon };
+  return { status, text: formatDeparture(dep.departureTime, now, { offline: opts.offline, clock: opts.clock, status, lang: opts.lang }), tooSoon };
 }
 
 /**
  * The spoken form of a departure: "16 minutes, Live", "7:02 PM, Leaves before you get there".
  * Scheduled is the unmarked default; `markScheduled` says it anyway (the LiveStrip's "16 minutes, scheduled").
  */
-export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; markScheduled?: boolean; lang: Lang }): string {
+export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; offline?: boolean; clock?: boolean; markScheduled?: boolean; lang: Lang }): string {
   const { lang } = opts;
   const view = departureView(dep, now, opts);
-  const s = shown(dep.departureTime, now, { offline: opts.offline, status: view.status });
+  const s = shown(dep.departureTime, now, { offline: opts.offline, clock: opts.clock, status: view.status });
   const value = s.kind === "min" ? t("time.minutesA11y", { count: s.m }, lang) : view.text;
   const word = view.tooSoon
     ? t("status.tooSoon", undefined, lang)
@@ -112,9 +131,16 @@ export function departureA11y(dep: Dep, now: number, opts: { walkMin?: number; o
   return word ? `${value}, ${word}` : value;
 }
 
-/** Drops departures more than 60s past, keeping the input order. */
-export function upcoming<T extends { departureTime: string }>(deps: T[], now: number): T[] {
-  return deps.filter((d) => Date.parse(d.departureTime) >= now - PAST_GRACE_MS);
+/**
+ * Drops departures more than 60s past, keeping the input order. A scheduled time (isRealtime
+ * false) is dropped as soon as it passes: only a live bus can still be "Now", and a passed
+ * scheduled time would show as a clock time beside minutes ("12:00 PM" at 12:00:05).
+ */
+export function upcoming<T extends { departureTime: string; isRealtime?: boolean }>(deps: T[], now: number): T[] {
+  return deps.filter((d) => {
+    const at = Date.parse(d.departureTime);
+    return d.isRealtime === false ? at > now : at >= now - PAST_GRACE_MS;
+  });
 }
 
 /** "250 ft" / "0.1 mi" (es: "250 pies"). Always use this rather than the server's distanceText. */
