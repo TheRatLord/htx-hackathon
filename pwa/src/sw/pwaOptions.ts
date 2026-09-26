@@ -32,6 +32,8 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     navigateFallback: "/index.html",
     navigateFallbackDenylist: [/^\/api\//, /^\/data\//],
     cleanupOutdatedCaches: true,
+    // notificationclick: a tapped trip or tracking notification brings the app forward.
+    importScripts: ["/sw-notify.js"],
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/tiles\.openfreemap\.org\/planet\/.+\.pbf$/,
