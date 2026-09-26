@@ -7,9 +7,9 @@ import type { StepListProps, TimelineStep } from "./types.ts";
 
 const MARKER: Record<TimelineStep["kind"], string> = {
   walk: styles.walk,
-  board: styles.ride,
+  board: `${styles.ride} ${styles.board}`,
   ride: styles.ride,
-  alight: styles.ride,
+  alight: `${styles.ride} ${styles.alight}`,
   transfer: styles.transfer,
   arrive: styles.arrive,
 };
@@ -22,7 +22,11 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
       {steps.map((s, i) => (
         <li key={i} className={styles.item}>
           <button type="button" className={styles.row} onClick={() => onStepPress(s, i)} aria-current={i === currentIndex ? "step" : undefined}>
-            <span className={`${styles.rail} ${MARKER[s.kind]}`} style={s.route ? { ["--leg" as string]: s.route.color } : undefined} aria-hidden="true">
+            <span
+              className={[styles.rail, MARKER[s.kind], i === currentIndex && styles.belowHere, steps[i - 1]?.kind === "walk" && styles.afterWalk].filter(Boolean).join(" ")}
+              style={s.route ? { ["--leg" as string]: s.route.color } : undefined}
+              aria-hidden="true"
+            >
               {i === 0 && s.kind === "walk" ? <span className={styles.origin} /> : s.kind === "arrive" ? <Icon name="place" color="var(--c-dest-pin)" /> : <span className={styles.node} />}
             </span>
             <span className={styles.text}>
@@ -30,7 +34,7 @@ export function StepList({ steps, onStepPress, currentIndex }: StepListProps) {
               <span className={styles.title}>
                 {s.kind === "walk" && <Icon name="directions_walk" size={20} />}
                 {s.route && <RouteBadge route={s.route} size="sm" />}
-                {s.title}
+                <span className={styles.titleText}>{s.title}</span>
               </span>
               {s.lines.map((l, j) => (
                 <span key={j}>{l}</span>

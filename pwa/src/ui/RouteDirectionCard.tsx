@@ -26,13 +26,14 @@ export function RouteDirectionCard({ route, directionLabel, headsign, stop, walk
       </div>
       <div className={styles.top}>
         <h2 className={styles.name}>
-          {tcName ? (
-            <span className={styles.inline}>
-              {tcName}
-              {bay && <BayTag bay={bay} />}
-            </span>
-          ) : (
-            place
+          {place}
+          {tcName && bay && (
+            <>
+              <span className={styles.sep} aria-hidden="true">
+                ·
+              </span>
+              <BayTag bay={bay} />
+            </>
           )}
         </h2>
         {walkDistanceM !== undefined && <WalkButton stopId={stop.id} walkDistanceM={walkDistanceM} onPress={onWalk} />}

@@ -2,9 +2,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 var(--sp-1);
+  gap: 0 var(--sp-2);
   min-height: 56px;
-  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  /* The text buttons carry their own 48dp touch height; the text gets the card's padding. */
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--card-pad);
   border-radius: var(--r-card);
   background: var(--c-card);
   --tonal-bg: var(--c-surface);
@@ -12,7 +13,14 @@
 
 .tripText {
   flex: 1 1 12em;
+  padding-block: var(--sp-2);
   font-weight: var(--fw-medium);
+}
+
+.tripActions {
+  display: flex;
+  gap: var(--touch-gap);
+  margin-left: auto;
 }
 
 .card {

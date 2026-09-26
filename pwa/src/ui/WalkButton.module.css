@@ -32,8 +32,10 @@
   white-space: nowrap;
 }
 
+/* "walk from the museum" (D4) wraps within the width of "walk from the", so the stop name
+   beside the button keeps two lines at 360dp. */
 .sub {
-  max-width: 9em;
+  max-width: 6.5em;
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
   text-align: center;
