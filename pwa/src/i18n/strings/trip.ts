@@ -1,0 +1,121 @@
+// Live trip (D13).
+import type { Strings } from "../index.ts";
+
+const strings: Strings = {
+  en: {
+    trip: {
+      title: "Live trip",
+      stepOf: "Step {n} of {total}",
+      allSteps: "All steps",
+      walk: {
+        head: "Walk {min} min to {stop}",
+        next: "Your {route} leaves at {time}",
+        directions: "Walking directions",
+      },
+      wait: {
+        head: "Wait at stop #{id}",
+        boardBus: "Board the bus marked",
+        boardTrain: "Board the train marked",
+      },
+      ride: {
+        ride: "Ride",
+        getOff: "Get off at {stop}",
+        stopsLeft: { one: "stop left", other: "stops left" },
+        about: "about {min} min",
+        next: "Next stop: {stop}",
+        progress: "{done} of {total} stops",
+      },
+      basis: {
+        location: "Based on your location",
+        schedule: "Based on the schedule",
+        fixture: "Sample trip: use Next step to move along",
+        simulated: "Based on a simulated location (demo)",
+      },
+      warn: {
+        ready: "Get ready: {count} stops to {stop}",
+        next: "Get off at the next stop: {stop}",
+        notifyTitle: "Get off at the next stop",
+      },
+      final: { head: "Walk {min} min to {place}" },
+      arrived: { head: "You've arrived at {place}" },
+      prev: "Previous step",
+      next: "Next step",
+      keepOpen: "Keep this screen open during your trip.",
+      end: "End trip",
+      endTitle: "End this trip?",
+      endBody: "You can start it again from My Itinerary.",
+      keepGoing: "Keep going",
+      resumed: "Tracking resumed · step {n} of {total}",
+      planAgain: "Plan again from here",
+      planAgainOff: "Needs your location. Turn it on in More › Settings.",
+      none: { title: "No trip in progress", body: "Plan a trip, then tap Start trip.", action: "Plan a trip" },
+      sim: {
+        start: "Simulate moving (demo)",
+        stop: "Stop simulating",
+        note: "Demo: your position is simulated along the route.",
+        you: "You (simulated)",
+      },
+      vehicle: "Route {route} bus",
+      vehicleStale: "Last seen {min} min ago",
+    },
+  },
+  es: {
+    trip: {
+      title: "Viaje en curso",
+      stepOf: "Paso {n} de {total}",
+      allSteps: "Todos los pasos",
+      walk: {
+        head: "Camine {min} min a {stop}",
+        next: "Su {route} sale a las {time}",
+        directions: "Cómo llegar a pie",
+      },
+      wait: {
+        head: "Espere en la parada #{id}",
+        boardBus: "Suba al autobús que dice",
+        boardTrain: "Suba al tren que dice",
+      },
+      ride: {
+        ride: "Viaje en el",
+        getOff: "Bájese en {stop}",
+        stopsLeft: { one: "parada más", other: "paradas más" },
+        about: "unos {min} min",
+        next: "Próxima parada: {stop}",
+        progress: "{done} de {total} paradas",
+      },
+      basis: {
+        location: "Según su ubicación",
+        schedule: "Según el horario",
+        fixture: "Viaje de muestra: use Paso siguiente para avanzar",
+        simulated: "Según una ubicación simulada (demo)",
+      },
+      warn: {
+        ready: "Prepárese: faltan {count} paradas para {stop}",
+        next: "Bájese en la próxima parada: {stop}",
+        notifyTitle: "Bájese en la próxima parada",
+      },
+      final: { head: "Camine {min} min a {place}" },
+      arrived: { head: "Llegó a {place}" },
+      prev: "Paso anterior",
+      next: "Paso siguiente",
+      keepOpen: "Mantenga esta pantalla abierta durante el viaje.",
+      end: "Terminar viaje",
+      endTitle: "¿Terminar este viaje?",
+      endBody: "Puede iniciarlo otra vez desde Mi itinerario.",
+      keepGoing: "Seguir",
+      resumed: "Seguimiento reanudado · paso {n} de {total}",
+      planAgain: "Planear otra vez desde aquí",
+      planAgainOff: "Necesita su ubicación. Actívela en Más › Configuración.",
+      none: { title: "No hay un viaje en curso", body: "Planee un viaje y toque Iniciar viaje.", action: "Planear un viaje" },
+      sim: {
+        start: "Simular movimiento (demo)",
+        stop: "Dejar de simular",
+        note: "Demo: su posición se simula a lo largo de la ruta.",
+        you: "Usted (simulado)",
+      },
+      vehicle: "Autobús de la ruta {route}",
+      vehicleStale: "Visto hace {min} min",
+    },
+  },
+};
+
+export default strings;
