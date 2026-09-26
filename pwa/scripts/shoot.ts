@@ -1,10 +1,12 @@
 // Headless screenshots of the PWA on a phone-sized viewport, with a mocked GPS fix.
 //
 //   npx tsx scripts/shoot.ts --url http://localhost:5173/explore --out /tmp/explore.png \
-//     [--w 412 --h 800] [--lat 29.7563 --lon -95.3639] [--wait-ms 1500] [--full] \
-//     [--actions '[{"click":"text=Show list"},{"fill":["input","342"]},{"wait":500}]'] \
+//     [--w 412 --h 800] [--lat 29.7563 --lon -95.3639] [--wait-ms 3000] [--full] \
+//     [--actions '[{"click":"Show list"},{"fill":["css=input","342"]},{"wait":500}]'] \
 //     [--storage '{"ridemetro.prefs":{"welcomed":true}}']
 //
+// An action target is visible text ("7:05 PM", "Try again."), unless it starts with "css=",
+// "text=", "xpath=" or "#", which go to page.locator.
 // --storage seeds localStorage before the app loads (default: onboarded, so Welcome is skipped;
 // pass --storage '{}' to see first launch).
 // Prints console errors and failed requests; exits non-zero if the page fails to load.
@@ -31,7 +33,8 @@ const { values } = parseArgs({
     h: { type: "string", default: "800" },
     lat: { type: "string" },
     lon: { type: "string" },
-    "wait-ms": { type: "string", default: "1500" },
+    // Map tiles often need more than 2 s to paint.
+    "wait-ms": { type: "string", default: "3000" },
     actions: { type: "string" },
     full: { type: "boolean", default: false },
     storage: { type: "string", default: '{"ridemetro.prefs":{"welcomed":true}}' },
@@ -46,8 +49,8 @@ if (!values.url || !values.out) {
 const actions = values.actions ? (JSON.parse(values.actions) as Action[]) : [];
 const geo = values.lat && values.lon ? { latitude: Number(values.lat), longitude: Number(values.lon), accuracy: 10 } : undefined;
 
-/** Selectors ("text=…", "#id", "button[aria-pressed]", a bare tag) go to page.locator; anything else is visible text. */
-const isSelector = (s: string) => /^(text=|css=|xpath=)/.test(s) || /[#.[\]>:=]/.test(s) || /^[a-z][a-z0-9]*$/.test(s);
+/** Only an explicit prefix makes a selector, so text such as "7:05 PM" or "walk" is matched as text. */
+const isSelector = (s: string) => /^(css=|text=|xpath=|#)/.test(s);
 const locate = (page: Page, target: string) => (isSelector(target) ? page.locator(target) : page.getByText(target)).first();
 
 const browser = await chromium.launch();
@@ -78,7 +81,8 @@ try {
   }
   await page.waitForTimeout(Number(values["wait-ms"]));
   // The app scrolls inside <main>, not the document; unroll it so a full-page shot shows everything.
-  if (values.full) await page.addStyleTag({ content: "#root, #root > div, main { height: auto !important; overflow: visible !important; }" });
+  if (values.full)
+    await page.addStyleTag({ content: "#root, #root > div, #root > div > div, main { position: static !important; height: auto !important; overflow: visible !important; }" });
   await page.screenshot({ path: values.out, fullPage: values.full });
   console.log(`saved ${values.out}`);
 } finally {
