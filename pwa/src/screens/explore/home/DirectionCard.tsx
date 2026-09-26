@@ -1,11 +1,32 @@
 import { useNavigate } from "react-router";
-import { useArrivals, useStop } from "../../../api/hooks.ts";
-import type { LatLon, RouteRef, StopSummary } from "../../../api/types.ts";
+import { useStop } from "../../../api/hooks.ts";
+import type { Arrival, LatLon, RouteRef, StopSummary } from "../../../api/types.ts";
+import { useT } from "../../../i18n/index.ts";
+import { upcoming } from "../../../lib/format.ts";
+import { useNow } from "../../../state/clock.ts";
 import { useWalkDistance, type WalkDistanceSource } from "../../../state/walkDistance.ts";
 import { RouteDirectionCard } from "../../../ui/RouteDirectionCard.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
+import type { RouteDirectionCardProps } from "../../../ui/types.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 import type { Place } from "./anchor.ts";
+import styles from "./Home.module.css";
+
+/**
+ * C.5c, plus "No buses in the next 2 hours" once the times have loaded and none is upcoming (the
+ * shared card has no such line yet: requests.md).
+ */
+export function DirectionCard({ loaded, ...card }: RouteDirectionCardProps & { loaded: boolean }) {
+  const t = useT();
+  const now = useNow();
+  if (!loaded || upcoming(card.deps, now).length) return <RouteDirectionCard {...card} />;
+  return (
+    <div className={styles.quietCard}>
+      <RouteDirectionCard {...card} />
+      <p className={styles.quietLine}>{t("card.noBuses2h")}</p>
+    </div>
+  );
+}
 
 export interface StreetCardProps {
   route: RouteRef;
@@ -16,22 +37,22 @@ export interface StreetCardProps {
   place?: Place;
   /** The distance to show until a better one is known (/nearby's when the stop is in it). */
   seed: { distanceM: number; source: WalkDistanceSource };
+  /** This stop's next departures of the route; undefined while loading. */
+  arrivals?: Arrival[];
 }
 
 function Card({ summary, ...p }: StreetCardProps & { summary: StopSummary }) {
   const navigate = useNavigate();
-  // Real time for this stop whatever its rank in /nearby (D3 "Times per card").
-  const arrivals = useArrivals(p.stopId, { route: p.route.id, limit: 2 });
   const { distanceM } = useWalkDistance(p.origin, p.stopId, p.seed.distanceM, p.seed.source);
-  const headsign = arrivals.data?.arrivals[0]?.headsign ?? p.headsign;
   return (
-    <RouteDirectionCard
+    <DirectionCard
       route={p.route}
       directionLabel={p.directionLabel}
-      headsign={headsign}
+      headsign={p.arrivals?.[0]?.headsign ?? p.headsign}
       stop={summary}
       walkDistanceM={distanceM}
-      deps={arrivals.data?.arrivals ?? []}
+      deps={p.arrivals ?? []}
+      loaded={p.arrivals !== undefined}
       onOpen={() => navigate(`/explore/stop/${encodeURIComponent(p.stopId)}?route=${encodeURIComponent(p.route.id)}`)}
       onWalk={() => navigate(walkUrl(p.stopId, { d: distanceM, route: p.route.id, from: p.place?.param, fromName: p.place?.name }))}
     />

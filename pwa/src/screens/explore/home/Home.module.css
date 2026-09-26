@@ -14,14 +14,38 @@
   margin-inline: 0;
 }
 
+/* D4: "Back to my location" with the UpdatedAgo beside it (wraps under it when there is no room). */
 .backToMe {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--sp-2);
 }
 
 .notice {
   font-size: var(--fs-heading);
   line-height: var(--lh-heading);
   font-weight: var(--fw-bold);
+}
+
+/* Informational lines in the list (late night, "the closest stops are a longer walk"). */
+.info {
+  color: var(--c-text-variant);
+}
+
+/* A RouteDirectionCard with the "No buses in the next 2 hours" line joined under it, as one card. */
+.quietCard {
+  border-radius: var(--r-card);
+  background: var(--c-card);
+}
+
+/* Positioned, so it paints above the card it is pulled up into. */
+.quietLine {
+  position: relative;
+  margin-top: calc(-1 * var(--sp-2));
+  padding: 0 var(--card-pad) var(--card-pad);
+  color: var(--c-text-variant);
 }
 
 .caption {

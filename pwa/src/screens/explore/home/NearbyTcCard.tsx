@@ -1,15 +1,12 @@
 import { useNavigate } from "react-router";
 import type { Arrival, LatLon, NearbyTransitCenter, TransitCenterDetail } from "../../../api/types.ts";
 import { haversineM } from "../../../lib/geo.ts";
-import { toRouteRef } from "../../../lib/routes.ts";
 import { TransitCenterCard } from "../../../ui/TransitCenterCard.tsx";
 import type { TcDeparture } from "../../../ui/types.ts";
+import { refOfArrival } from "../stop/refs.ts";
 import { walkUrl } from "../walk/walkUrl.ts";
 
-const toTcDeparture = (a: Arrival): TcDeparture => ({
-  ...a,
-  route: toRouteRef({ id: a.routeId, name: a.routeShortName, color: a.routeColor, textColor: a.routeTextColor }),
-});
+const toTcDeparture = (a: Arrival): TcDeparture => ({ ...a, route: refOfArrival(a) });
 
 /** The platform nearest to `origin`: where Walk should lead. */
 export function nearestPlatform(detail: TransitCenterDetail, origin: LatLon): string {

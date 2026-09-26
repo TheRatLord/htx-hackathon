@@ -1,11 +1,11 @@
 // Explore home (G.3 `/explore`): Nearby (D2), Route near you (D3, `?route=`) and Stops near a
 // place (D4, `?at=&label=`). One sheet: title row, one banner, the route chips, then the list.
 
-import { useRef, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useNearby, useTransitCenter } from "../../../api/hooks.ts";
+import { useAlerts, useNearby, useTransitCenter } from "../../../api/hooks.ts";
 import type { LatLon, NearbyResponse, TransitCenterDetail } from "../../../api/types.ts";
-import { ExploreSheet, useExploreChrome } from "../../../app/layouts/ExploreChrome.tsx";
+import { ExploreSheet, useExploreChrome, type FabRequest } from "../../../app/layouts/ExploreChrome.tsx";
 import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
@@ -23,6 +23,7 @@ import { SheetBanner } from "../../../ui/SheetBanner.tsx";
 import { SheetHeader } from "../../../ui/SheetHeader.tsx";
 import type { SheetBannerProps } from "../../../ui/types.ts";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
+import { foldCap, TALL_VH } from "./fold.ts";
 import { placeQuery, useHomeAnchor, type HomeAnchor, type Place } from "./anchor.ts";
 import { homeChips } from "./chips.ts";
 import styles from "./Home.module.css";
@@ -31,19 +32,20 @@ import { RouteChips } from "./RouteChips.tsx";
 import { RouteNearYou } from "./RouteNearYou.tsx";
 import { SavedRow } from "./SavedRow.tsx";
 import { useHalfUpTo } from "./useHalfUpTo.ts";
-import { walkFromLabel } from "./walkFrom.ts";
+import { withPlausibleWalks } from "../walk/plausible.ts";
 
 /** Panning further than this from the list's anchor offers "Search this area" (C.16). */
 const SEARCH_AREA_M = 300;
 const HOME_ZOOM = 16;
-/** Bottom nav plus the search bar: what the half sheet and the map strip share the screen with. */
-const NAV_H = 80;
-const SEARCH_BAR_H = 60;
-/** M1: the map strip left above the half sheet. */
-const mapMin = (vh: number) => (vh >= 740 ? 180 : 120);
-const foldCap = (vh: number) => vh - NAV_H - SEARCH_BAR_H - mapMin(vh);
-/** D4 may take more of a tall screen; on a short one the FABs would run into the search bar. */
-const placeCap = (vh: number) => (vh >= 740 ? 0.75 * vh : foldCap(vh));
+
+/**
+ * D3's FABs. Three don't fit between the search bar and the half sheet of a short screen, so there
+ * Locate gives way to the route's alerts (the map is already fitted to the rider and the stops).
+ */
+function routeFabs(routeId: string, alerting: boolean): FabRequest[] {
+  const alertsFab = { kind: "routeAlerts", routeId } as const;
+  return alerting && window.innerHeight < TALL_VH ? ["planTrip", alertsFab] : ["locate", "planTrip", alertsFab];
+}
 
 /** The transit center detail is fetched only when one is within 1,000 m. */
 function WithTransitCenter({ id, children }: { id?: string; children: (tc?: TransitCenterDetail) => ReactNode }) {
@@ -83,7 +85,10 @@ function HomeScene({ anchor }: { anchor: HomeAnchor }) {
     anchor.kind === "user"
       ? { focus: { kind: "user", zoom: HOME_ZOOM } }
       : at
-        ? { focus: { kind: "point", point: at, zoom: HOME_ZOOM }, markers: [{ id: "place", point: at, kind: "destination", label: anchor.kind === "place" ? anchor.label : undefined }] }
+        ? {
+            focus: { kind: "point", point: at, zoom: HOME_ZOOM },
+            markers: [{ id: "place", point: at, kind: "board", label: anchor.kind === "place" ? anchor.label : undefined }],
+          }
         : { focus: { kind: "point", point: DOWNTOWN, zoom: HOME_ZOOM - 1 } },
     [anchor.kind, at?.lat, at?.lon],
   );
@@ -95,22 +100,27 @@ interface NearbyBodyProps {
   origin?: LatLon;
   place?: Place;
   nearby: ReturnType<typeof useNearby>;
+  data?: NearbyResponse;
   tc?: TransitCenterDetail;
 }
 
 /** D2 / D4 below the chips: the saved row (D2), the stop cards and the footer. */
-function NearbyBody({ anchor, origin, place, nearby, tc }: NearbyBodyProps) {
+function NearbyBody({ anchor, origin, place, nearby, data, tc }: NearbyBodyProps) {
   const t = useT();
   const firstCard = useRef<HTMLDivElement>(null);
-  const ids = nearby.data?.stops.map((s) => s.stop.id).join() ?? "";
-  // D4's longer title and "Back to my location" need more room; its map only has to show the place.
-  useHalfUpTo(() => firstCard.current?.querySelector("li") ?? firstCard.current, place ? placeCap : foldCap, `${anchor.kind}|${ids}`);
+  const ids = data?.stops.map((s) => s.stop.id).join() ?? "";
+  // M2/M3: grow to card #1's first route row (the shared card has no ref for it: requests.md).
+  useHalfUpTo(() => firstCard.current?.querySelector("li") ?? firstCard.current, foldCap, `${anchor.kind}|${ids}`);
   return (
     <>
       <HomeScene anchor={anchor} />
       {!place && <SavedRow />}
-      {origin ? <NearbyList nearby={nearby} origin={origin} place={place} tcDetail={tc} firstCard={firstCard} /> : anchor.kind === "finding" && <LoadingCards />}
-      {nearby.data && (
+      {origin ? (
+        <NearbyList nearby={nearby} data={data} origin={origin} place={place} tcDetail={tc} firstCard={firstCard} />
+      ) : (
+        anchor.kind === "finding" && <LoadingCards />
+      )}
+      {data && (
         <div className={styles.footer}>
           <ScheduleCaption />
           <p className={styles.caption}>{t("home.footerPace")}</p>
@@ -122,29 +132,26 @@ function NearbyBody({ anchor, origin, place, nearby, tc }: NearbyBodyProps) {
 
 export default function Home() {
   const t = useT();
-  const lang = useLang();
   const navigate = useNavigate();
   const back = useBack();
   const [params] = useSearchParams();
   const anchor = useHomeAnchor();
   const { walkPace } = usePrefs();
   const center = useMapCenter();
+  const alerts = useAlerts();
   useRoutesLoaded();
 
   const routeParam = params.get("route");
   const routeId = routeParam ? canonicalRouteId(routeParam) : undefined;
   const origin = anchor.kind === "place" || anchor.kind === "user" ? anchor.point : undefined;
-  const place: Place | undefined =
-    anchor.kind === "place" ? { param: anchor.param, name: anchor.label, short: walkFromLabel(anchor.label, lang) } : undefined;
+  const place: Place | undefined = anchor.kind === "place" ? { param: anchor.param, name: anchor.label, short: t("home.walkFromThere") } : undefined;
   const nearby = useNearby(origin, { precise: true });
-  const banner = useSheetBanner(anchor, nearby.data);
+  const data = useMemo(() => (nearby.data && origin ? withPlausibleWalks(nearby.data, origin) : undefined), [nearby.data, origin]);
+  const banner = useSheetBanner(anchor, data);
 
   const panned = Boolean(!routeId && origin && center && haversineM(origin.lat, origin.lon, center.lat, center.lon) > SEARCH_AREA_M);
-  useExploreChrome(
-    routeId
-      ? { fabs: ["locate", "planTrip", { kind: "routeAlerts", routeId }] }
-      : { banner: panned ? "search-this-area" : null },
-  );
+  const alerting = routeId !== undefined && alerts.source !== "unavailable" && alerts.forRoute(routeId).length > 0;
+  useExploreChrome(routeId ? { fabs: routeFabs(routeId, alerting) } : { banner: panned ? "search-this-area" : null });
 
   let title: string;
   if (routeId) title = t("home.route.title", { name: routeRef(routeId)?.name ?? routeParam! });
@@ -157,34 +164,30 @@ export default function Home() {
     if (id === routeId) navigate(`/explore${extra ? `?${extra}` : ""}`, { replace: true });
     else navigate(`/explore?route=${encodeURIComponent(id)}${extra ? `&${extra}` : ""}`, { replace: Boolean(routeId) });
   };
-  const updated = !routeId && nearby.data && (
-    <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />
-  );
+  const updated = !routeId && nearby.data && <UpdatedAgo compact at={new Date(nearby.dataUpdatedAt).toISOString()} onRefresh={() => void nearby.refetch()} />;
 
   return (
-    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={updated} />} onBack={routeId || place ? back : undefined}>
-      <WithTransitCenter id={nearby.data?.transitCenters[0]?.id}>
+    // D4's two-line title leaves no room beside it: its UpdatedAgo shares the "Back to my location" row.
+    <ExploreSheet ariaLabel={title} header={<SheetHeader title={title} sub={place ? undefined : updated} />} onBack={routeId || place ? back : undefined}>
+      <WithTransitCenter id={data?.transitCenters[0]?.id}>
         {(tc) => (
           <div className={styles.body}>
             {place && !routeId && (
               <div className={styles.backToMe}>
                 <Button variant="tonal" icon="close" label={t("home.backToMe")} onPress={() => navigate("/explore")} />
+                {updated}
               </div>
             )}
             {banner && !place && <SheetBanner {...banner} />}
-            {nearby.data && (
+            {data && (
               <div className={styles.bleed}>
-                <RouteChips routes={homeChips(nearby.data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
+                <RouteChips routes={homeChips(data, tc, walkPace)} selectedId={routeId} onPress={(r) => onChip(r.id)} />
               </div>
             )}
             {routeId ? (
-              origin ? (
-                <RouteNearYou routeId={routeId} origin={origin} place={place} nearby={nearby.data} tc={tc} />
-              ) : (
-                anchor.kind === "finding" && <LoadingCards />
-              )
+              <RouteNearYou routeId={routeId} origin={origin} finding={anchor.kind === "finding"} place={place} nearby={data} tc={tc} />
             ) : (
-              <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} tc={tc} />
+              <NearbyBody anchor={anchor} origin={origin} place={place} nearby={nearby} data={data} tc={tc} />
             )}
           </div>
         )}
