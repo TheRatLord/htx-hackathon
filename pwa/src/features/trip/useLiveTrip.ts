@@ -10,16 +10,16 @@ import { tripActions, type ActiveTrip } from "../../state/trip.ts";
 import { ridePosition, rideStops, stepDone, type PositionSource } from "./progress.ts";
 import { countedSteps, tripSteps } from "./steps.ts";
 
-/** Where the trip ends: the last leg's destination, named as the rider chose it. */
-export function destinationOf(active: ActiveTrip): PlanStop {
+/** Where the trip ends: the last leg's destination, named as the rider chose it; none without legs. */
+export function destinationOf(active: ActiveTrip): PlanStop | undefined {
   const last = active.itinerary.legs.at(-1);
-  const place = last ? (last.type === "walk" ? last.to : last.alight) : { name: "", lat: 0, lon: 0 };
+  if (!last) return undefined;
+  const place = last.type === "walk" ? last.to : last.alight;
   return { ...place, name: active.query.toName ?? place.name };
 }
 
-export function useLiveTrip(active: ActiveTrip, fix: LatLon | undefined) {
+export function useLiveTrip(active: ActiveTrip, destination: PlanStop, fix: LatLon | undefined) {
   const now = useNow();
-  const destination = useMemo(() => destinationOf(active), [active]);
   const steps = useMemo(() => tripSteps(active.itinerary, destination), [active.itinerary, destination]);
   const stepIndex = Math.min(Math.max(active.stepIndex, 0), steps.length - 1);
   const step = steps[stepIndex];

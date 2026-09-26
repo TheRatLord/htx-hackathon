@@ -1,80 +1,108 @@
-// One Live trip step (spec D13): Walk, Wait, Ride, Final walk or Arrived. The headline is the
-// only polite live region besides the get-off warnings, so a step change is announced once.
+// One Live trip step (spec D13): Walk, Wait, Ride, Final walk or Arrived. The headlines are plain
+// text: LiveTrip announces each step once through its own live region.
 
 import { useArrivals } from "../../../api/hooks.ts";
-import type { Dep, LatLon, TransitLeg, WalkLeg } from "../../../api/types.ts";
-import type { RideStop } from "../../../features/trip/progress.ts";
+import type { LatLon, TransitLeg, WalkLeg } from "../../../api/types.ts";
+import { boardDeparture } from "../../../features/trip/departures.ts";
+import { walkOrigin, type RideStop } from "../../../features/trip/progress.ts";
 import type { TripStep } from "../../../features/trip/steps.ts";
-import { stopTitle } from "../../../features/trip/timeline.ts";
+import { shortSide, stopTitle } from "../../../features/trip/timeline.ts";
 import { useFinalWalk } from "../../../features/trip/useFinalWalk.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { formatClock, sideLine } from "../../../lib/format.ts";
-import { formatLatLon, haversineM } from "../../../lib/geo.ts";
+import { formatLatLon } from "../../../lib/geo.ts";
 import { walkStepText } from "../../../lib/i18nServer.ts";
 import { toRouteRef } from "../../../lib/routes.ts";
 import { canMakeIt, estimateWalk, walkMinutes } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
 import { usePrefs } from "../../../state/prefs.ts";
+import { useWalkDistance } from "../../../state/walkDistance.ts";
 import { BayTag } from "../../../ui/BayTag.tsx";
 import { Button } from "../../../ui/Button.tsx";
 import { LiveStrip } from "../../../ui/LiveStrip.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import styles from "./trip.module.css";
 
-/** A fix this close to the walk's start still counts as "at the start": show the planned walk. */
-const MOVED_M = 50;
 const ARRIVALS_LIMIT = 4;
 
-/** The bus the rider is catching: its live prediction when the stop reports this trip, else the plan's time. */
-function useBoardDeparture(ride: TransitLeg): { dep: Dep; deps: Dep[]; loading: boolean } {
-  const arrivals = useArrivals(ride.board.id ?? "", { route: ride.route.id, limit: ARRIVALS_LIMIT, enabled: Boolean(ride.board.id) });
-  const deps = arrivals.data?.arrivals ?? [];
-  const live = ride.tripId ? deps.find((d) => d.tripId === ride.tripId) : undefined;
-  const dep: Dep = live ?? { departureTime: ride.departureTime, isRealtime: false, canceled: false, source: "schedule", tripId: ride.tripId ?? "" };
-  return { dep, deps, loading: arrivals.isLoading };
+/** The bus being caught. A recorded (fixture) trip has no real bus, so only its planned time shows. */
+function useBoardDeparture(ride: TransitLeg, fixture: boolean) {
+  const now = useNow();
+  const arrivals = useArrivals(ride.board.id ?? "", { route: ride.route.id, limit: ARRIVALS_LIMIT, enabled: Boolean(ride.board.id) && !fixture });
+  return boardDeparture(ride, fixture ? [] : (arrivals.data?.arrivals ?? []), now);
 }
 
-function WalkCard({ leg, ride, fix, onDirections }: { leg: WalkLeg; ride: TransitLeg; fix?: LatLon; onDirections: () => void }) {
+interface WalkProps {
+  leg: WalkLeg;
+  ride: TransitLeg;
+  fix?: LatLon;
+  fixture: boolean;
+  /** Where the planned walk starts, for D8's title. */
+  fromName: string;
+  onNavigate: (href: string) => void;
+}
+
+function WalkCard({ leg, ride, fix, fixture, fromName, onNavigate }: WalkProps) {
   const t = useT();
   const lang = useLang();
   const now = useNow();
   const { walkPace } = usePrefs();
-  const { dep } = useBoardDeparture(ride);
-  const moved = fix && haversineM(fix.lat, fix.lon, leg.from.lat, leg.from.lon) > MOVED_M;
-  const min = moved ? estimateWalk(fix, ride.board, walkPace).minutes : walkMinutes(leg.distanceM, walkPace);
+  const { dep } = useBoardDeparture(ride, fixture);
+  const stopId = ride.board.id ?? "";
+  // On this walk: from the fix, through the shared distance cache (C.17). Anywhere else: the plan.
+  const origin = walkOrigin(leg, fix);
+  const shared = useWalkDistance(origin, stopId, origin && estimateWalk(origin, ride.board, walkPace).distanceM);
+  const distanceM = origin && shared.distanceM !== undefined ? shared.distanceM : leg.distanceM;
+  const min = walkMinutes(distanceM, walkPace);
   const verdict = canMakeIt(min, dep, now);
   const side = sideLine({ ...ride.board, kind: toRouteRef(ride.route).mode }, { withCompass: false, lang });
+  const q = new URLSearchParams({
+    from: formatLatLon(origin ?? leg.from),
+    fromName: origin ? t("common.myLocation") : fromName,
+    route: ride.route.id,
+    d: String(distanceM),
+  });
   return (
     <>
-      <p className={styles.headline} aria-live="polite">
-        {t("trip.walk.head", { min, stop: stopTitle(ride.board) })}
-      </p>
+      <p className={styles.headline}>{t("trip.walk.head", { min, stop: stopTitle(ride.board) })}</p>
       {side && <p className={styles.variant}>{side}</p>}
       <p>
         {t("trip.walk.next", { route: ride.route.name, time: formatClock(dep.departureTime, lang) })} ·{" "}
         <span className={verdict === "yes" ? styles.ok : styles.alert}>{t(`canMakeIt.${verdict}`)}</span>
       </p>
-      <Button variant="tonal" icon="directions_walk" label={`${t("trip.walk.directions")} ›`} onPress={onDirections} />
+      <Button
+        variant="tonal"
+        icon="directions_walk"
+        label={`${t("trip.walk.directions")} ›`}
+        onPress={() => onNavigate(`/explore/stop/${encodeURIComponent(stopId)}/walk?${q}`)}
+      />
     </>
   );
 }
 
-function WaitCard({ ride }: { ride: TransitLeg }) {
+function WaitCard({ ride, fixture }: { ride: TransitLeg; fixture: boolean }) {
   const t = useT();
   const lang = useLang();
-  const { deps, loading } = useBoardDeparture(ride);
+  const { matched, strip } = useBoardDeparture(ride, fixture);
   const route = toRouteRef(ride.route);
-  const side = ride.board.side ? sideLine({ ...ride.board, kind: route.mode }, { withCompass: true, lang }) : "";
+  const side = shortSide(ride.board, lang);
+  const id = ride.board.id ?? "";
   return (
     <>
-      <p className={styles.headline} aria-live="polite">
-        {t("trip.wait.head", { id: ride.board.id ?? "" })}
-      </p>
-      {side && <p className={styles.variant}>{side}</p>}
+      <p className={styles.headline}>{side ? t("trip.wait.headSide", { id, side }) : t("trip.wait.head", { id })}</p>
       {ride.board.bay && <BayTag bay={ride.board.bay} />}
       <div className={styles.bleed}>
-        <LiveStrip deps={deps} loading={loading} />
+        <LiveStrip deps={strip} />
       </div>
+      {!matched && (
+        <p className={styles.variant}>
+          {t(strip.length > 1 ? "trip.wait.plannedFirst" : "trip.wait.planned", {
+            route: ride.route.name,
+            // Keeps "10:40 PM" on one line.
+            time: formatClock(ride.departureTime, lang).replace(" ", "\u00a0"),
+          })}
+        </p>
+      )}
       <p className={styles.board}>
         {t(route.mode === "rail" ? "trip.wait.boardTrain" : "trip.wait.boardBus")} <strong>{ride.headsign.toUpperCase()}</strong>
       </p>
@@ -99,19 +127,19 @@ function RideCard({ ride, stops, index, basis }: RideProps) {
   const next = stops[Math.min(index + 1, last)];
   return (
     <>
-      <p className={styles.headline} aria-live="polite">
-        <span className={styles.rideHead}>
-          {t("trip.ride.ride")} <RouteBadge route={route} size="sm" /> {t("headsign.to")} {ride.headsign.toUpperCase()}
-        </span>
+      <p className={`${styles.headline} ${styles.rideHead}`}>
+        {t("trip.ride.ride")} <RouteBadge route={route} size="sm" /> {t("headsign.to")} {ride.headsign.toUpperCase()}
       </p>
       <p className={styles.getOff}>{t("trip.ride.getOff", { stop: stopTitle(ride.alight) })}</p>
       <GetOffWarning left={left} alight={ride.alight.id ? stopTitle(ride.alight) : ride.alight.name} />
-      <div className={`${styles.bleed} ${styles.strip}`}>
-        <span className={styles.stripDigits}>{left}</span>
+      <p className={`${styles.bleed} ${styles.strip}`}>
         <span>
-          {t("trip.ride.stopsLeft", { count: left })} · {t("trip.ride.about", { min: about })}
+          <span className={styles.stripDigits}>{left}</span> {t("trip.ride.stopsLeft", { count: left })}
         </span>
-      </div>
+        <span>
+          {t("trip.ride.about")} <span className={styles.stripDigits}>{about}</span> {t("trip.ride.min")}
+        </span>
+      </p>
       {left > 0 && <p>{t("trip.ride.next", { stop: next.id ? `${next.name} (#${next.id})` : next.name })}</p>}
       <div
         className={styles.progress}
@@ -128,12 +156,12 @@ function RideCard({ ride, stops, index, basis }: RideProps) {
   );
 }
 
-/** The amber get-off warnings at 2 and 1 stops left (J3.2). */
+/** The amber get-off warnings at 2 and 1 stops left (J3.2); the region stays mounted so each is announced. */
 function GetOffWarning({ left, alight }: { left: number; alight: string }) {
   const t = useT();
   const text = left === 2 ? t("trip.warn.ready", { count: 2, stop: alight }) : left === 1 ? t("trip.warn.next", { stop: alight }) : "";
   return (
-    <p className={text ? styles.warn : styles.srOnly} aria-live="polite">
+    <p className={text ? styles.warn : "visually-hidden"} aria-live="polite">
       {text}
     </p>
   );
@@ -146,9 +174,7 @@ function FinalCard({ leg, place }: { leg: WalkLeg; place: string }) {
   const directions = useFinalWalk(leg);
   return (
     <>
-      <p className={styles.headline} aria-live="polite">
-        {t("trip.final.head", { min: walkMinutes(leg.distanceM, walkPace), place })}
-      </p>
+      <p className={styles.headline}>{t("trip.final.head", { min: walkMinutes(leg.distanceM, walkPace), place })}</p>
       {directions.data && (
         <ol className={styles.walkSteps}>
           {directions.data.steps.map((s, i) => (
@@ -163,21 +189,33 @@ function FinalCard({ leg, place }: { leg: WalkLeg; place: string }) {
 interface StepCardProps {
   step: TripStep;
   fix?: LatLon;
+  fixture: boolean;
   stops?: RideStop[];
   rideIndex: number;
   basis: string;
   destination: string;
-  onWalkDirections: (leg: WalkLeg, ride: TransitLeg) => void;
+  /** The name of where the trip starts, for the first walk's directions. */
+  originName: string;
+  onNavigate: (href: string) => void;
   onDone: () => void;
 }
 
-export function StepCard({ step, fix, stops, rideIndex, basis, destination, onWalkDirections, onDone }: StepCardProps) {
+export function StepCard({ step, fix, fixture, stops, rideIndex, basis, destination, originName, onNavigate, onDone }: StepCardProps) {
   const t = useT();
   switch (step.kind) {
     case "walk":
-      return <WalkCard leg={step.leg} ride={step.ride} fix={fix} onDirections={() => onWalkDirections(step.leg, step.ride)} />;
+      return (
+        <WalkCard
+          leg={step.leg}
+          ride={step.ride}
+          fix={fix}
+          fixture={fixture}
+          fromName={step.legIndex === 0 ? originName : step.leg.from.name}
+          onNavigate={onNavigate}
+        />
+      );
     case "wait":
-      return <WaitCard ride={step.ride} />;
+      return <WaitCard ride={step.ride} fixture={fixture} />;
     case "ride":
       return stops ? <RideCard ride={step.ride} stops={stops} index={rideIndex} basis={basis} /> : null;
     case "final":
@@ -185,22 +223,9 @@ export function StepCard({ step, fix, stops, rideIndex, basis, destination, onWa
     case "arrived":
       return (
         <>
-          <p className={styles.headline} aria-live="polite">
-            {t("trip.arrived.head", { place: step.destination.name })}
-          </p>
+          <p className={styles.headline}>{t("trip.arrived.head", { place: step.destination.name })}</p>
           <Button variant="primary" fullWidth label={t("common.done")} onPress={onDone} />
         </>
       );
   }
-}
-
-/**
- * D8 for the walk to the next stop, from where the rider is now. The planned distance seeds D8
- * only while the rider is still at the walk's start, so both screens show the same minutes.
- */
-export function walkUrl(leg: WalkLeg, ride: TransitLeg, fix: LatLon | undefined, fromName: string): string {
-  const moved = fix && haversineM(fix.lat, fix.lon, leg.from.lat, leg.from.lon) > MOVED_M;
-  const q = new URLSearchParams({ from: formatLatLon(moved ? fix : leg.from), fromName, route: ride.route.id });
-  if (!moved) q.set("d", String(leg.distanceM));
-  return `/explore/stop/${encodeURIComponent(ride.board.id ?? "")}/walk?${q}`;
 }
