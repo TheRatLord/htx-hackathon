@@ -1,0 +1,219 @@
+/* Shared list parts for the Recent and More tabs (prefix rl-). */
+
+.rl-section {
+  display: grid;
+  gap: 12px;
+}
+.rl-section + .rl-section {
+  margin-top: var(--s-1);
+}
+.rl-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding-left: var(--s-1);
+}
+/* A header action keeps its 48px target without making the header taller. */
+.rl-section__head > .btn {
+  flex: none;
+  margin: -12px 0;
+}
+.rl-section__titles {
+  display: grid;
+  gap: var(--s-half);
+  min-width: 0;
+}
+.rl-section__title {
+  outline-offset: 4px;
+  border-radius: var(--r-sm);
+}
+.rl-section__title:focus:not(:focus-visible) {
+  outline: none;
+}
+.rl-section__sub {
+  text-wrap: pretty;
+}
+
+/* Card of rows */
+.rl-card {
+  display: grid;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+/* Each row collapses to zero height when removed. */
+.rl-item {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease);
+}
+.rl-item--leaving {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.rl-item__clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rl-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding-right: var(--s-1);
+}
+/* Hairline divider, inset past the icon like a native list. */
+.rl-item + .rl-item .rl-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 72px;
+  right: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.rl-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 72px;
+  padding: 12px var(--s-1) 12px var(--s-2);
+  text-align: left;
+  color: var(--text);
+  transition: background-color var(--dur-1) var(--ease);
+}
+.rl-row:not(:has(.rl-row__remove)) .rl-row__main {
+  margin-right: calc(var(--s-1) * -1);
+  padding-right: var(--s-2);
+}
+button.rl-row__main:active {
+  background: var(--fill-1);
+}
+button.rl-row__main:focus-visible,
+.rl-row__remove:focus-visible {
+  outline-offset: -3px;
+}
+
+.rl-row__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rl-row__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.rl-row__title {
+  font-weight: 700;
+  font-size: var(--t-body);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+}
+.rl-row__sub {
+  font-size: var(--t-small);
+  line-height: var(--lh-tight);
+  color: var(--text-2);
+}
+.rl-row__meta {
+  font-size: var(--t-caption);
+  line-height: var(--lh-tight);
+  color: var(--text-3);
+}
+.rl-row__chev {
+  flex: none;
+  color: var(--text-3);
+}
+.rl-row__remove {
+  flex: none;
+  font-size: var(--t-small);
+}
+@media (hover: hover) {
+  .rl-row__remove:hover {
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+  }
+}
+.rl-row__remove:active {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+/* Loading rows */
+.rl-skeleton {
+  display: grid;
+}
+.rl-skeleton__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 72px;
+  padding: 12px var(--s-2);
+}
+.rl-skeleton__row + .rl-skeleton__row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 72px;
+  right: 0;
+  border-top: 1px solid var(--hairline);
+}
+.rl-skeleton__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--fill-2);
+}
+.rl-skeleton__lines {
+  flex: 1;
+  display: grid;
+  gap: var(--s-1);
+}
+.rl-skeleton__line {
+  display: block;
+  height: 14px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--fill-1) 0%, var(--fill-2) 50%, var(--fill-1) 100%);
+  background-size: 200% 100%;
+  animation: rl-shimmer 1.4s linear 3;
+}
+.rl-skeleton__line--short {
+  height: 12px;
+}
+@keyframes rl-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Empty states sit inside the card; they fade in when a list empties. */
+.rl-card .empty-state {
+  padding: var(--s-4) var(--s-3);
+  animation: rl-fade-in var(--dur-3) var(--ease-out) both;
+}
+@keyframes rl-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

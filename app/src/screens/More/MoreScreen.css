@@ -1,0 +1,98 @@
+/* More tab. Saved places and trips use the list parts in ../Recent/lists.css. */
+
+.more-restore {
+  display: flex;
+  justify-content: center;
+}
+.more-restore .btn {
+  font-size: var(--t-small);
+  padding: 0 20px 0 var(--s-2);
+}
+
+/* Appearance and About cards */
+.more-card {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+.more-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.more-card__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.more-card__title {
+  font-weight: 700;
+  font-size: var(--t-body);
+  line-height: var(--lh-tight);
+  margin: 2px 0 var(--s-half);
+}
+
+/* Three equal segments that fill the card, and wrap if text is enlarged. */
+.more-theme .segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  padding: var(--s-half);
+  border-radius: var(--r-pill);
+  background: var(--fill-1);
+}
+.more-theme .segmented__opt {
+  flex: 1 1 0;
+  min-width: 80px;
+  background: transparent;
+}
+.more-theme .segmented__opt--on {
+  background: var(--accent-fill);
+  box-shadow: var(--shadow-1);
+}
+
+.more-about__text {
+  font-size: var(--t-small);
+  line-height: var(--lh-body);
+  color: var(--text-2);
+  margin-top: 2px;
+  text-wrap: pretty;
+}
+.more-about__actions {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding-left: 56px;
+}
+.more-about__actions .btn {
+  font-size: var(--t-small);
+  padding: 0 20px;
+}
+.more-about__status:empty {
+  display: none;
+}
+.more-about__note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--success);
+  font-weight: 700;
+  animation: more-note-in var(--dur-2) var(--ease-out) both;
+}
+@keyframes more-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
