@@ -68,3 +68,39 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
   be untrue there.
 - **10 (card labels):** the LiveStrip keeps its spec label "16 minutes, scheduled"
   (`markScheduled: true`); cards follow C.5a and leave the scheduled default unspoken.
+
+## src/lib/text.ts (spec G.2 lists it; missing)
+- From: B (D5, D9, D20)
+- Where: src/lib/text.ts
+- Need: re-export `tokenize` / `normalize` from `server/lib/text.ts`, so screens don't import server code directly. B's `screens/explore/route/stopMatch.ts` imports `server/lib/text.ts` until then (marked TODO).
+- Status: open
+
+## Shared stop-name lookup (or platform names in TC detail)
+- From: B (D10)
+- Where: src/lib (e.g. `stopName(id)` over `/data/stops.json`, shared with MapView's loader) or `getTransitCenterDetail` (add `platforms: {stopId, name}[]`)
+- Need: the bay diagram labels platforms "Platform 2 · Stop #79" from the stop name, which the TC detail doesn't carry. B loads `/data/stops.json` itself in `screens/explore/tc/usePlatformNames.ts` (a second loader next to MapView's) until then.
+- Status: open
+
+## Static routes list
+- From: B (D20)
+- Where: src/lib/routes.ts
+- Need: export the loaded `ClientRoute[]` (e.g. `useAllRoutes()`), so D20 doesn't fetch `/data/routes.json` again through its own query.
+- Status: open
+
+## SearchField focus ring
+- From: B (D5)
+- Where: src/ui/SearchField.module.css
+- Need: the input draws a rectangular 3px focus ring inside the pill (visible in every D5 screenshot, since the input is autofocused). Put the ring on the pill with `.field:focus-within` and give the input `outline-offset: -3px` or a pill radius, without `outline: none`.
+- Status: open
+
+## Map attribution shows on pushed pages
+- From: B (D9, D10)
+- Where: src/app/AppShell.tsx / src/map/MapView.tsx
+- Need: the MapLibre attribution ("OpenFreeMap © OpenMapTiles …") stays visible above the bottom nav on PageLayout screens after coming from Explore (seen on /explore/route/82). Hide it with the map.
+- Status: open
+
+## useRoute enabled flag
+- From: B (D5)
+- Where: src/api/hooks.ts
+- Need: `useRoute(id, { enabled })`, like `useArrivals`. B works around it by rendering the "82 montrose" shortcut's fetching child only for a known route.
+- Status: open
