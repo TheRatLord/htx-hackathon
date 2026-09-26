@@ -1,6 +1,6 @@
 // D10 Transit Center: which bay a route leaves from, a bay diagram, and departures by bay.
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../../api/client.ts";
 import { useArrivals, useTransitCenter } from "../../../api/hooks.ts";
@@ -9,7 +9,7 @@ import { useBack } from "../../../app/useBack.ts";
 import { usePageTitle } from "../../../app/usePageTitle.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
 import { directionWord, formatClock, headsignLine, platformLabel } from "../../../lib/format.ts";
-import { canonicalRouteId, useRoutesLoaded } from "../../../lib/routes.ts";
+import { canonicalRouteId, routeRefOrFallback, useRoutesLoaded } from "../../../lib/routes.ts";
 import { estimateWalk, MAX_WALK_MINUTES } from "../../../lib/walk.ts";
 import { useNow } from "../../../state/clock.ts";
 import { useOffline } from "../../../state/offline.ts";
@@ -28,7 +28,7 @@ import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { ScheduleCaption } from "../../../ui/ScheduleCaption.tsx";
 import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { UpdatedAgo } from "../../../ui/UpdatedAgo.tsx";
-import { departureRows, foldQuietBays, platformsOf, servesRoute, tcRoutes, type Bay, type DepartureRow } from "./tcModel.ts";
+import { departureRows, foldQuietBays, platformsOf, routesByNextDeparture, servesRoute, type Bay, type DepartureRow } from "./tcModel.ts";
 import styles from "./TransitCenter.module.css";
 
 const bayId = (bay: string) => `bay-${bay}`;
@@ -95,7 +95,12 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
   });
 
   const routeParam = params.get("route");
-  const routes = tcRoutes(tc);
+  // Chips in the order their routes next leave (a route opened from a link leads), so they match the
+  // departures below. The order is set once per center: chips never move under the rider's finger.
+  const routes = useMemo(
+    () => routesByNextDeparture(tc, now, routeParam ?? undefined),
+    [tc.id],
+  );
   const selected = routeParam ? routes.find((r) => r.id === canonicalRouteId(routeParam)) : undefined;
   const setRoute = (id?: string) =>
     setParams(
@@ -140,12 +145,12 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
     setPendingBay(bay);
   };
 
-  const items = foldQuietBays(
-    shownBays.map((bay) => ({
-      bay,
-      rows: departureRows(bay.departures, now, selected?.id),
-    })),
-  );
+  // Departures by platform: "Platform 1" is said once over its bays, not on every bay header.
+  const groups = platforms.map((p) => ({
+    platform: p,
+    items: foldQuietBays(p.bays.map((bay) => ({ bay, rows: departureRows(bay.departures, now, selected?.id) }))),
+  }));
+  const namePlatforms = groups.length > 1;
   // A chosen route's bays are all in its banner (strip and times), so the list below would only repeat them.
   const showList = !selected || !routeBays.length;
   // With a route chosen, the diagram shrinks to the platforms it leaves from, with its bay lit.
@@ -198,27 +203,30 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
       {tc.source === "hand-authored-demo" && <p className={styles.note}>{t("bay.handAuthored")}</p>}
       {showList && (
         <div className={styles.list}>
-          {items.map((item) =>
-            item.kind === "bay" ? (
-              <BayGroup
-                key={`${item.bay.stopId}-${item.bay.bay}`}
-                id={bayId(item.bay.bay)}
-                title={t("tc.bayHeader", {
-                  bay: item.bay.bay,
-                  platform: platformName(item.bay.stopId),
-                })}
-                rows={item.rows}
-                windowEnd={tc.windowEnd}
-              />
-            ) : (
-              <QuietBays key={item.bays.map((b) => `${b.stopId}-${b.bay}`).join()} bays={item.bays} windowEnd={tc.windowEnd} />
-            ),
-          )}
+          {groups.map(({ platform, items }) => (
+            <div key={platform.stopId} className={styles.platform}>
+              {namePlatforms && <h3 className={styles.platformTitle}>{platformName(platform.stopId)}</h3>}
+              {items.map((item) =>
+                item.kind === "bay" ? (
+                  <BayGroup
+                    key={`${item.bay.stopId}-${item.bay.bay}`}
+                    id={bayId(item.bay.bay)}
+                    title={t("tc.bayTitle", { bay: item.bay.bay })}
+                    heading={namePlatforms ? "h4" : "h3"}
+                    rows={item.rows}
+                    windowEnd={tc.windowEnd}
+                  />
+                ) : (
+                  <QuietBays key={item.bays.map((b) => `${b.stopId}-${b.bay}`).join()} bays={item.bays} windowEnd={tc.windowEnd} />
+                ),
+              )}
+            </div>
+          ))}
           {unassigned.length > 0 && <BayGroup title={t("tc.bayNotPublished")} rows={unassigned} windowEnd={tc.windowEnd} />}
         </div>
       )}
-      {/* One footer line, "Scheduled times · Updated just now · Refresh". The longer caption ("…unless
-          marked Live") is kept for when a Live time or the offline note can be on the page. */}
+      {/* "Scheduled times" alone when every time is from the timetable. The longer caption ("…unless
+          marked Live") and Refresh are kept for when a Live time or the offline note can be on the page. */}
       <div className={styles.footer}>
         {hasLive || offline ? (
           <>
@@ -226,10 +234,8 @@ function TcBody({ tc, updatedAt, onRefresh }: { tc: TransitCenterDetail; updated
             <ScheduleCaption />
           </>
         ) : (
-          <p className={styles.footerLine}>
-            <span>{t("tc.scheduledTimes")}</span>
-            <span aria-hidden="true">·</span> <UpdatedAgo at={new Date(updatedAt).toISOString()} onRefresh={onRefresh} />
-          </p>
+          // Timetable times don't change on a refresh: just say what they are.
+          <p className={styles.footerLine}>{t("tc.scheduledTimes")}</p>
         )}
       </div>
     </div>
@@ -299,7 +305,7 @@ function RouteBanner({
 
 /**
  * "Route 58 leaves from Bay M · Platform 2", then the familiar blue strip with up to 4 times for that
- * bay's stop and the stop sheet's actions (Full Schedule, Stop details).
+ * bay's stop and the stop sheet's actions (Schedule, Stop details).
  */
 function SingleBayBanner({
   tc,
@@ -323,8 +329,13 @@ function SingleBayBanner({
   const ahead = (list: DepartureRow["deps"]) => list.filter((d) => d.isRealtime || Date.parse(d.departureTime) > now);
   const live = arrivals.data && ahead(arrivals.data.arrivals);
   const deps = live && live.length ? live : ahead(fallback);
+  const lang = useLang();
   const stop = encodeURIComponent(bay.stopId);
   const route = encodeURIComponent(routeId);
+  // "WESTBOUND to WEST BELT", as on every other departure, so the rider can confirm the direction.
+  const headsigns = [
+    ...new Set(bay.routes.filter((r) => servesRoute({ routes: [r] }, routeId)).map((r) => headsignLine(routeRefOrFallback(r.routeId, r.route), r.directionLabel, r.headsign, lang))),
+  ];
   return (
     <div className={styles.banner}>
       <div>
@@ -336,6 +347,11 @@ function SingleBayBanner({
           })}
         </p>
       </div>
+      {headsigns.map((h) => (
+        <p key={h} className={styles.bannerHeadsign}>
+          {h}
+        </p>
+      ))}
       {deps.length || arrivals.isPending ? (
         <LiveStrip deps={deps} loading={arrivals.isPending && !fallback.length} />
       ) : (
@@ -382,11 +398,23 @@ function QuietBays({ bays, windowEnd }: { bays: Bay[]; windowEnd: string | null 
   );
 }
 
-function BayGroup({ id, title, rows, windowEnd }: { id?: string; title: string; rows: DepartureRow[]; windowEnd: string | null }) {
+function BayGroup({
+  id,
+  title,
+  heading: Heading = "h3",
+  rows,
+  windowEnd,
+}: {
+  id?: string;
+  title: string;
+  heading?: "h3" | "h4";
+  rows: DepartureRow[];
+  windowEnd: string | null;
+}) {
   const lang = useLang();
   return (
     <section id={id} className={styles.bay}>
-      <h3 className={styles.bayTitle}>{title}</h3>
+      <Heading className={styles.bayTitle}>{title}</Heading>
       {rows.length ? (
         <ul>
           {rows.map((r) => (

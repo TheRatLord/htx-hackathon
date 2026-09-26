@@ -253,6 +253,11 @@
   color: var(--c-text-variant);
 }
 
+/* The street the bus runs along, under the bold cross street. */
+.street {
+  color: var(--c-text-variant);
+}
+
 .nearest {
   color: var(--c-link-text);
   font-weight: var(--fw-medium);
@@ -281,11 +286,21 @@
   gap: var(--sp-2);
 }
 
+/* "Bus here now": its own short line at the top of the row, the glyph on the spine. */
+.busMark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: -2px;
+  padding-top: var(--sp-2);
+  color: var(--c-brand-navy);
+  font-weight: var(--fw-medium);
+}
+
 /* A live bus: a 20dp navy glyph on the spine, between this stop and the one above. */
 .bus {
-  position: absolute;
-  top: 0;
-  left: calc(var(--gutter) + 8px);
+  position: relative;
+  flex: none;
   z-index: 1;
   display: grid;
   place-items: center;
@@ -295,7 +310,6 @@
   box-shadow: 0 0 0 2px var(--c-surface);
   background: var(--c-brand-navy);
   color: #fff;
-  transform: translate(-50%, -50%);
 }
 
 /* A bus placed by the timetable, not by GPS: outlined, so it never passes for a live one. */

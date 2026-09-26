@@ -1,7 +1,7 @@
 // D5 before anything is typed: the rider's saved stops and routes, recently viewed routes and stops,
 // recent searches, then one short hint line and a way to browse routes.
 
-import { useArrivals } from "../../../api/hooks.ts";
+import { useSavedStopRoutes } from "../../../api/savedStop.ts";
 import { useLang, useT } from "../../../i18n/index.ts";
 import { sideLine, stopTitle } from "../../../lib/format.ts";
 import { routeRef, routeRefOrFallback } from "../../../lib/routes.ts";
@@ -12,8 +12,8 @@ import { Icon } from "../../../ui/Icon.tsx";
 import { RouteBadge } from "../../../ui/RouteBadge.tsx";
 import { SavedStopRow } from "../../../ui/SavedStopRow.tsx";
 import { SectionHeader } from "../../../ui/SectionHeader.tsx";
+import { Skeleton } from "../../../ui/Skeleton.tsx";
 import { SimpleRow } from "./ResultRows.tsx";
-import { savedRoutes } from "./savedRoutes.ts";
 import styles from "./Search.module.css";
 
 const MAX_SAVED = 3;
@@ -123,15 +123,10 @@ export function EmptyQuery({ pick, onOpenStop, onOpenRecentStop, onRecent, onOpe
   );
 }
 
+/** The same routes as Explore's and Recent's saved rows (one per route, preferred route first). */
 function SavedRow({ stop, onOpen }: { stop: SavedStop; onOpen: () => void }) {
-  const arrivals = useArrivals(stop.id, { limit: 6 });
-  return (
-    <SavedStopRow
-      stopId={stop.id}
-      name={stop.name}
-      preferredRouteId={stop.preferredRouteId}
-      routes={savedRoutes(arrivals.data?.arrivals ?? [])}
-      onOpen={onOpen}
-    />
-  );
+  const { routes, preferredRouteId, arrivals } = useSavedStopRoutes(stop);
+  // A failed call still lists the saved stop by name, so it can be opened.
+  if (!routes && !(arrivals.isError && !arrivals.data)) return <Skeleton variant="row" />;
+  return <SavedStopRow stopId={stop.id} name={stop.name} preferredRouteId={preferredRouteId} routes={routes ?? []} onOpen={onOpen} />;
 }
