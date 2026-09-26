@@ -1,0 +1,363 @@
+{
+ "key": "foot/-95.39000,29.74400;-95.38903,29.74444",
+ "recordedAt": "2026-09-26T02:27:26.088Z",
+ "json": {
+  "code": "Ok",
+  "routes": [
+   {
+    "legs": [
+     {
+      "steps": [
+       {
+        "intersections": [
+         {
+          "out": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           89
+          ],
+          "location": [
+           -95.390001,
+           29.744098
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.390001,
+           29.744098
+          ],
+          [
+           -95.389628,
+           29.744101
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 89,
+         "bearing_before": 0,
+         "location": [
+          -95.390001,
+          29.744098
+         ],
+         "modifier": "right",
+         "type": "depart"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 3.61,
+        "duration": 28.8,
+        "distance": 36.1
+       },
+       {
+        "intersections": [
+         {
+          "out": 0,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           0,
+           90,
+           270
+          ],
+          "location": [
+           -95.389628,
+           29.744101
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.389628,
+           29.744101
+          ],
+          [
+           -95.389645,
+           29.744525
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 357,
+         "bearing_before": 88,
+         "location": [
+          -95.389628,
+          29.744101
+         ],
+         "modifier": "left",
+         "type": "turn"
+        },
+        "name": "",
+        "mode": "walking",
+        "weight": 4.7,
+        "duration": 37.6,
+        "distance": 47
+       },
+       {
+        "intersections": [
+         {
+          "out": 1,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false,
+           true
+          ],
+          "bearings": [
+           15,
+           105,
+           180,
+           285
+          ],
+          "location": [
+           -95.389645,
+           29.744525
+          ]
+         },
+         {
+          "out": 1,
+          "in": 2,
+          "entry": [
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           120,
+           285
+          ],
+          "location": [
+           -95.38954,
+           29.744492
+          ]
+         },
+         {
+          "out": 1,
+          "in": 3,
+          "entry": [
+           true,
+           true,
+           true,
+           false
+          ],
+          "bearings": [
+           15,
+           105,
+           180,
+           300
+          ],
+          "location": [
+           -95.38945,
+           29.744457
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.389645,
+           29.744525
+          ],
+          [
+           -95.389611,
+           29.74451
+          ],
+          [
+           -95.38954,
+           29.744492
+          ],
+          [
+           -95.389496,
+           29.744473
+          ],
+          [
+           -95.38945,
+           29.744457
+          ],
+          [
+           -95.389337,
+           29.74442
+          ],
+          [
+           -95.38913,
+           29.744422
+          ],
+          [
+           -95.389109,
+           29.744439
+          ],
+          [
+           -95.389056,
+           29.74444
+          ],
+          [
+           -95.389035,
+           29.744431
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 109,
+         "bearing_before": 357,
+         "location": [
+          -95.389645,
+          29.744525
+         ],
+         "modifier": "right",
+         "type": "turn"
+        },
+        "name": "Westheimer Road",
+        "mode": "walking",
+        "weight": 5.19,
+        "duration": 49.6,
+        "distance": 62.2
+       },
+       {
+        "intersections": [
+         {
+          "in": 0,
+          "entry": [
+           true
+          ],
+          "bearings": [
+           296
+          ],
+          "location": [
+           -95.389035,
+           29.744431
+          ]
+         }
+        ],
+        "driving_side": "right",
+        "geometry": {
+         "coordinates": [
+          [
+           -95.389035,
+           29.744431
+          ],
+          [
+           -95.389035,
+           29.744431
+          ]
+         ],
+         "type": "LineString"
+        },
+        "maneuver": {
+         "bearing_after": 0,
+         "bearing_before": 116,
+         "location": [
+          -95.389035,
+          29.744431
+         ],
+         "type": "arrive"
+        },
+        "name": "Westheimer Road",
+        "mode": "walking",
+        "weight": 0,
+        "duration": 0,
+        "distance": 0
+       }
+      ],
+      "weight": 13.5,
+      "summary": "Westheimer Road",
+      "duration": 116,
+      "distance": 145.4
+     }
+    ],
+    "weight_name": "routability",
+    "geometry": {
+     "coordinates": [
+      [
+       -95.390001,
+       29.744098
+      ],
+      [
+       -95.389628,
+       29.744101
+      ],
+      [
+       -95.389645,
+       29.744525
+      ],
+      [
+       -95.389611,
+       29.74451
+      ],
+      [
+       -95.38954,
+       29.744492
+      ],
+      [
+       -95.389496,
+       29.744473
+      ],
+      [
+       -95.38945,
+       29.744457
+      ],
+      [
+       -95.389337,
+       29.74442
+      ],
+      [
+       -95.38913,
+       29.744422
+      ],
+      [
+       -95.389109,
+       29.744439
+      ],
+      [
+       -95.389056,
+       29.74444
+      ],
+      [
+       -95.389035,
+       29.744431
+      ]
+     ],
+     "type": "LineString"
+    },
+    "weight": 13.5,
+    "duration": 116,
+    "distance": 145.4
+   }
+  ],
+  "waypoints": [
+   {
+    "hint": "WYZLiVVpho5pAQAAugAAAAAAAACMAwAA4lsQQsyclEEAAAAANYK1QiABAACVAAAAAAAAANYCAAAUAAAAz3ZQ-uLbxQHQdlD6gNvFAQAA3xAAAAAA",
+    "location": [
+     -95.390001,
+     29.744098
+    ],
+    "name": "",
+    "distance": 10.8635173
+   },
+   {
+    "hint": "ToZLiUZbho4SAAAACQAAAEoBAABOAAAA-9wQQG8mej9EbB5CiUAWQRIAAAAIAAAAPAEAAEsAAAAUAAAAlXpQ-i_dxQGaelD6ON3FAQgATwcAAAAA",
+    "location": [
+     -95.389035,
+     29.744431
+    ],
+    "name": "Westheimer Road",
+    "distance": 1.108731814
+   }
+  ]
+ }
+}
