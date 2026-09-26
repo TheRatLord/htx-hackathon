@@ -27,23 +27,25 @@ export function tcRoutes(tc: Pick<TransitCenterDetail, "bays" | "unassignedRoute
 }
 
 /**
- * The center's routes with the ones leaving soonest first (then the rest in number order), so the
- * chips name the routes the departures list shows first. `first` (a chosen route) leads.
+ * The center's routes in the order the departures list below names them (platform, then bay, then the
+ * soonest departure in each bay, then routes without a bay), so the first chip is the first route the
+ * rider reads in the list. Routes with nothing listed follow in number order. `first` (a chosen route) leads.
  */
-export function routesByNextDeparture(
-  tc: Pick<TransitCenterDetail, "bays" | "unassignedRoutes" | "unassignedDepartures">,
+export function routesInListOrder(
+  tc: Pick<TransitCenterDetail, "bays" | "stopIds" | "unassignedRoutes" | "unassignedDepartures">,
+  names: Map<string, string>,
   now: number,
   first?: string,
 ): RouteRef[] {
-  const soonest = new Map<string, number>();
-  for (const d of upcoming([...tc.bays.flatMap((b) => b.departures), ...tc.unassignedDepartures], now)) {
-    const id = canonicalRouteId(d.routeId);
-    const ms = Date.parse(d.departureTime);
-    if (!(ms >= (soonest.get(id) ?? Infinity))) soonest.set(id, ms);
-  }
+  const order = new Map<string, number>();
+  const note = (id: string) => {
+    if (!order.has(id)) order.set(id, order.size);
+  };
+  for (const p of platformsOf(tc, names)) for (const b of p.bays) for (const r of departureRows(b.departures, now)) note(r.route.id);
+  for (const r of departureRows(tc.unassignedDepartures, now)) note(r.route.id);
   const lead = first && canonicalRouteId(first);
-  const at = (r: RouteRef) => (r.id === lead ? -Infinity : (soonest.get(r.id) ?? Infinity));
-  // Array.sort is stable: routes with no departure keep tcRoutes' number order.
+  const at = (r: RouteRef) => (r.id === lead ? -1 : (order.get(r.id) ?? Infinity));
+  // Array.sort is stable: routes with nothing listed keep tcRoutes' number order.
   return tcRoutes(tc).sort((a, b) => (at(a) === at(b) ? 0 : at(a) < at(b) ? -1 : 1));
 }
 

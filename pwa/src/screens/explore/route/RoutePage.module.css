@@ -264,8 +264,34 @@
 }
 
 .next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   text-align: end;
   white-space: nowrap;
+}
+
+/* "next bus" under each time, so every number says what it is. */
+.nextCaption {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* The stop a bus has just left: greyed, with "Bus just left" under its name. */
+.stop[data-passed="true"] .cross,
+.stop[data-passed="true"] .stopId {
+  color: var(--c-text-secondary);
+}
+
+.stop[data-passed="true"] .node {
+  border-color: var(--c-divider);
+  background: var(--c-divider);
+}
+
+.passedLine {
+  color: var(--c-text-secondary);
+  font-style: italic;
 }
 
 .panel {
