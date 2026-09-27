@@ -63,6 +63,13 @@
   color: var(--c-alert-text);
 }
 
+/* A pill for a destructive action that stands alone, like End on the live trip's bar. */
+.danger-outline {
+  background: var(--c-surface);
+  color: var(--c-alert-text);
+  border: 1px solid var(--c-alert-border);
+}
+
 .text:disabled,
 .danger-text:disabled {
   background: none;

@@ -269,94 +269,105 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
     requestAnimationFrame(() => stepsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
   };
   return (
-    <ExploreSheet
-      ariaLabel={t("trip.title")}
-      onBack={onBack}
-      // Tucked away: when the rider arrives and what to do now, in two short lines.
-      peek={
-        <div className={styles.peek}>
-          <p className={styles.peekTime}>
-            {step.kind === "arrived" ? t("trip.complete") : t("trip.peekArrive", { time: formatClock(it.endTime, lang) })}
-          </p>
-          <p className={styles.peekStep}>{summary}</p>
-        </div>
-      }
-      header={
-        // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
-        <PlanHeader
-          title={step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
-          right={
-            <Button
-              variant="text"
-              label={`${t("trip.allSteps")} ›`}
-              onPress={showAllSteps}
-            />
-          }
-        />
-      }
-    >
-      <div ref={body} className={styles.body}>
-        {/* The one announcement per step (L13): no minutes, so GPS and clock updates stay silent. */}
-        <p className="visually-hidden" aria-live="polite">
-          {step.kind === "arrived" ? `${t("trip.complete")}: ${summary}` : `${t("trip.stepOf", { n, total })}: ${summary}`}
-        </p>
-        <section className={styles.card}>
-          <StepCard
-            step={step}
-            fix={fix}
-            fixture={active.fixture}
-            stops={stops}
-            rideIndex={rideIndex}
-            basis={basis}
-            destination={destination.name}
-            originName={originName}
-            onNavigate={navigate}
-            onDone={end}
-            // Previous / Next share a row with the step's own action (Walking directions).
-            actions={
-              step.kind !== "arrived" && (
-                <>
-                  {stepIndex > 0 && <Button variant="tonal" label={`‹ ${t("trip.prev")}`} onPress={() => live.goTo(stepIndex - 1)} />}
-                  <Button variant="primary" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
-                </>
-              )
+    <>
+      <ExploreSheet
+        ariaLabel={t("trip.title")}
+        onBack={onBack}
+        // Tucked away: when the rider arrives and what to do now, in two short lines.
+        // End sits at its right, where the thumb is (as Google Maps has it); it asks first.
+        peek={
+          <div className={styles.peek}>
+            <div className={styles.peekText}>
+              <p className={styles.peekTime}>
+                {step.kind === "arrived" ? t("trip.complete") : t("trip.peekArrive", { time: formatClock(it.endTime, lang) })}
+              </p>
+              <p className={styles.peekStep}>{summary}</p>
+            </div>
+            {step.kind === "arrived" ? (
+              <Button variant="primary" label={t("common.done")} onPress={end} />
+            ) : (
+              <Button variant="danger-outline" label={t("trip.endShort")} ariaLabel={t("trip.end")} onPress={() => setConfirmEnd(true)} />
+            )}
+          </div>
+        }
+        header={
+          // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
+          <PlanHeader
+            title={step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
+            right={
+              <Button
+                variant="text"
+                label={`${t("trip.allSteps")} ›`}
+                onPress={showAllSteps}
+              />
             }
           />
-        </section>
-        <NotifyPermissionCard context="trip" />
-        <section ref={stepsRef} className={styles.allSteps} aria-labelledby="trip-all-steps">
-          <h2 id="trip-all-steps" className={styles.allStepsTitle}>
-            {t("trip.allSteps")}
-          </h2>
-          <StepList
-            steps={rows.map((r) => r.step)}
-            currentIndex={rowForStep(rows, step)}
-            onStepPress={(_, i) => {
-              const href = rows[i].href;
-              if (href) navigate(href);
-            }}
-          />
-        </section>
-        {step.kind !== "arrived" && (
-          <>
-            <p className={styles.caption}>{t("trip.keepOpen")}</p>
-            <div className={styles.endRow}>
-              <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
-            </div>
-          </>
-        )}
-        {simAllowed && step.kind !== "arrived" && (
-          <div className={styles.sim}>
-            <Button
-              variant="outline"
-              icon="directions_walk"
-              label={t(simFrom === null ? "trip.sim.start" : "trip.sim.stop")}
-              onPress={() => setSimFrom(simFrom === null ? legIndex : null)}
+        }
+      >
+        <div ref={body} className={styles.body}>
+          {/* The one announcement per step (L13): no minutes, so GPS and clock updates stay silent. */}
+          <p className="visually-hidden" aria-live="polite">
+            {step.kind === "arrived" ? `${t("trip.complete")}: ${summary}` : `${t("trip.stepOf", { n, total })}: ${summary}`}
+          </p>
+          <section className={styles.card}>
+            <StepCard
+              step={step}
+              fix={fix}
+              fixture={active.fixture}
+              stops={stops}
+              rideIndex={rideIndex}
+              basis={basis}
+              destination={destination.name}
+              originName={originName}
+              onNavigate={navigate}
+              onDone={end}
+              // Previous / Next share a row with the step's own action (Walking directions).
+              actions={
+                step.kind !== "arrived" && (
+                  <>
+                    {stepIndex > 0 && <Button variant="tonal" label={`‹ ${t("trip.prev")}`} onPress={() => live.goTo(stepIndex - 1)} />}
+                    <Button variant="primary" label={`${t("trip.next")} ›`} onPress={() => live.goTo(stepIndex + 1)} />
+                  </>
+                )
+              }
             />
-            {simFix && <p className={styles.caption}>{t("trip.sim.note")}</p>}
-          </div>
-        )}
-      </div>
+          </section>
+          <NotifyPermissionCard context="trip" />
+          <section ref={stepsRef} className={styles.allSteps} aria-labelledby="trip-all-steps">
+            <h2 id="trip-all-steps" className={styles.allStepsTitle}>
+              {t("trip.allSteps")}
+            </h2>
+            <StepList
+              steps={rows.map((r) => r.step)}
+              currentIndex={rowForStep(rows, step)}
+              onStepPress={(_, i) => {
+                const href = rows[i].href;
+                if (href) navigate(href);
+              }}
+            />
+          </section>
+          {step.kind !== "arrived" && (
+            <>
+              <p className={styles.caption}>{t("trip.keepOpen")}</p>
+              <div className={styles.endRow}>
+                <Button variant="danger-text" label={t("trip.end")} onPress={() => setConfirmEnd(true)} />
+              </div>
+            </>
+          )}
+          {simAllowed && step.kind !== "arrived" && (
+            <div className={styles.sim}>
+              <Button
+                variant="outline"
+                icon="directions_walk"
+                label={t(simFrom === null ? "trip.sim.start" : "trip.sim.stop")}
+                onPress={() => setSimFrom(simFrom === null ? legIndex : null)}
+              />
+              {simFix && <p className={styles.caption}>{t("trip.sim.note")}</p>}
+            </div>
+          )}
+        </div>
+      </ExploreSheet>
+      {/* Outside the sheet: its body is hidden at the peek, where End on the bar opens this. */}
       <Dialog
         open={confirmEnd}
         onClose={() => setConfirmEnd(false)}
@@ -367,7 +378,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
           { label: t("trip.end"), variant: "danger-text", onPress: endFromDialog },
         ]}
       />
-    </ExploreSheet>
+    </>
   );
 }
 
