@@ -102,6 +102,13 @@ export function ExploreLayout() {
 
   const onTrip = location.pathname === "/explore/trip";
   const arriveAt = trip.active && formatClock(trip.active.itinerary.endTime, lang);
+  // The banner's X ends the trip at once; Undo restarts the same one where it was.
+  const endTrip = () => {
+    const ended = trip.active;
+    if (!ended) return;
+    trip.end();
+    toast({ message: t("banner.tripEnded"), action: { label: t("common.undo"), onPress: () => trip.resume(ended) } });
+  };
   // "Showing Downtown Houston" is only true where the list is anchored on the rider (D2/D3 without a fix).
   const downtown = !rider.fix && location.pathname === "/explore" && !new URLSearchParams(location.search).has("at");
 
@@ -111,7 +118,7 @@ export function ExploreLayout() {
     : offline
       ? undefined
       : arriveAt && !onTrip
-      ? { kind: "trip-active", arriveAt, onOpen: () => navigate("/explore/trip") }
+      ? { kind: "trip-active", arriveAt, onOpen: () => navigate("/explore/trip"), onEnd: endTrip }
       : chrome?.banner === "search-this-area" && center
         ? { kind: "search-this-area", onPress: () => navigate(`/explore?at=${formatLatLon(center)}&label=${encodeURIComponent(t("map.thisArea"))}`) }
         : downtown

@@ -47,6 +47,10 @@ export const tripActions = {
   setStep(stepIndex: number) {
     store.set((s) => (s.active ? { ...s, active: { ...s.active, stepIndex } } : s));
   },
+  /** Puts back a trip that was just ended (the banner's Undo). */
+  resume(active: ActiveTrip) {
+    store.set((s) => ({ ...s, active }));
+  },
   /** Ends the active trip; the planned one stays so it can be restarted. */
   end() {
     store.set((s) => ({ ...s, active: undefined }));

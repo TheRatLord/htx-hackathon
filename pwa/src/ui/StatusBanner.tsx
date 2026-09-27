@@ -1,4 +1,5 @@
 import { useT } from "../i18n/index.ts";
+import { Icon } from "./Icon.tsx";
 import styles from "./StatusBanner.module.css";
 import type { OverlayItem } from "./types.ts";
 
@@ -39,6 +40,11 @@ export function StatusBanner({ item }: { item: OverlayItem }) {
           {item.onOpen && (
             <button type="button" className={styles.open} onClick={item.onOpen}>
               {t("common.open")} ›
+            </button>
+          )}
+          {item.onEnd && (
+            <button type="button" className={styles.end} aria-label={t("banner.endTrip")} onClick={item.onEnd}>
+              <Icon name="close" size={20} />
             </button>
           )}
         </div>
