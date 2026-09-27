@@ -18,7 +18,7 @@ import { itineraryTimeline, rowForStep, stopTitle } from "../../../features/trip
 import { destinationOf, useLiveTrip } from "../../../features/trip/useLiveTrip.ts";
 import { useWakeLock } from "../../../features/trip/wakeLock.ts";
 import { useLang, useT, type Lang } from "../../../i18n/index.ts";
-import { ageMinutes, STALE_VEHICLE_S } from "../../../lib/format.ts";
+import { ageMinutes, formatClock, STALE_VEHICLE_S } from "../../../lib/format.ts";
 import { boundsOf, formatLatLon } from "../../../lib/geo.ts";
 import { BUZZ, notify, notifyPermission, vibrate } from "../../../lib/notify.ts";
 import { planUrl } from "../../../lib/planQuery.ts";
@@ -98,6 +98,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   const { setSnap } = useSheet();
   const toast = useToast();
   const onBack = useBack();
+  const stepsRef = useRef<HTMLElement>(null);
   const it = active.itinerary;
 
   // "Simulate moving": demo sessions only (a pinned ?demoLoc= or ?simulate=1).
@@ -261,10 +262,25 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   }
 
   const summary = stepSummary(step, destination.name, t, lang);
+  // Pulled all the way up, the sheet lists every step under the current one (as Google Maps does).
+  const rows = itineraryTimeline(it, { fromName: originName, toName: destination.name, pace: walkPace, lang });
+  const showAllSteps = () => {
+    setSnap("full");
+    requestAnimationFrame(() => stepsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  };
   return (
     <ExploreSheet
       ariaLabel={t("trip.title")}
       onBack={onBack}
+      // Tucked away: when the rider arrives and what to do now, in two short lines.
+      peek={
+        <div className={styles.peek}>
+          <p className={styles.peekTime}>
+            {step.kind === "arrived" ? t("trip.complete") : t("trip.peekArrive", { time: formatClock(it.endTime, lang) })}
+          </p>
+          <p className={styles.peekStep}>{summary}</p>
+        </div>
+      }
       header={
         // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
         <PlanHeader
@@ -273,10 +289,7 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
             <Button
               variant="text"
               label={`${t("trip.allSteps")} ›`}
-              onPress={() => {
-                setSnap("full");
-                navigate(`/explore/trip?view=steps`);
-              }}
+              onPress={showAllSteps}
             />
           }
         />
@@ -311,6 +324,19 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
           />
         </section>
         <NotifyPermissionCard context="trip" />
+        <section ref={stepsRef} className={styles.allSteps} aria-labelledby="trip-all-steps">
+          <h2 id="trip-all-steps" className={styles.allStepsTitle}>
+            {t("trip.allSteps")}
+          </h2>
+          <StepList
+            steps={rows.map((r) => r.step)}
+            currentIndex={rowForStep(rows, step)}
+            onStepPress={(_, i) => {
+              const href = rows[i].href;
+              if (href) navigate(href);
+            }}
+          />
+        </section>
         {step.kind !== "arrived" && (
           <>
             <p className={styles.caption}>{t("trip.keepOpen")}</p>
