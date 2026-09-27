@@ -195,7 +195,7 @@ export type FabProps =
   | { kind: "myTrip"; onPress: () => void };
 
 /** C.10 */
-type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text";
+type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text" | "danger-outline";
 
 export interface ButtonProps {
   variant: ButtonVariant;
