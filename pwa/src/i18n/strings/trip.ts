@@ -6,6 +6,7 @@ const strings: Strings = {
     trip: {
       title: "Live trip",
       stepOf: "Step {n} of {total}",
+      peekArrive: "Arrive {time}",
       complete: "Trip complete",
       allSteps: "All steps",
       walk: {
@@ -69,6 +70,7 @@ const strings: Strings = {
     trip: {
       title: "Viaje en curso",
       stepOf: "Paso {n} de {total}",
+      peekArrive: "Llegada {time}",
       complete: "Viaje terminado",
       allSteps: "Todos los pasos",
       walk: {
