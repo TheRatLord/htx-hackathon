@@ -182,21 +182,97 @@ export interface ClusterItem {
   p: Pt;
 }
 
+/** How much farther than the merge radius (×) a cluster's pins may drift apart before it splits. */
+export const KEEP_TOGETHER = 1.5;
+
 /**
- * Pins closer than `radius` px merge into one cluster pin, in priority order: each item joins the
- * first cluster whose first member is within reach, else starts its own. Two pins 25px apart
- * (567 and 259, 42) read as one stop with a tag floating between them.
+ * Each pair's own merge distance, `radius` ± SPREAD, fixed by their IDs: downtown's stops sit a
+ * block apart, and with one threshold for all, a whole grid of pairs merged (or split) on the same
+ * slight zoom. Spread out, a small zoom changes only a few.
  */
-export function clusterPoints<T extends ClusterItem>(items: T[], radius = 40): { members: T[]; p: Pt }[] {
-  const out: { members: T[]; p: Pt }[] = [];
-  for (const it of items) {
-    const near = out.find((c) => Math.hypot(c.members[0].p.x - it.p.x, c.members[0].p.y - it.p.y) < radius);
-    if (near) near.members.push(it);
-    else out.push({ members: [it], p: it.p });
+const SPREAD = 0.2;
+function reach(a: string, b: string, radius: number) {
+  const key = a < b ? a + "|" + b : b + "|" + a;
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
+  return radius * (1 - SPREAD + (2 * SPREAD * (h >>> 0)) / 2 ** 32);
+}
+
+const centroid = (ps: Pt[]): Pt => ({ x: ps.reduce((a, p) => a + p.x, 0) / ps.length, y: ps.reduce((a, p) => a + p.y, 0) / ps.length });
+const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/**
+ * Pins closer than about `radius` px (see reach) merge into one cluster pin: each joins the nearest cluster whose
+ * centre is within reach, else starts its own, and two clusters that come within reach of each
+ * other merge. Members keep their priority order (the first, listed one leads). Two pins 25px apart
+ * (567 and 259, 42) read as one stop with a tag floating between them.
+ *
+ * `prev` maps each pin to the cluster it was drawn in last time (see clusterKeys). Those clusters
+ * are kept, less any pin now KEEP_TOGETHER × `radius` from the rest, and the other pins are added
+ * around them: a slight zoom or pan merges or splits only the pins it moved past the threshold,
+ * instead of regrouping pins all over the map (the jump at one zoom, a greedy pass re-seeded).
+ */
+export function clusterPoints<T extends ClusterItem>(items: T[], radius = 40, prev?: ReadonlyMap<string, string>): { members: T[]; p: Pt }[] {
+  const order = new Map(items.map((it, i) => [it, i]));
+  type C = { members: T[]; p: Pt };
+  const out: C[] = [];
+  const loose: T[] = [];
+  if (prev?.size) {
+    const kept = new Map<string, T[]>();
+    for (const it of items) {
+      const key = prev.get(it.id);
+      if (key === undefined) loose.push(it);
+      else kept.set(key, [...(kept.get(key) ?? []), it]);
+    }
+    for (const members of kept.values()) {
+      // The pin farthest from the others leaves first, until every one is within reach of the rest.
+      while (members.length > 1) {
+        const far = members
+          .map((m) => {
+            const rest = members.filter((x) => x !== m);
+            return { m, over: dist(m.p, centroid(rest.map((x) => x.p))) / reach(m.id, rest[0].id, radius * KEEP_TOGETHER) };
+          })
+          .sort((a, b) => b.over - a.over)[0];
+        if (far.over < 1) break;
+        members.splice(members.indexOf(far.m), 1);
+        loose.push(far.m);
+      }
+      if (members.length > 1) out.push({ members, p: centroid(members.map((m) => m.p)) });
+      else loose.push(...members);
+    }
+    loose.sort((a, b) => order.get(a)! - order.get(b)!);
+  } else loose.push(...items);
+  for (const it of loose) {
+    const near = out
+      .map((c) => ({ c, d: dist(c.p, it.p) / reach(c.members[0].id, it.id, radius) }))
+      .filter(({ d }) => d < 1)
+      .sort((a, b) => a.d - b.d)[0]?.c;
+    if (near) {
+      near.members.push(it);
+      near.p = centroid(near.members.map((m) => m.p));
+    } else out.push({ members: [it], p: it.p });
   }
-  for (const c of out)
-    if (c.members.length > 1) c.p = { x: c.members.reduce((a, m) => a + m.p.x, 0) / c.members.length, y: c.members.reduce((a, m) => a + m.p.y, 0) / c.members.length };
-  return out;
+  // Clusters that came within reach of each other merge, the closest pair first.
+  for (;;) {
+    let best: [number, number, number] | undefined;
+    for (let i = 0; i < out.length; i++)
+      for (let j = i + 1; j < out.length; j++) {
+        const d = dist(out[i].p, out[j].p) / reach(out[i].members[0].id, out[j].members[0].id, radius);
+        if (d < 1 && (!best || d < best[2])) best = [i, j, d];
+      }
+    if (!best) break;
+    const [a, b] = [out[best[0]], out[best[1]]];
+    a.members.push(...b.members);
+    a.p = centroid(a.members.map((m) => m.p));
+    out.splice(best[1], 1);
+  }
+  for (const c of out) c.members.sort((a, b) => order.get(a)! - order.get(b)!);
+  return out.sort((a, b) => order.get(a.members[0])! - order.get(b.members[0])!);
+}
+
+/** Each clustered pin's cluster, for the next clusterPoints: a key shared by the cluster's pins. */
+export function clusterKeys(groups: { members: ClusterItem[] }[]): Map<string, string> {
+  return new Map(groups.flatMap((g) => (g.members.length > 1 ? g.members.map((m) => [m.id, g.members[0].id] as const) : [])));
 }
 
 /** A cluster's tag: its IDs in priority order ("567 · 259"), at most three, then "+n". */

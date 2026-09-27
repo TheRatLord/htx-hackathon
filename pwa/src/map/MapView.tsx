@@ -19,6 +19,8 @@ import { addSceneLayers, drawScene, hideSceneLabels, legLabelId, legLine, type M
 import {
   addTransitLayers,
   LABELLED_NEAREST,
+  PINS_ZOOM,
+  pinScale,
   rankFrom,
   setClusters,
   setCoveredStops,
@@ -32,7 +34,7 @@ import {
   stopsCollection,
   transitAt,
 } from "./layers/transit.ts";
-import { around, chipRoom, roomAround, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
+import { around, chipRoom, roomAround, clusterKeys, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -249,6 +251,12 @@ const MERGE_PX = 72;
 const CLUSTER_MAX_ZOOM = 19;
 /** Pins closer than this (px) are drawn as one cluster pin tagged with every ID ("567 · 259"). */
 const CLUSTER_PX = 40;
+/**
+ * The stop pins' cluster radius at `zoom`: CLUSTER_PX from 16, widening to 56px at 15 (about one pin
+ * per block downtown, not one per corner). It changes with the zoom, not in a step, so pins merge
+ * one pair at a time as the rider zooms out rather than all at once.
+ */
+const stopClusterPx = (zoom: number) => CLUSTER_PX + 16 * Math.min(1, Math.max(0, 16 - zoom));
 /** A listed stop, its tag or a place pin is kept this far (px) from the FAB column, search bar and sheet edge. */
 const CLEAR_PX = 40;
 /** A tag keeps this far (px) from the search bar. */
@@ -374,6 +382,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
   const nudgeArmed = useRef(0);
   /** Set when no nudge could make room above a listed stop: its tag may then go beside its pin. */
   const besideOk = useRef(false);
+  /** Each clustered stop's cluster (its first stop) as last drawn: pins drawn as one split only past KEEP_TOGETHER. */
+  const clusterOf = useRef(new Map<string, string>());
   /** A new scene, sheet snap or chrome change: the map may be nudged again, above-only tags first. */
   const arm = () => {
     nudgeArmed.current = NUDGES;
@@ -551,8 +561,12 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
         // The scene's own stops (the cards listed in the sheet) are tagged first, then the nearest.
         const tagged = scene.tagStopIds ?? [];
         const taggedAt = new Map(tagged.map((id, i) => [id, i]));
-        const z16 = map.getZoom() >= 16;
-        const pinHalf = z16 ? 14 : 10;
+        const zoom = map.getZoom();
+        const z16 = zoom >= 16;
+        // Pins are clustered wherever they are drawn (from zoom 15), so nothing appears or merges at 16.
+        const clustering = zoom >= PINS_ZOOM;
+        const scale = pinScale(zoom);
+        const pinHalf = 14 * scale;
         const inView: { id: string; s: ClientStop; p: Pt; r: number }[] = [];
         const covered: string[] = [];
         for (const s of stopsWithin(stops, b.getWest(), b.getSouth(), b.getEast(), b.getNorth())) {
@@ -560,7 +574,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
           inView.push({ id: s.id, s, p: proj(s), r: taggedAt.get(s.id) ?? 1e6 + rank(s) });
         }
         inView.sort((a, c) => a.r - c.r);
-        // From zoom 16 (every pin drawn), pins closer than CLUSTER_PX are one cluster pin, bus and
+        // Wherever pins are drawn, those closer than CLUSTER_PX are one cluster pin, bus and
         // rail apart: its tag names each stop, the listed ones first ("567 · 259", 42). Pins under
         // the chrome are clustered too, so the pair is the same whether or not a FAB hides one.
         type Group = { members: typeof inView; p: Pt };
@@ -595,10 +609,15 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
         }
         const free = inView.filter((x) => !underTc(x));
         const isCovered = (p: Pt) => covering.some((o) => overlaps(around(p, CHROME_GAP_BOX), o));
-        let groups: Group[] = z16
-          ? [...clusterPoints(free.filter((x) => x.s.kind !== "rail"), CLUSTER_PX), ...clusterPoints(free.filter((x) => x.s.kind === "rail"), CLUSTER_PX), ...loose]
+        const prev = clusterOf.current;
+        let groups: Group[] = clustering
+          ? [
+              ...clusterPoints(free.filter((x) => x.s.kind !== "rail"), stopClusterPx(zoom), prev),
+              ...clusterPoints(free.filter((x) => x.s.kind === "rail"), stopClusterPx(zoom), prev),
+              ...loose,
+            ]
           : inView.map((x) => ({ members: [x], p: x.p }));
-        if (z16) groups = mergeCovered(groups);
+        if (clustering) groups = mergeCovered(groups);
         groups = groups.filter((g) => {
           // A pin under the search bar or a FAB is left out; a listed one is nudged into view.
           if (!isCovered(g.p)) return true;
@@ -606,7 +625,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
           if (g.members.some((x) => taggedAt.has(x.id)) && g.p.y < mapBottom) blocked.push({ p: g.p, room: square(16), need: "pin" });
           return false;
         });
-        const halfOf = (g: Group) => (g.members.length > 1 ? 16 : pinHalf);
+        const halfOf = (g: Group) => (g.members.length > 1 ? 16 * scale : pinHalf);
         // The sheet's own stops only, when it lists some: an unlisted stop's tag ("3425" over
         // Westheimer Rd, 03) was one more number to match against the cards, and none of them.
         const want = tagged.length || LABELLED_NEAREST;
@@ -673,6 +692,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
         // Listed stops stay on the map strip with their tags when the map is nudged for something else.
         keepPts.push(...visible.filter(isListed).map((g) => ({ p: g.p, room: tagRoom.get(g) ?? PIN_BOX })));
         const clusters: StopCluster[] = [];
+        // Only the pins on screen are remembered: one panned away and back is clustered afresh.
+        clusterOf.current = clusterKeys(groups);
         for (const g of groups) {
           if (g.members.length < 2) continue;
           clusters.push({ at: { lat: map.unproject([g.p.x, g.p.y]).lat, lon: map.unproject([g.p.x, g.p.y]).lng }, ids: g.members.map((x) => x.id), rail: g.members[0].s.kind === "rail" });
@@ -749,6 +770,16 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
       });
       m.on("zoomstart", (e) => {
         if (latest.current.following && (e as { originalEvent?: Event }).originalEvent) followZoomed.current = true;
+      });
+      // Stops are re-clustered as the zoom goes, not only once it ends: pins that came together
+      // mid-pinch overlapped, and a stack hid pins already apart, until the fingers lifted.
+      let clusterFrame = 0;
+      m.on("zoom", () => {
+        if (clusterFrame) return;
+        clusterFrame = requestAnimationFrame(() => {
+          clusterFrame = 0;
+          if (mapRef.current === m) placeLabels(m);
+        });
       });
       // A pin opens its stop directly (no "Choose Direction" step, C.16).
       m.on("click", (e) => {

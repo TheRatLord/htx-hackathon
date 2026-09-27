@@ -321,7 +321,7 @@ function queryMap(page: Page, stopId: string, kind: "pin" | "tag", rebuild = fal
     const m = (window as unknown as { __map?: M }).__map;
     if (!m) return { ok: false, error: "map not hooked yet" };
     const idle = () => new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
-    const wanted = kind === "pin" ? ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
+    const wanted = kind === "pin" ? ["stops-pin", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
     const layers = wanted.filter((l) => m.getLayer(l));
     if (rebuild) {
       // Same data, fresh tiles: the source re-parses them and the feature index is built again.
