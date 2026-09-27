@@ -10,6 +10,7 @@ import { isAdvisory } from "../../lib/alerts.ts";
 import { formatClock } from "../../lib/format.ts";
 import { formatLatLon } from "../../lib/geo.ts";
 import { useMapCenter } from "../../map/scene.ts";
+import { requestCompass } from "../../state/heading.ts";
 import { useLocation as useRiderLocation } from "../../state/location.tsx";
 import { useOffline, useOfflineSince } from "../../state/offline.ts";
 import { useTrip } from "../../state/trip.ts";
@@ -63,7 +64,7 @@ export function ExploreLayout() {
   const alerts = useAlerts();
   const toast = useToast();
   const center = useMapCenter();
-  const { sheetH, setSheetH, setMapVisible, locate } = useMapHost();
+  const { sheetH, setSheetH, setMapVisible, locate, following } = useMapHost();
 
   const [snap, setSnap] = usePerScreen<Snap>(location.pathname, "half");
   const [minHalf, setMinHalf] = usePerScreen<number | undefined>(location.pathname, undefined);
@@ -109,14 +110,18 @@ export function ExploreLayout() {
             ? { kind: "demo-location" }
             : undefined;
 
+  // Locate centres on the rider and follows them. The tap is also iOS's one chance to ask for the
+  // compass (the beam on the dot); elsewhere requestCompass does nothing.
   const onLocate = () => {
-    if (rider.fix) return locate();
+    requestCompass();
+    locate();
+    if (rider.fix) return;
     rider.request();
     toast({ message: t("map.noFix") });
   };
 
   const requested: FabProps[] = (chrome?.fabs ?? DEFAULT_FABS).flatMap((f): FabProps[] => {
-    if (f === "locate") return [{ kind: "locate", onPress: onLocate }];
+    if (f === "locate") return [{ kind: "locate", following: following && Boolean(rider.fix), onPress: onLocate }];
     if (f === "planTrip")
       return [trip.active ? { kind: "myTrip", onPress: () => navigate("/explore/trip") } : { kind: "planTrip", onPress: () => navigate("/explore/plan") }];
     const list = alerts.source === "unavailable" ? [] : alerts.forRoute(f.routeId);
