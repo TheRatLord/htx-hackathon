@@ -544,3 +544,11 @@ All 26 findings of the F0a review were fixed. Where the fix differs from the rev
 - Need: TabLayout's Frame is `surface` (white), so its `padding-bottom` shows a white strip under
   pages that now use `--c-background` like today's app. `background="background"` fixes it.
 - Status: done (34fb41e)
+
+## Button: `danger-outline` (End on the live trip's bar)
+- From: live trip (D13), tucked sheet
+- Where: src/ui/Button.module.css, src/ui/types.ts
+- Need: End on the tucked trip bar stands alone at the right of the arrival time, as Google Maps
+  has it. `danger-text` read as a link there; a surface pill with the alert text colour and
+  `--c-alert-border` reads as a button and stays clearly destructive. It asks before ending.
+- Status: done
