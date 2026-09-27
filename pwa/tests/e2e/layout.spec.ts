@@ -26,7 +26,7 @@
 // when its feature index keeps throwing the guard fails, it never answers from the app's own data.
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { firstTimeBox, GPS, launch, ONBOARDED, pinPosition, SAVED_2958, settle, tagPosition, type Gps } from "./helpers.ts";
+import { firstTimeBox, GPS, launch, ONBOARDED, pinPosition, SAVED_2958, settle, showList, tagPosition, type Gps } from "./helpers.ts";
 
 const PLAN_Q = "from=29.71990%2C-95.34220&to=landmark%3Ahobby-airport&toName=Hobby+Airport";
 const prefs = (lang: "en" | "es", textSize: "standard" | "xlarge") => ({ "ridemetro.prefs": { welcomed: true, lang, textSize, walkPace: "normal" } });
@@ -207,6 +207,7 @@ test.describe("layout guards", () => {
     expect(stopFirst, "stop sheet shows a departure").not.toBeNull();
     await page.goto("/explore");
     await page.waitForTimeout(2000);
+    await showList(page).tap();
     const card = page.locator("article").filter({ has: page.locator("h2", { hasText: "Westheimer Rd @ Montrose Blvd" }) }).first();
     await expect(card).toBeVisible();
     const homeFirst = await firstTimeBox(card);
@@ -217,6 +218,8 @@ test.describe("layout guards", () => {
 
   test("G6 first listed stop has a pin in the map strip: Home, Spanish 360x640", async ({ page }) => {
     await open(page, "/explore", { storage: prefs("es", "standard"), small: true });
+    await page.waitForTimeout(1500);
+    await showList(page, "Ver lista").tap();
     await page.waitForTimeout(1500);
     const first = page.locator("article h2, article h3").filter({ hasText: /\(\d+\)/ }).first();
     await expect(first).toBeVisible();
@@ -244,6 +247,9 @@ test.describe("layout guards", () => {
     await page.waitForTimeout(1200);
     await page.getByRole("button", { name: /Start trip/ }).first().tap();
     await page.waitForTimeout(1200);
+    // The trip opens on its bar: Next step is on the step card, one tap up.
+    await showList(page).tap();
+    await page.waitForTimeout(600);
     await page.getByRole("button", { name: /Next step/ }).first().tap();
     await page.waitForTimeout(1200);
     const line = page.getByText(/^(Scheduled time · )?Next (bus|one)\b/).filter({ visible: true }).first();
@@ -277,6 +283,7 @@ test.describe("layout guards", () => {
       return (await el.isVisible().catch(() => false)) ? (await el.innerText()).replace(/\s+/g, " ").trim() : null;
     };
     await open(page, "/explore", { gps: GPS.montrose, storage: { ...ONBOARDED, ...SAVED_2958 } });
+    await showList(page).tap();
     const card = page.locator("article").filter({ has: page.locator("h2", { hasText: "Westheimer Rd @ Montrose Blvd" }) }).first();
     await expect(card).toBeVisible();
     const home = await caption(card);
