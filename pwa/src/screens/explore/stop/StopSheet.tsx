@@ -160,8 +160,9 @@ function Loaded({ detail }: { detail: StopDetail }) {
   const strip = useRef<HTMLDivElement>(null);
   const route = useRoute(expanded?.routeId ?? "", { enabled: Boolean(expanded) });
   const dir = route.data?.directions.find((d) => d.stopIds.includes(stop.id));
-  const routeLine = dir && route.data ? { coords: dir.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), color: route.data.color } : undefined;
-  // The expanded route's line through the stop, as today: riders use it to confirm the direction.
+  const routeLine = dir && route.data ? { coords: dir.shapePoints.map(([lat, lon]) => [lon, lat] as [number, number]), color: route.data.color, stopIds: dir.stopIds } : undefined;
+  // The expanded route's line through the stop, as today, with its stops: riders use it to confirm
+  // the direction and see where the bus stops. Itineraries leave these out (their own markers only).
   useMapScene({ focus: { kind: "point", point: stop, zoom: STOP_ZOOM }, highlightStopId: stop.id, routeLine }, [stop.id, dir]);
   useHalfUpTo(() => strip.current, foldCap, expanded ? servingKey(expanded) : "");
 
