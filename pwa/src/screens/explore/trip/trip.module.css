@@ -7,6 +7,30 @@
   padding: 0 var(--gutter) var(--sp-4);
 }
 
+/* The minimized sheet: the step's title and its instruction, one line each. */
+.peek {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter) var(--sp-2);
+}
+
+.peekTitle {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.peekLine {
+  font-weight: var(--fw-medium);
+}
+
+.peekTitle,
+.peekLine {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .card {
   display: flex;
   flex-direction: column;

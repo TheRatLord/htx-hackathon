@@ -261,14 +261,23 @@ function Running({ active, destination }: { active: ActiveTrip; destination: Pla
   }
 
   const summary = stepSummary(step, destination.name, t, lang);
+  const title = step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total });
   return (
     <ExploreSheet
       ariaLabel={t("trip.title")}
       onBack={onBack}
+      // Minimized, as in Google Maps: the step's title and its one-line instruction over the map
+      // (the sheet's own row above it carries Back and "Show list").
+      peek={
+        <div className={styles.peek}>
+          <p className={styles.peekTitle}>{title}</p>
+          <p className={styles.peekLine}>{summary}</p>
+        </div>
+      }
       header={
         // The shared title row, so Back and the one chevron share a row and no "Show list" row is added.
         <PlanHeader
-          title={step.kind === "arrived" ? t("trip.complete") : t("trip.stepOf", { n, total })}
+          title={title}
           right={
             <Button
               variant="text"

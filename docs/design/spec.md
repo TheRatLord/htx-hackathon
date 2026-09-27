@@ -169,7 +169,7 @@
   --chip-band: 7px;               /* navy top band height (sm: 6px) */
   --strip-h: 64px;                /* blue live-minutes strip */
   --sheet-peek: 132px;
-  --sheet-half-min: 340px;        /* see C.6 snap rules */
+  --sheet-half-min: 220px;        /* see C.6 snap rules */
   --icon: 24px;
 
   /* ---------- Motion ---------- */
@@ -337,7 +337,7 @@ It shows the 2 soonest upcoming departures across bays. The body and "Departures
 
 ### C.6 BottomSheet
 - **Anatomy:** `--c-surface`, top radius `--r-sheet`, `--e-sheet`. A **handle zone 48dp tall**: the 32x4dp handle (`--c-handle`) centred 10dp from the top, **"‹ Back" at its left end and "Show list ▲ / Show map ▼" at its right end**. These two text buttons live in the handle zone **only**, never in the title row, so a title such as "Route 40 near you" (22sp) gets the full width at 360dp. Below it, a **header row** holds the title (and optional right slot for a short action like "Edit"). The body scrolls. An optional **`footer`** is pinned to the bottom of the sheet (above the nav), outside the scroll area, with a 1dp `--c-divider` top edge and `--c-surface` background, and is visible at `half` and `full` (D12 Start trip). The sheet sits above the bottom nav.
-- **Snap points:** `peek` = `--sheet-peek` (handle + header + one line). `half` = `clamp(var(--sheet-half-min), 52dvh, 460px)`, or larger when a screen passes `minHalf` (for example the route-filtered view asks for `min(contentHeight, 75dvh)`). `full` = top at `env(safe-area-inset-top) + 8px`. It covers the search bar, and the FABs hide.
+- **Snap points:** `peek` = `--sheet-peek` (handle + header + one line). `half` = `clamp(var(--sheet-half-min), 36dvh, 320px)`, or larger when a screen passes `minHalf`, never past 45dvh (Google Maps proportions: most of the screen stays map, and the rider drags up for more). `full` = top at `env(safe-area-inset-top) + 8px`. It covers the search bar, and the FABs hide.
 - **No-drag alternative (WCAG 2.5.7):** the handle zone always has a text button at its far right: **"Show list ▲"** in peek and half (goes to full) and **"Show map ▼"** in full (goes to half). 16sp Medium `--c-link-text`, 48dp target. Dragging also works (pointer events, 30% velocity threshold). Swiping down from half goes to peek. **Swiping never closes or discards anything.**
 - **Props:** `{ snap: Snap; onSnapChange(s: Snap): void; minHalf?: number; onBack?: () => void; header: ReactNode; peek?: ReactNode; footer?: ReactNode; children; allowPeek?: boolean (default true); ariaLabel: string }`. `peek` is what the peek state shows instead of the header (e.g. D11's "▶ Start" summary).
 - **a11y:** `role="region"` with `aria-label`. The Show list/Show map button has `aria-expanded`. When the snap changes, focus stays where it was. **On route change** (a new screen mounts in the sheet), focus moves to the sheet title, which is an `<h1 tabindex="-1">`. Reduced motion means no animation.
