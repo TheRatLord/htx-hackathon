@@ -21,7 +21,7 @@
 
 /* --half-max: set by a screen to end the half sheet on a whole line (useHalfUpTo). */
 .half {
-  height: min(calc(100% - 8px), var(--half-max, 100%), max(var(--sheet-half-min), min(calc(0.36 * var(--win-h, 100dvh)), 320px), var(--min-half)));
+  height: min(calc(100% - 8px), var(--half-max, 100%), max(var(--sheet-half-min), min(calc(0.52 * var(--win-h, 100dvh)), 460px), var(--min-half)));
 }
 
 /* Full: the sheet covers the whole map (no strip of map and pins peeking over its corners). */
@@ -58,19 +58,6 @@
 .headerZone {
   flex: none;
   touch-action: none;
-}
-
-/* A drag on the grips must not select their text: a mouse press on selected text starts a native
-   drag of it, which cancels the next swipe of the sheet (up or down). */
-.handleZone,
-.headerZone {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.headerZone :is(input, textarea) {
-  -webkit-user-select: text;
-  user-select: text;
 }
 
 .handle {
