@@ -44,6 +44,19 @@
   font-weight: var(--fw-medium);
 }
 
+/* The X that ends the trip: a 48dp target at the banner's right edge, over its padding. */
+.end {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--touch-min);
+  min-height: var(--touch-min);
+  margin: calc(-1 * var(--sp-1)) calc(-1 * var(--sp-3)) calc(-1 * var(--sp-1)) calc(-1 * var(--sp-2));
+  border: none;
+  background: none;
+  color: #fff;
+}
+
 .pill {
   min-height: var(--touch-min);
   margin: 0 auto;

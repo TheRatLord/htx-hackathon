@@ -269,7 +269,7 @@ export interface AlertStatusLineProps {
 /** C.12 map overlay slot (StatusBanner), in priority order. */
 export type OverlayItem =
   | { kind: "offline"; since?: string }
-  | { kind: "trip-active"; arriveAt: string; onOpen?: () => void; complete?: boolean }
+  | { kind: "trip-active"; arriveAt: string; onOpen?: () => void; onEnd?: () => void; complete?: boolean }
   | { kind: "search-this-area"; onPress: () => void }
   | { kind: "downtown-fallback" }
   | { kind: "demo-location" };
