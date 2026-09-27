@@ -188,7 +188,7 @@ export interface SearchFieldProps {
 
 /** C.9 */
 export type FabProps =
-  | { kind: "locate"; onPress: () => void }
+  | { kind: "locate"; /** Follow mode is on: the map keeps the rider's dot centred. */ following?: boolean; onPress: () => void }
   | { kind: "ticket"; onPress: () => void }
   | { kind: "planTrip"; onPress: () => void }
   | { kind: "routeAlerts"; count: number; /** Every alert is an advisory: navy (i), not the red warning. */ advisory?: boolean; onPress: () => void }

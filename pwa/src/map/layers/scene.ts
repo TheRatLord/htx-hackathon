@@ -1,6 +1,6 @@
 // The layers a screen draws through the Scene API (C.16): the selected route, itinerary and walk
 // legs under the stop pins; markers, live buses, the highlighted stop with its "Stop: 342"
-// callout and the rider's dot above them; marker labels placed around them.
+// callout and the rider's dot (and the way they face) above them; marker labels placed around them.
 
 import type { Feature as GeoFeature, FeatureCollection, Geometry } from "geojson";
 import type maplibregl from "maplibre-gl";
@@ -39,6 +39,7 @@ export function addSceneLayers(map: maplibregl.Map) {
   labelPoints = {};
   merged = {};
   lastPoints = [];
+  shownUser = shownHeading = undefined;
   for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const lines: maplibregl.LayerSpecification[] = [
     { id: "scene-route-casing", type: "line", source: "scene-route", paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
@@ -156,6 +157,21 @@ export function addSceneLayers(map: maplibregl.Map) {
     source: "scene-user",
     paint: { "circle-color": token("--c-user-dot"), "circle-opacity": 0.15 },
   });
+  // The way the rider faces (state/heading.ts, else the GPS course): a beam under the dot, turned
+  // from north, so it points the same way however the map is framed.
+  map.addLayer({
+    id: "scene-user-heading",
+    type: "symbol",
+    source: "scene-user",
+    filter: ["has", "heading"],
+    layout: {
+      "icon-image": "heading-cone",
+      "icon-rotate": ["get", "heading"],
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+  });
   map.addLayer({
     id: "scene-user",
     type: "symbol",
@@ -222,9 +238,26 @@ function haloRadius(user: Fix): maplibregl.ExpressionSpecification {
   return ["interpolate", ["exponential", 2], ["zoom"], 10, px(10), 20, px(20)];
 }
 
+let shownUser: Fix | undefined;
+let shownHeading: number | undefined;
+
+function drawUser(map: maplibregl.Map) {
+  const u = shownUser;
+  src(map, "scene-user")?.setData(collection(u ? [point(u, shownHeading === undefined ? {} : { heading: Math.round(shownHeading) })] : []));
+}
+
 export function showUser(map: maplibregl.Map, user: Fix | undefined) {
-  src(map, "scene-user")?.setData(collection(user ? [point(user, {})] : []));
+  shownUser = user;
+  drawUser(map);
   if (user) map.setPaintProperty("scene-user-halo", "circle-radius", haloRadius(user));
+}
+
+/** Turns the dot's beam to `heading` (degrees clockwise from north); undefined hides it. */
+export function showHeading(map: maplibregl.Map, heading: number | undefined) {
+  const next = heading === undefined ? undefined : Math.round(heading);
+  if (next === shownHeading) return;
+  shownHeading = next;
+  if (shownUser) drawUser(map);
 }
 
 /**

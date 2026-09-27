@@ -17,6 +17,10 @@
   padding: 0 var(--sp-4);
 }
 
+.following {
+  background: var(--c-accent-icon);
+}
+
 .alert {
   color: var(--c-alert-text);
 }
