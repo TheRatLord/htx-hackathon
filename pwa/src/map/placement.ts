@@ -270,6 +270,24 @@ export function clusterPoints<T extends ClusterItem>(items: T[], radius = 40, pr
   return out.sort((a, b) => order.get(a.members[0])! - order.get(b.members[0])!);
 }
 
+/** How far past the widest a drawn cluster can hold together (px) a tapped stack's pins are zoomed apart. */
+const SPLIT_MARGIN_PX = 12;
+
+/**
+ * The zoom at which pins now at `ps` (px, at `zoom`) all come apart, each pair past the widest a
+ * drawn cluster holds together (KEEP_TOGETHER × the widest reach of `radiusAt` that zoom), so one
+ * tap on a stack shows its stops as pins of their own. `maxZoom` when they never do (one pole).
+ */
+export function splitZoom(ps: Pt[], zoom: number, radiusAt: (zoom: number) => number, maxZoom: number): number {
+  let closest = Infinity;
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) closest = Math.min(closest, dist(ps[i], ps[j]));
+  if (!Number.isFinite(closest)) return zoom;
+  for (let z = zoom; z < maxZoom; z += 0.05) {
+    if (closest * 2 ** (z - zoom) >= radiusAt(z) * KEEP_TOGETHER * (1 + SPREAD) + SPLIT_MARGIN_PX) return z;
+  }
+  return maxZoom;
+}
+
 /** Each clustered pin's cluster, for the next clusterPoints: a key shared by the cluster's pins. */
 export function clusterKeys(groups: { members: ClusterItem[] }[]): Map<string, string> {
   return new Map(groups.flatMap((g) => (g.members.length > 1 ? g.members.map((m) => [m.id, g.members[0].id] as const) : [])));

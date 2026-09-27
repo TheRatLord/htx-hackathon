@@ -34,7 +34,7 @@ import {
   stopsCollection,
   transitAt,
 } from "./layers/transit.ts";
-import { around, chipRoom, roomAround, clusterKeys, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
+import { around, chipRoom, roomAround, clusterKeys, clusterLabel, clusterPoints, lineRects, overlaps, pointAlong, placeChip, placeSceneLabel, splitZoom, square, stopsWithin, type Pt, type Rect } from "./placement.ts";
 import type { MapScene } from "./scene.ts";
 import { ATTRIBUTION, DEFAULT_CAMERA, loadMapStyle, USER_ZOOM } from "./style.ts";
 import styles from "./MapView.module.css";
@@ -247,8 +247,8 @@ const LEG_LABEL_AT = [0.5, 0.35, 0.65, 0.25, 0.75];
 
 /** Two listed stops closer than this (px) whose tags can't both stand above their pins merge into one. */
 const MERGE_PX = 72;
-/** Past this zoom a cluster tap opens its first stop instead of zooming in. */
-const CLUSTER_MAX_ZOOM = 19;
+/** A stack tap zooms in at most this far (stops ~6 m apart come apart); past it, it opens its first stop. */
+const CLUSTER_MAX_ZOOM = 20;
 /** Pins closer than this (px) are drawn as one cluster pin tagged with every ID ("567 · 259"). */
 const CLUSTER_PX = 40;
 /**
@@ -785,9 +785,21 @@ export function MapView({ scene, user, bottomPadding, locateNonce, following, on
       m.on("click", (e) => {
         const hit = transitAt(m, e.point);
         if (!hit) return;
-        // A cluster zooms in until its stops come apart; at street level it opens its first stop.
-        if (hit.kind === "cluster" && m.getZoom() < CLUSTER_MAX_ZOOM) {
-          m.easeTo({ center: hit.at, zoom: Math.min(CLUSTER_MAX_ZOOM, m.getZoom() + 1.5) });
+        // A stack zooms in, in one tap, as far as its stops need to come apart as pins of their own
+        // (1.5 levels a tap took two or three taps at a corner). Stops a few metres apart that stay
+        // stacked at CLUSTER_MAX_ZOOM open the first stop on the next tap.
+        if (hit.kind === "cluster" && m.getZoom() < CLUSTER_MAX_ZOOM - 0.01) {
+          const zoom = m.getZoom();
+          const fallback = () => m.easeTo({ center: hit.at, zoom: Math.min(CLUSTER_MAX_ZOOM, zoom + 1.5) });
+          void loadStops().then((stops) => {
+            if (mapRef.current !== m) return;
+            const members = hit.ids.flatMap((id) => stops.get(id) ?? []);
+            if (members.length < 2) return fallback();
+            const at = splitZoom(members.map((s) => m.project([s.lon, s.lat])), zoom, stopClusterPx, CLUSTER_MAX_ZOOM);
+            const center: [number, number] = [members.reduce((a, s) => a + s.lon, 0) / members.length, members.reduce((a, s) => a + s.lat, 0) / members.length];
+            // At least a step in: a stack merged to keep its tag clear of the chrome is already far enough apart.
+            m.easeTo({ center, zoom: Math.min(CLUSTER_MAX_ZOOM, Math.max(at, zoom + 1)) });
+          }, fallback);
           return;
         }
         latest.current.navigate(hit.kind === "tc" ? `/explore/tc/${encodeURIComponent(hit.id)}` : `/explore/stop/${encodeURIComponent(hit.id)}`);
