@@ -1,0 +1,5 @@
+{
+  // Editors pick the nearest tsconfig.json. Without this one, files under src/ fall to ../tsconfig.json
+  // (server and tests, no vite/client types), and every `*.module.css` import reads as a missing module.
+  "extends": "../tsconfig.app.json"
+}
