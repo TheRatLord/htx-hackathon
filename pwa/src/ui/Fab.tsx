@@ -9,8 +9,14 @@ export function Fab(props: FabProps) {
   switch (props.kind) {
     case "locate":
       return (
-        <button type="button" className={styles.fab} aria-label={t("map.locate")} onClick={props.onPress}>
-          <Icon name="my_location" color="var(--c-accent-icon)" />
+        // Following: filled in the accent colour, and named for what it is doing, as in the maps apps.
+        <button
+          type="button"
+          className={`${styles.fab} ${props.following ? styles.following : ""}`}
+          aria-label={t(props.following ? "map.following" : "map.locate")}
+          onClick={props.onPress}
+        >
+          <Icon name="my_location" color={props.following ? "#fff" : "var(--c-accent-icon)"} />
         </button>
       );
     case "ticket":

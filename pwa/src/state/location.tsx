@@ -11,7 +11,12 @@ export type LocationStatus = "unknown" | "prompt" | "granted-waiting" | "fix" | 
 export interface Fix extends LatLon {
   accuracyM: number;
   at: number;
+  /** The direction of travel (degrees clockwise from north), only while moving at walking pace or faster. */
+  course?: number;
 }
+
+/** Below this speed (m/s) the GPS course is noise: a rider standing still "faces" wherever it drifts. */
+const COURSE_MIN_SPEED = 1;
 
 export interface LocationState {
   status: LocationStatus;
@@ -94,7 +99,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         (p) => {
           hasFix.current = true;
           clearTimeout(timeout);
-          setFix({ lat: p.coords.latitude, lon: p.coords.longitude, accuracyM: p.coords.accuracy, at: p.timestamp });
+          const { heading, speed } = p.coords;
+          const course = heading !== null && Number.isFinite(heading) && (speed ?? 0) >= COURSE_MIN_SPEED ? heading : undefined;
+          setFix({ lat: p.coords.latitude, lon: p.coords.longitude, accuracyM: p.coords.accuracy, at: p.timestamp, ...(course !== undefined && { course }) });
           setStatus("fix");
         },
         (err) => {
