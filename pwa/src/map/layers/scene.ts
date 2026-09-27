@@ -1,6 +1,6 @@
-// The layers a screen draws through the Scene API (C.16): the selected route, itinerary and walk
-// legs under the stop pins; markers, live buses, the highlighted stop with its "Stop: 342"
-// callout and the rider's dot above them; marker labels placed around them.
+// The layers a screen draws through the Scene API (C.16): the selected route with its stops,
+// itinerary and walk legs under the stop pins; markers, live buses, the highlighted stop with its
+// "Stop: 342" callout and the rider's dot above them; marker labels placed around them.
 
 import type { Feature as GeoFeature, FeatureCollection, Geometry } from "geojson";
 import type maplibregl from "maplibre-gl";
@@ -39,7 +39,7 @@ export function addSceneLayers(map: maplibregl.Map) {
   labelPoints = {};
   merged = {};
   lastPoints = [];
-  for (const id of ["scene-route", "scene-alt", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
+  for (const id of ["scene-route", "scene-route-stops", "scene-alt", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
   const alt = token("--c-alt-route-line");
   const lines: maplibregl.LayerSpecification[] = [
     // The other options first, so the selected one draws over them where they share a street.
@@ -55,6 +55,20 @@ export function addSceneLayers(map: maplibregl.Map) {
     },
     { id: "scene-route-casing", type: "line", source: "scene-route", paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
     { id: "scene-route", type: "line", source: "scene-route", paint: { "line-color": ["get", "color"], "line-width": 6 }, layout: round },
+    // The route's stops as white dots ringed in its colour, the way a line map shows them: zoomed
+    // out, where only a few stop pins (or none) show, they say where this bus stops. From zoom 16
+    // every stop's pin is drawn over its dot.
+    {
+      id: "scene-route-stops",
+      type: "circle",
+      source: "scene-route-stops",
+      paint: {
+        "circle-color": "#fff",
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 2, 16, 5],
+        "circle-stroke-color": ["get", "color"],
+        "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 11, 1.5, 16, 2.5],
+      },
+    },
     { id: "scene-ride-casing", type: "line", source: "scene-legs", filter: ["==", ["get", "kind"], "ride"], paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
     { id: "scene-ride", type: "line", source: "scene-legs", filter: ["==", ["get", "kind"], "ride"], paint: { "line-color": ["get", "color"], "line-width": 6 }, layout: round },
     {
@@ -260,8 +274,11 @@ export const legLine = (l: NonNullable<MapScene["legs"]>[number]) => (l.kind ===
 /** The scene-points id of leg `i`'s route label. */
 export const legLabelId = (i: number) => `leg-${i}`;
 
-export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
-  src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
+export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string, routeStops: ClientStop[] = []) {
+  const route = scene.routeLine;
+  src(map, "scene-route")?.setData(collection(route ? [line(route.coords, { color: route.color })] : []));
+  // The highlighted stop has its own enlarged pin.
+  src(map, "scene-route-stops")?.setData(collection(route ? routeStops.filter((s) => s.id !== highlight?.id).map((s) => point(s, { color: route.color })) : []));
   src(map, "scene-alt")?.setData(collection((scene.altLegs ?? []).map((l) => line(legLine(l), { kind: l.kind }))));
   src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(legLine(l), { kind: l.kind, color: l.color ?? "" }))));
   const edge = labelEdge(scene);
