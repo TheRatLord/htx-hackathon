@@ -16,9 +16,13 @@ const token = (name: string) => parseFloat(getComputedStyle(document.documentEle
  */
 export const HALF_MAX_VAR = "--half-max";
 
+/** The default half sheet, as a share of the window and a ceiling: most of the screen stays map, as in Google Maps. */
+const HALF_RATIO = 0.36;
+const HALF_MAX_PX = 320;
+
 /** The half sheet's height before a screen grows it (C.6). */
 export function defaultHalfPx(): number {
-  return Math.max(token("--sheet-half-min"), Math.min(0.52 * window.innerHeight, 460));
+  return Math.max(token("--sheet-half-min"), Math.min(HALF_RATIO * window.innerHeight, HALF_MAX_PX));
 }
 
 /** Snap heights in px for a container `h` px tall; mirrors the CSS in BottomSheet.module.css (C.6). */

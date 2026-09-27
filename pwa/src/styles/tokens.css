@@ -127,7 +127,7 @@
   --chip-band: 7px;               /* navy top band height (sm: 6px) */
   --strip-h: 64px;                /* blue live-minutes strip */
   --sheet-peek: 132px;
-  --sheet-half-min: 340px;        /* see C.6 snap rules */
+  --sheet-half-min: 220px;        /* see C.6 snap rules */
   --icon: 24px;
 
   /* ---------- Motion ---------- */
