@@ -14,8 +14,9 @@
 }
 
 /* Keep in sync with snapHeights() in BottomSheet.tsx. */
+/* --peek-fit: the measured grab zone and title row (BottomSheet.tsx), so no empty band under them. */
 .peek {
-  height: var(--sheet-peek);
+  height: min(var(--sheet-peek), var(--peek-fit, var(--sheet-peek)));
 }
 
 /* --half-max: set by a screen to end the half sheet on a whole line (useHalfUpTo). */
