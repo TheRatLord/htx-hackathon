@@ -102,12 +102,22 @@ export function ExploreLayout() {
 
   const onTrip = location.pathname === "/explore/trip";
   const arriveAt = trip.active && formatClock(trip.active.itinerary.endTime, lang);
-  // The banner's X ends the trip at once; Undo restarts the same one where it was.
+  // The trip bar's X ends the trip at once and leaves for Explore; Undo puts the same trip back.
   const endTrip = () => {
     const ended = trip.active;
     if (!ended) return;
     trip.end();
-    toast({ message: t("banner.tripEnded"), action: { label: t("common.undo"), onPress: () => trip.resume(ended) } });
+    navigate("/explore", { replace: true });
+    toast({
+      message: t("banner.tripEnded"),
+      action: {
+        label: t("common.undo"),
+        onPress: () => {
+          trip.resume(ended);
+          navigate("/explore/trip");
+        },
+      },
+    });
   };
   // "Showing Downtown Houston" is only true where the list is anchored on the rider (D2/D3 without a fix).
   const downtown = !rider.fix && location.pathname === "/explore" && !new URLSearchParams(location.search).has("at");
@@ -118,7 +128,7 @@ export function ExploreLayout() {
     : offline
       ? undefined
       : arriveAt && !onTrip
-      ? { kind: "trip-active", arriveAt, onOpen: () => navigate("/explore/trip"), onEnd: endTrip }
+      ? { kind: "trip-active", arriveAt, onOpen: () => navigate("/explore/trip") }
       : chrome?.banner === "search-this-area" && center
         ? { kind: "search-this-area", onPress: () => navigate(`/explore?at=${formatLatLon(center)}&label=${encodeURIComponent(t("map.thisArea"))}`) }
         : downtown
@@ -157,11 +167,11 @@ export function ExploreLayout() {
   );
   const full = snap === "full";
 
-  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip). Beside the
+  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip; its X ends it). Beside the
   // search bar, as in today's app, the ticket button opens the rider's QR code.
   const topBar =
     onTrip && arriveAt ? (
-      <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete" }} />
+      <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete", onEnd: endTrip }} />
     ) : (
       !chrome?.hideSearchBar && (
         <div className={styles.searchRow}>
