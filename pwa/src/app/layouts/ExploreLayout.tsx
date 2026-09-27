@@ -69,7 +69,11 @@ export function ExploreLayout() {
   // rider pulls it up. A route filter or a place's stops (D3, D4) is a list the rider asked for,
   // so those open at half like every other Explore screen.
   const query = new URLSearchParams(location.search);
-  const mapFirst = location.pathname === "/explore" && !query.has("route") && !query.has("at");
+  // A trip in progress opens the same way, as Google Maps does: a short bar with the arrival and the
+  // current step; pulled up it previews the step, pulled up again it lists every step.
+  const mapFirst =
+    (location.pathname === "/explore" && !query.has("route") && !query.has("at")) ||
+    (location.pathname === "/explore/trip" && Boolean(trip.active) && query.get("view") !== "steps");
   // "Search this area" stays on /explore: a new place is a new list, so it opens at half too.
   const [snap, setSnap] = usePerScreen<Snap>(location.pathname + (query.get("at") ?? ""), mapFirst ? "peek" : "half");
   const [minHalf, setMinHalf] = usePerScreen<number | undefined>(location.pathname, undefined);
