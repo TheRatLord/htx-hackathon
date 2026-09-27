@@ -39,6 +39,18 @@ export function itineraryMarkers(it: Itinerary, lang: Lang, hide: (string | unde
   return markers;
 }
 
+/**
+ * Select Itinerary: `it` drawn as usual, the other options faded under it, and the camera framing
+ * them all, so tapping another card redraws the lines without moving the map.
+ */
+export function planScene(it: Itinerary, others: Itinerary[], lang: Lang): MapScene {
+  const altLegs = others.filter((o) => o.id !== it.id).flatMap((o) => itineraryLegs(o).map(({ coords, kind }) => ({ coords, kind })));
+  const scene = itineraryScene(it, lang);
+  const all = [...(scene.legs ?? []), ...altLegs];
+  const bounds = boundsOf(all.flatMap((l) => l.coords.map(([lon, lat]) => ({ lat, lon }))));
+  return { ...scene, altLegs, ...(bounds && { focus: { kind: "bounds", bounds } }) };
+}
+
 export function itineraryScene(it: Itinerary, lang: Lang): MapScene {
   const legs = itineraryLegs(it);
   const bounds = boundsOf(legs.flatMap((l) => l.coords.map(([lon, lat]) => ({ lat, lon }))));

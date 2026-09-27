@@ -65,7 +65,13 @@ export function ExploreLayout() {
   const center = useMapCenter();
   const { sheetH, setSheetH, setMapVisible, locate } = useMapHost();
 
-  const [snap, setSnap] = usePerScreen<Snap>(location.pathname, "half");
+  // Home opens on the map, as today's app does: the sheet starts at its peek (title only) and the
+  // rider pulls it up. A route filter or a place's stops (D3, D4) is a list the rider asked for,
+  // so those open at half like every other Explore screen.
+  const query = new URLSearchParams(location.search);
+  const mapFirst = location.pathname === "/explore" && !query.has("route") && !query.has("at");
+  // "Search this area" stays on /explore: a new place is a new list, so it opens at half too.
+  const [snap, setSnap] = usePerScreen<Snap>(location.pathname + (query.get("at") ?? ""), mapFirst ? "peek" : "half");
   const [minHalf, setMinHalf] = usePerScreen<number | undefined>(location.pathname, undefined);
   const [chrome, setChrome] = useState<ExploreChromeOptions | null>(null);
   const [sheetEl, setSheetEl] = useState<HTMLElement | null>(null);
