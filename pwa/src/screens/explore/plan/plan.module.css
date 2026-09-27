@@ -778,6 +778,11 @@
   text-align: end;
 }
 
+/* "▶ Start" stays one line at 360dp; the title wraps instead. */
+.headerRight > button {
+  white-space: nowrap;
+}
+
 .headerRight + .headerToggle {
   margin-left: 0;
 }

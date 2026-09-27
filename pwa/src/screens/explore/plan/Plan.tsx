@@ -304,7 +304,13 @@ export default function Plan() {
     <ExploreSheet
       ariaLabel={title}
       onBack={onBack}
-      header={<PlanHeader title={title} />}
+      header={
+        <PlanHeader
+          title={title}
+          // ( ▶ Start ) for the option on the map at half and full too, not only once the sheet is down to the peek.
+          right={results && selected && <Button variant="primary" label={t("plan.start")} ariaLabel={t("plan.startA11y")} onPress={() => start(selected)} />}
+        />
+      }
       peek={selected && <Peek it={selected} toName={query.toName ?? ""} onStart={() => start(selected)} />}
     >
       <div className={styles.body}>
