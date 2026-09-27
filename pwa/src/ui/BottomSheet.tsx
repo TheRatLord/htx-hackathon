@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type PointerEvent, type Ref } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type PointerEvent, type Ref } from "react";
 import { useT } from "../i18n/index.ts";
 import styles from "./BottomSheet.module.css";
 import { Icon } from "./Icon.tsx";
@@ -26,10 +26,17 @@ export function defaultHalfPx(): number {
 }
 
 /** Snap heights in px for a container `h` px tall; mirrors the CSS in BottomSheet.module.css (C.6). */
-function snapHeights(h: number, minHalf = 0, halfMax = Infinity): Record<Snap, number> {
+function snapHeights(h: number, minHalf = 0, halfMax = Infinity, peekFit = Infinity): Record<Snap, number> {
   const full = h;
   const half = Math.min(full, halfMax, Math.max(defaultHalfPx(), minHalf));
-  return { peek: token("--sheet-peek"), half, full };
+  return { peek: Math.min(token("--sheet-peek"), peekFit), half, full };
+}
+
+/** The peek ends under its title row: the grab zone (unless slim, drawn over the header) plus the header. */
+function peekFitPx(handle: HTMLElement | null, header: HTMLElement | null): number | undefined {
+  if (!handle || !header) return undefined;
+  const handleH = getComputedStyle(handle).position === "absolute" ? 0 : handle.offsetHeight;
+  return Math.ceil(handleH + header.offsetHeight);
 }
 
 /**
@@ -63,8 +70,27 @@ export function BottomSheet({
     else if (ref) ref.current = el;
   };
 
+  // The peek fits what it shows (a title row, a trip's two lines), up to --sheet-peek: a fixed
+  // height left an empty band under a short title (Home opens here).
+  const handleRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [peekFit, setPeekFit] = useState<number>();
+  useLayoutEffect(() => {
+    if (snap !== "peek" || !headerRef.current) return;
+    const measure = () => setPeekFit(peekFitPx(handleRef.current, headerRef.current));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(headerRef.current);
+    return () => observer.disconnect();
+  }, [snap]);
+
   const heights = () =>
-    snapHeights(root.current?.parentElement?.clientHeight ?? window.innerHeight, minHalf, parseFloat(root.current?.style.getPropertyValue(HALF_MAX_VAR) ?? "") || Infinity);
+    snapHeights(
+      root.current?.parentElement?.clientHeight ?? window.innerHeight,
+      minHalf,
+      parseFloat(root.current?.style.getPropertyValue(HALF_MAX_VAR) ?? "") || Infinity,
+      peekFit,
+    );
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest("button, a, input, textarea, select") || !root.current) return;
@@ -120,8 +146,8 @@ export function BottomSheet({
   const hosted = hosts > 0 && !showPeek;
   const grip = { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
   return (
-    <section ref={setRoot} className={`${styles.sheet} ${styles[snap]}`} style={{ ...style, ["--min-half" as string]: `${minHalf ?? 0}px` }} role="region" aria-label={ariaLabel}>
-      <div className={`${styles.handleZone} ${hosted ? styles.slim : ""}`} {...grip}>
+    <section ref={setRoot} className={`${styles.sheet} ${styles[snap]}`} style={{ ...style, ["--min-half" as string]: `${minHalf ?? 0}px`, ...(peekFit && { ["--peek-fit" as string]: `${peekFit}px` }) }} role="region" aria-label={ariaLabel}>
+      <div ref={handleRef} className={`${styles.handleZone} ${hosted ? styles.slim : ""}`} {...grip}>
         <span className={styles.handle} aria-hidden="true" />
         {!hosted && (
           <>
@@ -144,11 +170,12 @@ export function BottomSheet({
       </div>
       <SheetChromeContext value={chrome}>
         {/* The title row drags the sheet too, so the slim handle zone isn't the only grip. */}
-        <div className={styles.headerZone} {...grip}>
+        <div ref={headerRef} className={styles.headerZone} {...grip}>
           {showPeek ? peek : header}
         </div>
       </SheetChromeContext>
-      <div className={styles.body} hidden={Boolean(showPeek)}>
+      {/* At the peek only the title shows: a list row cut by the sheet's edge looked broken (Home opens here). */}
+      <div className={styles.body} hidden={snap === "peek"}>
         {children}
       </div>
       {footer && snap !== "peek" && <div className={styles.footer} data-sheet-footer="">{footer}</div>}

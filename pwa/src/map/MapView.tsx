@@ -175,8 +175,8 @@ function focusKey(scene: MapScene): string {
 async function applyScene(state: SceneState, map: maplibregl.Map, scene: MapScene, user: Fix | undefined, pad: maplibregl.PaddingOptions, fit = true) {
   const seq = ++state.seq;
   showUser(map, user);
-  // Without stops.json the scene still draws, just without the enlarged pin.
-  const stops = scene.highlightStopId ? await loadStops().catch(() => undefined) : undefined;
+  // Without stops.json the scene still draws, just without the enlarged pin and the route's stops.
+  const stops = scene.highlightStopId || scene.routeLine?.stopIds?.length ? await loadStops().catch(() => undefined) : undefined;
   // stops.json (1.6 MB) can take seconds on a cold start: the rider may have moved on to another screen.
   if (seq !== state.seq) return;
   const highlight = scene.highlightStopId ? stops?.get(scene.highlightStopId) : undefined;
@@ -186,7 +186,8 @@ async function applyScene(state: SceneState, map: maplibregl.Map, scene: MapScen
   // The callout says "Stop 342" on every screen (stop sheet, walk, trip), the number riders match to
   // the sign and to the stop sheet's title, as today's "Stop: 342" does.
   const callout = highlight ? t("map.stopCallout", { id: highlight.id }) : "";
-  drawScene(map, scene, highlight, callout);
+  const routeStops = (scene.routeLine?.stopIds ?? []).flatMap((id) => stops?.get(id) ?? []);
+  drawScene(map, scene, highlight, callout, routeStops);
 
   const f = fit ? scene.focus : undefined;
   if (scene.focus) state.tripBounds = scene.focus.kind === "bounds" && scene.legs?.length ? scene.focus.bounds : undefined;

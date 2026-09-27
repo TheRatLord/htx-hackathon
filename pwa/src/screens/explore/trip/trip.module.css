@@ -7,30 +7,6 @@
   padding: 0 var(--gutter) var(--sp-4);
 }
 
-/* The minimized sheet: the step's title and its instruction, one line each. */
-.peek {
-  display: flex;
-  flex-direction: column;
-  padding: 0 var(--gutter) var(--sp-2);
-}
-
-.peekTitle {
-  font-size: var(--fs-heading);
-  line-height: var(--lh-heading);
-  font-weight: var(--fw-bold);
-}
-
-.peekLine {
-  font-weight: var(--fw-medium);
-}
-
-.peekTitle,
-.peekLine {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .card {
   display: flex;
   flex-direction: column;
@@ -166,5 +142,43 @@
 
 .yourBusSmall {
   color: rgb(255 255 255 / 88%);
+  font-weight: var(--fw-medium);
+}
+
+/* Tucked away (the sheet's peek): the arrival, then the current step on one line. */
+.peek {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--gutter) var(--sp-3);
+  min-width: 0;
+}
+
+.peekTime {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-bold);
+}
+
+.peekStep {
+  overflow: hidden;
+  color: var(--c-text-variant);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pulled all the way up: every step, under the current one. */
+.allSteps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-divider);
+  scroll-margin-top: var(--sp-2);
+}
+
+.allStepsTitle {
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
   font-weight: var(--fw-medium);
 }
