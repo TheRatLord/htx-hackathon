@@ -181,6 +181,9 @@ test.describe("follow mode", () => {
     await locate(page).click();
     await expect(locate(page)).toHaveAccessibleName("Following your location");
     // In-app navigation (a reload would reset everything anyway): the first stop card, then back.
+    // Home opens map-first, the sheet at its peek: the list comes up first.
+    await page.getByRole("button", { name: "Show list" }).click();
+    await settle(page, 400);
     // The card is one big button under its text (the text takes the pointer, the button the click).
     await page.getByRole("button", { name: /^Fannin St @ McKinney St \(246\)/ }).dispatchEvent("click");
     await expect(page).toHaveURL(/\/explore\/stop\/246/);
@@ -218,11 +221,11 @@ test.describe("follow mode", () => {
     await hookMap(page);
     await locate(page).click();
     await expectCentredOn(page, start);
-    // Full (the map is covered), then back to half: the camera fits the dot to the strip left each time.
+    // Home opens at its peek; up to half, the map strip left is shorter and the dot moves into it.
+    const before = await mapStrip(page);
     await page.getByRole("button", { name: "Show list" }).click();
     await settle(page, 600);
-    await page.getByRole("button", { name: "Show map" }).click();
-    await settle(page, 600);
+    expect((await mapStrip(page)).bottom).toBeLessThan(before.bottom - 100);
     await expect(locate(page)).toHaveAccessibleName("Following your location");
     await expectCentredOn(page, start);
   });

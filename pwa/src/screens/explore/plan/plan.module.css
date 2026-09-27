@@ -343,6 +343,46 @@
   justify-content: space-between;
 }
 
+/* A short screen (Select Itinerary at half height): the summary is one row, places then
+   "Leave now  Edit ›", so card 1 fits whole above the tab bar with the map strip still showing.
+   From is left out when it is the rider's location; a long place name ends in "…". */
+@media (max-height: 719px) {
+  .summary {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: var(--touch-min);
+    padding-block: 0;
+  }
+
+  .summaryPlaces {
+    flex: 1;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .summaryPlaces > span {
+    min-width: 0;
+  }
+
+  .summaryFromRider .summaryFrom {
+    display: none;
+  }
+
+  .summaryTo,
+  .summaryToName {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .summaryWhen {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+}
+
 /* "Leave now · Edit ›": when, then the link word, 48dp tall. */
 .summaryEdit {
   display: inline-flex;
@@ -406,13 +446,35 @@
   gap: 2px;
   margin: calc(-1 * var(--card-pad));
   padding: var(--card-pad);
+  border: 0;
   border-radius: var(--r-card);
+  background: none;
   color: var(--c-text);
+  font: inherit;
+  text-align: start;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .cardMain:active {
   background: rgb(0 0 0 / 5%);
+}
+
+/* The option drawn on the map: the selected-segment border, inside the card so nothing shifts. */
+.cardSelected {
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+
+.detailsLink {
+  align-self: flex-end;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  margin: calc(-1 * var(--sp-2)) 0 calc(-1 * var(--card-pad) + var(--sp-1));
+  padding: 0 var(--sp-2);
+  color: var(--c-link-text);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
 }
 
 .cardTop {

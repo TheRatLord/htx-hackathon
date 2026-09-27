@@ -40,8 +40,20 @@ export function addSceneLayers(map: maplibregl.Map) {
   merged = {};
   lastPoints = [];
   shownUser = shownHeading = undefined;
-  for (const id of ["scene-route", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
+  for (const id of ["scene-route", "scene-alt", "scene-legs", "scene-points", "scene-user"]) map.addSource(id, { type: "geojson", data: collection([]) });
+  const alt = token("--c-alt-route-line");
   const lines: maplibregl.LayerSpecification[] = [
+    // The other options first, so the selected one draws over them where they share a street.
+    { id: "scene-alt-casing", type: "line", source: "scene-alt", filter: ["==", ["get", "kind"], "ride"], paint: { "line-color": "#fff", "line-width": 8 }, layout: round },
+    { id: "scene-alt-ride", type: "line", source: "scene-alt", filter: ["==", ["get", "kind"], "ride"], paint: { "line-color": alt, "line-width": 5 }, layout: round },
+    {
+      id: "scene-alt-walk",
+      type: "line",
+      source: "scene-alt",
+      filter: ["==", ["get", "kind"], "walk"],
+      paint: { "line-color": alt, "line-width": 4, "line-dasharray": [0.1, 2] },
+      layout: round,
+    },
     { id: "scene-route-casing", type: "line", source: "scene-route", paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
     { id: "scene-route", type: "line", source: "scene-route", paint: { "line-color": ["get", "color"], "line-width": 6 }, layout: round },
     { id: "scene-ride-casing", type: "line", source: "scene-legs", filter: ["==", ["get", "kind"], "ride"], paint: { "line-color": "#fff", "line-width": 10 }, layout: round },
@@ -283,6 +295,7 @@ export const legLabelId = (i: number) => `leg-${i}`;
 
 export function drawScene(map: maplibregl.Map, scene: MapScene, highlight: ClientStop | undefined, highlightLabel: string) {
   src(map, "scene-route")?.setData(collection(scene.routeLine ? [line(scene.routeLine.coords, { color: scene.routeLine.color })] : []));
+  src(map, "scene-alt")?.setData(collection((scene.altLegs ?? []).map((l) => line(legLine(l), { kind: l.kind }))));
   src(map, "scene-legs")?.setData(collection((scene.legs ?? []).map((l) => line(legLine(l), { kind: l.kind, color: l.color ?? "" }))));
   const edge = labelEdge(scene);
   const points: Feature[] = [
