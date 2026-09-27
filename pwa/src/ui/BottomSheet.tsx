@@ -144,7 +144,8 @@ export function BottomSheet({
           {showPeek ? peek : header}
         </div>
       </SheetChromeContext>
-      <div className={styles.body} hidden={Boolean(showPeek)}>
+      {/* At the peek only the title shows: a list row cut by the sheet's edge looked broken (Home opens here). */}
+      <div className={styles.body} hidden={snap === "peek"}>
         {children}
       </div>
       {footer && snap !== "peek" && <div className={styles.footer} data-sheet-footer="">{footer}</div>}
