@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clusterKeys, clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, roomAround, trimLoops } from "./placement.ts";
+import { clusterKeys, clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, roomAround, splitZoom, trimLoops } from "./placement.ts";
 
 describe("pointAlong", () => {
   it("finds a point by length along the line", () => {
@@ -67,6 +67,34 @@ describe("clusterPoints", () => {
     const prev = new Map([["b", "b"], ["c", "b"], ["d", "d"], ["e", "d"]]);
     const gs = clusterPoints(row, 40, prev);
     expect(gs.map((g) => g.members.map((m) => m.id))).toEqual([["a"], ["b", "c"], ["d", "e"]]);
+  });
+});
+
+describe("splitZoom", () => {
+  // MapView's stop radius: 40px from zoom 16, widening to 56px at 15.
+  const radiusAt = (z: number) => 40 + 16 * Math.min(1, Math.max(0, 16 - z));
+  const ids = (gs: { members: { id: string }[] }[]) => gs.map((g) => g.members.map((m) => m.id));
+  const scaled = (pins: { id: string; p: { x: number; y: number } }[], by: number) => pins.map((x) => ({ id: x.id, p: { x: x.p.x * by, y: x.p.y * by } }));
+
+  it("zooms a tapped stack in one step to where its drawn cluster comes apart", () => {
+    for (const pins of [
+      [{ id: "567", p: { x: 0, y: 0 } }, { id: "259", p: { x: 20, y: 5 } }],
+      [{ id: "a", p: { x: 0, y: 0 } }, { id: "b", p: { x: 12, y: 0 } }, { id: "c", p: { x: 24, y: 0 } }],
+      [{ id: "a", p: { x: 0, y: 0 } }, { id: "b", p: { x: 30, y: 0 } }, { id: "c", p: { x: 15, y: 26 } }],
+    ]) {
+      const zoom = 15.4;
+      const drawn = clusterPoints(pins, radiusAt(zoom));
+      expect(ids(drawn)).toHaveLength(1);
+      const z = splitZoom(pins.map((x) => x.p), zoom, radiusAt, 20);
+      expect(z).toBeGreaterThan(zoom);
+      expect(z).toBeLessThan(20);
+      // Every stop its own pin there, whatever the drawn cluster remembered.
+      expect(ids(clusterPoints(scaled(pins, 2 ** (z - zoom)), radiusAt(z), clusterKeys(drawn)))).toEqual(pins.map((x) => [x.id]));
+    }
+  });
+
+  it("stops at the max zoom for stops that never come apart", () => {
+    expect(splitZoom([{ x: 0, y: 0 }, { x: 0.5, y: 0 }], 16, radiusAt, 20)).toBe(20);
   });
 });
 
