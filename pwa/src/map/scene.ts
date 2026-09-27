@@ -20,8 +20,8 @@ export interface MapScene {
   tagStopIds?: string[];
   /** Enlarged pin; on a scene with `legs` (walk, trip) also a white callout with the stop's name. */
   highlightStopId?: string;
-  /** The selected route, [lon, lat] pairs. */
-  routeLine?: { coords: [number, number][]; color: string };
+  /** The selected route, [lon, lat] pairs; `stopIds` (its stops in this direction) are drawn as dots on it. */
+  routeLine?: { coords: [number, number][]; color: string; stopIds?: string[] };
   /**
    * Itinerary or walk legs, [lon, lat] pairs. Walks are always drawn dotted in --c-walk-line; a
    * ride needs its route colour. `label` (a ride's route name, "80") is drawn as a chip halfway
