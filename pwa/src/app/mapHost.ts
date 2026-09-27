@@ -9,8 +9,10 @@ export interface MapHost {
   setSheetH: (px: number) => void;
   /** Shows the map while an Explore layout is mounted; it stays alive (hidden) otherwise. */
   setMapVisible: (visible: boolean) => void;
-  /** The Locate FAB: centre on the rider. */
+  /** The Locate FAB: centre on the rider and follow them until they drag the map or change screens. */
   locate: () => void;
+  /** Follow mode is on: the Locate FAB shows it. */
+  following: boolean;
 }
 
 export const MapHostContext = createContext<MapHost | null>(null);

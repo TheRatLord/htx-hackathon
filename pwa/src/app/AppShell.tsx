@@ -1,7 +1,7 @@
 // The root frame around every screen: the one persistent map (shown only under ExploreLayout),
 // the bottom nav (all screens but Welcome), focus-on-navigate and the Explore tab's memory.
 
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigationType } from "react-router";
 import type { LatLon } from "../api/types.ts";
 import { MapCenterContext, MapSceneContext, type MapScene } from "../map/scene.ts";
@@ -42,8 +42,27 @@ export function AppShell() {
   const [sheetH, setSheetH] = useState(0);
   const [center, setCenter] = useState<LatLon>();
   const [locateNonce, setLocateNonce] = useState(0);
+  // Follow mode belongs to the screen Locate was pressed on: another screen frames its own scene.
+  const [followPath, setFollowPath] = useState<string>();
+  const following = followPath === pathname;
+  useEffect(() => {
+    setFollowPath((p) => (p === pathname ? p : undefined));
+  }, [pathname]);
+  const endFollow = useCallback(() => setFollowPath(undefined), []);
 
-  const host = useMemo(() => ({ sheetH, setSheetH, setMapVisible, locate: () => setLocateNonce((n) => n + 1) }), [sheetH]);
+  const host = useMemo(
+    () => ({
+      sheetH,
+      setSheetH,
+      setMapVisible,
+      following,
+      locate: () => {
+        setFollowPath(pathname);
+        setLocateNonce((n) => n + 1);
+      },
+    }),
+    [sheetH, following, pathname],
+  );
 
   return (
     <MapSceneContext value={setScene}>
@@ -59,6 +78,8 @@ export function AppShell() {
                       user={rider.status === "fix" ? rider.fix : undefined}
                       bottomPadding={sheetH}
                       locateNonce={locateNonce}
+                      following={following}
+                      onFollowEnd={endFollow}
                       onCenterChange={setCenter}
                     />
                   </Suspense>

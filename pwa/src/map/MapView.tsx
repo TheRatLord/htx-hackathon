@@ -11,10 +11,11 @@ import type { ClientStop, LatLon } from "../api/types.ts";
 import { t, useLang } from "../i18n/index.ts";
 import { haversineM } from "../lib/geo.ts";
 import { loadStops } from "../lib/stops.ts";
+import { getHeading, subscribeHeading } from "../state/heading.ts";
 import type { Fix } from "../state/location.tsx";
 import { useSaved } from "../state/saved.ts";
 import { addMarkerImages } from "./layers/images.ts";
-import { addSceneLayers, drawScene, hideSceneLabels, legLabelId, legLine, type MarkerMerge, setLabelSides, showUser, TALL_PINS } from "./layers/scene.ts";
+import { addSceneLayers, drawScene, hideSceneLabels, legLabelId, legLine, type MarkerMerge, setLabelSides, showHeading, showUser, TALL_PINS } from "./layers/scene.ts";
 import {
   addTransitLayers,
   LABELLED_NEAREST,
@@ -72,6 +73,8 @@ const SHEET_CLEAR = 40;
 const SEARCH_BAR_H = 64;
 /** A point focus with label room keeps its drawing this far (px) left of the FAB column. */
 const FAB_GAP = 16;
+/** A follow-mode camera move to the rider's new fix (ms): the map glides with them, not jumps. */
+const FOLLOW_MS = 600;
 /** The camera's side paddings (see padding()). */
 const PAD_LEFT = 32;
 const PAD_RIGHT = 72;
@@ -342,10 +345,19 @@ interface MapViewProps {
   bottomPadding: number;
   /** Incremented by the Locate FAB: centre on the rider. */
   locateNonce: number;
+  /**
+   * Follow mode (set by the Locate FAB): the camera keeps the rider's dot centred as fixes come in,
+   * instead of the scene's framing. Pinching to zoom keeps it; dragging the map ends it (onFollowEnd).
+   */
+  following: boolean;
+  onFollowEnd: () => void;
   onCenterChange: (center: LatLon) => void;
 }
 
-export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChange }: MapViewProps) {
+/** The way the rider faces: the compass, else (moving) the GPS course. */
+const riderHeading = (user: Fix | undefined) => (user ? (getHeading() ?? user.course) : undefined);
+
+export function MapView({ scene, user, bottomPadding, locateNonce, following, onFollowEnd, onCenterChange }: MapViewProps) {
   const navigate = useNavigate();
   const lang = useLang();
   const tcs = useTransitCenters();
@@ -370,8 +382,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
   const lastFocus = useRef<string | undefined>(undefined);
   /** The rider panned or zoomed the map by hand since the camera last fitted a scene. */
   const riderMoved = useRef(false);
-  const latest = useRef({ scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds });
-  latest.current = { scene, user, bottomPadding, onCenterChange, navigate, tcData, savedIds };
+  /** A pinch or scroll zoom while following: the camera goes back to the rider once it ends. */
+  const followZoomed = useRef(false);
+  const latest = useRef({ scene, user, bottomPadding, following, onFollowEnd, onCenterChange, navigate, tcData, savedIds });
+  latest.current = { scene, user, bottomPadding, following, onFollowEnd, onCenterChange, navigate, tcData, savedIds };
 
   const rankLabels = (map: maplibregl.Map) => {
     const { scene, user } = latest.current;
@@ -507,7 +521,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
 
       if (stops) placeStopTags(stops);
 
-      if (!nudgeArmed.current || map.isMoving()) return;
+      // Following, the camera belongs to the rider's dot: a nudge would only be undone by the next fix.
+      if (!nudgeArmed.current || map.isMoving() || latest.current.following) return;
       nudgeArmed.current -= 1;
       if (!blocked.length) return;
       // Only what is on the map strip now must stay there (a place view's rider may be miles away).
@@ -676,6 +691,11 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     void loadStops().then(place, () => place());
   };
   const pad = (bottom: number) => padding(bottom, topChrome(container.current, safeTopProbe.current?.offsetHeight ?? 0), container.current?.clientHeight ?? 0);
+  /** Follow mode: the rider's dot to the centre of the map strip, at the current zoom. */
+  const follow = (map: maplibregl.Map, duration = FOLLOW_MS) => {
+    const { user, bottomPadding } = latest.current;
+    if (user) map.easeTo({ center: [user.lon, user.lat], padding: pad(bottomPadding), duration });
+  };
 
   useEffect(() => {
     let map: maplibregl.Map | undefined;
@@ -705,6 +725,10 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       mapRef.current = map;
       const m = map;
       m.on("moveend", () => {
+        if (followZoomed.current && !m.isMoving()) {
+          followZoomed.current = false;
+          if (latest.current.following) follow(m);
+        }
         const c = m.getCenter();
         latest.current.onCenterChange({ lat: c.lat, lon: c.lng });
         rankLabels(m);
@@ -713,6 +737,17 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
       // Only a gesture has an originalEvent: fitBounds, easeTo and panBy do not.
       m.on("movestart", (e) => {
         if ((e as { originalEvent?: Event }).originalEvent) riderMoved.current = true;
+      });
+      // Dragging the map means the rider wants to look elsewhere: follow mode ends. A pinch or
+      // wheel zoom keeps it, and the camera comes back to the dot once the zoom ends.
+      m.on("dragstart", (e) => {
+        // A pinch pans too (MapLibre runs touchPan beside touchZoom): only a one-finger or mouse drag counts.
+        const ev = (e as { originalEvent?: Event }).originalEvent;
+        const pinch = typeof TouchEvent !== "undefined" && ev instanceof TouchEvent && ev.touches.length > 1;
+        if (latest.current.following && !pinch) latest.current.onFollowEnd();
+      });
+      m.on("zoomstart", (e) => {
+        if (latest.current.following && (e as { originalEvent?: Event }).originalEvent) followZoomed.current = true;
       });
       // A pin opens its stop directly (no "Choose Direction" step, C.16).
       m.on("click", (e) => {
@@ -739,6 +774,7 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
         arm();
         lastFocus.current = focusKey(scene);
         void applyScene(sceneState.current, m, scene, user, pad(bottomPadding)).then(() => placeLabels(m));
+        showHeading(m, riderHeading(user));
       });
     });
     return () => {
@@ -758,7 +794,8 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     // switch) redraws without moving the camera once the rider has panned or zoomed by hand, so
     // they are not snapped back. Untouched, the camera is fitted again (the same view once settled).
     const key = focusKey(scene);
-    const fit = key !== lastFocus.current || !riderMoved.current;
+    // Following, the rider's dot stays centred: a new scene (the next step of a trip) draws in place.
+    const fit = !latest.current.following && (key !== lastFocus.current || !riderMoved.current);
     lastFocus.current = key;
     if (fit) {
       riderMoved.current = false;
@@ -779,6 +816,11 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const id = setTimeout(() => {
       arm();
       const { scene: now, user } = latest.current;
+      if (latest.current.following) {
+        if (user) follow(map);
+        else placeLabels(map);
+        return;
+      }
       const f = now.focus;
       const center = f?.kind === "point" ? (f.point ?? undefined) : undefined;
       if (bounds) fitFocus(map, bounds, fitPad(now, pad(bottomPadding)));
@@ -802,11 +844,30 @@ export function MapView({ scene, user, bottomPadding, locateNonce, onCenterChang
     const first = !hadUser.current && user;
     hadUser.current = Boolean(user);
     const { scene, bottomPadding } = latest.current;
-    if (first && scene.focus?.kind === "user") arm();
-    if (first && scene.focus?.kind === "user") void applyScene(sceneState.current, map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
+    const { following } = latest.current;
+    if (first && scene.focus?.kind === "user" && !following) arm();
+    if (first && scene.focus?.kind === "user" && !following) void applyScene(sceneState.current, map, scene, user, pad(bottomPadding)).then(() => placeLabels(map));
     else showUser(map, user);
+    showHeading(map, riderHeading(user));
+    // A pinch in progress is left alone: the camera comes back to the dot when it ends.
+    if (following && user && !followZoomed.current) follow(map);
     rankLabels(map);
   }, [user]);
+
+  // Follow mode off (a drag, another screen): the camera stays where it is, and a zoom that began
+  // while following no longer brings it back.
+  useEffect(() => {
+    if (!following) followZoomed.current = false;
+  }, [following]);
+
+  // The compass turns the dot's beam. Listened to only while there is a dot to turn.
+  const hasUser = Boolean(user);
+  useEffect(() => {
+    if (!hasUser) return;
+    const turnBeam = () => mapRef.current && ready.current && showHeading(mapRef.current, riderHeading(latest.current.user));
+    turnBeam();
+    return subscribeHeading(turnBeam);
+  }, [hasUser]);
 
   useEffect(() => {
     if (mapRef.current && ready.current && tcData) showTransitCenters(mapRef.current, tcData);
