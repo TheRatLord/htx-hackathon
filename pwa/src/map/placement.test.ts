@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, roomAround, trimLoops } from "./placement.ts";
+import { clusterKeys, clusterLabel, clusterPoints, placeChip, placeSceneLabel, pointAlong, roomAround, trimLoops } from "./placement.ts";
 
 describe("pointAlong", () => {
   it("finds a point by length along the line", () => {
@@ -39,6 +39,34 @@ describe("clusterPoints", () => {
     expect(groups[0].p).toEqual({ x: 110, y: 105 });
     expect(clusterLabel(["567", "259"])).toBe("567 · 259");
     expect(clusterLabel(["1", "2", "3", "4", "5"])).toBe("1 · 2 · 3 +2");
+  });
+  it("keeps a drawn cluster together until its pins are well past the radius (no flicker at the threshold)", () => {
+    const at = (d: number) => [
+      { id: "567", p: { x: 100, y: 100 } },
+      { id: "259", p: { x: 100 + d, y: 100 } },
+    ];
+    const ids = (gs: { members: { id: string }[] }[]) => gs.map((g) => g.members.map((m) => m.id));
+    // This pair's own merge distance (within ±20% of the radius): the largest gap still drawn as one.
+    let r = 0;
+    while (clusterPoints(at(r + 1)).length === 1) r++;
+    expect(r).toBeGreaterThanOrEqual(31);
+    expect(r).toBeLessThanOrEqual(48);
+    const merged = clusterPoints(at(r));
+    expect(ids(merged)).toEqual([["567", "259"]]);
+    // Zoomed in a touch past it: still one pin; well apart, two.
+    expect(ids(clusterPoints(at(r + 3), 40, clusterKeys(merged)))).toEqual([["567", "259"]]);
+    const split = clusterPoints(at(r * 1.6), 40, clusterKeys(merged));
+    expect(ids(split)).toEqual([["567"], ["259"]]);
+    // Split, they merge again only within their distance.
+    expect(ids(clusterPoints(at(r + 3), 40, clusterKeys(split)))).toEqual([["567"], ["259"]]);
+  });
+  it("merges only the pins a zoom moved within reach, leaving the other clusters as they were", () => {
+    // A row of pins 30px apart: without history a pass groups them from the first; with it, a
+    // cluster further along is kept even though a greedy pass from the start would regroup it.
+    const row = ["a", "b", "c", "d", "e"].map((id, i) => ({ id, p: { x: i * 30, y: 0 } }));
+    const prev = new Map([["b", "b"], ["c", "b"], ["d", "d"], ["e", "d"]]);
+    const gs = clusterPoints(row, 40, prev);
+    expect(gs.map((g) => g.members.map((m) => m.id))).toEqual([["a"], ["b", "c"], ["d", "e"]]);
   });
 });
 

@@ -145,12 +145,19 @@
   font-weight: var(--fw-medium);
 }
 
-/* Tucked away (the sheet's peek): the arrival, then the current step on one line. */
+/* Tucked away (the sheet's peek): the arrival, then the current step on one line; End at the right. */
 .peek {
   display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--gutter) var(--sp-3);
+}
+
+.peekText {
+  display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 2px;
-  padding: 0 var(--gutter) var(--sp-3);
   min-width: 0;
 }
 

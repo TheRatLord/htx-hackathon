@@ -10,6 +10,7 @@ import { isAdvisory } from "../../lib/alerts.ts";
 import { formatClock } from "../../lib/format.ts";
 import { formatLatLon } from "../../lib/geo.ts";
 import { useMapCenter } from "../../map/scene.ts";
+import { requestCompass } from "../../state/heading.ts";
 import { useLocation as useRiderLocation } from "../../state/location.tsx";
 import { useOffline, useOfflineSince } from "../../state/offline.ts";
 import { useTrip } from "../../state/trip.ts";
@@ -63,7 +64,7 @@ export function ExploreLayout() {
   const alerts = useAlerts();
   const toast = useToast();
   const center = useMapCenter();
-  const { sheetH, setSheetH, setMapVisible, locate } = useMapHost();
+  const { sheetH, setSheetH, setMapVisible, locate, following } = useMapHost();
 
   // Home opens on the map, as today's app does: the sheet starts at its peek (title only) and the
   // rider pulls it up. A route filter or a place's stops (D3, D4) is a list the rider asked for,
@@ -101,6 +102,23 @@ export function ExploreLayout() {
 
   const onTrip = location.pathname === "/explore/trip";
   const arriveAt = trip.active && formatClock(trip.active.itinerary.endTime, lang);
+  // The trip bar's X ends the trip at once and leaves for Explore; Undo puts the same trip back.
+  const endTrip = () => {
+    const ended = trip.active;
+    if (!ended) return;
+    trip.end();
+    navigate("/explore", { replace: true });
+    toast({
+      message: t("banner.tripEnded"),
+      action: {
+        label: t("common.undo"),
+        onPress: () => {
+          trip.resume(ended);
+          navigate("/explore/trip");
+        },
+      },
+    });
+  };
   // "Showing Downtown Houston" is only true where the list is anchored on the rider (D2/D3 without a fix).
   const downtown = !rider.fix && location.pathname === "/explore" && !new URLSearchParams(location.search).has("at");
 
@@ -119,14 +137,18 @@ export function ExploreLayout() {
             ? { kind: "demo-location" }
             : undefined;
 
+  // Locate centres on the rider and follows them. The tap is also iOS's one chance to ask for the
+  // compass (the beam on the dot); elsewhere requestCompass does nothing.
   const onLocate = () => {
-    if (rider.fix) return locate();
+    requestCompass();
+    locate();
+    if (rider.fix) return;
     rider.request();
     toast({ message: t("map.noFix") });
   };
 
   const requested: FabProps[] = (chrome?.fabs ?? DEFAULT_FABS).flatMap((f): FabProps[] => {
-    if (f === "locate") return [{ kind: "locate", onPress: onLocate }];
+    if (f === "locate") return [{ kind: "locate", following: following && Boolean(rider.fix), onPress: onLocate }];
     if (f === "planTrip")
       return [trip.active ? { kind: "myTrip", onPress: () => navigate("/explore/trip") } : { kind: "planTrip", onPress: () => navigate("/explore/plan") }];
     const list = alerts.source === "unavailable" ? [] : alerts.forRoute(f.routeId);
@@ -145,11 +167,11 @@ export function ExploreLayout() {
   );
   const full = snap === "full";
 
-  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip). Beside the
+  // D13: the trip bar takes the search bar's place (no "Open ›": this is the trip; its X ends it). Beside the
   // search bar, as in today's app, the ticket button opens the rider's QR code.
   const topBar =
     onTrip && arriveAt ? (
-      <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete" }} />
+      <StatusBanner item={{ kind: "trip-active", arriveAt, complete: chrome?.tripBar === "complete", onEnd: endTrip }} />
     ) : (
       !chrome?.hideSearchBar && (
         <div className={styles.searchRow}>

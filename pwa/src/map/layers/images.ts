@@ -1,6 +1,6 @@
 // Map marker images drawn on a canvas at device resolution, so they stay sharp and need no sprite
 // file: stop pins (bus and rail, three sizes), the TC tile, the direction notch, the destination
-// and place pins, the live-bus icon (grey when stale), the rider and itinerary dots, and the white
+// and place pins, the live-bus icon (grey when stale), the rider and itinerary dots, the rider's heading beam, and the white
 // chips behind stop-ID labels and the "Stop: 342" callout.
 
 import type maplibregl from "maplibre-gl";
@@ -156,6 +156,29 @@ function dot(diameter: number, fill: string, ring: string, ringWidth: number): I
   });
 }
 
+/**
+ * The rider's heading: a beam fanning out from the dot's centre, pointing up (north; the layer turns
+ * it), strong at the dot and fading out, as in the maps apps riders know. Square, so it turns about
+ * the dot.
+ */
+function headingCone(color: string): ImageData {
+  const size = 72;
+  const c = size / 2;
+  const half = (34 * Math.PI) / 180;
+  return image(size, size, (ctx) => {
+    const beam = ctx.createRadialGradient(c, c, 4, c, c, c);
+    beam.addColorStop(0, color);
+    beam.addColorStop(1, "transparent");
+    ctx.beginPath();
+    ctx.moveTo(c, c);
+    ctx.arc(c, c, c, -Math.PI / 2 - half, -Math.PI / 2 + half);
+    ctx.closePath();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = beam;
+    ctx.fill();
+  });
+}
+
 /** Which side of a chip its pointer is on: towards the pin it names. */
 export type Pointer = "down" | "up" | "left" | "right";
 /** How far a pointer reaches out of its chip (dp). */
@@ -253,6 +276,7 @@ export function addMarkerImages(map: maplibregl.Map) {
   add("vehicle", vehicle(navy));
   add("vehicle-stale", vehicle(token("--c-text-disabled")));
   add("dot-user", dot(16, token("--c-user-dot"), "#fff", 2));
+  add("heading-cone", headingCone(token("--c-user-dot")));
   add("dot-origin", dot(16, token("--c-origin-dot"), "#fff", 2));
   add("dot-stop", dot(14, "#fff", navy, 3));
   const label = chip(token("--c-outline-strong"));

@@ -144,8 +144,8 @@ function Clock({ iso }: { iso: string }) {
  * `later` are the same buses from the same stops later on, said on one line instead of more cards:
  * "Also at 12:30 PM ›".
  *
- * A tap selects the card, and the map above the half sheet draws its route. The selected card's
- * "Details ›" opens My Itinerary, so switching between options never leaves the map.
+ * The whole card opens My Itinerary (where Start is); the selected one is the route drawn on the
+ * map above the half sheet, and says "Details ›".
  */
 export function ItineraryCard({
   it,
@@ -183,7 +183,7 @@ export function ItineraryCard({
   };
   return (
     <article className={selected ? `${styles.card} ${styles.cardSelected}` : styles.card}>
-      <button type="button" className={styles.cardMain} aria-pressed={selected} onClick={onSelect}>
+      <Link to={href} className={styles.cardMain} onClick={onSelect}>
         <span className={styles.cardTop}>
           <ModeStrip it={it} toPlace={toPlace} />
           <span className={styles.durationCol}>
@@ -211,12 +211,12 @@ export function ItineraryCard({
         {tight.length > 0 && <Warning>{t("plan.tightTransferMin", { min: Math.min(...tight) })}</Warning>}
         {ride && <BoardLine ride={ride} />}
         <AlertsLine it={it} shared={sharedAlerts} />
-      </button>
-      {selected && (
-        <Link to={href} className={styles.detailsLink}>
-          {t("common.details")}&nbsp;›
-        </Link>
-      )}
+        {selected && (
+          <span className={styles.detailsLink} aria-hidden="true">
+            {t("common.details")}&nbsp;›
+          </span>
+        )}
+      </Link>
       {later.length > 0 && (
         <p className={styles.later}>
           <span>{t("plan.alsoAt")}</span>

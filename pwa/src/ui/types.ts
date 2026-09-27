@@ -188,14 +188,14 @@ export interface SearchFieldProps {
 
 /** C.9 */
 export type FabProps =
-  | { kind: "locate"; onPress: () => void }
+  | { kind: "locate"; /** Follow mode is on: the map keeps the rider's dot centred. */ following?: boolean; onPress: () => void }
   | { kind: "ticket"; onPress: () => void }
   | { kind: "planTrip"; onPress: () => void }
   | { kind: "routeAlerts"; count: number; /** Every alert is an advisory: navy (i), not the red warning. */ advisory?: boolean; onPress: () => void }
   | { kind: "myTrip"; onPress: () => void };
 
 /** C.10 */
-type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text";
+type ButtonVariant = "primary" | "tonal" | "outline" | "text" | "danger-text" | "danger-outline";
 
 export interface ButtonProps {
   variant: ButtonVariant;
@@ -269,7 +269,7 @@ export interface AlertStatusLineProps {
 /** C.12 map overlay slot (StatusBanner), in priority order. */
 export type OverlayItem =
   | { kind: "offline"; since?: string }
-  | { kind: "trip-active"; arriveAt: string; onOpen?: () => void; complete?: boolean }
+  | { kind: "trip-active"; arriveAt: string; onOpen?: () => void; onEnd?: () => void; complete?: boolean }
   | { kind: "search-this-area"; onPress: () => void }
   | { kind: "downtown-fallback" }
   | { kind: "demo-location" };

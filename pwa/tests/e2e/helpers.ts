@@ -236,6 +236,14 @@ export async function expectFocusOnH1(page: Page) {
 
 // ---------- map pins (canvas features; reached through the MapLibre instance) ----------
 
+/**
+ * Home and a live trip open map-first, the sheet at its peek (title only): its "Show list" chevron
+ * brings the list (or the step card) up to half. `label` is its accessible name in the app's language.
+ */
+export function showList(page: Page, label: "Show list" | "Ver lista" = "Show list"): Locator {
+  return page.getByRole("button", { name: label }).first();
+}
+
 /** Exposes the MapLibre instance as window.__map by hooking the pre-bundled module's Map.prototype.fire. */
 export async function hookMap(page: Page) {
   await page.evaluate(async () => {
@@ -313,7 +321,7 @@ function queryMap(page: Page, stopId: string, kind: "pin" | "tag", rebuild = fal
     const m = (window as unknown as { __map?: M }).__map;
     if (!m) return { ok: false, error: "map not hooked yet" };
     const idle = () => new Promise<void>((done) => (m.once("idle", done), setTimeout(done, 1500)));
-    const wanted = kind === "pin" ? ["stops-pin", "stops-pin-far", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
+    const wanted = kind === "pin" ? ["stops-pin", "stops-cluster", "tc-pin", "scene-markers"] : ["stops-label-near", "stops-label"];
     const layers = wanted.filter((l) => m.getLayer(l));
     if (rebuild) {
       // Same data, fresh tiles: the source re-parses them and the feature index is built again.
